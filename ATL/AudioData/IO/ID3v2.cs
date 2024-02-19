@@ -105,8 +105,8 @@ namespace ATL.AudioData.IO
 #pragma warning disable S125 // Sections of code should not be commented out
         //private static readonly ICollection<string> standardFrames_v22 = new List<string>() { "BUF", "CNT", "COM", "CRA", "CRM", "ETC", "EQU", "GEO", "IPL", "LNK", "MCI", "MLL", "PIC", "POP", "REV", "RVA", "SLT", "STC", "TAL", "TBP", "TCM", "TCO", "TCR", "TDA", "TDY", "TEN", "TFT", "TIM", "TKE", "TLA", "TLE", "TMT", "TOA", "TOF", "TOL", "TOR", "TOT", "TP1", "TP2", "TP3", "TP4", "TPA", "TPB", "TRC", "TRD", "TRK", "TSI", "TSS", "TT1", "TT2", "TT3", "TXT", "TXX", "TYE", "UFI", "ULT", "WAF", "WAR", "WAS", "WCM", "WCP", "WPB", "WXX" };
 #pragma warning restore S125 // Sections of code should not be commented out
-        private static readonly ICollection<string> standardFrames_v23 = new List<string> { "AENC", "APIC", "COMM", "COMR", "ENCR", "EQUA", "ETCO", "GEOB", "GRID", "IPLS", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVAD", "RVRB", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDAT", "TDLY", "TENC", "TEXT", "TFLT", "TIME", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMED", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
-        private static readonly ICollection<string> standardFrames_v24 = new List<string> { "AENC", "APIC", "ASPI", "COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK", "SIGN", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR", "TDRC", "TDRL", "TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL", "TMED", "TMOO", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA", "TSOP", "TSOT", "TSRC", "TSSE", "TSST", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC",
+        private static readonly ICollection<string> standardFrames_v23 = new HashSet<string> { "AENC", "APIC", "COMM", "COMR", "ENCR", "EQUA", "ETCO", "GEOB", "GRID", "IPLS", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVAD", "RVRB", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDAT", "TDLY", "TENC", "TEXT", "TFLT", "TIME", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMED", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPUB", "TRCK", "TRDA", "TRSN", "TRSO", "TSIZ", "TSRC", "TSSE", "TYER", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC" };
+        private static readonly ICollection<string> standardFrames_v24 = new HashSet<string> { "AENC", "APIC", "ASPI", "COMM", "COMR", "ENCR", "EQU2", "ETCO", "GEOB", "GRID", "LINK", "MCDI", "MLLT", "OWNE", "PRIV", "PCNT", "POPM", "POSS", "RBUF", "RVA2", "RVRB", "SEEK", "SIGN", "SYLT", "SYTC", "TALB", "TBPM", "TCOM", "TCON", "TCOP", "TDEN", "TDLY", "TDOR", "TDRC", "TDRL", "TDTG", "TENC", "TEXT", "TFLT", "TIPL", "TIT1", "TIT2", "TIT3", "TKEY", "TLAN", "TLEN", "TMCL", "TMED", "TMOO", "TOAL", "TOFN", "TOLY", "TOPE", "TORY", "TOWN", "TPE1", "TPE2", "TPE3", "TPE4", "TPOS", "TPRO", "TPUB", "TRCK", "TRSN", "TRSO", "TSOA", "TSOP", "TSOT", "TSRC", "TSSE", "TSST", "TXXX", "UFID", "USER", "USLT", "WCOM", "WCOP", "WOAF", "WOAR", "WOAS", "WORS", "WPAY", "WPUB", "WXXX", "CHAP", "CTOC",
           "RGAD", "TCMP", "TSO2", "TSOC", "XRVA"  // Unoffical fields used by modern apps like itunes & Musicbrainz - see "Unofficial Frames Seen in the Wild" on ID3.org
         };
 
@@ -833,6 +833,15 @@ namespace ATL.AudioData.IO
                 string cDesc = StreamUtils.ReadNullTerminatedString(source, frameEncoding); // Content description
                 Frame.ID += "." + cDesc;
                 dataSize -= (int)(source.Position - geoStartOffset);
+            }
+
+            // General Encapsulated Object
+            if (Frame.ID.StartsWith("PRIV"))
+            {
+                long privStartOffset = source.Position;
+                string owner = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
+                Frame.ID += "." + owner;
+                dataSize -= (int)(source.Position - privStartOffset);
             }
 
 
@@ -1778,14 +1787,16 @@ namespace ATL.AudioData.IO
                 frameCode = "COMM";
                 isCommentCode = true;
             }
-            // If frame is a General Encapsulated object, its code has to be broken down ("GEOB.FileName")
-            else if (frameCode.StartsWith("GEO", StringComparison.OrdinalIgnoreCase))
+            // If frame is a General Encapsulated object or a Private Frame,
+            // its code has to be broken down ("GEOB.FileName" / "PRIV.Owner")
+            else if (frameCode.StartsWith("GEO", StringComparison.OrdinalIgnoreCase)
+                     || frameCode.StartsWith("PRIV", StringComparison.OrdinalIgnoreCase))
             {
-                string[] parts = frameCode.Split('.');
-                if (parts.Length > 1)
+                int dotIdx = frameCode.IndexOf('.');
+                if (dotIdx > -1)
                 {
-                    frameCode = parts[0];
-                    actualFrameCode = parts[1];
+                    actualFrameCode = frameCode[(dotIdx + 1)..];
+                    frameCode = frameCode[..dotIdx];
                 }
             }
             // If frame is not standard, it has to be added through TXXX frame ("user-defined text information frame")
@@ -1898,6 +1909,14 @@ namespace ATL.AudioData.IO
                 w.Write(getBomFromEncoding(geoEncoding));
 
                 isExplicitLatin1Encoding = true; // Writing something else than Latin-1 is unsupported for now
+                writeTextEncoding = false;
+                writeNullTermination = true;
+            }
+            else if (frameCode.StartsWith("PRIV")) // Private frame
+            {
+                w.Write(encodeID3v2CharEncoding(tagEncoding));
+                w.Write(tagEncoding.GetBytes(actualFrameCode + '\0')); // Owner
+                
                 writeTextEncoding = false;
                 writeNullTermination = true;
             }

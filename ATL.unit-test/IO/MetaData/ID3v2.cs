@@ -1385,6 +1385,33 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_WAV_PRIV_Existing()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_PRIV_multipleValues.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+            AudioDataManager theFile2 = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            TagHolder theTag = new TagHolder();
+            theTag.Comment = "something";
+            Assert.IsTrue(theFile2.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile2.ReadFromFile(true, true));
+
+            Assert.AreEqual(theFile.ID3v2.AdditionalFields.Count, theFile2.ID3v2.AdditionalFields.Count);
+            foreach (var v in theFile.ID3v2.AdditionalFields)
+            {
+                Assert.IsTrue(theFile2.ID3v2.AdditionalFields.ContainsKey(v.Key));
+                Assert.AreEqual(theFile2.ID3v2.AdditionalFields[v.Key], v.Value);
+            }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_RW_ID3v2_ID3v1()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ID3V1);
