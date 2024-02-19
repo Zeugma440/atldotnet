@@ -833,6 +833,7 @@ namespace ATL.AudioData.IO
                 string cDesc = StreamUtils.ReadNullTerminatedString(source, frameEncoding); // Content description
                 Frame.ID += "." + cDesc;
                 dataSize -= (int)(source.Position - geoStartOffset);
+                frameEncoding = Utils.Latin1Encoding; // Decode encapsulated object using Latin-1
             }
 
             // General Encapsulated Object
@@ -842,6 +843,7 @@ namespace ATL.AudioData.IO
                 string owner = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
                 Frame.ID += "." + owner;
                 dataSize -= (int)(source.Position - privStartOffset);
+                frameEncoding = Utils.Latin1Encoding; // Decode private data using Latin-1
             }
 
 

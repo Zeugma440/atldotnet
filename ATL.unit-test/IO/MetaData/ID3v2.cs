@@ -1385,7 +1385,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_WAV_PRIV_Existing()
+        public void TagIO_RW_ID3v2_PRIV_Existing()
         {
             new ConsoleLogger();
 
