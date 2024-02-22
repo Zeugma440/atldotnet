@@ -48,8 +48,9 @@
 
   <ItemGroup>
     <PackageReference Include="Ude.NetStandard" Version="1.2.0" />
-    <PackageReference Include="Zomp.SyncMethodGenerator" Version="1.0.12" >
-      <ExcludeAssets>Runtime</ExcludeAssets>
+    <PackageReference Include="Zomp.SyncMethodGenerator" Version="1.0.12">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
