@@ -422,8 +422,7 @@ namespace Commons
         public static bool IsHex(string s)
         {
             if (string.IsNullOrEmpty(s)) return false;
-
-            if (s.Length % 2 > 0) return false; // Hex notation always uses two characters for every byte
+            if (1 == s.Length % 2) return false; // Hex notation always uses two characters for every byte
 
             foreach (var t in s)
             {
@@ -432,6 +431,31 @@ namespace Commons
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Parse the given string into an array of bytes, decoding the given string as an hexadecimal value
+        /// </summary>
+        /// <param name="s">String to be parsed</param>
+        /// <returns>Parsed value; empty array if a parsing issue has been encountered</returns>
+        public static byte[] ParseHex(string s)
+        {
+            if (!IsHex(s)) return Array.Empty<byte>();
+
+            byte[] arr = new byte[s.Length >> 1];
+            for (int i = 0; i < s.Length >> 1; ++i)
+            {
+                arr[i] = (byte)((getHexVal(s[i << 1]) << 4) + getHexVal(s[(i << 1) + 1]));
+            }
+
+            return arr;
+        }
+
+        public static int getHexVal(char hex)
+        {
+            int val = (byte)hex;
+            var letters = val < 97 ? 55 : 87;
+            return val - (val < 58 ? 48 : letters);
         }
 
         /// <summary>
@@ -446,14 +470,13 @@ namespace Commons
             string[] parts = s.Split(new char[] { ',', '.' });
 
             if (parts.Length > 2) return 0;
-            else if (1 == parts.Length) return double.Parse(s);
-            else // 2 == parts.Length
-            {
-                double decimalDivisor = Math.Pow(10, parts[1].Length);
-                double result = double.Parse(parts[0]);
-                if (result >= 0) return result + double.Parse(parts[1]) / decimalDivisor;
-                else return result - double.Parse(parts[1]) / decimalDivisor;
-            }
+            if (1 == parts.Length) return double.Parse(s);
+
+            // Other possibilities : 2 == parts.Length
+            double decimalDivisor = Math.Pow(10, parts[1].Length);
+            double result = double.Parse(parts[0]);
+            if (result >= 0) return result + double.Parse(parts[1]) / decimalDivisor;
+            return result - double.Parse(parts[1]) / decimalDivisor;
         }
 
         /// <summary>
@@ -466,7 +489,7 @@ namespace Commons
         public static string GetBytesReadable(long i)
         {
             // Get absolute value
-            long absolute_i = (i < 0 ? -i : i);
+            long absolute_i = i < 0 ? -i : i;
             // Determine the suffix and readable value
             string suffix;
             double readable;

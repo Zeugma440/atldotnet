@@ -123,12 +123,35 @@ namespace ATL.test
             Assert.IsTrue(Utils.IsHex("11"));
             Assert.IsTrue(Utils.IsHex("1A"));
             Assert.IsTrue(Utils.IsHex("AA"));
+            Assert.IsTrue(Utils.IsHex("1a"));
+            Assert.IsTrue(Utils.IsHex("aa"));
 
             Assert.IsFalse(Utils.IsHex(null));
             Assert.IsFalse(Utils.IsHex(""));
             Assert.IsFalse(Utils.IsHex("AAA"));
             Assert.IsFalse(Utils.IsHex("GG"));
             Assert.IsFalse(Utils.IsHex("1§"));
+        }
+
+        [TestMethod]
+        public void Utils_ParseHex()
+        {
+            Assert.AreEqual(83, Utils.ParseHex("53")[0]);
+            Assert.AreEqual(90, Utils.ParseHex("5A")[0]);
+            Assert.AreEqual(90, Utils.ParseHex("5a")[0]);
+            Assert.AreEqual(190, Utils.ParseHex("BE")[0]);
+            Assert.AreEqual(190, Utils.ParseHex("be")[0]);
+            Assert.AreEqual(227, Utils.ParseHex("E3")[0]);
+            Assert.AreEqual(227, Utils.ParseHex("e3")[0]);
+
+            Assert.AreEqual(227, Utils.ParseHex("e3af")[0]);
+            Assert.AreEqual(175, Utils.ParseHex("e3af")[1]);
+
+            Assert.AreEqual(0, Utils.ParseHex(null).Length);
+            Assert.AreEqual(0, Utils.ParseHex("").Length);
+            Assert.AreEqual(0, Utils.ParseHex("aaa").Length);
+            Assert.AreEqual(0, Utils.ParseHex("GG").Length);
+            Assert.AreEqual(0, Utils.ParseHex("1§").Length);
         }
 
         [TestMethod]

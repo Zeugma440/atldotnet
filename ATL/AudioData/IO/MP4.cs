@@ -127,6 +127,19 @@ namespace ATL.AudioData.IO
             public long RelativeOffset;
         }
 
+        private sealed class Uuid
+        {
+            public long position;
+            public uint size;
+            public string key = "";
+            public string value = "";
+
+            public bool isValid()
+            {
+                return 32 == key.Length && Utils.IsHex(key);
+            }
+        }
+
         // Inner technical information to remember for writing purposes
         private uint globalTimeScale;
         private readonly IDictionary<int, int> trackTimescales = new Dictionary<int, int>();
@@ -379,7 +392,7 @@ namespace ATL.AudioData.IO
 
             source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
             byte currentTrakIndex = 0;
-            long trakSize = 0;
+            long trakSize;
 
             // Loop through tracks
             do
@@ -394,6 +407,25 @@ namespace ATL.AudioData.IO
                 }
             }
             while (trakSize > 0);
+
+            // Look for uuid atoms
+            source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            Uuid uuid;
+            do
+            {
+                uuid = readUuid(source.BaseStream);
+                if (uuid.isValid())
+                {
+                    tagExists = true;
+                    SetMetaField("uuid." + uuid.key, uuid.value, readTagParams.ReadAllMetaFrames);
+                    if (readTagParams.PrepareForWriting)
+                    {
+                        structureHelper.AddZone(uuid.position, uuid.size, "uuid." + uuid.key);
+                        structureHelper.AddSize(uuid.position, uuid.size, "uuid." + uuid.key);
+                    }
+                }
+            } while (uuid.size > 0);
+
 
             // Seek audio data segment to calculate mean bitrate 
             // NB : This figure is closer to truth than the "average bitrate" recorded in the esds/m4ds header
@@ -544,16 +576,17 @@ namespace ATL.AudioData.IO
         }
 
         private long readTrack(
-        BinaryReader source,
-        ReadTagParams readTagParams,
-        int currentTrakIndex,
-        IList<MP4Sample> chapterTextTrackSamples,
-        IList<MP4Sample> chapterPictureTrackSamples,
-        IDictionary<int, IList<int>> chapterTrackIndexes,
-        IList<long> mediaTrackOffsets,
-        long trackCounterOffset,
-        long moovPosition,
-        long moovSize)
+            BinaryReader source,
+            ReadTagParams readTagParams,
+            int currentTrakIndex,
+            IList<MP4Sample> chapterTextTrackSamples,
+            IList<MP4Sample> chapterPictureTrackSamples,
+            IDictionary<int, IList<int>> chapterTrackIndexes,
+            IList<long> mediaTrackOffsets,
+            long trackCounterOffset,
+            long moovPosition,
+            long moovSize
+        )
         {
             int mediaTimeScale = 1000;
 
@@ -1224,13 +1257,14 @@ namespace ATL.AudioData.IO
                 if (readTagParams.ReadTag) readTag(source, readTagParams);
             }
 
+            // Look for Xtra WMA fields (specific fields -e.g. rating- inserted by Windows instead of using standard MP4 fields)
             source.BaseStream.Seek(udtaPosition, SeekOrigin.Begin);
             atomSize = navigateToAtom(source, "Xtra");
             if (atomSize > 7)
             {
                 if (readTagParams.PrepareForWriting)
                 {
-                    structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, new byte[0], ZONE_MP4_XTRA);
+                    structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, Array.Empty<byte>(), ZONE_MP4_XTRA);
                 }
                 if (readTagParams.ReadTag) readXtraTag(source, readTagParams, atomSize - 8);
             }
@@ -1270,11 +1304,8 @@ namespace ATL.AudioData.IO
             }
             structureHelper.AddZone(source.BaseStream.Position - 8, (int)iListSize, ILST_CORE_SIGNATURE, ZONE_MP4_ILST);
 
-            if (8 == Size) // Core minimal size
-            {
-                tagExists = false;
-                return;
-            }
+            // Core minimal size
+            if (8 == Size) return;
             tagExists = true;
 
             StringBuilder atomHeaderBuilder = new StringBuilder();
@@ -1286,7 +1317,7 @@ namespace ATL.AudioData.IO
                 atomSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                 atomHeaderBuilder.Append(Utils.Latin1Encoding.GetString(source.ReadBytes(4)));
 
-                uint metadataSize = 0;
+                uint metadataSize;
                 if ("----".Equals(atomHeaderBuilder.ToString())) // Custom text metadata
                 {
                     metadataSize = navigateToAtom(source, "mean"); // "issuer" of the field
@@ -1432,7 +1463,10 @@ namespace ATL.AudioData.IO
             }
         }
 
-        // Called _after_ reading standard MP4 tag
+        /**
+         * Read WMA fields located behind the 'Xtra' atom
+         * NB : Called _after_ reading standard MP4 tag
+         */
         private void readXtraTag(BinaryReader source, ReadTagParams readTagParams, long atomDataSize)
         {
             IList<KeyValuePair<string, string>> wmaFields = WMAHelper.ReadFields(source.BaseStream, atomDataSize);
@@ -1440,6 +1474,9 @@ namespace ATL.AudioData.IO
                 setXtraField(field.Key, field.Value, readTagParams.ReadAllMetaFrames || readTagParams.PrepareForWriting);
         }
 
+        /**
+         * Set a WMA field
+         */
         private void setXtraField(string ID, string data, bool readAllMetaFrames)
         {
             // Finds the ATL field identifier
@@ -1471,8 +1508,33 @@ namespace ATL.AudioData.IO
             }
         }
 
+        private Uuid readUuid(Stream source)
+        {
+            Uuid result = new Uuid();
+            result.position = source.Position - 8;
+            result.size = navigateToAtom(source, "uuid");
+            if (result.size >= 16 + 8)
+            {
+                Span<byte> key = new byte[16];
+                source.Read(key);
+                // Convert key to hex value
+                StringBuilder sbr = new StringBuilder();
+                for (int i = 0; i < 16; i++) sbr.Append(key[i].ToString("X2"));
+                result.key = sbr.ToString();
+                // Read remaining data as UTF-8 string
+                long dataSize = result.size - 8 - 16;
+                if (dataSize > 0)
+                {
+                    Span<byte> data = new byte[dataSize];
+                    source.Read(data);
+                    result.value = Encoding.UTF8.GetString(data);
+                }
+            }
+            return result;
+        }
+
         /// <summary>
-        /// Looks for the atom segment starting with the given key, at the current atom level
+        /// Look for the atom segment starting with the given key, at the current atom level
         /// Returns with Source positioned right after the atom header, on the 1st byte of data
         /// 
         /// Warning : stream must be positioned at the end of a previous atom before being called
@@ -1483,6 +1545,11 @@ namespace ATL.AudioData.IO
         /// If atom not found : 0</returns>
         private uint navigateToAtom(BinaryReader source, string atomKey)
         {
+            return navigateToAtom(source.BaseStream, atomKey);
+        }
+
+        private uint navigateToAtom(Stream source, string atomKey)
+        {
             uint atomSize = 0;
             string atomHeader;
             bool first = true;
@@ -1491,7 +1558,7 @@ namespace ATL.AudioData.IO
 
             do
             {
-                if (!first) source.BaseStream.Seek((long)atomSize - 8, SeekOrigin.Current);
+                if (!first) source.Seek((long)atomSize - 8, SeekOrigin.Current);
                 source.Read(data, 0, 4);
                 atomSize = StreamUtils.DecodeBEUInt32(data);
                 source.Read(data, 0, 4);
@@ -1499,14 +1566,14 @@ namespace ATL.AudioData.IO
 
                 if (first) first = false;
                 if (++iterations > 100) return 0;
-            } while (!atomKey.Equals(atomHeader) && source.BaseStream.Position + atomSize - 16 < source.BaseStream.Length);
+            } while (!atomKey.Equals(atomHeader) && source.Position + atomSize - 16 < source.Length);
 
-            if (source.BaseStream.Position + atomSize - 16 > source.BaseStream.Length)
+            if (source.Position + atomSize - 16 > source.Length)
             {
                 // atom found, but its declared size goes beyond file size
                 if (atomKey.Equals(atomHeader))
                 {
-                    uint actualSize = (uint)(source.BaseStream.Length - source.BaseStream.Position + 16);
+                    uint actualSize = (uint)(source.Length - source.Position + 16);
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "atom " + atomKey + " has been declared with an incorrect size; using its actual size (" + actualSize + " bytes)");
                     return actualSize;
                 }
@@ -1660,6 +1727,10 @@ namespace ATL.AudioData.IO
             {
                 result = writeQTChaptersData(w, Chapters);
             }
+            else if (zone.StartsWith("uuid.")) // UUID atoms
+            {
+                result = writeUuidFrame(tag, zone.Substring(5), w);
+            }
             else if (zone.StartsWith(ZONE_MP4_PHYSICAL_CHUNK)) // Audio chunks
             {
                 result = 1; // Needs to appear active in case their headers need to be rewritten (e.g. chunk enlarged somewhere -> all physical chunks are X bytes ahead of their initial position)
@@ -1739,7 +1810,11 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
+                if (
+                    (fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
+                    && !fieldInfo.MarkedForDeletion
+                    && !fieldInfo.NativeFieldCode.StartsWith("uuid.")
+                    )
                 {
                     writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                     counter++;
@@ -2417,6 +2492,35 @@ namespace ATL.AudioData.IO
 
             w.BaseStream.Seek(trakPos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - trakPos)));
+
+            return 1;
+        }
+        private int writeUuidFrame(TagData tag, string key, BinaryWriter w)
+        {
+            if (key.Length < 32)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "uuid key should be 16-bit long");
+                return 0;
+            }
+            if (!Utils.IsHex(key))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "uuid key should be given in hexadecimal format");
+                return 0;
+            }
+
+            var data = tag.AdditionalFields.FirstOrDefault(f => "uuid." + key == f.NativeFieldCode);
+            if (null == data)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Couldn't find uuid " + key + " inside additionalFields");
+                return 0;
+            }
+
+            byte[] rawData = Encoding.UTF8.GetBytes(data.Value);
+            uint size = 8 + 16 + (uint)rawData.Length;
+            w.Write(size);
+            w.Write(Utils.Latin1Encoding.GetBytes("uuid"));
+            w.Write(Utils.ParseHex(data.NativeFieldCode));
+            w.Write(rawData);
 
             return 1;
         }

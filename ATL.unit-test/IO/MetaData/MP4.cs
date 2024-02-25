@@ -1217,7 +1217,7 @@ namespace ATL.test.IO.MetaData
         {
             new ConsoleLogger();
 
-            String testFileLocation = TestUtils.CopyAsTempTestFile("MP4/xtraField.m4a");
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/xtraField.m4a");
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Read
@@ -1246,6 +1246,66 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual((float)3.0 / 5, theFile.NativeTag.Popularity);
             Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("WM/Publisher"));
             Assert.AreEqual("editor", theFile.NativeTag.AdditionalFields["WM/Publisher"]);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_Uuid()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/uuid.m4a"); // XMP data with botched UUID to test generic UUID support
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("uuid.BEAACFCB97A942E89C71999491E3AFAC"));
+            var data = theFile.NativeTag.AdditionalFields["uuid.BEAACFCB97A942E89C71999491E3AFAC"];
+            Assert.AreEqual(3070, data.Length); // 3072 actual bytes, but 3070 UTF-8 characters
+            Assert.IsTrue(data.StartsWith("<?xpacket begin=\"\ufeff\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>"));
+            Assert.IsTrue(data.EndsWith("<?xpacket end=\"w\"?>"));
+
+            // Write
+            TagHolder theTag = new TagHolder();
+            theTag.Popularity = 3.0f / 5;
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("uuid.BEAACFCB97A942E89C71999491E3AFAC"));
+            data = theFile.NativeTag.AdditionalFields["uuid.BEAACFCB97A942E89C71999491E3AFAC"];
+            Assert.AreEqual(3070, data.Length); // 3072 actual bytes, but 3070 UTF-8 characters
+            Assert.IsTrue(data.StartsWith("<?xpacket begin=\"\ufeff\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>"));
+            Assert.IsTrue(data.EndsWith("<?xpacket end=\"w\"?>"));
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_Xmp()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/xmp.m4a");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            // Write
+            TagHolder theTag = new TagHolder();
+            theTag.Popularity = 3.0f / 5;
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
