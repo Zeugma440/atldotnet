@@ -1,4 +1,5 @@
-﻿using ATL.AudioData;
+﻿using System.Collections.Concurrent;
+using ATL.AudioData;
 using System.Drawing;
 using static ATL.PictureInfo;
 using ATL.AudioData.IO;
@@ -1252,7 +1253,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_MP4_Uuid()
+        public void TagIO_RW_MP4_Uuid_Existing()
         {
             new ConsoleLogger();
 
@@ -1288,7 +1289,46 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_MP4_Xmp()
+        public void TagIO_RW_MP4_Uuid_Empty()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/empty.m4a");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsFalse(theFile.NativeTag.Exists);
+
+            TagHolder theTag = new TagHolder();
+            theTag.AdditionalFields = new Dictionary<string, string>
+            {
+                {"uuid.BEAACFCB97A942E89C71999491E3AFAC", "that's a very long story I'm about to tell you~"}
+            };
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.AreEqual(1, theFile.NativeTag.AdditionalFields.Count);
+            Assert.IsTrue(theFile.NativeTag.AdditionalFields.ContainsKey("uuid.BEAACFCB97A942E89C71999491E3AFAC"));
+            var value = theFile.NativeTag.AdditionalFields["uuid.BEAACFCB97A942E89C71999491E3AFAC"];
+            Assert.AreEqual("that's a very long story I'm about to tell you~", value);
+
+            theTag.tagData.AdditionalFields[0].MarkedForDeletion = true;
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            Assert.AreEqual(0, theFile.NativeTag.AdditionalFields.Count);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_Xmp_Existing()
         {
             new ConsoleLogger();
 

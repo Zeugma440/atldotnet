@@ -8,6 +8,7 @@ using static ATL.ChannelsArrangements;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
 using System.Collections.Concurrent;
+using System.Xml;
 using static ATL.TagData;
 
 namespace ATL.AudioData.IO
@@ -38,6 +39,7 @@ namespace ATL.AudioData.IO
         private static readonly byte[] FILE_HEADER = Utils.Latin1Encoding.GetBytes("ftyp");
 
         private static readonly byte[] ILST_CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
+        private const string UUID_XMP = "BE7ACFCB97A942E89C71999491E3AFAC"; // XMP data unique ID
 
         private const string ZONE_MP4_NOUDTA = "noudta";                // Placeholder for missing 'udta' atom
         private const string ZONE_MP4_NOMETA = "nometa";                // Placeholder for missing 'meta' atom
@@ -49,6 +51,7 @@ namespace ATL.AudioData.IO
         private const string ZONE_MP4_QT_CHAP_TXT_TRAK = "qt_trak_txt"; // Quicktime chapters text track
         private const string ZONE_MP4_QT_CHAP_PIC_TRAK = "qt_trak_pic"; // Quicktime chapters picture track
         private const string ZONE_MP4_QT_CHAP_MDAT = "qt_chap_mdat";    // Quicktime chapters data
+        private const string ZONE_MP4_ADDITIONAL_UUIDS = "uuids";       // Zone to write extra UUIDs
 
         private const string ZONE_MP4_PHYSICAL_CHUNK = "chunk";         // Physical audio chunk referenced from stco or co64
 
@@ -417,11 +420,19 @@ namespace ATL.AudioData.IO
                 if (uuid.isValid())
                 {
                     tagExists = true;
-                    SetMetaField("uuid." + uuid.key, uuid.value, readTagParams.ReadAllMetaFrames);
+                    if (UUID_XMP == uuid.key)
+                    {
+                        var stream = new MemoryStream(Encoding.UTF8.GetBytes(uuid.value));
+                        XmpTag.FromStream(stream, this, readTagParams, stream.Length);
+                    }
+                    else
+                    {
+                        SetMetaField("uuid." + uuid.key, uuid.value, readTagParams.ReadAllMetaFrames);
+                    }
+
                     if (readTagParams.PrepareForWriting)
                     {
                         structureHelper.AddZone(uuid.position, uuid.size, "uuid." + uuid.key);
-                        structureHelper.AddSize(uuid.position, uuid.size, "uuid." + uuid.key);
                     }
                 }
             } while (uuid.size > 0);
@@ -443,6 +454,9 @@ namespace ATL.AudioData.IO
             AudioDataOffset = mdatOffset - 8;
             AudioDataSize = mdatSize;
             bitrate = (int)Math.Round(mdatSize * 8 / calculatedDurationMs * 1000.0, 0);
+
+            // Set zone for new UUIDs to write at the end of the file
+            if (readTagParams.PrepareForWriting) structureHelper.AddZone(AudioDataOffset + AudioDataSize, 0, ZONE_MP4_ADDITIONAL_UUIDS);
 
 
             // == Quicktime chapters management
@@ -625,7 +639,7 @@ namespace ATL.AudioData.IO
             {
                 trackZoneName = "track." + trackId;
                 structureHelper.AddZone(trakPosition, 0, trackZoneName, false);
-                structureHelper.AddCounter(trackCounterOffset, (1 == trackId) ? 2 : 1, trackZoneName);
+                structureHelper.AddCounter(trackCounterOffset, 1 == trackId ? 2 : 1, trackZoneName);
             }
 
             // Detect the track type
@@ -1511,8 +1525,8 @@ namespace ATL.AudioData.IO
         private Uuid readUuid(Stream source)
         {
             Uuid result = new Uuid();
-            result.position = source.Position - 8;
             result.size = navigateToAtom(source, "uuid");
+            result.position = source.Position - 8;
             if (result.size >= 16 + 8)
             {
                 Span<byte> key = new byte[16];
@@ -1727,9 +1741,13 @@ namespace ATL.AudioData.IO
             {
                 result = writeQTChaptersData(w, Chapters);
             }
-            else if (zone.StartsWith("uuid.")) // UUID atoms
+            else if (zone.StartsWith("uuid.")) // Existing UUID atoms
             {
-                result = writeUuidFrame(tag, zone.Substring(5), w);
+                result = writeUuidFrame(tag, zone[5..], w);
+            }
+            else if (zone.StartsWith(ZONE_MP4_ADDITIONAL_UUIDS)) // Extra UUID atoms
+            {
+                result = writeUuidFrames(tag, w);
             }
             else if (zone.StartsWith(ZONE_MP4_PHYSICAL_CHUNK)) // Audio chunks
             {
@@ -2497,32 +2515,55 @@ namespace ATL.AudioData.IO
         }
         private static int writeUuidFrame(TagData tag, string key, BinaryWriter w)
         {
-            if (key.Length < 32)
+            var keyNominal = key.Replace(" ", "");
+            if (keyNominal.Length < 32)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "uuid key should be 16-bit long");
                 return 0;
             }
-            if (!Utils.IsHex(key))
+            if (!Utils.IsHex(keyNominal))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "uuid key should be given in hexadecimal format");
                 return 0;
             }
 
-            var data = tag.AdditionalFields.FirstOrDefault(f => "uuid." + key == f.NativeFieldCode);
+            var data = tag.AdditionalFields.FirstOrDefault(f => "uuid." + keyNominal == f.NativeFieldCode && !f.MarkedForDeletion);
             if (null == data)
             {
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Couldn't find uuid " + key + " inside additionalFields");
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Couldn't find uuid " + keyNominal + " inside additionalFields");
                 return 0;
             }
 
             byte[] rawData = Encoding.UTF8.GetBytes(data.Value);
             uint size = 8 + 16 + (uint)rawData.Length;
-            w.Write(size);
+            w.Write(StreamUtils.EncodeBEUInt32(size));
             w.Write(Utils.Latin1Encoding.GetBytes("uuid"));
-            w.Write(Utils.ParseHex(data.NativeFieldCode));
+            w.Write(Utils.ParseHex(keyNominal));
             w.Write(rawData);
 
             return 1;
+        }
+
+        private int writeUuidFrames(TagData tag, BinaryWriter w)
+        {
+            var existingUuids =
+                structureHelper.ZoneNames
+                    .Where(n => n.StartsWith("uuid.", StringComparison.OrdinalIgnoreCase))
+                    .Select(n => n[5..].Replace(" ", "").ToUpper());
+
+            var extraUuids = tag.AdditionalFields
+                .Where(f => f.TagType.Equals(MetaDataIOFactory.TagType.ANY) || f.TagType.Equals(getImplementedTagType()))
+                .Where(f => !f.MarkedForDeletion)
+                .Where(f => f.NativeFieldCode.StartsWith("uuid.", StringComparison.OrdinalIgnoreCase))
+                .Where(f => !existingUuids.Contains(f.NativeFieldCode[5..].Replace(" ", "").ToUpper()));
+
+            var written = 0;
+            foreach (var data in extraUuids)
+            {
+                written += writeUuidFrame(tag, data.NativeFieldCode[5..], w);
+            }
+
+            return written;
         }
 
         private static uint getMacDateNow()
