@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using ATL.AudioData;
+﻿using ATL.AudioData;
 using System.Drawing;
 using static ATL.PictureInfo;
 using ATL.AudioData.IO;
@@ -1340,6 +1339,10 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
+            var xmpCount = theFile.NativeTag.AdditionalFields.Count(f => f.Key.StartsWith("xmp."));
+            Assert.AreEqual(12, xmpCount);
+
+
             // Write
             TagHolder theTag = new TagHolder();
             theTag.Popularity = 3.0f / 5;
@@ -1347,9 +1350,14 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
+            xmpCount = theFile.NativeTag.AdditionalFields.Count(f => f.Key.StartsWith("xmp."));
+            Assert.AreEqual(12, xmpCount);
+
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
+
+        // TODO empty
 
         [TestMethod]
         public void TagIO_RW_MP4_InvalidValues()

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 using ATL.AudioData.IO;
 using ATL.Logging;
 using Commons;
@@ -16,6 +17,7 @@ namespace ATL.AudioData
         private readonly string displayPrefix;
         private readonly Func<string, bool> isCollection;
         private readonly Func<string, bool> isIndex;
+        private readonly ISet<string> structuralAttributes = new HashSet<string>();
 
         public XmlArray(
             string prefix,
@@ -28,6 +30,11 @@ namespace ATL.AudioData
             this.displayPrefix = displayPrefix;
             this.isCollection = isCollection;
             this.isIndex = isIndex;
+        }
+
+        public void setStructuralAttributes(ISet<string> attrs)
+        {
+            foreach (var attr in attrs) structuralAttributes.Add(attr.ToLower());
         }
 
         public void FromStream(Stream source, MetaDataIO meta, MetaDataIO.ReadTagParams readTagParams, long chunkSize)
@@ -121,6 +128,124 @@ namespace ATL.AudioData
                         break;
                 }
             }
+        }
+
+        public int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
+        {
+            IDictionary<string, string> additionalFields = meta.AdditionalFields;
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                CloseOutput = false,
+                Encoding = Encoding.UTF8
+            };
+
+            var nsKeys = meta.AdditionalFields.Keys.Where(k => k.Contains("xmlns:")).ToHashSet();
+            var namespaces = new Dictionary<string, string>();
+            foreach (var nsKey in nsKeys)
+            {
+                namespaces.Add(nsKey.Split(':')[^1], additionalFields[nsKey]);
+            }
+
+            using XmlWriter writer = XmlWriter.Create(w.BaseStream, settings);
+            writer.WriteStartDocument();
+            string name = prefix;
+            string pfx = null;
+            int pfxIdfx = name.IndexOf(':');
+            if (pfxIdfx > -1)
+            {
+                pfx = name[..pfxIdfx];
+                name = name[(pfxIdfx + 1)..];
+            }
+            if (null == pfx) writer.WriteStartElement(name);
+            else writer.WriteStartElement(pfx, name, namespaces[pfx]);
+
+            // Register all namespaces on the top level element
+            foreach (var ns in namespaces)
+            {
+                writer.WriteAttributeString(ns.Key,
+                    "http://www.w3.org/2000/xmlns/",
+                    ns.Value);
+            }
+
+            // Path notes : key = node path; value = node name
+            Dictionary<string, string> pathNodes = new Dictionary<string, string>();
+            List<string> previousPathNodes = new List<string>();
+            foreach (var key in additionalFields.Keys
+                         .Where(key => key.StartsWith(displayPrefix + "."))
+                         .Where(key => !nsKeys.Contains(key))
+                     )
+            {
+                // Create the list of path nodes
+                List<string> singleNodes = new List<string>(key.Split('.'));
+                singleNodes.RemoveAt(0);// Remove the root node
+                StringBuilder nodePrefix = new StringBuilder();
+                pathNodes.Clear();
+                foreach (string nodeName in singleNodes)
+                {
+                    nodePrefix.Append('.').Append(nodeName);
+                    pathNodes.Add(nodePrefix.ToString(), nodeName);
+                }
+                // Close all terminated (i.e. non present in current path) nodes in reverse order
+                for (int i = previousPathNodes.Count - 2; i >= 0; i--)
+                {
+                    if (!pathNodes.ContainsKey(previousPathNodes[i]))
+                    {
+                        writer.WriteEndElement();
+                    }
+                }
+                // Open all new (i.e. non present in previous path) nodes
+                foreach (string nodePath in pathNodes.Keys)
+                {
+                    if (!previousPathNodes.Contains(nodePath))
+                    {
+                        var subkey = pathNodes[nodePath];
+                        if (subkey.Equals(singleNodes[^1])) continue; // Last node is a leaf, not a node
+
+                        if (subkey.Contains('[')) subkey = subkey[..subkey.IndexOf('[')]; // Remove [x]'s
+
+                        name = subkey;
+                        pfx = null;
+                        pfxIdfx = name.IndexOf(':');
+                        if (pfxIdfx > -1)
+                        {
+                            pfx = name[..pfxIdfx];
+                            name = name[(pfxIdfx + 1)..];
+                        }
+                        if (null == pfx) writer.WriteStartElement(name);
+                        else writer.WriteStartElement(pfx, name, namespaces[pfx]);
+                    }
+                }
+                // Write the last node (=leaf) as a proper value if it does not belong to structural attributes
+                name = singleNodes[^1];
+                pfx = null;
+                pfxIdfx = name.IndexOf(':');
+                if (pfxIdfx > -1)
+                {
+                    pfx = name[..pfxIdfx];
+                    name = name[(pfxIdfx + 1)..];
+                }
+                if (structuralAttributes.Contains(singleNodes[^1].ToLower()))
+                {
+                    if (null == pfx) writer.WriteAttributeString(name, additionalFields[key]);
+                    else writer.WriteAttributeString(pfx, name, namespaces[pfx], additionalFields[key]);
+                }
+                else
+                {
+                    if (null == pfx) writer.WriteElementString(name, additionalFields[key]);
+                    else writer.WriteElementString(pfx, name, namespaces[pfx], additionalFields[key]);
+                }
+
+                previousPathNodes = pathNodes.Keys.ToList();
+            }
+
+            // Close all terminated paths
+            if (previousPathNodes != null)
+                for (int i = previousPathNodes.Count - 2; i >= 0; i--)
+                {
+                    writer.WriteEndElement();
+                }
+
+            return 14;
         }
     }
 }

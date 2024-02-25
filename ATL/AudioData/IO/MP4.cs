@@ -8,6 +8,7 @@ using static ATL.ChannelsArrangements;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Xml;
 using static ATL.TagData;
 
@@ -421,7 +422,7 @@ namespace ATL.AudioData.IO
                     tagExists = true;
                     if (XmpTag.UUID_XMP == uuid.key)
                     {
-                        var stream = new MemoryStream(Encoding.UTF8.GetBytes(uuid.value));
+                        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(uuid.value));
                         XmpTag.FromStream(stream, this, readTagParams, stream.Length);
                     }
                     else
@@ -1831,6 +1832,7 @@ namespace ATL.AudioData.IO
                     (fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
                     && !fieldInfo.MarkedForDeletion
                     && !fieldInfo.NativeFieldCode.StartsWith("uuid.")
+                    && !fieldInfo.NativeFieldCode.StartsWith("xmp.")
                     )
                 {
                     writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
@@ -2512,7 +2514,7 @@ namespace ATL.AudioData.IO
 
             return 1;
         }
-        private static int writeUuidFrame(TagData tag, string key, BinaryWriter w)
+        private int writeUuidFrame(TagData tag, string key, BinaryWriter w)
         {
             var keyNominal = key.Replace(" ", "");
             if (keyNominal.Length < 32)
@@ -2526,19 +2528,32 @@ namespace ATL.AudioData.IO
                 return 0;
             }
 
-            var data = tag.AdditionalFields.FirstOrDefault(f => "uuid." + keyNominal == f.NativeFieldCode && !f.MarkedForDeletion);
-            if (null == data)
+            byte[] data;
+            if (keyNominal.Equals(XmpTag.UUID_XMP, StringComparison.OrdinalIgnoreCase))
             {
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Couldn't find uuid " + keyNominal + " inside additionalFields");
-                return 0;
+                using var mem = new MemoryStream();
+                using var memW = new BinaryWriter(mem);
+                XmpTag.ToStream(memW, this);
+                data = mem.ToArray();
+            }
+            else
+            {
+                var info = tag.AdditionalFields.FirstOrDefault(f =>
+                    "uuid." + keyNominal == f.NativeFieldCode && !f.MarkedForDeletion);
+                if (null == info)
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR,
+                        "Couldn't find uuid " + keyNominal + " inside additionalFields");
+                    return 0;
+                }
+                data = Encoding.UTF8.GetBytes(info.Value);
             }
 
-            byte[] rawData = Encoding.UTF8.GetBytes(data.Value);
-            uint size = 8 + 16 + (uint)rawData.Length;
+            uint size = 8 + 16 + (uint)data.Length;
             w.Write(StreamUtils.EncodeBEUInt32(size));
             w.Write(Utils.Latin1Encoding.GetBytes("uuid"));
             w.Write(Utils.ParseHex(keyNominal));
-            w.Write(rawData);
+            w.Write(data);
 
             return 1;
         }
