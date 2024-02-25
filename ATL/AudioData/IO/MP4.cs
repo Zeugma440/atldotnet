@@ -1543,12 +1543,12 @@ namespace ATL.AudioData.IO
         /// <param name="atomKey">Atom key to look for (e.g. "udta")</param>
         /// <returns>If atom found : raw size of the atom (including the already-read 8-byte header);
         /// If atom not found : 0</returns>
-        private uint navigateToAtom(BinaryReader source, string atomKey)
+        private static uint navigateToAtom(BinaryReader source, string atomKey)
         {
             return navigateToAtom(source.BaseStream, atomKey);
         }
 
-        private uint navigateToAtom(Stream source, string atomKey)
+        private static uint navigateToAtom(Stream source, string atomKey)
         {
             uint atomSize = 0;
             string atomHeader;
@@ -1973,7 +1973,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat)
+        private static void writePictureFrame(BinaryWriter writer, byte[] pictureData, ImageFormat picFormat)
         {
             const int frameFlags = 0;
 
@@ -2043,7 +2043,7 @@ namespace ATL.AudioData.IO
             return xtraTags.Count();
         }
 
-        private int writeNeroChapters(BinaryWriter w, IList<ChapterInfo> chapters)
+        private static int writeNeroChapters(BinaryWriter w, IList<ChapterInfo> chapters)
         {
             if (null == chapters || 0 == chapters.Count) return 0;
 
@@ -2078,7 +2078,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private int writeQTChaptersTref(BinaryWriter w, int qtChapterTextTrackNum, int qtChapterPictureTrackNum, IList<ChapterInfo> chapters)
+        private static int writeQTChaptersTref(BinaryWriter w, int qtChapterTextTrackNum, int qtChapterPictureTrackNum, IList<ChapterInfo> chapters)
         {
             if (null == chapters || 0 == chapters.Count) return 0;
 
@@ -2095,7 +2095,7 @@ namespace ATL.AudioData.IO
             return 1;
         }
 
-        private int writeQTChaptersChap(BinaryWriter w, int qtChapterTextTrackNum, int qtChapterPictureTrackNum, ICollection<ChapterInfo> chapters)
+        private static int writeQTChaptersChap(BinaryWriter w, int qtChapterTextTrackNum, int qtChapterPictureTrackNum, ICollection<ChapterInfo> chapters)
         {
             if (null == chapters || 0 == chapters.Count) return 0;
 
@@ -2118,7 +2118,7 @@ namespace ATL.AudioData.IO
             return 1;
         }
 
-        private int writeQTChaptersData(BinaryWriter w, ICollection<ChapterInfo> chapters)
+        private static int writeQTChaptersData(BinaryWriter w, ICollection<ChapterInfo> chapters)
         {
             if (null == chapters || 0 == chapters.Count) return 0;
 
@@ -2495,7 +2495,7 @@ namespace ATL.AudioData.IO
 
             return 1;
         }
-        private int writeUuidFrame(TagData tag, string key, BinaryWriter w)
+        private static int writeUuidFrame(TagData tag, string key, BinaryWriter w)
         {
             if (key.Length < 32)
             {
