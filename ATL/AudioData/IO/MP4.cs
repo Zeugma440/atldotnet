@@ -39,7 +39,6 @@ namespace ATL.AudioData.IO
         private static readonly byte[] FILE_HEADER = Utils.Latin1Encoding.GetBytes("ftyp");
 
         private static readonly byte[] ILST_CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
-        private const string UUID_XMP = "BE7ACFCB97A942E89C71999491E3AFAC"; // XMP data unique ID
 
         private const string ZONE_MP4_NOUDTA = "noudta";                // Placeholder for missing 'udta' atom
         private const string ZONE_MP4_NOMETA = "nometa";                // Placeholder for missing 'meta' atom
@@ -420,7 +419,7 @@ namespace ATL.AudioData.IO
                 if (uuid.isValid())
                 {
                     tagExists = true;
-                    if (UUID_XMP == uuid.key)
+                    if (XmpTag.UUID_XMP == uuid.key)
                     {
                         var stream = new MemoryStream(Encoding.UTF8.GetBytes(uuid.value));
                         XmpTag.FromStream(stream, this, readTagParams, stream.Length);

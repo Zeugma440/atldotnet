@@ -1,8 +1,8 @@
 ﻿using ATL.AudioData.IO;
-using Commons;
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using Commons;
 
 namespace ATL.AudioData
 {

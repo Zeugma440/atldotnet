@@ -1,114 +1,27 @@
-﻿using Commons;
-using System;
+﻿using System;
+using Commons;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml;
 using static ATL.AudioData.IO.MetaDataIO;
 using System.Linq;
-using ATL.Logging;
 
 namespace ATL.AudioData.IO
 {
     internal static class IXmlTag
     {
         public const string CHUNK_IXML = "iXML";
-
-        private static string getPosition(IEnumerable<string> position)
-        {
-            StringBuilder result = new StringBuilder();
-            bool first = true;
-
-            foreach (string s in position)
-            {
-                if (first)
-                {
-                    first = false;
-                }
-                else
-                {
-                    result.Append(".");
-                }
-                result.Append(s);
-            }
-
-            return result.ToString();
-        }
-
+        
         public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize)
         {
-            IList<string> position = new List<string> { "ixml" };
-            long initialOffset = source.Position;
-            int nbSkipBegin = StreamUtils.SkipValues(source, new[] { 10, 13, 32, 0 }); // Ignore leading CR, LF, whitespace, null
-            source.Seek(initialOffset + chunkSize, SeekOrigin.Begin);
-            int nbSkipEnd = StreamUtils.SkipValuesEnd(source, new[] { 10, 13, 32, 0, 0xFF }); // Ignore ending CR, LF, whitespace, null, 0xFF
-            source.Seek(initialOffset + nbSkipBegin, SeekOrigin.Begin);
-
-            using (MemoryStream mem = new MemoryStream((int)chunkSize - nbSkipBegin - nbSkipEnd))
-            {
-                StreamUtils.CopyStream(source, mem, chunkSize - nbSkipBegin - nbSkipEnd); // Isolate XML structure in a clean memory chunk
-                mem.Seek(0, SeekOrigin.Begin);
-
-                try
-                {
-                    // Try using the declared encoding
-                    readXml(mem, null, position, meta, readTagParams);
-                }
-                catch (Exception e) // Fallback to forcing UTF-8 when the declared encoding is invalid (e.g. "UTF - 8")
-                {
-                    Utils.TraceException(e, Log.LV_DEBUG);
-                    mem.Seek(0, SeekOrigin.Begin);
-                    position = new List<string> { "ixml" };
-                    readXml(mem, Encoding.UTF8, position, meta, readTagParams);
-                }
-            }
-        }
-
-        private static void readXml(Stream mem, Encoding encoding, IList<string> position, MetaDataIO meta, ReadTagParams readTagParams)
-        {
-            bool inList = false;
-            int listDepth = 0;
-            int listCounter = 1;
-
-            using (XmlReader reader = null == encoding ? XmlReader.Create(mem) : XmlReader.Create(new StreamReader(mem, encoding)))
-            {
-                while (reader.Read())
-                {
-                    switch (reader.NodeType)
-                    {
-                        case XmlNodeType.Element: // Element start
-                            string key = reader.Name;
-                            if (inList && reader.Depth == listDepth + 1 && !key.EndsWith("COUNT", StringComparison.OrdinalIgnoreCase))
-                            {
-                                key = key + "[" + listCounter + "]";
-                                listCounter++;
-                            }
-                            if (!key.Equals("BWFXML", StringComparison.OrdinalIgnoreCase)) position.Add(key);
-                            if (!inList && reader.Name.EndsWith("LIST", StringComparison.OrdinalIgnoreCase))
-                            {
-                                inList = true;
-                                listDepth = reader.Depth;
-                                listCounter = 1;
-                            }
-                            break;
-
-                        case XmlNodeType.Text:
-                            if (!string.IsNullOrEmpty(reader.Value))
-                            {
-                                meta.SetMetaField(getPosition(position), reader.Value, readTagParams.ReadAllMetaFrames);
-                            }
-                            break;
-
-                        case XmlNodeType.EndElement: // Element end
-                            position.RemoveAt(position.Count - 1);
-                            if (inList && reader.Name.EndsWith("LIST", StringComparison.OrdinalIgnoreCase))
-                            {
-                                inList = false;
-                            }
-                            break;
-                    }
-                }
-            }
+            XmlArray xmlArray = new XmlArray(
+                "BWFXML", 
+                "ixml",
+                e => e.EndsWith("LIST", StringComparison.OrdinalIgnoreCase),
+                e => e.EndsWith("COUNT", StringComparison.OrdinalIgnoreCase)
+                );
+            xmlArray.FromStream(source, meta, readTagParams, chunkSize);
         }
 
         public static bool IsDataEligible(MetaDataIO meta)
