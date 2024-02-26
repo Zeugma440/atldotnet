@@ -570,7 +570,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private void writeTextFrame(BinaryWriter writer, string frameCode, string text)
+        private static void writeTextFrame(BinaryWriter writer, string frameCode, string text)
         {
             var frameSizePos = writer.BaseStream.Position;
             writer.Write((uint)0); // Frame size placeholder to be rewritten in a few lines
@@ -607,7 +607,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        public void WritePicture(BinaryWriter picW, byte[] pictureData, string mimeType, int pictureTypeCode, string picDescription)
+        public static void WritePicture(BinaryWriter picW, byte[] pictureData, string mimeType, int pictureTypeCode, string picDescription)
         {
             picW.Write(StreamUtils.EncodeBEInt32(pictureTypeCode));
             picW.Write(StreamUtils.EncodeBEInt32(mimeType.Length));

@@ -480,7 +480,7 @@ namespace ATL.AudioData.IO
             return true;
         }
 
-        private object getFormattedRiffChunkSize(long input, bool isRf64)
+        private static object getFormattedRiffChunkSize(long input, bool isRf64)
         {
             if (isRf64) return input;
             return (uint)input;

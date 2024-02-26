@@ -243,7 +243,7 @@ namespace ATL
         /// <summary>
         /// All standard fields, stored according to their code
         /// </summary>
-        protected IDictionary<Field, string> Fields { get; set; }
+        private IDictionary<Field, string> Fields { get; set; }
 
         /// <summary>
         /// Additional fields = non-classic fields
@@ -302,7 +302,7 @@ namespace ATL
             IntegrateValues(tagData);
         }
 
-        private bool isNumeric(Field f) { return numericFields.Contains(f); }
+        private static bool isNumeric(Field f) { return numericFields.Contains(f); }
 
         /// <summary>
         /// Stores a 'classic' metadata value into current TagData object according to its key
@@ -317,7 +317,9 @@ namespace ATL
             {
                 Fields.Remove(key);
             }
-            else switch (key)
+            else
+            {
+                switch (key)
                 {
                     case Field.LYRICS_UNSYNCH:
                         {
@@ -335,13 +337,15 @@ namespace ATL
                         break;
                     case Field.RECORDING_DATE_OR_YEAR:
                         {
-                            if (!Fields.ContainsKey(Field.RECORDING_DATE)) Fields[Field.RECORDING_DATE] = emptyIfZero(value);
+                            if (!Fields.ContainsKey(Field.RECORDING_DATE))
+                                Fields[Field.RECORDING_DATE] = emptyIfZero(value);
                             break;
                         }
                     default:
                         Fields[key] = isNumeric(key) ? emptyIfZero(value) : value;
                         break;
                 }
+            }
         }
 
         /// <summary>
@@ -565,7 +569,7 @@ namespace ATL
                 string trackNumber = Fields[Field.TRACK_NUMBER];
                 string trackTotal = null;
                 string trackNumberTotal;
-                if (trackNumber.Contains("/"))
+                if (trackNumber.Contains('/'))
                 {
                     trackNumberTotal = trackNumber;
                     string[] parts = trackNumber.Split('/');
@@ -595,7 +599,7 @@ namespace ATL
                 string discNumber = Fields[Field.DISC_NUMBER];
                 string discTotal = null;
                 string discNumberTotal;
-                if (discNumber.Contains("/"))
+                if (discNumber.Contains('/'))
                 {
                     discNumberTotal = discNumber;
                     string[] parts = discNumber.Split('/');
@@ -649,7 +653,7 @@ namespace ATL
         /// </summary>
         /// <param name="s">Value to convert</param>
         /// <returns>If null or zero ("0"), empty string (""); else initial value</returns>
-        private string emptyIfZero(string s)
+        private static string emptyIfZero(string s)
         {
             string result = s;
 

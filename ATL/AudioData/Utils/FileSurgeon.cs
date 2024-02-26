@@ -169,15 +169,10 @@ namespace ATL.AudioData.IO
             bool tagExists,
             bool useBuffer)
         {
-            long oldTagSize;
-            long newTagSize;
-            long globalOffsetCorrection;
             long globalCumulativeDelta = 0;
             bool result = true;
-            bool isBuffered;
 
             IList<ZoneRegion> zoneRegions = computeZoneRegions(zones, fullScopeWriter.Length);
-            Stream writer;
 
             displayRegions(zoneRegions);
 
@@ -192,6 +187,9 @@ namespace ATL.AudioData.IO
                 MemoryStream buffer = null;
                 try
                 {
+                    Stream writer;
+                    bool isBuffered;
+                    long globalOffsetCorrection;
                     if (useBuffer && region.IsBufferable)
                     {
                         isBuffered = true;
@@ -221,9 +219,7 @@ namespace ATL.AudioData.IO
 
                     foreach (Zone zone in region.Zones)
                     {
-                        bool isNothing;
-                        oldTagSize = zone.Size;
-                        WriteResult writeResult;
+                        var oldTagSize = zone.Size;
 
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------ ZONE " + zone.Name + (zone.IsReadonly ? " (read-only) " : "") + "@" + zone.Offset);
                         Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Allocating " + Utils.GetBytesReadable(zone.Size));
@@ -231,6 +227,8 @@ namespace ATL.AudioData.IO
                         // Write new tag to a MemoryStream
                         using (var memStream = new MemoryStream((int)Math.Min(zone.Size, int.MaxValue)))
                         {
+                            WriteResult writeResult;
+                            long newTagSize;
                             if (!zone.IsReadonly)
                             {
                                 // DataSizeDelta needs to be incremented to be used by classes that don't use FileStructureHelper (e.g. FLAC)
@@ -275,7 +273,7 @@ namespace ATL.AudioData.IO
                                 newTagSize = oldTagSize;
                             }
                             long delta = newTagSize - oldTagSize;
-                            isNothing = 0 == oldTagSize && 0 == delta; // Avoids unnecessary operations to optimize processing time
+                            var isNothing = 0 == oldTagSize && 0 == delta;
 
                             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "newTagSize : " + Utils.GetBytesReadable(newTagSize));
 
@@ -381,7 +379,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void displayRegions(IList<ZoneRegion> zoneRegions)
+        private static void displayRegions(IList<ZoneRegion> zoneRegions)
         {
             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "========================================");
             Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Found " + zoneRegions.Count + " regions");

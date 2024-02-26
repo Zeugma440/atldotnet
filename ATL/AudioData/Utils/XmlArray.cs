@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
-using System.Xml.Linq;
 using ATL.AudioData.IO;
 using ATL.Logging;
 using Commons;
@@ -139,6 +138,7 @@ namespace ATL.AudioData
                 Encoding = Encoding.UTF8
             };
 
+            // Isolate all namespaces
             var nsKeys = meta.AdditionalFields.Keys.Where(k => k.Contains("xmlns:")).ToHashSet();
             var namespaces = new Dictionary<string, string>();
             foreach (var nsKey in nsKeys)
@@ -239,11 +239,7 @@ namespace ATL.AudioData
             }
 
             // Close all terminated paths
-            if (previousPathNodes != null)
-                for (int i = previousPathNodes.Count - 2; i >= 0; i--)
-                {
-                    writer.WriteEndElement();
-                }
+            for (int i = previousPathNodes.Count - 2; i >= 0; i--) writer.WriteEndElement();
 
             return 14;
         }

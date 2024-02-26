@@ -188,7 +188,7 @@ namespace ATL.AudioData.IO
             return StreamUtils.ArrBeginsWith(data, PSF_FORMAT_TAG);
         }
 
-        private bool readHeader(Stream source, ref PSFHeader header)
+        private static bool readHeader(Stream source, ref PSFHeader header)
         {
             byte[] buffer = new byte[4];
             source.Read(header.FormatTag, 0, 3);
@@ -208,7 +208,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private string readPSFLine(Stream source, Encoding encoding)
+        private static string readPSFLine(Stream source, Encoding encoding)
         {
             long lineStart = source.Position;
             long lineEnd;
@@ -301,7 +301,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private double parsePSFDuration(string durationStr)
+        private static double parsePSFDuration(string durationStr)
         {
             string hStr = "";
             string mStr = "";
@@ -310,49 +310,49 @@ namespace ATL.AudioData.IO
             double result = 0;
 
             // decimal
-            var sepIndex = durationStr.LastIndexOf(".");
-            if (-1 == sepIndex) sepIndex = durationStr.LastIndexOf(",");
+            var sepIndex = durationStr.LastIndexOf('.');
+            if (-1 == sepIndex) sepIndex = durationStr.LastIndexOf(',');
 
             if (-1 != sepIndex)
             {
                 sepIndex++;
                 dStr = durationStr.Substring(sepIndex, durationStr.Length - sepIndex);
-                durationStr = durationStr.Substring(0, Math.Max(0, sepIndex - 1));
+                durationStr = durationStr[..Math.Max(0, sepIndex - 1)];
             }
 
 
             // seconds
-            sepIndex = durationStr.LastIndexOf(":");
+            sepIndex = durationStr.LastIndexOf(':');
 
             sepIndex++;
             sStr = durationStr.Substring(sepIndex, durationStr.Length - sepIndex);
 
-            durationStr = durationStr.Substring(0, Math.Max(0, sepIndex - 1));
+            durationStr = durationStr[..Math.Max(0, sepIndex - 1)];
 
             // minutes
             if (durationStr.Length > 0)
             {
-                sepIndex = durationStr.LastIndexOf(":");
+                sepIndex = durationStr.LastIndexOf(':');
 
                 sepIndex++;
                 mStr = durationStr.Substring(sepIndex, durationStr.Length - sepIndex);
 
-                durationStr = durationStr.Substring(0, Math.Max(0, sepIndex - 1));
+                durationStr = durationStr[..Math.Max(0, sepIndex - 1)];
             }
 
             // hours
             if (durationStr.Length > 0)
             {
-                sepIndex = durationStr.LastIndexOf(":");
+                sepIndex = durationStr.LastIndexOf(':');
 
                 sepIndex++;
                 hStr = durationStr.Substring(sepIndex, durationStr.Length - sepIndex);
             }
 
-            if (dStr != "") result = result + (Int32.Parse(dStr) * 100);
-            if (sStr != "") result = result + (Int32.Parse(sStr) * 1000);
-            if (mStr != "") result = result + (Int32.Parse(mStr) * 60000);
-            if (hStr != "") result = result + (Int32.Parse(hStr) * 3600000);
+            if (dStr != "") result += (int.Parse(dStr) * 100);
+            if (sStr != "") result += (int.Parse(sStr) * 1000);
+            if (mStr != "") result += (int.Parse(mStr) * 60000);
+            if (hStr != "") result += (int.Parse(hStr) * 3600000);
 
             return result;
         }
@@ -368,7 +368,6 @@ namespace ATL.AudioData.IO
 
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
-            bool result = true;
             PSFHeader header = new PSFHeader();
             PSFTag tag = new PSFTag();
 
@@ -394,7 +393,7 @@ namespace ATL.AudioData.IO
             version = header.VersionByte;
             BitRate = AudioDataSize * 8 / Duration;
 
-            return result;
+            return true;
         }
 
         protected override int write(TagData tag, Stream s, string zone)
@@ -447,7 +446,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void writeTextFrame(BinaryWriter writer, string frameCode, string text)
+        private static void writeTextFrame(BinaryWriter writer, string frameCode, string text)
         {
             string[] textLines;
             if (text.Contains(Environment.NewLine))
@@ -457,7 +456,7 @@ namespace ATL.AudioData.IO
             }
             else
             {
-                textLines = new string[1] { text };
+                textLines = new[] { text };
             }
 
             foreach (string s in textLines)
@@ -492,7 +491,7 @@ namespace ATL.AudioData.IO
             foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
                 var fieldCode = fieldInfo.NativeFieldCode.ToLower();
-                if (!fieldCode.StartsWith("_") && !playbackFrames.Contains(fieldCode))
+                if (!fieldCode.StartsWith('_') && !playbackFrames.Contains(fieldCode))
                 {
                     MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
                     emptyFieldInfo.MarkedForDeletion = true;

@@ -8,8 +8,6 @@ using static ATL.ChannelsArrangements;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
 using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
-using System.Xml;
 using static ATL.TagData;
 
 namespace ATL.AudioData.IO
@@ -1423,7 +1421,7 @@ namespace ATL.AudioData.IO
                         {
                             var picturePosition = takePicturePosition(picType);
 
-                            int dataSize = (int)Math.Max(0, pictureSize - 16);
+                            int dataSize = Math.Max(0, (int)pictureSize - 16);
                             if (readTagParams.ReadPictures)
                             {
                                 PictureInfo picInfo = PictureInfo.fromBinaryData(source.BaseStream, dataSize, picType, getImplementedTagType(), dataClass, picturePosition);
@@ -1522,11 +1520,13 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private Uuid readUuid(Stream source)
+        private static Uuid readUuid(Stream source)
         {
-            Uuid result = new Uuid();
-            result.size = navigateToAtom(source, "uuid");
-            result.position = source.Position - 8;
+            Uuid result = new Uuid
+            {
+                size = navigateToAtom(source, "uuid"),
+                position = source.Position - 8
+            };
             if (result.size >= 16 + 8)
             {
                 Span<byte> key = new byte[16];

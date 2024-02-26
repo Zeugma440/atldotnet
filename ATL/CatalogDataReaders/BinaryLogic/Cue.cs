@@ -12,26 +12,22 @@ namespace ATL.CatalogDataReaders.BinaryLogic
     /// </summary>
     public class Cue : ICatalogDataReader
     {
-        private string title = "";
-        private string artist = "";
         private readonly StringBuilder comments = new StringBuilder();
-
-        readonly IList<Track> tracks = new List<Track>();
 
         /// <inheritdoc/>
         public string Path { get; set; }
 
         /// <inheritdoc/>
-        public string Artist => artist;
+        public string Artist { get; private set; } = "";
 
         /// <inheritdoc/>
         public string Comments => comments.ToString();
 
         /// <inheritdoc/>
-        public string Title => title;
+        public string Title { get; private set; } = "";
 
         /// <inheritdoc/>
-        public IList<Track> Tracks => tracks;
+        public IList<Track> Tracks { get; } = new List<Track>();
 
 
         /// <summary>
@@ -47,10 +43,10 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 
         // ----------------------- Specific methods
 
-        private string stripBeginEndQuotes(string s)
+        private static string stripBeginEndQuotes(string s)
         {
             if (s.Length < 2) return s;
-            if (s[0] != '"' || (s[^1] != '"')) return s;
+            if (s[0] != '"' || s[^1] != '"') return s;
 
             return s.Substring(1, s.Length - 2);
         }
@@ -63,7 +59,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
             int minutes = 0;
             int seconds = 0;
 
-            if (timeCode.Contains(":"))
+            if (timeCode.Contains(':'))
             {
                 string[] parts = timeCode.Split(':');
                 if (parts.Length >= 1) frames = int.Parse(parts[^1]);
@@ -114,11 +110,11 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                             }
                             else if ("PERFORMER".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                             {
-                                artist = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
+                                Artist = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
                             }
                             else if ("TITLE".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                             {
-                                title = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
+                                Title = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
                             }
                             else if ("FILE".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                             {
@@ -155,14 +151,14 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                         {
                             if ("TRACK".Equals(firstWord, StringComparison.OrdinalIgnoreCase) && physicalTrack != null)
                             {
-                                if (0 == currentTrack.Artist.Length) currentTrack.Artist = artist;
+                                if (0 == currentTrack.Artist.Length) currentTrack.Artist = Artist;
                                 if (0 == currentTrack.Artist.Length) currentTrack.Artist = physicalTrack.Artist;
                                 if (0 == currentTrack.Title.Length) currentTrack.Title = physicalTrack.Title;
                                 if (0 == currentTrack.Comment.Length) currentTrack.Comment = physicalTrack.Comment;
                                 if (0 == currentTrack.TrackNumber) currentTrack.TrackNumber = physicalTrack.TrackNumber;
-                                currentTrack.Album = title;
+                                currentTrack.Album = Title;
 
-                                tracks.Add(currentTrack);
+                                Tracks.Add(currentTrack);
 
                                 previousTrack = currentTrack;
                                 currentTrack = new Track();
@@ -220,8 +216,8 @@ namespace ATL.CatalogDataReaders.BinaryLogic
 
                     if (currentTrack != null)
                     {
-                        currentTrack.Album = title;
-                        if (0 == currentTrack.Artist.Length) currentTrack.Artist = artist;
+                        currentTrack.Album = Title;
+                        if (0 == currentTrack.Artist.Length) currentTrack.Artist = Artist;
                         if (physicalTrack != null)
                         {
                             if (0 == currentTrack.Artist.Length) currentTrack.Artist = physicalTrack.Artist;
@@ -231,7 +227,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                             currentTrack.DurationMs += physicalTrack.DurationMs - previousTimeOffset;
                         }
 
-                        tracks.Add(currentTrack);
+                        Tracks.Add(currentTrack);
                     }
                 }
             } // using

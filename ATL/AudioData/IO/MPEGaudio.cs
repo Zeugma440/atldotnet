@@ -471,7 +471,7 @@ namespace ATL.AudioData.IO
                 return 0;
         }
 
-        private ChannelsArrangement getChannelsArrangement(FrameHeader frame)
+        private static ChannelsArrangement getChannelsArrangement(FrameHeader frame)
         {
             switch (frame.ModeID)
             {

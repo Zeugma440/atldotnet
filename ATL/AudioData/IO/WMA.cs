@@ -644,7 +644,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private bool isValid(FileData Data)
+        private static bool isValid(FileData Data)
         {
             return Data.Channels > 0 && Data.SampleRate >= 8000 && Data.SampleRate <= 96000;
         }
@@ -699,7 +699,7 @@ namespace ATL.AudioData.IO
             };
         }
 
-        private int writeContentDescription(TagData tag, BinaryWriter w)
+        private static int writeContentDescription(TagData tag, BinaryWriter w)
         {
             var beginPos = w.BaseStream.Position;
             w.Write(WMA_CONTENT_DESCRIPTION_ID);
@@ -903,7 +903,7 @@ namespace ATL.AudioData.IO
             return counter;
         }
 
-        private void writeTextFrame(BinaryWriter writer, string frameCode, string text, bool isExtendedHeader = false, ushort languageIndex = 0, ushort streamNumber = 0)
+        private static void writeTextFrame(BinaryWriter writer, string frameCode, string text, bool isExtendedHeader = false, ushort languageIndex = 0, ushort streamNumber = 0)
         {
             byte[] nameBytes = Encoding.Unicode.GetBytes(frameCode + '\0');
             ushort nameSize = (ushort)nameBytes.Length;
@@ -979,7 +979,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, string mimeType, byte pictureTypeCode, string description, bool isExtendedHeader = false, ushort languageIndex = 0, ushort streamNumber = 0)
+        private static void writePictureFrame(BinaryWriter writer, byte[] pictureData, string mimeType, byte pictureTypeCode, string description, bool isExtendedHeader = false, ushort languageIndex = 0, ushort streamNumber = 0)
         {
             byte[] nameBytes = Encoding.Unicode.GetBytes("WM/Picture" + '\0');
             ushort nameSize = (ushort)nameBytes.Length;

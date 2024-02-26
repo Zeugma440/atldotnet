@@ -830,53 +830,53 @@ namespace ATL
 
         /// FORMATTING UTILITIES
 
-        private string processString(string value)
+        private static string processString(string value)
         {
             return value.Replace(Settings.InternalValueSeparator, Settings.DisplayValueSeparator);
         }
 
-        private DateTime? update(DateTime value)
+        private static DateTime? update(DateTime value)
         {
             if (value > DateTime.MinValue || !Settings.NullAbsentValues) return value;
             else return null;
         }
 
-        private int? update(int value)
+        private static int? update(int value)
         {
             if (value != 0 || !Settings.NullAbsentValues) return value;
             else return null;
         }
 
-        private bool canUseValue(DateTime? value)
+        private static bool canUseValue(DateTime? value)
         {
             return (value.HasValue && (Settings.NullAbsentValues || !value.Equals(DateTime.MinValue)));
         }
-        private bool canUseValue(int? value)
+        private static bool canUseValue(int? value)
         {
             return (value.HasValue && (Settings.NullAbsentValues || value != 0));
         }
 
-        private bool canUseValue(float value)
+        private static bool canUseValue(float value)
         {
             return (Settings.NullAbsentValues || value != 0.0);
         }
 
-        private string toTagValue(DateTime? value)
+        private static string toTagValue(DateTime? value)
         {
             if (canUseValue(value)) return TrackUtils.FormatISOTimestamp(value.Value);
-            else return Settings.NullAbsentValues ? "" : "0";
+            return Settings.NullAbsentValues ? "" : "0";
         }
 
-        private string toTagValue(int? value)
+        private static string toTagValue(int? value)
         {
             if (canUseValue(value)) return value.Value.ToString();
-            else return Settings.NullAbsentValues ? "" : "0";
+            return Settings.NullAbsentValues ? "" : "0";
         }
 
-        private string toTagValue(float value)
+        private static string toTagValue(float value)
         {
             if (canUseValue(value)) return value.ToString();
-            else return Settings.NullAbsentValues ? "" : "0";
+            return Settings.NullAbsentValues ? "" : "0";
         }
     }
 }

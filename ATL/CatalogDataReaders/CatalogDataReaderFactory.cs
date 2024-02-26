@@ -63,7 +63,7 @@ namespace ATL.CatalogDataReaders
             return result;
         }
 
-        private ICatalogDataReader GetCatalogDataReader(int formatId, string path = "")
+        private static ICatalogDataReader GetCatalogDataReader(int formatId, string path = "")
         {
             ICatalogDataReader theReader = null;
 

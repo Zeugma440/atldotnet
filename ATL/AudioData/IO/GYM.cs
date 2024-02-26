@@ -163,7 +163,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private uint calculateDuration(BufferedBinaryReader source, uint loopStart, uint nbLoops)
+        private static uint calculateDuration(BufferedBinaryReader source, uint loopStart, uint nbLoops)
         {
             long streamSize = source.Length;
             uint frameIndex = 0;

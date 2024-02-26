@@ -244,7 +244,7 @@ namespace ATL.AudioData.IO
             return StreamUtils.ArrBeginsWith(data, SPC_FORMAT_TAG);
         }
 
-        private bool readHeader(Stream source, ref SpcHeader header)
+        private static bool readHeader(Stream source, ref SpcHeader header)
         {
             source.Seek(0, SeekOrigin.Begin);
 
@@ -361,7 +361,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private int isText(byte[] data)
+        private static int isText(byte[] data)
         {
             int c = 0;
 
@@ -569,16 +569,16 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private bool canBeWrittenInExtendedMetadata(Field frameType, string value)
+        private static bool canBeWrittenInExtendedMetadata(Field frameType, string value)
         {
             if (frameType == Field.TITLE || frameType == Field.ALBUM || frameType == Field.COMMENT || frameType == Field.ARTIST)
             {
-                return (value.Length > 32);
+                return value.Length > 32;
             }
-            else return true;
+            return true;
         }
 
-        private void writeSubChunk(Stream stream, byte frameCode, string text, Span<byte> buffer)
+        private static void writeSubChunk(Stream stream, byte frameCode, string text, Span<byte> buffer)
         {
             stream.WriteByte(frameCode);
 

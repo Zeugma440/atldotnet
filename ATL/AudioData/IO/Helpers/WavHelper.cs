@@ -86,9 +86,9 @@ namespace ATL.AudioData.IO
         /// <param name="paddingByte">Padding value to use (default : 0x00)</param>
         public static void writeFixedFieldTextValue(string field, IDictionary<string, string> additionalFields, int length, BinaryWriter w, byte paddingByte = 0)
         {
-            if (additionalFields.Keys.Contains(field))
+            if (additionalFields.TryGetValue(field, out var additionalField))
             {
-                writeFixedTextValue(additionalFields[field], length, w, paddingByte);
+                writeFixedTextValue(additionalField, length, w, paddingByte);
             }
             else
             {
@@ -186,7 +186,7 @@ namespace ATL.AudioData.IO
         /// <param name="defaultValue">Default value to use in case no value is found in the given Map; type determines the type of the written value</param>
         public static void writeField100DecimalValue(string field, IDictionary<string, string> additionalFields, BinaryWriter w, object defaultValue)
         {
-            if (additionalFields.Keys.Contains(field))
+            if (additionalFields.ContainsKey(field))
             {
                 if (Utils.IsNumeric(additionalFields[field]))
                 {

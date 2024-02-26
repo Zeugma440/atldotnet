@@ -58,7 +58,7 @@ namespace ATL.AudioData.IO
         private sealed class ChunkHeader
         {
             public string ID;
-            public uint Size = 0;                                            // Chunk size
+            public uint Size;                                            // Chunk size
         }
 
 #pragma warning disable S4487 // Unread "private" fields should be removed
@@ -179,7 +179,7 @@ namespace ATL.AudioData.IO
             return Header.BitRate;
         }
 
-        private int GetSampleRate(HeaderInfo Header)
+        private static int GetSampleRate(HeaderInfo Header)
         {
             int result = (int)Header.SampleRate;
             result = result switch
@@ -195,7 +195,7 @@ namespace ATL.AudioData.IO
         // Get duration from header
         private double getDuration(HeaderInfo Header)
         {
-            return Math.Abs(sizeInfo.FileSize - Header.Size - 20) * 1000.0 / 125.0 / (double)Header.BitRate;
+            return Math.Abs(sizeInfo.FileSize - Header.Size - 20) * 1000.0 / 125.0 / Header.BitRate;
         }
 
         private static bool headerEndReached(ChunkHeader Chunk)
@@ -312,7 +312,7 @@ namespace ATL.AudioData.IO
             if (recordingYear.Length > 0)
             {
                 string recordingDate = Utils.ProtectValue(tag[Field.RECORDING_DATE]);
-                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) map[TagData.Field.RECORDING_DATE] = recordingYear;
+                if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear)) map[Field.RECORDING_DATE] = recordingYear;
             }
 
             // Supported textual fields
@@ -346,7 +346,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void writeTextFrame(Stream s, string frameCode, string text)
+        private static void writeTextFrame(Stream s, string frameCode, string text)
         {
             StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(frameCode));
             byte[] textBytes = Encoding.UTF8.GetBytes(text);
@@ -373,7 +373,7 @@ namespace ATL.AudioData.IO
             foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
                 var fieldCode = fieldInfo.NativeFieldCode.ToLower();
-                if (!fieldCode.StartsWith("_") && !fieldCode.Equals("DSIZ") && !fieldCode.Equals("COMM"))
+                if (!fieldCode.StartsWith('_') && !fieldCode.Equals("DSIZ") && !fieldCode.Equals("COMM"))
                 {
                     MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
                     emptyFieldInfo.MarkedForDeletion = true;

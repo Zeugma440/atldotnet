@@ -29,9 +29,9 @@ namespace ATL.AudioData.IO
 
         private const int VGM_HEADER_SIZE = 256;
 
-        private static readonly int LOOP_COUNT_DEFAULT = 1;              // Default loop count
-        private static readonly int FADEOUT_DURATION_DEFAULT = 10000;    // Default fadeout duration, in milliseconds (10s)
-        private static readonly int RECORDING_RATE_DEFAULT = 60;         // Default playback rate for v1.00 files
+        private const int LOOP_COUNT_DEFAULT = 1; // Default loop count
+        private const int FADEOUT_DURATION_DEFAULT = 10000; // Default fadeout duration, in milliseconds (10s)
+        private const int RECORDING_RATE_DEFAULT = 60; // Default playback rate for v1.00 files
 
         // Standard fields
 
@@ -128,7 +128,6 @@ namespace ATL.AudioData.IO
 
         private bool readHeader(BufferedBinaryReader source, ReadTagParams readTagParams)
         {
-            int nbSamples, loopNbSamples;
             int nbLoops = LOOP_COUNT_DEFAULT;
             int recordingRate = RECORDING_RATE_DEFAULT;
 
@@ -164,11 +163,11 @@ namespace ATL.AudioData.IO
                     }
                 }
 
-                nbSamples = source.ReadInt32();
+                var nbSamples = source.ReadInt32();
 
                 source.Seek(4, SeekOrigin.Current); // Loop offset
 
-                loopNbSamples = source.ReadInt32();
+                var loopNbSamples = source.ReadInt32();
                 if (version >= 0x00000101)
                 {
                     recordingRate = source.ReadInt32();
@@ -248,9 +247,9 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
-        public bool Read(Stream source, SizeInfo sizeNfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeNfo;
+            this.sizeInfo = sizeInfo;
 
             return read(source, readTagParams);
         }
@@ -298,7 +297,7 @@ namespace ATL.AudioData.IO
 
         private int write(TagData tag, BinaryWriter w)
         {
-            byte[] endString = new byte[2] { 0, 0 };
+            byte[] endString = new byte[] { 0, 0 };
             int result = 11; // 11 field to write
             Encoding unicodeEncoder = Encoding.Unicode;
 

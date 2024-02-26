@@ -216,7 +216,7 @@ namespace ATL.AudioData.IO
 
             public void Reset()
             {
-                ID = new byte[0];
+                ID = Array.Empty<byte>();
                 Array.Clear(BitstreamVersion, 0, BitstreamVersion.Length);
                 ChannelMode = 0;
                 SampleRate = 0;
@@ -245,7 +245,7 @@ namespace ATL.AudioData.IO
 
             public void Reset()
             {
-                ID = new byte[0];
+                ID = Array.Empty<byte>();
                 Version = 0;
                 OutputChannelCount = 0;
                 PreSkip = 0;
@@ -364,7 +364,7 @@ namespace ATL.AudioData.IO
         // ---------------------------------------------------------------------------
 
         // Read total samples of OGG file, which are located on the very last page of the file
-        private ulong getSamples(BufferedBinaryReader source)
+        private static ulong getSamples(BufferedBinaryReader source)
         {
             byte typeFlag;
             byte[] lacingValues = new byte[255];
@@ -912,7 +912,7 @@ namespace ATL.AudioData.IO
         }
 
         // Resize the whole in-memory stream once and for all to avoid multiple reallocations while repaging
-        private void resizeMemStream(Stream memStream, int commentsHeader_nbSegments, int setupHeader_nbSegments)
+        private static void resizeMemStream(Stream memStream, int commentsHeader_nbSegments, int setupHeader_nbSegments)
         {
             int nbPageHeaders = (int)Math.Ceiling((commentsHeader_nbSegments + setupHeader_nbSegments) / 255.0);
             int totalPageHeadersSize = (nbPageHeaders * 27) + commentsHeader_nbSegments + setupHeader_nbSegments;
@@ -976,7 +976,7 @@ namespace ATL.AudioData.IO
         }
 
         // Generate CRC32 of created pages
-        private void generatePageCrc32(Stream s, IList<KeyValuePair<long, int>> pageHeaderOffsets)
+        private static void generatePageCrc32(Stream s, IEnumerable<KeyValuePair<long, int>> pageHeaderOffsets)
         {
             byte[] data = Array.Empty<byte>();
             foreach (KeyValuePair<long, int> kv in pageHeaderOffsets)
@@ -991,7 +991,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private bool renumberRemainingPages(Stream s, long nextPageOffset, int writtenPages)
+        private static bool renumberRemainingPages(Stream s, long nextPageOffset, int writtenPages)
         {
             OggPageHeader header = new OggPageHeader();
             byte[] data = Array.Empty<byte>();

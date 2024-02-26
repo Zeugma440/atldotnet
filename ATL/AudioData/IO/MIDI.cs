@@ -443,11 +443,10 @@ namespace ATL.AudioData.IO
 
             // Ready to read header data...
             source.Read(buffer, 0, buffer.Length);
-            if ((buffer[0] != 0) ||
-                (buffer[1] != 0) ||
-                (buffer[2] != 0) ||
-                (buffer[3] != 6)
-                )
+            if (buffer[0] != 0 ||
+                buffer[1] != 0 ||
+                buffer[2] != 0 ||
+                buffer[3] != 6)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Wrong MIDI header");
                 return false;
@@ -469,7 +468,6 @@ namespace ATL.AudioData.IO
 
             tempo = 0; // maybe (hopefully!) overwritten by parseTrack
 
-            int trackSize;
             int nbTrack = 0;
             comment = new StringBuilder("");
 
@@ -491,7 +489,7 @@ namespace ATL.AudioData.IO
 
                 // trackSize is stored in big endian -> needs inverting
                 source.Read(buffer, 0, 4);
-                trackSize = StreamUtils.DecodeBEInt32(buffer);
+                var trackSize = StreamUtils.DecodeBEInt32(buffer);
 
                 byte[] trackData = new byte[trackSize];
                 source.Read(trackData, 0, trackSize);
@@ -954,15 +952,13 @@ namespace ATL.AudioData.IO
         // variable length string to int (+repositioning)
         //---------------------------------------------------------------
         //# TO LOOK AFTER CAREFULLY <.<
-        private int readVarLen(ref byte[] data, ref int pos)
+        private static int readVarLen(ref byte[] data, ref int pos)
         {
-            int value;
-            int c;
-
-            value = data[pos++];
+            int value = data[pos++];
             if ((value & 0x80) != 0)
             {
                 value &= 0x7F;
+                int c;
                 do
                 {
                     c = data[pos++];

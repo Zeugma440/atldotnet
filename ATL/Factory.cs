@@ -72,11 +72,7 @@ namespace ATL
         public IList<Format> getFormatsFromPath(string path)
         {
             IList<Format> result = null;
-            string extension;
-            if (path.Contains("."))
-                extension = path.Substring(path.LastIndexOf('.'), path.Length - path.LastIndexOf('.')).ToLower();
-            else
-                extension = path;
+            string extension = path.Contains('.') ? path.Substring(path.LastIndexOf('.'), path.Length - path.LastIndexOf('.')).ToLower() : path;
 
             if (formatListByExt.TryGetValue(extension, out var formats) && formats != null && formats.Count > 0)
             {

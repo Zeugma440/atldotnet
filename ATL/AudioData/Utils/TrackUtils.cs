@@ -70,7 +70,7 @@ namespace ATL.AudioData
             if (null == str) return 0;
             str = str.Trim();
             if (str.Length < 1) return 0;
-            if (!str.Contains("/")) return 0;
+            if (!str.Contains('/')) return 0;
 
             int delimiterOffset = str.IndexOf('/');
             if (delimiterOffset == str.Length - 1) return 0;
@@ -331,7 +331,7 @@ namespace ATL.AudioData
         /// <returns>Given track or disc number(s) formatted according to the given paramaters</returns>
         public static string FormatWithLeadingZeroes(string value, bool overrideExistingFormat, int existingDigits, bool useLeadingZeroes, string total)
         {
-            if (value.Contains("/"))
+            if (value.Contains('/'))
             {
                 string[] parts = value.Split('/');
                 return formatWithLeadingZeroesInternal(parts[0], overrideExistingFormat, existingDigits, useLeadingZeroes, parts[1]) + "/" + formatWithLeadingZeroesInternal(parts[1], overrideExistingFormat, existingDigits, useLeadingZeroes, parts[1]);
@@ -428,11 +428,11 @@ namespace ATL.AudioData
             StringBuilder result = new StringBuilder();
 
             if (4 == year.Length && Utils.IsNumeric(year)) result.Append(year);
-            if (2 == month.Length && Utils.IsNumeric(month)) result.Append("-").Append(month);
-            if (2 == day.Length && Utils.IsNumeric(day)) result.Append("-").Append(day);
-            if (2 == hour.Length && Utils.IsNumeric(hour)) result.Append("T").Append(hour);
-            if (2 == minutes.Length && Utils.IsNumeric(minutes)) result.Append(":").Append(minutes);
-            if (2 == seconds.Length && Utils.IsNumeric(seconds)) result.Append(":").Append(seconds);
+            if (2 == month.Length && Utils.IsNumeric(month)) result.Append('-').Append(month);
+            if (2 == day.Length && Utils.IsNumeric(day)) result.Append('-').Append(day);
+            if (2 == hour.Length && Utils.IsNumeric(hour)) result.Append('T').Append(hour);
+            if (2 == minutes.Length && Utils.IsNumeric(minutes)) result.Append(':').Append(minutes);
+            if (2 == seconds.Length && Utils.IsNumeric(seconds)) result.Append(':').Append(seconds);
 
             return result.ToString();
         }

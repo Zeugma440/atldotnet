@@ -32,7 +32,7 @@ namespace ATL.AudioData.IO
         private const byte FLAG_LAST_METADATA_BLOCK = 0x80;
 
 
-        private FlacHeader header = null;
+        private FlacHeader header;
 
         private AudioDataManager.SizeInfo sizeInfo;
 
@@ -467,7 +467,7 @@ namespace ATL.AudioData.IO
             w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method
 
             var dataPos = w.BaseStream.Position;
-            vorbisTag.WritePicture(w, picture.PictureData, picture.MimeType, picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), picture.Description);
+            VorbisTag.WritePicture(w, picture.PictureData, picture.MimeType, picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), picture.Description);
 
             var finalPos = w.BaseStream.Position;
             w.BaseStream.Seek(sizePos, SeekOrigin.Begin);

@@ -18,7 +18,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         public const string CHUNK_BEXT = "bext";
 
-        private static readonly byte[] CR_LF = new byte[2] { 13, 10 };
+        private static readonly byte[] CR_LF = { 13, 10 };
 
         /// <summary>
         /// Read a bext chunk from the given source into the given Metadata I/O, using the given read parameters
@@ -28,12 +28,11 @@ namespace ATL.AudioData.IO
         /// <param name="readTagParams">Read parameters to use</param>
         public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams)
         {
-            string str;
             byte[] data = new byte[256];
 
             // Description
             source.Read(data, 0, 256);
-            str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(data).Trim());
+            var str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(data).Trim());
             if (str.Length > 0) meta.SetMetaField("bext.description", str, readTagParams.ReadAllMetaFrames);
 
             // Originator
@@ -147,7 +146,7 @@ namespace ATL.AudioData.IO
 
             // Text values
             string description = Utils.ProtectValue(meta.GeneralDescription);
-            if (0 == description.Length && additionalFields.Keys.Contains("bext.description")) description = additionalFields["bext.description"];
+            if (0 == description.Length && additionalFields.TryGetValue("bext.description", out var field)) description = field;
 
             WavHelper.writeFixedTextValue(description, 256, w);
             WavHelper.writeFixedFieldTextValue("bext.originator", additionalFields, 32, w);
@@ -160,7 +159,7 @@ namespace ATL.AudioData.IO
             WavHelper.writeFieldIntValue("bext.version", additionalFields, w, (ushort)0);
 
             // UMID
-            if (additionalFields.Keys.Contains("bext.UMID"))
+            if (additionalFields.ContainsKey("bext.UMID"))
             {
                 if (Utils.IsHex(additionalFields["bext.UMID"]))
                 {
@@ -196,9 +195,9 @@ namespace ATL.AudioData.IO
 
             // CodingHistory
             byte[] textData = Array.Empty<byte>();
-            if (additionalFields.Keys.Contains("bext.codingHistory"))
+            if (additionalFields.TryGetValue("bext.codingHistory", out var additionalField))
             {
-                textData = Utils.Latin1Encoding.GetBytes(additionalFields["bext.codingHistory"]);
+                textData = Utils.Latin1Encoding.GetBytes(additionalField);
                 w.Write(textData);
             }
             w.Write(new byte[] { 13, 10 } /* CR LF */);

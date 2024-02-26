@@ -33,7 +33,7 @@ namespace ATL.AudioData.IO
                     || e.Equals("RDF:SEQ", StringComparison.OrdinalIgnoreCase)
                     || e.Equals("RDF:ALT", StringComparison.OrdinalIgnoreCase)
                 ),
-                e => false
+                _ => false
             );
             result.setStructuralAttributes(ATTRIBUTES);
             return result;

@@ -23,7 +23,7 @@ namespace ATL.AudioData.IO
     {
         private const string ZONE_TITLE = "title";
 
-        private const String S3M_SIGNATURE = "SCRM";
+        private const string S3M_SIGNATURE = "SCRM";
         private const byte MAX_ROWS = 64;
 
         // Effects
@@ -274,7 +274,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private string getTrackerName(ushort trackerVersion)
+        private static string getTrackerName(ushort trackerVersion)
         {
             string result = "";
 
@@ -433,7 +433,7 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < 32; i++)
             {
                 FChannelTable.Add(bSource.ReadByte());
-                if (FChannelTable[FChannelTable.Count - 1] < 30) nbChannels++;
+                if (FChannelTable[^1] < 30) nbChannels++;
             }
 
             // Pattern table
@@ -482,7 +482,7 @@ namespace ATL.AudioData.IO
             if (ZONE_TITLE.Equals(zone))
             {
                 string title = tag[Field.TITLE];
-                if (title.Length > 28) title = title.Substring(0, 28);
+                if (title.Length > 28) title = title[..28];
                 else if (title.Length < 28) title = Utils.BuildStrictLengthString(title, 28, '\0');
                 StreamUtils.WriteBytes(s, Utils.Latin1Encoding.GetBytes(title));
                 result = 1;
