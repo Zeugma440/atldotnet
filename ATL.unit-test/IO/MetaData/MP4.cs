@@ -1341,7 +1341,9 @@ namespace ATL.test.IO.MetaData
 
             var xmpCount = theFile.NativeTag.AdditionalFields.Count(f => f.Key.StartsWith("xmp."));
             Assert.AreEqual(12, xmpCount);
-
+            var originalFields = theFile.NativeTag.AdditionalFields
+                .Where(f => f.Key.StartsWith(".xmp"))
+                .ToDictionary(field => field.Key, field => field.Value);
 
             // Write
             TagHolder theTag = new TagHolder();
@@ -1349,9 +1351,19 @@ namespace ATL.test.IO.MetaData
 
             Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
             Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
 
-            xmpCount = theFile.NativeTag.AdditionalFields.Count(f => f.Key.StartsWith("xmp."));
-            Assert.AreEqual(12, xmpCount);
+            var newFields = theFile.NativeTag.AdditionalFields
+                .Where(f => f.Key.StartsWith(".xmp"))
+                .ToDictionary(field => field.Key, field => field.Value);
+
+            Assert.AreEqual(originalFields.Count, newFields.Count);
+            foreach (var key in originalFields.Keys)
+            {
+                Assert.IsTrue(newFields.ContainsKey(key));
+                Assert.AreEqual(originalFields[key], newFields[key]);
+            }
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
