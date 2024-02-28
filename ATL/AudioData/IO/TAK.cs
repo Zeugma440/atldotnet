@@ -19,15 +19,6 @@ namespace ATL.AudioData.IO
         private uint bits;
         private uint sampleRate;
 
-        private ChannelsArrangement channelsArrangement;
-        private bool isValid;
-
-        private SizeInfo sizeInfo;
-
-
-        // Public declarations 
-        public double CompressionRatio => getCompressionRatio();
-
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
@@ -45,7 +36,8 @@ namespace ATL.AudioData.IO
         public int BitDepth => bits > 0 ? (int)bits : -1;
         public double Duration { get; private set; }
 
-        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        public ChannelsArrangement ChannelsArrangement { get; private set; }
+
         /// <inheritdoc/>
         public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
@@ -61,7 +53,6 @@ namespace ATL.AudioData.IO
         {
             Duration = 0;
             BitRate = 0;
-            isValid = false;
 
             bits = 0;
             sampleRate = 0;
@@ -80,15 +71,6 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        private double getCompressionRatio()
-        {
-            // Get compression ratio 
-            if (isValid)
-                return sizeInfo.FileSize / (Duration * sampleRate * (channelsArrangement.NbChannels * bits / 8.0) + 44) * 100.0;
-            else
-                return 0;
-        }
-
         public static bool IsValidHeader(byte[] data)
         {
             return StreamUtils.ArrBeginsWith(data, TAK_ID);
@@ -99,12 +81,8 @@ namespace ATL.AudioData.IO
             bool result = false;
             bool doLoop = true;
 
-            long sampleCount = 0;
-            int frameSizeType = -1;
-            uint formatVersion;
             byte[] buffer = new byte[4];
 
-            this.sizeInfo = sizeInfo;
             resetData();
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
@@ -130,17 +108,16 @@ namespace ATL.AudioData.IO
                     {
                         source.Read(buffer, 0, 2);
                         var readData16 = StreamUtils.DecodeUInt16(buffer);
-                        frameSizeType = readData16 & 0x003C; // bits 11 to 14
                         source.Read(buffer, 0, 4);
                         readData32 = StreamUtils.DecodeUInt32(buffer);
                         source.Read(buffer, 0, 4);
                         uint restOfData = StreamUtils.DecodeUInt32(buffer);
 
-                        sampleCount = (readData16 >> 14) + (readData32 << 2) + ((restOfData & 0x00000080) << 34);
+                        var sampleCount = (readData16 >> 14) + (readData32 << 2) + ((restOfData & 0x00000080) << 34);
 
                         sampleRate = ((restOfData >> 4) & 0x03ffff) + 6000; // bits 5 to 22
                         bits = ((restOfData >> 22) & 0x1f) + 8; // bits 23 to 27
-                        channelsArrangement = GuessFromChannelNumber((int)((restOfData >> 27) & 0x0f) + 1); // bits 28 to 31
+                        ChannelsArrangement = GuessFromChannelNumber((int)((restOfData >> 27) & 0x0f) + 1); // bits 28 to 31
 
                         if (sampleCount > 0)
                         {
@@ -152,9 +129,6 @@ namespace ATL.AudioData.IO
                     {
                         source.Read(buffer, 0, 4);
                         readData32 = StreamUtils.DecodeUInt32(buffer);
-                        formatVersion = 100 * ((readData32 & 0x00ff0000) >> 16);
-                        formatVersion += 10 * ((readData32 & 0x0000ff00) >> 8);
-                        formatVersion += readData32 & 0x000000ff;
                     }
 
                     source.Seek(position + metaSize, SeekOrigin.Begin);

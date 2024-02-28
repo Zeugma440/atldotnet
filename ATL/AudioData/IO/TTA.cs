@@ -1,4 +1,3 @@
-using ATL.Logging;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
@@ -21,13 +20,8 @@ namespace ATL.AudioData.IO
         private uint sampleRate;
         private uint samplesSize;
 
-        private bool isValid;
-
-        private SizeInfo sizeInfo;
-
 
         // Public declarations    
-        public double CompressionRatio => getCompressionRatio();
         public uint Samples => samplesSize;
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -64,7 +58,6 @@ namespace ATL.AudioData.IO
         {
             Duration = 0;
             BitRate = 0;
-            isValid = false;
 
             bitsPerSample = 0;
             sampleRate = 0;
@@ -84,15 +77,6 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        private double getCompressionRatio()
-        {
-            // Get compression ratio
-            if (isValid)
-                return (double)sizeInfo.FileSize / (samplesSize * (ChannelsArrangement.NbChannels * bitsPerSample / 8) + 44) * 100;
-            else
-                return 0;
-        }
-
         public static bool IsValidHeader(byte[] data)
         {
             return StreamUtils.ArrBeginsWith(data, TTA_SIGNATURE);
@@ -100,7 +84,6 @@ namespace ATL.AudioData.IO
 
         public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
             resetData();
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
@@ -110,8 +93,6 @@ namespace ATL.AudioData.IO
             source.Read(buffer, 0, buffer.Length);
             if (IsValidHeader(buffer))
             {
-                isValid = true;
-
                 AudioDataOffset = source.Position - 4;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
 

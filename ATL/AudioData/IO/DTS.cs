@@ -11,10 +11,10 @@ namespace ATL.AudioData.IO
 	class DTS : IAudioDataIO
     {
         // Standard bitrates (KBit/s)
-        private static readonly int[] BITRATES = new int[] { 32, 56, 64, 96, 112, 128, 192, 224, 256,
-                                                        320, 384, 448, 512, 576, 640, 768, 960,
-                                                        1024, 1152, 1280, 1344, 1408, 1411, 1472,
-                                                        1536, 1920, 2048, 3072, 3840, 0, -1, 1 };
+        private static readonly int[] BITRATES = { 32, 56, 64, 96, 112, 128, 192, 224, 256,
+                                                 320, 384, 448, 512, 576, 640, 768, 960,
+                                                 1024, 1152, 1280, 1344, 1408, 1411, 1472,
+                                                 1536, 1920, 2048, 3072, 3840, 0, -1, 1 };
 
         // Private declarations
         private uint bits;
@@ -73,7 +73,7 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        private ChannelsArrangement getChannelsArrangement(uint amode, bool isLfePresent)
+        private static ChannelsArrangement getChannelsArrangement(uint amode, bool isLfePresent)
         {
             return amode switch
             {

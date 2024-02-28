@@ -18,6 +18,7 @@ namespace ATL.AudioData.IO
 	partial class FLAC : VorbisTagHolder, IMetaDataIO, IAudioDataIO
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
+#pragma warning disable IDE0051 // Remove unused private members
         private const byte META_STREAMINFO = 0;
         private const byte META_PADDING = 1;
         private const byte META_APPLICATION = 2;
@@ -25,6 +26,7 @@ namespace ATL.AudioData.IO
         private const byte META_VORBIS_COMMENT = 4;
         private const byte META_CUESHEET = 5;
         private const byte META_PICTURE = 6;
+#pragma warning restore IDE0051 // Remove unused private members
 #pragma warning restore S1144 // Unused private types or members should be removed
 
         public static readonly byte[] FLAC_ID = Utils.Latin1Encoding.GetBytes("fLaC");
@@ -42,10 +44,8 @@ namespace ATL.AudioData.IO
         private long initialPaddingOffset, initialPaddingSize;
 
         // Physical info
-        private int sampleRate;
         private byte bitsPerSample;
         private long samples;
-        private ChannelsArrangement channelsArrangement;
 
 
         /// <summary>
@@ -61,13 +61,13 @@ namespace ATL.AudioData.IO
 
         // Handling of the 'isLast' bit
         private long latestBlockOffset = -1;
-        private byte latestBlockType = 0;
+        private byte latestBlockType;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO
-        public int SampleRate => sampleRate; // Sample rate (hz)
+        public int SampleRate { get; private set; }
 
         public bool IsVBR => false;
 
@@ -94,7 +94,7 @@ namespace ATL.AudioData.IO
         public double Duration => getDuration();
 
         /// <inheritdoc/>
-        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        public ChannelsArrangement ChannelsArrangement { get; private set; }
 
         /// <inheritdoc/>
         public Format AudioFormat
@@ -121,7 +121,7 @@ namespace ATL.AudioData.IO
         protected void resetData()
         {
             // Audio data
-            sampleRate = 0;
+            SampleRate = 0;
             bitsPerSample = 0;
             samples = 0;
             initialPaddingOffset = -1;
@@ -145,15 +145,15 @@ namespace ATL.AudioData.IO
         {
             if (header == null) return false;
             return header.IsValid() &&
-                    channelsArrangement.NbChannels > 0 &&
-                    sampleRate > 0 &&
+                    ChannelsArrangement.NbChannels > 0 &&
+                    SampleRate > 0 &&
                     bitsPerSample > 0 &&
                     samples > 0;
         }
 
         private double getDuration()
         {
-            if (isValid() && sampleRate > 0) return samples * 1000.0 / sampleRate;
+            if (isValid() && SampleRate > 0) return samples * 1000.0 / SampleRate;
             return 0;
         }
 
@@ -184,8 +184,8 @@ namespace ATL.AudioData.IO
             // Process data if loaded and header valid    
             if (header.IsValid())
             {
-                channelsArrangement = header.getChannelsArrangement();
-                sampleRate = header.SampleRate;
+                ChannelsArrangement = header.getChannelsArrangement();
+                SampleRate = header.SampleRate;
                 bitsPerSample = header.BitsPerSample;
                 samples = header.NbSamples;
 
@@ -423,7 +423,7 @@ namespace ATL.AudioData.IO
         /// <param name="existingPictureIndex">Current index of existing pictures in use in the main write loop</param>
         /// <param name="targetPictureIndex">Current index of target pictures in use in the main write loop</param>
         /// <returns></returns>
-        private WriteResult processPictureBlock(BinaryWriter w, IList<PictureInfo> existingPictures, IList<PictureInfo> picturesToWrite, ref int existingPictureIndex, ref int targetPictureIndex)
+        private static WriteResult processPictureBlock(BinaryWriter w, IList<PictureInfo> existingPictures, IList<PictureInfo> picturesToWrite, ref int existingPictureIndex, ref int targetPictureIndex)
         {
             bool doWritePicture = false;
             PictureInfo pictureToWrite = null;
@@ -457,7 +457,7 @@ namespace ATL.AudioData.IO
             else return new WriteResult(WriteMode.REPLACE, 0); // Nothing else to write; existing picture blocks are erased
         }
 
-        private int writePictureBlock(BinaryWriter w, PictureInfo picture, bool isLastMetaBlock = false)
+        private static int writePictureBlock(BinaryWriter w, PictureInfo picture, bool isLastMetaBlock = false)
         {
             byte toWrite = META_PICTURE;
             if (isLastMetaBlock) toWrite |= 0x80;

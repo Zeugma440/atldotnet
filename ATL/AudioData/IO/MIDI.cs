@@ -146,7 +146,7 @@ namespace ATL.AudioData.IO
         }
 
         #region instruments
-        private static readonly string[] instrumentList = new string[128] { "Piano",
+        private static readonly string[] instrumentList = new string[] { "Piano",
                                                               "Bright Piano",
                                                               "Electric Grand",
                                                               "Honky Tonk Piano",

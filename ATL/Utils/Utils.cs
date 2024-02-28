@@ -38,16 +38,6 @@ namespace Commons
         }
 
         /// <summary>
-        /// Extract the year from the given DateTime; "" if DateTime is its minimum value
-        /// </summary>
-        /// <param name="value">DateTime to extract the year from</param>
-        /// <returns>Year from the given DateTime, or "" if not set</returns>
-        public static string ProtectYear(DateTime value)
-        {
-            return DateTime.MinValue == value ? "" : value.Year.ToString();
-        }
-
-        /// <summary>
         /// Format the given duration using the following format
         ///     DDdHH:MM:SS.UUUU
         ///     
@@ -81,23 +71,17 @@ namespace Commons
         /// <returns>Formatted duration according to the abovementioned convention</returns>
         public static string EncodeTimecode_s(long seconds)
         {
-            int h;
-            long m;
-            string hStr, mStr, sStr;
-            long s;
-            int d;
-
-            h = Convert.ToInt32(Math.Floor(seconds / 3600.00));
-            m = Convert.ToInt64(Math.Floor((seconds - 3600.00 * h) / 60));
-            s = seconds - 60 * m - 3600 * h;
-            d = Convert.ToInt32(Math.Floor(h / 24.00));
+            var h = Convert.ToInt32(Math.Floor(seconds / 3600.00));
+            var m = Convert.ToInt64(Math.Floor((seconds - 3600.00 * h) / 60));
+            var s = seconds - 60 * m - 3600 * h;
+            var d = Convert.ToInt32(Math.Floor(h / 24.00));
             if (d > 0) h = h - 24 * d;
 
-            hStr = h.ToString();
+            var hStr = h.ToString();
             if (1 == hStr.Length) hStr = "0" + hStr;
-            mStr = m.ToString();
+            var mStr = m.ToString();
             if (1 == mStr.Length) mStr = "0" + mStr;
-            sStr = s.ToString();
+            var sStr = s.ToString();
             if (1 == sStr.Length) sStr = "0" + sStr;
 
             if (d > 0) return d + "d " + hStr + ":" + mStr + ":" + sStr;
@@ -496,27 +480,27 @@ namespace Commons
             if (absolute_i >= 0x1000000000000000) // Exabyte
             {
                 suffix = "EB";
-                readable = (i >> 50);
+                readable = i >> 50;
             }
             else if (absolute_i >= 0x4000000000000) // Petabyte
             {
                 suffix = "PB";
-                readable = (i >> 40);
+                readable = i >> 40;
             }
             else if (absolute_i >= 0x10000000000) // Terabyte
             {
                 suffix = "TB";
-                readable = (i >> 30);
+                readable = i >> 30;
             }
             else if (absolute_i >= 0x40000000) // Gigabyte
             {
                 suffix = "GB";
-                readable = (i >> 20);
+                readable = i >> 20;
             }
             else if (absolute_i >= 0x100000) // Megabyte
             {
                 suffix = "MB";
-                readable = (i >> 10);
+                readable = i >> 10;
             }
             else if (absolute_i >= 0x400) // Kilobyte
             {
@@ -528,7 +512,7 @@ namespace Commons
                 return i.ToString("0 B"); // Byte
             }
             // Divide by 1024 to get fractional value
-            readable = (readable / 1024);
+            readable = readable / 1024;
             // Return formatted number with suffix
             return readable.ToString("0.## ") + suffix;
         }
@@ -550,7 +534,7 @@ namespace Commons
             cdet.Feed(s);
             cdet.DataEnd();
             if (cdet.Charset != null) return getEncodingCached(cdet.Charset);
-            else return Settings.DefaultTextEncoding;
+            return Settings.DefaultTextEncoding;
         }
 
         /// <summary>

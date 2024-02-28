@@ -23,6 +23,7 @@ namespace ATL.AudioData.IO
         private const string XTENDED_TAG = "xid6";
 
 #pragma warning disable S1144 // Unused private types or members should be removed
+#pragma warning disable IDE0051 // Remove unused private members
         private const int REGISTERS_LENGTH = 9;
         private const int AUDIODATA_LENGTH = 65792;
         private const int SPC_RAW_LENGTH = 66048;
@@ -78,6 +79,7 @@ namespace ATL.AudioData.IO
         private const int XID6_TICKSSEC = 64000;                //Number of ticks in a second
         private const int XID6_TICKSMS = 64;                    //Number of ticks in a millisecond
         private const int XID6_MAXLOOP = 9;                 //Max loop times
+#pragma warning restore IDE0051 // Remove unused private members
 #pragma warning restore S1144 // Unused private types or members should be removed
 
 

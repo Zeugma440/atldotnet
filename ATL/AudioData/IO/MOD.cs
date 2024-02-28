@@ -28,6 +28,7 @@ namespace ATL.AudioData.IO
 
         // Effects
 #pragma warning disable S1144 // Unused private types or members should be removed
+#pragma warning disable IDE0051 // Remove unused private members
         private const byte EFFECT_POSITION_JUMP = 0xB;
         private const byte EFFECT_PATTERN_BREAK = 0xD;
         private const byte EFFECT_SET_SPEED = 0xF;
@@ -38,9 +39,10 @@ namespace ATL.AudioData.IO
         private const byte EFFECT_NOTE_DELAY = 0xD;
         private const byte EFFECT_PATTERN_DELAY = 0xE;
         private const byte EFFECT_INVERT_LOOP = 0xF;
+#pragma warning restore IDE0051 // Remove unused private members
 #pragma warning restore S1144 // Unused private types or members should be removed
 
-        private static IDictionary<String, ModFormat> modFormats = new Dictionary<string, ModFormat>()
+        private static readonly IDictionary<string, ModFormat> modFormats = new Dictionary<string, ModFormat>
         {
             { "M.K.", new ModFormat("ProTracker", "M.K.", 31, 4) },
             { "M!K!", new ModFormat("ProTracker", "M!K!", 31, 4) },

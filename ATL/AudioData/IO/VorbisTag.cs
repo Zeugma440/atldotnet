@@ -517,10 +517,7 @@ namespace ATL.AudioData.IO
             }
 
             // Chapters
-            if (Chapters.Count > 0)
-            {
-                writeChapters(w, Chapters);
-            }
+            if (Chapters.Count > 0) writeChapters(w, Chapters);
 
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
@@ -554,7 +551,7 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
-        private void writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters)
+        private static void writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters)
         {
             int chapterIndex = 0;
             foreach (ChapterInfo chapterInfo in chapters)
@@ -586,7 +583,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, string mimeType, int pictureTypeCode, string picDescription)
+        private static void writePictureFrame(BinaryWriter writer, byte[] pictureData, string mimeType, int pictureTypeCode, string picDescription)
         {
             var frameSizePos = writer.BaseStream.Position;
             writer.Write((uint)0); // Frame size placeholder to be rewritten in a few lines

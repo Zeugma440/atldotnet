@@ -21,6 +21,7 @@ namespace ATL.AudioData.IO
         private static readonly byte[] XM_SIGNATURE = Utils.Latin1Encoding.GetBytes("Extended Module: ");
 
 #pragma warning disable S1144 // Unused private types or members should be removed
+#pragma warning disable IDE0051 // Remove unused private members
         // Effects (NB : very close to the MOD effect codes)
         private const byte EFFECT_POSITION_JUMP = 0xB;
         private const byte EFFECT_PATTERN_BREAK = 0xD;
@@ -31,6 +32,7 @@ namespace ATL.AudioData.IO
         private const byte EFFECT_NOTE_CUT = 0xC;
         private const byte EFFECT_NOTE_DELAY = 0xD;
         private const byte EFFECT_PATTERN_DELAY = 0xE;
+#pragma warning restore IDE0051 // Remove unused private members
 #pragma warning restore S1144 // Unused private types or members should be removed
 
 

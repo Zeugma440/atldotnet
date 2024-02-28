@@ -156,7 +156,7 @@ namespace ATL.AudioData.IO
 
         // ********************* Auxiliary functions & voids ********************
 
-        private bool readFooter(BufferedBinaryReader source, TagInfo Tag)
+        private static bool readFooter(BufferedBinaryReader source, TagInfo Tag)
         {
             bool result = true;
 
@@ -478,7 +478,7 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
-        private void writeTextFrame(BinaryWriter writer, string frameCode, string text)
+        private static void writeTextFrame(BinaryWriter writer, string frameCode, string text)
         {
             const int frameFlags = 0x0000;
 
@@ -501,7 +501,7 @@ namespace ATL.AudioData.IO
             writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private void writePictureFrame(BinaryWriter writer, byte[] pictureData, string mimeType, string pictureTypeCode)
+        private static void writePictureFrame(BinaryWriter writer, byte[] pictureData, string mimeType, string pictureTypeCode)
         {
             const int frameFlags = 0x00000002; // This frame contains binary information (essential for pictures)
 

@@ -119,7 +119,7 @@ namespace ATL.AudioData.IO
         /// <param name="defaultValue">Default value to use in case no value is found in the given Map; type determines the type of the written value</param>
         public static void writeFieldIntValue(string field, IDictionary<string, string> additionalFields, BinaryWriter w, object defaultValue)
         {
-            if (additionalFields.Keys.Contains(field))
+            if (additionalFields.ContainsKey(field))
             {
                 if (Utils.IsNumeric(additionalFields[field], true))
                 {

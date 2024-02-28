@@ -155,8 +155,6 @@ namespace ATL.AudioData.IO
             bool isInsideLoop = false;
             double loopDuration = 0;
 
-            IList<S3MEvent> row;
-
             double speed = initialSpeed;
             double tempo = initialTempo;
             double previousTempo = tempo;
@@ -167,7 +165,7 @@ namespace ATL.AudioData.IO
                 {
                     currentPattern = FPatternTable[currentPatternIndex];
 
-                    while ((currentPattern > FPatterns.Count - 1) && (currentPatternIndex < FPatternTable.Count - 1))
+                    while (currentPattern > FPatterns.Count - 1 && currentPatternIndex < FPatternTable.Count - 1)
                     {
                         if (currentPattern.Equals(255)) // End of song / sub-song
                         {
@@ -179,7 +177,7 @@ namespace ATL.AudioData.IO
                     }
                     if (currentPattern > FPatterns.Count - 1) return result;
 
-                    row = FPatterns[currentPattern][currentRow];
+                    var row = FPatterns[currentPattern][currentRow];
                     foreach (S3MEvent theEvent in row) // Events loop
                     {
 
@@ -315,23 +313,18 @@ namespace ATL.AudioData.IO
 
         private void readPatterns(BufferedBinaryReader source, IList<ushort> patternPointers)
         {
-            byte rowNum;
-            byte what;
-            IList<S3MEvent> aRow;
-            IList<IList<S3MEvent>> aPattern;
-
             foreach (ushort pos in patternPointers)
             {
-                aPattern = new List<IList<S3MEvent>>();
+                IList<IList<S3MEvent>> aPattern = new List<IList<S3MEvent>>();
 
                 source.Seek(pos << 4, SeekOrigin.Begin);
-                aRow = new List<S3MEvent>();
-                rowNum = 0;
+                IList<S3MEvent> aRow = new List<S3MEvent>();
+                byte rowNum = 0;
                 source.Seek(2, SeekOrigin.Current); // patternSize
 
                 do
                 {
-                    what = source.ReadByte();
+                    var what = source.ReadByte();
 
                     if (what > 0)
                     {
@@ -372,16 +365,6 @@ namespace ATL.AudioData.IO
 
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
-            bool result = true;
-
-            ushort nbOrders = 0;
-            ushort nbPatterns = 0;
-            ushort nbInstruments = 0;
-            byte nbChannels = 0;
-
-            ushort flags;
-            ushort trackerVersion;
-
             StringBuilder comment = new StringBuilder("");
 
             IList<ushort> patternPointers = new List<ushort>();
@@ -402,12 +385,12 @@ namespace ATL.AudioData.IO
             AudioDataOffset = bSource.Position;
             AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
 
-            nbOrders = bSource.ReadUInt16();
-            nbInstruments = bSource.ReadUInt16();
-            nbPatterns = bSource.ReadUInt16();
+            var nbOrders = bSource.ReadUInt16();
+            var nbInstruments = bSource.ReadUInt16();
+            var nbPatterns = bSource.ReadUInt16();
 
-            flags = bSource.ReadUInt16();
-            trackerVersion = bSource.ReadUInt16();
+            bSource.ReadUInt16();
+            var trackerVersion = bSource.ReadUInt16();
 
             trackerName = getTrackerName(trackerVersion);
 
@@ -433,26 +416,17 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < 32; i++)
             {
                 FChannelTable.Add(bSource.ReadByte());
-                if (FChannelTable[^1] < 30) nbChannels++;
+                // if (FChannelTable[^1] < 30) nbChannels++;
             }
 
             // Pattern table
-            for (int i = 0; i < nbOrders; i++)
-            {
-                FPatternTable.Add(bSource.ReadByte());
-            }
+            for (int i = 0; i < nbOrders; i++) FPatternTable.Add(bSource.ReadByte());
 
             // Instruments pointers
-            for (int i = 0; i < nbInstruments; i++)
-            {
-                instrumentPointers.Add(bSource.ReadUInt16());
-            }
+            for (int i = 0; i < nbInstruments; i++) instrumentPointers.Add(bSource.ReadUInt16());
 
             // Patterns pointers
-            for (int i = 0; i < nbPatterns; i++)
-            {
-                patternPointers.Add(bSource.ReadUInt16());
-            }
+            for (int i = 0; i < nbPatterns; i++) patternPointers.Add(bSource.ReadUInt16());
 
             readInstruments(bSource, instrumentPointers);
             readPatterns(bSource, patternPointers);
@@ -472,7 +446,7 @@ namespace ATL.AudioData.IO
             tagData.IntegrateValue(Field.COMMENT, comment.ToString());
             BitRate = sizeInfo.FileSize / Duration;
 
-            return result;
+            return true;
         }
 
         protected override int write(TagData tag, Stream s, string zone)
