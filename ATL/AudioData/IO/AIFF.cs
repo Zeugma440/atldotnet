@@ -26,6 +26,7 @@ namespace ATL.AudioData.IO
 	class AIFF : MetaDataIO, IAudioDataIO, IMetaDataEmbedder
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
+#pragma warning disable IDE0051 // Remove unused private members
         public static readonly byte[] AIFF_CONTAINER_ID = Utils.Latin1Encoding.GetBytes("FORM");
 
         private const string FORMTYPE_AIFF = "AIFF";
@@ -45,6 +46,7 @@ namespace ATL.AudioData.IO
         private const string CHUNKTYPE_COPYRIGHT = "(c) ";
         private const string CHUNKTYPE_ANNOTATION = "ANNO"; // Use in discouraged by specs in favour of COMT
         private const string CHUNKTYPE_ID3TAG = "ID3 ";
+#pragma warning restore IDE0051 // Remove unused private members
 #pragma warning restore S1144 // Unused private types or members should be removed
 
 
@@ -68,10 +70,6 @@ namespace ATL.AudioData.IO
 
         private string compression;
 
-        private bool isValid;
-
-        private SizeInfo sizeInfo;
-
         private readonly FileStructureHelper id3v2StructureHelper = new FileStructureHelper(false);
 
         // Mapping between AIFx frame codes and ATL frame codes
@@ -85,8 +83,6 @@ namespace ATL.AudioData.IO
 
         // Version code
         public byte VersionID { get; private set; }
-
-        public double CompressionRatio => getCompressionRatio();
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -159,7 +155,6 @@ namespace ATL.AudioData.IO
         {
             Duration = 0;
             BitRate = 0;
-            isValid = false;
             id3v2StructureHelper.Clear();
 
             bits = 0;
@@ -184,14 +179,6 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        private double getCompressionRatio()
-        {
-            // Get compression ratio 
-            if (isValid)
-                return sizeInfo.FileSize / (Duration / 1000.0 * SampleRate * (ChannelsArrangement.NbChannels * bits / 8.0) + 44) * 100;
-            return 0;
-        }
-
         /// <summary>
         /// Reads ID and size of a local chunk and returns them in a dedicated structure _without_ reading nor skipping data
         /// </summary>
@@ -206,7 +193,7 @@ namespace ATL.AudioData.IO
             int previousChunkSizeCorrection = 0;
 
             source.Read(aByte, 0, 1);
-            
+
             // In case previous chunk has a padding byte, seek a suitable first character for an ID
             if (aByte[0] != 40 && !char.IsLetter((char)aByte[0]) && source.Position <= limit)
             {
@@ -253,8 +240,6 @@ namespace ATL.AudioData.IO
 
         public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
-
             return read(source, readTagParams);
         }
 
@@ -281,7 +266,6 @@ namespace ATL.AudioData.IO
 
             // AIFF / AIFC format check
             if (!format.Equals(FORMTYPE_AIFF) && !format.Equals(FORMTYPE_AIFC)) return false;
-            isValid = true;
 
             StringBuilder commentStr = new StringBuilder("");
             long soundChunkPosition = 0;
@@ -499,132 +483,21 @@ namespace ATL.AudioData.IO
             return write(tag, w, zone);
         }
 
-        private int write(TagData tag, BinaryWriter w, string zone)
+        private static int write(TagData tag, BinaryWriter w, string zone)
         {
             int result = 0;
             switch (zone)
             {
                 case CHUNKTYPE_NAME:
-                {
-                    if (tag[Field.TITLE].Length > 0)
                     {
-                        w.Write(Utils.Latin1Encoding.GetBytes(zone));
-                        long sizePos = w.BaseStream.Position;
-                        w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
-
-                        byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.TITLE]);
-                        w.Write(strBytes);
-
-                        // Add the extra padding byte if needed
-                        long finalPos = w.BaseStream.Position;
-                        long paddingSize = (finalPos - sizePos) % 2;
-                        if (paddingSize > 0) w.BaseStream.WriteByte(0);
-
-                        // Write actual tag size
-                        w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                        w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
-
-                        result++;
-                    }
-
-                    break;
-                }
-                case CHUNKTYPE_AUTHOR:
-                {
-                    if (tag[Field.ARTIST].Length > 0)
-                    {
-                        w.Write(Utils.Latin1Encoding.GetBytes(zone));
-                        long sizePos = w.BaseStream.Position;
-                        w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
-
-                        byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.ARTIST]);
-                        w.Write(strBytes);
-
-                        // Add the extra padding byte if needed
-                        long finalPos = w.BaseStream.Position;
-                        long paddingSize = (finalPos - sizePos) % 2;
-                        if (paddingSize > 0) w.BaseStream.WriteByte(0);
-
-                        // Write actual tag size
-                        w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                        w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
-
-                        result++;
-                    }
-
-                    break;
-                }
-                case CHUNKTYPE_COPYRIGHT:
-                {
-                    if (tag[Field.COPYRIGHT].Length > 0)
-                    {
-                        w.Write(Utils.Latin1Encoding.GetBytes(zone));
-                        long sizePos = w.BaseStream.Position;
-                        w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
-
-                        byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.COPYRIGHT]);
-                        w.Write(strBytes);
-
-                        // Add the extra padding byte if needed
-                        long finalPos = w.BaseStream.Position;
-                        long paddingSize = (finalPos - sizePos) % 2;
-                        if (paddingSize > 0) w.BaseStream.WriteByte(0);
-
-                        // Write actual tag size
-                        w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                        w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
-
-                        result++;
-                    }
-
-                    break;
-                }
-                default:
-                {
-                    if (zone.StartsWith(CHUNKTYPE_ANNOTATION))
-                    {
-                        // Do not write anything, this field is deprecated (Cf. specs "Use of this chunk is discouraged within FORM AIFC. The more refined Comments Chunk should be used instead")
-                    }
-                    else if (zone.StartsWith(CHUNKTYPE_COMMENTS))
-                    {
-                        bool applicable = tag[Field.COMMENT].Length > 0;
-                        if (!applicable && tag.AdditionalFields.Count > 0)
+                        if (tag[Field.TITLE].Length > 0)
                         {
-                            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
-                            {
-                                applicable = fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS);
-                                if (applicable) break;
-                            }
-                        }
-
-                        if (applicable)
-                        {
-                            ushort numComments = 0;
-                            w.Write(Utils.Latin1Encoding.GetBytes(CHUNKTYPE_COMMENTS));
+                            w.Write(Utils.Latin1Encoding.GetBytes(zone));
                             long sizePos = w.BaseStream.Position;
-                            w.Write(0); // Placeholder for 'chunk size' field that will be rewritten at the end of the method
-                            w.Write((ushort)0); // Placeholder for 'number of comments' field that will be rewritten at the end of the method
+                            w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
 
-                            // First write generic comments (those linked to the Comment field)
-                            string[] comments = tag[Field.COMMENT].Split(Settings.InternalValueSeparator);
-                            foreach (string s in comments)
-                            {
-                                writeCommentChunk(w, null, s);
-                                numComments++;
-                            }
-
-                            // Then write comments linked to a Marker ID
-                            if (tag.AdditionalFields != null && tag.AdditionalFields.Count > 0)
-                            {
-                                foreach (var fieldInfo in tag.AdditionalFields.Where(fieldInfo => fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS)).Where(fieldInfo => ((CommentData)fieldInfo.SpecificData).MarkerId != 0))
-                                {
-                                    writeCommentChunk(w, fieldInfo);
-                                    numComments++;
-                                }
-                            }
-
-
-                            long dataEndPos = w.BaseStream.Position;
+                            byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.TITLE]);
+                            w.Write(strBytes);
 
                             // Add the extra padding byte if needed
                             long finalPos = w.BaseStream.Position;
@@ -633,15 +506,126 @@ namespace ATL.AudioData.IO
 
                             // Write actual tag size
                             w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                            w.Write(StreamUtils.EncodeBEInt32((int)(dataEndPos - sizePos - 4)));
-                            w.Write(StreamUtils.EncodeBEUInt16(numComments));
+                            w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
 
                             result++;
                         }
-                    }
 
-                    break;
-                }
+                        break;
+                    }
+                case CHUNKTYPE_AUTHOR:
+                    {
+                        if (tag[Field.ARTIST].Length > 0)
+                        {
+                            w.Write(Utils.Latin1Encoding.GetBytes(zone));
+                            long sizePos = w.BaseStream.Position;
+                            w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
+
+                            byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.ARTIST]);
+                            w.Write(strBytes);
+
+                            // Add the extra padding byte if needed
+                            long finalPos = w.BaseStream.Position;
+                            long paddingSize = (finalPos - sizePos) % 2;
+                            if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+                            // Write actual tag size
+                            w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+                            w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
+
+                            result++;
+                        }
+
+                        break;
+                    }
+                case CHUNKTYPE_COPYRIGHT:
+                    {
+                        if (tag[Field.COPYRIGHT].Length > 0)
+                        {
+                            w.Write(Utils.Latin1Encoding.GetBytes(zone));
+                            long sizePos = w.BaseStream.Position;
+                            w.Write(0); // Placeholder for field size that will be rewritten at the end of the method
+
+                            byte[] strBytes = Utils.Latin1Encoding.GetBytes(tag[Field.COPYRIGHT]);
+                            w.Write(strBytes);
+
+                            // Add the extra padding byte if needed
+                            long finalPos = w.BaseStream.Position;
+                            long paddingSize = (finalPos - sizePos) % 2;
+                            if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+                            // Write actual tag size
+                            w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+                            w.Write(StreamUtils.EncodeBEInt32(strBytes.Length));
+
+                            result++;
+                        }
+
+                        break;
+                    }
+                default:
+                    {
+                        if (zone.StartsWith(CHUNKTYPE_ANNOTATION))
+                        {
+                            // Do not write anything, this field is deprecated (Cf. specs "Use of this chunk is discouraged within FORM AIFC. The more refined Comments Chunk should be used instead")
+                        }
+                        else if (zone.StartsWith(CHUNKTYPE_COMMENTS))
+                        {
+                            bool applicable = tag[Field.COMMENT].Length > 0;
+                            if (!applicable && tag.AdditionalFields.Count > 0)
+                            {
+                                foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
+                                {
+                                    applicable = fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS);
+                                    if (applicable) break;
+                                }
+                            }
+
+                            if (applicable)
+                            {
+                                ushort numComments = 0;
+                                w.Write(Utils.Latin1Encoding.GetBytes(CHUNKTYPE_COMMENTS));
+                                long sizePos = w.BaseStream.Position;
+                                w.Write(0); // Placeholder for 'chunk size' field that will be rewritten at the end of the method
+                                w.Write((ushort)0); // Placeholder for 'number of comments' field that will be rewritten at the end of the method
+
+                                // First write generic comments (those linked to the Comment field)
+                                string[] comments = tag[Field.COMMENT].Split(Settings.InternalValueSeparator);
+                                foreach (string s in comments)
+                                {
+                                    writeCommentChunk(w, null, s);
+                                    numComments++;
+                                }
+
+                                // Then write comments linked to a Marker ID
+                                if (tag.AdditionalFields != null && tag.AdditionalFields.Count > 0)
+                                {
+                                    foreach (var fieldInfo in tag.AdditionalFields.Where(fieldInfo => fieldInfo.NativeFieldCode.StartsWith(CHUNKTYPE_COMMENTS)).Where(fieldInfo => ((CommentData)fieldInfo.SpecificData).MarkerId != 0))
+                                    {
+                                        writeCommentChunk(w, fieldInfo);
+                                        numComments++;
+                                    }
+                                }
+
+
+                                long dataEndPos = w.BaseStream.Position;
+
+                                // Add the extra padding byte if needed
+                                long finalPos = w.BaseStream.Position;
+                                long paddingSize = (finalPos - sizePos) % 2;
+                                if (paddingSize > 0) w.BaseStream.WriteByte(0);
+
+                                // Write actual tag size
+                                w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+                                w.Write(StreamUtils.EncodeBEInt32((int)(dataEndPos - sizePos - 4)));
+                                w.Write(StreamUtils.EncodeBEUInt16(numComments));
+
+                                result++;
+                            }
+                        }
+
+                        break;
+                    }
             }
 
             return result;
