@@ -1342,7 +1342,7 @@ namespace ATL.test.IO.MetaData
             var xmpCount = theFile.NativeTag.AdditionalFields.Count(f => f.Key.StartsWith("xmp."));
             Assert.AreEqual(12, xmpCount);
             var originalFields = theFile.NativeTag.AdditionalFields
-                .Where(f => f.Key.StartsWith(".xmp"))
+                .Where(f => f.Key.StartsWith("xmp."))
                 .ToDictionary(field => field.Key, field => field.Value);
 
             // Write
@@ -1355,7 +1355,51 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.Exists);
 
             var newFields = theFile.NativeTag.AdditionalFields
-                .Where(f => f.Key.StartsWith(".xmp"))
+                .Where(f => f.Key.StartsWith("xmp."))
+                .ToDictionary(field => field.Key, field => field.Value);
+
+            Assert.AreEqual(originalFields.Count, newFields.Count);
+            foreach (var key in originalFields.Keys)
+            {
+                if (key.Contains(".xmlns:")) continue; // Namespaces can be attached to a higher node
+                Assert.IsTrue(newFields.ContainsKey(key), "Key not found : " + key);
+                Assert.AreEqual(originalFields[key], newFields[key]);
+            }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_Xmp_Empty()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/empty.m4a");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read nothing
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsFalse(theFile.NativeTag.Exists);
+
+            // Write
+            TagHolder theTag = new TagHolder();
+            var originalFields = new Dictionary<string, string>
+            {
+                { "xmp.rdf:RDF.rdf:Description.xmp:CreateDate", "1904-01-01T00:00Z" },
+                { "xmp.rdf:RDF.rdf:Description.xmpDM:duration.xmpDM:value", "1264768" }
+            };
+            theTag.AdditionalFields = originalFields;
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            var newFields = theFile.NativeTag.AdditionalFields
+                .Where(f => f.Key.StartsWith("xmp."))
+                .Where(f => !f.Key.Contains(".xmlns:", StringComparison.OrdinalIgnoreCase))
                 .ToDictionary(field => field.Key, field => field.Value);
 
             Assert.AreEqual(originalFields.Count, newFields.Count);
@@ -1368,8 +1412,6 @@ namespace ATL.test.IO.MetaData
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
-
-        // TODO empty
 
         [TestMethod]
         public void TagIO_RW_MP4_InvalidValues()

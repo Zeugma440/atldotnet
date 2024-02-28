@@ -39,7 +39,7 @@ namespace ATL.AudioData.IO
             w.Write(0); // Placeholder for chunk size that will be rewritten at the end of the method
 
             XmlArray xmlArray = createXmlArray();
-            int result = xmlArray.ToStream(w, isLittleEndian, meta);
+            int result = xmlArray.ToStream(w, meta);
 
             long finalPos = w.BaseStream.Position;
 

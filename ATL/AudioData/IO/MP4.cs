@@ -884,9 +884,9 @@ namespace ATL.AudioData.IO
             {
                 if (isCurrentTrackFirstAudioTrack) bitrateTypeID = MP4_BITRATE_TYPE_CBR;
                 if (isCurrentTrackFirstChapterTextTrack)
-                    for (int i = 0; i < chapterTextTrackSamples.Count; i++) chapterTextTrackSamples[i].Size = blocByteSizeForAll;
+                    foreach (var tt in chapterTextTrackSamples) tt.Size = blocByteSizeForAll;
                 if (isCurrentTrackFirstChapterPicturesTrack)
-                    for (int i = 0; i < chapterPictureTrackSamples.Count; i++) chapterPictureTrackSamples[i].Size = blocByteSizeForAll;
+                    foreach (var pt in chapterPictureTrackSamples) pt.Size = blocByteSizeForAll;
             }
 
             // Adjust individual sample offsets using their size for those that are in position > 0 in the same chunk
@@ -895,18 +895,18 @@ namespace ATL.AudioData.IO
                 uint currentChunkIndex = uint.MaxValue;
                 uint cumulatedChunkOffset = 0;
 
-                for (int i = 0; i < chapterTextTrackSamples.Count; i++)
+                foreach (var tt in chapterTextTrackSamples)
                 {
-                    if (chapterTextTrackSamples[i].ChunkIndex == currentChunkIndex)
+                    if (tt.ChunkIndex == currentChunkIndex)
                     {
-                        chapterTextTrackSamples[i].RelativeOffset = cumulatedChunkOffset;
+                        tt.RelativeOffset = cumulatedChunkOffset;
                     }
                     else
                     {
-                        currentChunkIndex = chapterTextTrackSamples[i].ChunkIndex;
+                        currentChunkIndex = tt.ChunkIndex;
                         cumulatedChunkOffset = 0;
                     }
-                    cumulatedChunkOffset += chapterTextTrackSamples[i].Size;
+                    cumulatedChunkOffset += tt.Size;
                 }
             }
             if (isCurrentTrackFirstChapterPicturesTrack)
@@ -914,18 +914,18 @@ namespace ATL.AudioData.IO
                 uint currentChunkIndex = uint.MaxValue;
                 uint cumulatedChunkOffset = 0;
 
-                for (int i = 0; i < chapterPictureTrackSamples.Count; i++)
+                foreach (var pt in chapterPictureTrackSamples)
                 {
-                    if (chapterPictureTrackSamples[i].ChunkIndex == currentChunkIndex)
+                    if (pt.ChunkIndex == currentChunkIndex)
                     {
-                        chapterPictureTrackSamples[i].RelativeOffset = cumulatedChunkOffset;
+                        pt.RelativeOffset = cumulatedChunkOffset;
                     }
                     else
                     {
-                        currentChunkIndex = chapterPictureTrackSamples[i].ChunkIndex;
+                        currentChunkIndex = pt.ChunkIndex;
                         cumulatedChunkOffset = 0;
                     }
-                    cumulatedChunkOffset += chapterPictureTrackSamples[i].Size;
+                    cumulatedChunkOffset += pt.Size;
                 }
             }
 
@@ -982,22 +982,17 @@ namespace ATL.AudioData.IO
 
                     if (isCurrentTrackFirstChapterTextTrack) // Use the offsets to find position for QT chapter titles
                     {
-                        for (int j = 0; j < chapterTextTrackSamples.Count; j++)
+                        foreach (var tt in chapterTextTrackSamples)
                         {
-                            if (chapterTextTrackSamples[j].ChunkIndex == i + 1)
-                            {
-                                chapterTextTrackSamples[j].ChunkOffset = valueLong;
-                            }
+                            if (tt.ChunkIndex == i + 1) tt.ChunkOffset = valueLong;
                         }
                     }
                     else if (isCurrentTrackFirstChapterPicturesTrack)
-                    { // Use the offsets to find position for QT chapter pictures
-                        for (int j = 0; j < chapterPictureTrackSamples.Count; j++)
+                    {
+                        // Use the offsets to find position for QT chapter pictures
+                        foreach (var pt in chapterPictureTrackSamples)
                         {
-                            if (chapterPictureTrackSamples[j].ChunkIndex == i + 1)
-                            {
-                                chapterPictureTrackSamples[j].ChunkOffset = valueLong;
-                            }
+                            if (pt.ChunkIndex == i + 1) pt.ChunkOffset = valueLong;
                         }
                     }
                     else if (!isCurrentTrackOtherChapterTrack) // Don't need to save chunks for chapters since they are entirely rewritten
@@ -1024,8 +1019,7 @@ namespace ATL.AudioData.IO
             long trackCounterOffset,
             IList<MP4Sample> chapterTrackSamples,
             int mediaTimeScale,
-            bool isText
-            )
+            bool isText)
         {
             byte[] data32 = new byte[4];
 
@@ -1848,25 +1842,24 @@ namespace ATL.AudioData.IO
             {
                 // Picture has either to be supported, or to come from the right tag standard
                 var doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
+                if (!doWritePicture) doWritePicture = getImplementedTagType() == picInfo.TagType;
                 // It also has not to be marked for deletion
-                doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
+                doWritePicture = doWritePicture && !picInfo.MarkedForDeletion;
 
-                if (doWritePicture)
+                if (!doWritePicture) continue;
+
+                hasPic = true;
+                if (firstPic)
                 {
-                    hasPic = true;
-                    if (firstPic)
-                    {
-                        // If multiples pictures are embedded, the 'covr' atom is not repeated; the 'data' atom is
-                        picHeaderPos = w.BaseStream.Position;
-                        w.Write(0); // Frame size placeholder to be rewritten in a few lines
-                        w.Write(Utils.Latin1Encoding.GetBytes("covr"));
-                        firstPic = false;
-                    }
-
-                    writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat);
-                    counter++;
+                    // If multiples pictures are embedded, the 'covr' atom is not repeated; the 'data' atom is
+                    picHeaderPos = w.BaseStream.Position;
+                    w.Write(0); // Frame size placeholder to be rewritten in a few lines
+                    w.Write(Utils.Latin1Encoding.GetBytes("covr"));
+                    firstPic = false;
                 }
+
+                writePictureFrame(w, picInfo.PictureData, picInfo.NativeFormat);
+                counter++;
             }
             if (hasPic)
             {
@@ -2575,6 +2568,20 @@ namespace ATL.AudioData.IO
             foreach (var data in extraUuids)
             {
                 written += writeUuidFrame(tag, data.NativeFieldCode[5..], w);
+            }
+
+            // Scan AdditionalData for the need to write an XMP UUID if there's none already set
+            if (!existingUuids.Contains(XmpTag.UUID_XMP))
+            {
+                foreach (MetaFieldInfo info in tag.AdditionalFields)
+                {
+                    // XMP data => create the corresponding UUID atom to host it
+                    if (info.NativeFieldCode.StartsWith("xmp.", StringComparison.OrdinalIgnoreCase))
+                    {
+                        written += writeUuidFrame(tag, XmpTag.UUID_XMP, w);
+                        break;
+                    }
+                }
             }
 
             return written;

@@ -16,7 +16,9 @@ namespace ATL.AudioData
         private readonly string displayPrefix;
         private readonly Func<string, bool> isCollection;
         private readonly Func<string, bool> isIndex;
+
         private readonly ISet<string> structuralAttributes = new HashSet<string>();
+        private readonly IDictionary<string, string> defaultNamespaces = new Dictionary<string, string>();
 
         public XmlArray(
             string prefix,
@@ -34,6 +36,11 @@ namespace ATL.AudioData
         public void setStructuralAttributes(ISet<string> attrs)
         {
             foreach (var attr in attrs) structuralAttributes.Add(attr.ToLower());
+        }
+
+        public void setDefaultNamespaces(IDictionary<string, string> defaultNs)
+        {
+            foreach (var ns in defaultNs) defaultNamespaces.Add(ns.Key, ns.Value);
         }
 
         public void FromStream(Stream source, MetaDataIO meta, MetaDataIO.ReadTagParams readTagParams, long chunkSize)
@@ -129,21 +136,31 @@ namespace ATL.AudioData
             }
         }
 
-        public int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
+        public int ToStream(BinaryWriter w, MetaDataIO meta)
         {
-            IDictionary<string, string> additionalFields = meta.AdditionalFields;
+            // Filter eligible additionalData
+            IDictionary<string, string> additionalFields = meta.AdditionalFields
+                .Where(f => f.Key.StartsWith(displayPrefix + ".", StringComparison.OrdinalIgnoreCase))
+                .ToDictionary(x => x.Key, x => x.Value);
+
             XmlWriterSettings settings = new XmlWriterSettings
             {
                 CloseOutput = false,
                 Encoding = Encoding.UTF8
             };
 
-            // Isolate all namespaces
+            // Isolate all namespaces provided as input
             var nsKeys = meta.AdditionalFields.Keys.Where(k => k.Contains("xmlns:")).ToHashSet();
             var namespaces = new Dictionary<string, string>();
             foreach (var nsKey in nsKeys)
             {
                 namespaces.Add(nsKey.Split(':')[^1], additionalFields[nsKey]);
+            }
+
+            // Complete with default namespaces if there's any missing
+            foreach (var defaultNs in defaultNamespaces)
+            {
+                if (!namespaces.ContainsKey(defaultNs.Key)) namespaces.Add(defaultNs.Key, defaultNs.Value);
             }
 
             using XmlWriter writer = XmlWriter.Create(w.BaseStream, settings);
@@ -159,12 +176,31 @@ namespace ATL.AudioData
             if (null == pfx) writer.WriteStartElement(name);
             else writer.WriteStartElement(pfx, name, namespaces[pfx]);
 
-            // Register all namespaces on the top level element
-            foreach (var ns in namespaces)
+            // == Register all useful namespaces on the top level element
+
+            // Detect all used namespaces
+            ISet<string> usedNamespaces = new HashSet<string>();
+            var nonNsKeys = meta.AdditionalFields.Keys.Where(k => !k.Contains("xmlns:")).ToHashSet();
+            foreach (var nsKey in nonNsKeys)
             {
-                writer.WriteAttributeString(ns.Key,
+                var parts = nsKey.Split('.');
+                foreach (var part in parts)
+                {
+                    if (part.Contains(':')) usedNamespaces.Add(part.Split(':')[0]);
+                }
+            }
+
+            // Register them on the top level element
+            foreach (var ns in usedNamespaces)
+            {
+                if (!namespaces.ContainsKey(ns))
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Namespace not found : " + ns);
+                    continue;
+                }
+                writer.WriteAttributeString(ns,
                     "http://www.w3.org/2000/xmlns/",
-                    ns.Value);
+                    namespaces[ns]);
             }
 
             // Path notes : key = node path; value = node name

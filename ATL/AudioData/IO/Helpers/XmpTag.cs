@@ -22,6 +22,22 @@ namespace ATL.AudioData.IO
             "rdf:parseType"
         };
 
+        // Default namespaces
+        private static readonly IDictionary<string, string> DEFAULT_NAMESPACES = new Dictionary<string, string>
+        {
+            {"x", "adobe:ns:meta/"},
+            {"rdf","http://www.w3.org/1999/02/22-rdf-syntax-ns#"},
+            {"xmp","http://ns.adobe.com/xap/1.0/"},
+            {"xmpDM","http://ns.adobe.com/xmp/1.0/DynamicMedia/"},
+            {"stDim","http://ns.adobe.com/xap/1.0/sType/Dimensions#"},
+            {"tiff","http://ns.adobe.com/tiff/1.0/"},
+            {"xmpMM","http://ns.adobe.com/xap/1.0/mm/"},
+            {"stEvt","http://ns.adobe.com/xap/1.0/sType/ResourceEvent#"},
+            {"stRef","http://ns.adobe.com/xap/1.0/sType/ResourceRef#"},
+            {"dc","http://purl.org/dc/elements/1.1/"},
+            {"tmi", "http://titus.com/tmi/1.0/"}
+        };
+
 
         private static XmlArray createXmlArray()
         {
@@ -36,6 +52,7 @@ namespace ATL.AudioData.IO
                 _ => false
             );
             result.setStructuralAttributes(ATTRIBUTES);
+            result.setDefaultNamespaces(DEFAULT_NAMESPACES);
             return result;
         }
 
@@ -57,7 +74,7 @@ namespace ATL.AudioData.IO
             if (wavEmbed) w.Write(0);
 
             XmlArray xmlArray = createXmlArray();
-            int result = xmlArray.ToStream(w, isLittleEndian, meta);
+            int result = xmlArray.ToStream(w, meta);
 
             if (wavEmbed) // Add the extra padding byte if needed
             {
