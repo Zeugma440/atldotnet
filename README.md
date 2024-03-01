@@ -132,7 +132,7 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 (3) : MIDI meta events appear on the track's Comment field
 
-(4) : Support for BEXT, LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops), DISP (displayable objects) and iXML metadata chunks
+(4) : Support for LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops), DISP (displayable objects), BEXT, XMP and iXML metadata chunks
 
 (5) : Reads audio properties only, due to the rarity of sample CAF files tagged with actual metadata
 
@@ -161,7 +161,7 @@ Bitrate, Bit depth (bits per sample), Sample rate, Duration, VBR, Codec family, 
 
 - **Style** : Genre, Beats Per Minute (BPM)
 
-- **Miscellaneous** : Comment, Description, Long description (also known as "Podcast description"), Language, Copyright, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized Lyrics using the LRC or ID3v2 format, RIFF/WAV Cue Chunk, RIFF/WAV Disp Chunk, RIFF/WAV Sample Chunk
+- **Miscellaneous** : Comment, Description, Long description (also known as "Podcast description"), Language, Copyright, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized Lyrics using the LRC or ID3v2 format
 
 
 #### Custom metadata
@@ -174,9 +174,9 @@ NB : Most metadata will be read "as is", with minimal alteration. If your file h
 #### Specific industry standards
 
 ATL supports the following specific industry standards :
-- Broadcast wave / BEXT
-- Broadcast wave / iXML
-- XMP
+- Broadcast wave / BEXT for WAV files
+- Broadcast wave / iXML for WAV files
+- XMP for MP4/M4A and WAV files
 
 
 ### SUPPORTED PLAYLISTS FORMATS
