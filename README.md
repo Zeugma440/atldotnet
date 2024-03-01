@@ -161,15 +161,22 @@ Bitrate, Bit depth (bits per sample), Sample rate, Duration, VBR, Codec family, 
 
 - **Style** : Genre, Beats Per Minute (BPM)
 
-- **Miscellaneous** : Comment, Description, Long description (also known as "Podcast description"), Language, Copyright, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized Lyrics using the LRC or ID3v2 format
+- **Miscellaneous** : Comment, Description, Long description (also known as "Podcast description"), Language, Copyright, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized Lyrics using the LRC or ID3v2 format, RIFF/WAV Cue Chunk, RIFF/WAV Disp Chunk, RIFF/WAV Sample Chunk
 
 
 #### Custom metadata
 
-Any other field that might be in the tag is readable __and__ editable by ATL
-
+Any other field that might be in the tag is readable __and__ editable by ATL. More information can be found on the [dedicated page](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-non-standard-fields)
 
 NB : Most metadata will be read "as is", with minimal alteration. If your file has invalid tags (e.g. chapter start timecode located after file duration), ATL will give you back that information without trying to auto-correct it.
+
+
+#### Specific industry standards
+
+ATL supports the following specific industry standards :
+- Broadcast wave / BEXT
+- Broadcast wave / iXML
+- XMP
 
 
 ### SUPPORTED PLAYLISTS FORMATS
@@ -187,7 +194,7 @@ CUE
 
 ## What is the roadmap of ATL.NET ?
 
-* Support for Broadcast wave metadata : aXML and XMP
+* Support for Broadcast wave metadata : aXML and CART
 * Support for other audio file formats : Speex
 * Connectors to __other library file formats__ (e.g. iTunes)
 
