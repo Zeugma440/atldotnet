@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Commons;
 using static ATL.AudioData.IO.MetaDataIO;
 
 namespace ATL.AudioData.IO
@@ -26,16 +27,24 @@ namespace ATL.AudioData.IO
         private static readonly IDictionary<string, string> DEFAULT_NAMESPACES = new Dictionary<string, string>
         {
             {"x", "adobe:ns:meta/"},
+            {"xml", "http://www.w3.org/XML/1998/namespace"},
             {"rdf","http://www.w3.org/1999/02/22-rdf-syntax-ns#"},
             {"xmp","http://ns.adobe.com/xap/1.0/"},
             {"xmpDM","http://ns.adobe.com/xmp/1.0/DynamicMedia/"},
+            {"xmpRights","http://ns.adobe.com/xap/1.0/rights/"},
             {"stDim","http://ns.adobe.com/xap/1.0/sType/Dimensions#"},
             {"tiff","http://ns.adobe.com/tiff/1.0/"},
             {"xmpMM","http://ns.adobe.com/xap/1.0/mm/"},
             {"stEvt","http://ns.adobe.com/xap/1.0/sType/ResourceEvent#"},
             {"stRef","http://ns.adobe.com/xap/1.0/sType/ResourceRef#"},
+            {"Iptc4xmpCore","http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/"},
+            {"Iptc4xmpExt","http://iptc.org/std/Iptc4xmpExt/2008-02-29/"},
             {"dc","http://purl.org/dc/elements/1.1/"},
-            {"tmi", "http://titus.com/tmi/1.0/"}
+            {"asf","http://ns.adobe.com/asf/1.0/"},
+            {"tmi", "http://titus.com/tmi/1.0/"},
+            {"photoshop","http://ns.adobe.com/photoshop/1.0/"},
+            {"plus","http://ns.useplus.org/ldf/xmp/1.0/"},
+            {"adid", "http://ns.ad-id.org/adid/1.0/"}
         };
 
 
@@ -69,6 +78,8 @@ namespace ATL.AudioData.IO
 
         public static int ToStream(BinaryWriter w, MetaDataIO meta, bool isLittleEndian = false, bool wavEmbed = false)
         {
+            if (wavEmbed) w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_XMP));
+
             long sizePos = w.BaseStream.Position;
             // Placeholder for chunk size that will be rewritten at the end of the method
             if (wavEmbed) w.Write(0);
