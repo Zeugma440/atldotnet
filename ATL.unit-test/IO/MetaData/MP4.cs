@@ -1340,7 +1340,7 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(theFile.NativeTag.Exists);
 
             var xmpCount = theFile.NativeTag.AdditionalFields.Count(f => f.Key.StartsWith("xmp."));
-            Assert.AreEqual(12, xmpCount);
+            Assert.AreEqual(7, xmpCount); // Without namespaces
             var originalFields = theFile.NativeTag.AdditionalFields
                 .Where(f => f.Key.StartsWith("xmp."))
                 .ToDictionary(field => field.Key, field => field.Value);
@@ -1361,7 +1361,6 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(originalFields.Count, newFields.Count);
             foreach (var key in originalFields.Keys)
             {
-                if (key.Contains(".xmlns:")) continue; // Namespaces can be attached to a higher node
                 Assert.IsTrue(newFields.ContainsKey(key), "Key not found : " + key);
                 Assert.AreEqual(originalFields[key], newFields[key]);
             }

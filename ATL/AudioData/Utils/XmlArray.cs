@@ -123,7 +123,8 @@ namespace ATL.AudioData
                             for (int i = 0; i < reader.AttributeCount; i++)
                             {
                                 reader.MoveToAttribute(i);
-                                if (!string.IsNullOrEmpty(reader.Value))
+                                // Don't show namespaces as metadata for simplicity's sake
+                                if (!string.IsNullOrEmpty(reader.Value) && !reader.Name.StartsWith("xmlns:"))
                                 {
                                     meta.SetMetaField(string.Join(".", position.ToArray().Reverse()) + here + "." + reader.Name, reader.Value, readTagParams.ReadAllMetaFrames);
                                 }
