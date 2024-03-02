@@ -207,10 +207,12 @@ namespace ATL.AudioData
             // Path notes : key = node path; value = node name
             Dictionary<string, string> pathNodes = new Dictionary<string, string>();
             List<string> previousPathNodes = new List<string>();
+            Stack<string> openedNodes = new Stack<string>();
+            var valuesWritten = 0;
             foreach (var key in additionalFields.Keys
                          .Where(key => key.StartsWith(displayPrefix + "."))
                          .Where(key => !nsKeys.Contains(key))
-                     )
+                    )
             {
                 // Create the list of path nodes
                 List<string> singleNodes = new List<string>(key.Split('.'));
@@ -222,27 +224,34 @@ namespace ATL.AudioData
                     nodePrefix.Append('.').Append(nodeName);
                     pathNodes.Add(nodePrefix.ToString(), nodeName);
                 }
-                // Close all terminated (i.e. non present in current path) nodes in reverse order
-                for (int i = previousPathNodes.Count - 2; i >= 0; i--)
+
+                // Close all terminated (i.e. previously opened and not present in current path) nodes in reverse order
+                if (openedNodes.Count > 0)
                 {
-                    if (!pathNodes.ContainsKey(previousPathNodes[i]))
+                    var openedNode = openedNodes.Peek();
+                    while (!pathNodes.ContainsKey(openedNode))
                     {
                         writer.WriteEndElement();
+                        openedNodes.Pop();
+                        if (0 == openedNodes.Count) break;
+                        openedNode = openedNodes.Peek();
                     }
                 }
+
                 // Open all new (i.e. non present in previous path) nodes
                 foreach (string nodePath in pathNodes.Keys)
                 {
-                    if (!previousPathNodes.Contains(nodePath))
-                    {
-                        var subkey = pathNodes[nodePath];
-                        if (subkey.Equals(singleNodes[^1])) continue; // Last node is a leaf, not a node
-                        node = parseNode(subkey);
+                    if (previousPathNodes.Contains(nodePath)) continue;
 
-                        if (null == node.Prefix) writer.WriteStartElement(node.Name);
-                        else writer.WriteStartElement(node.Prefix, node.Name, namespaces[node.Prefix]);
-                    }
+                    var subkey = pathNodes[nodePath];
+                    if (subkey.Equals(singleNodes[^1])) continue; // Last node is a leaf, not a node
+                    node = parseNode(subkey);
+
+                    openedNodes.Push(nodePath);
+                    if (null == node.Prefix) writer.WriteStartElement(node.Name);
+                    else writer.WriteStartElement(node.Prefix, node.Name, namespaces[node.Prefix]);
                 }
+
                 // Write the last node (=leaf) as a proper value if it does not belong to structural attributes
                 node = parseNode(singleNodes[^1]);
                 if (structuralAttributes.Contains(singleNodes[^1].ToLower()))
@@ -256,17 +265,23 @@ namespace ATL.AudioData
                 }
                 else
                 {
+                    // ElementString is just a Helper for StartElement + String + EndElement
                     if (null == node.Prefix) writer.WriteElementString(node.Name, additionalFields[key]);
                     else writer.WriteElementString(node.Prefix, node.Name, namespaces[node.Prefix], additionalFields[key]);
                 }
+                valuesWritten++;
 
                 previousPathNodes = pathNodes.Keys.ToList();
             }
 
             // Close all terminated paths
-            for (int i = previousPathNodes.Count - 2; i >= 0; i--) writer.WriteEndElement();
+            while (openedNodes.Count > 0)
+            {
+                writer.WriteEndElement();
+                openedNodes.Pop();
+            }
 
-            return 14;
+            return valuesWritten;
         }
 
         /**
