@@ -142,6 +142,12 @@ namespace ATL.benchmark
 
             Console.WriteLine("images : " + t.EmbeddedPictures.Count);
 
+            Console.WriteLine("AdditionalFields");
+            foreach (var field in t.AdditionalFields)
+            {
+                Console.WriteLine("  " + field.Key + " = " + field.Value);
+            }
+
             Console.WriteLine(">>> INFO : END");
 
             Console.ReadLine();
