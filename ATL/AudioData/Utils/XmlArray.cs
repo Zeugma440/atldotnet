@@ -183,11 +183,8 @@ namespace ATL.AudioData
             var nonNsKeys = meta.AdditionalFields.Keys.Where(k => !k.Contains("xmlns:")).ToHashSet();
             foreach (var nsKey in nonNsKeys)
             {
-                var parts = nsKey.Split('.');
-                foreach (var part in parts)
-                {
-                    if (part.Contains(':')) usedNamespaces.Add(part.Split(':')[0]);
-                }
+                var parts = nsKey.Split('.').Where(s => s.Contains(':'));
+                foreach (var part in parts) usedNamespaces.Add(part.Split(':')[0]);
             }
 
             // Register them on the top level element
@@ -198,9 +195,7 @@ namespace ATL.AudioData
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Namespace not found : " + ns);
                     continue;
                 }
-                writer.WriteAttributeString(ns,
-                    "http://www.w3.org/2000/xmlns/",
-                    namespaces[ns]);
+                writer.WriteAttributeString(ns, "http://www.w3.org/2000/xmlns/", namespaces[ns]);
             }
 
             // Path notes : key = node path; value = node name
@@ -253,6 +248,7 @@ namespace ATL.AudioData
                 }
                 // Write the last node (=leaf) as a proper value if it does not belong to structural attributes
                 name = singleNodes[^1];
+                if (name.Contains('[')) name = name[..name.IndexOf('[')]; // Remove [x]'s
                 pfx = null;
                 pfxIdfx = name.IndexOf(':');
                 if (pfxIdfx > -1)
@@ -264,6 +260,10 @@ namespace ATL.AudioData
                 {
                     if (null == pfx) writer.WriteAttributeString(name, additionalFields[key]);
                     else writer.WriteAttributeString(pfx, name, namespaces[pfx], additionalFields[key]);
+                }
+                else if (previousPathNodes.Contains(key.Substring(displayPrefix.Length)))
+                {
+                    writer.WriteString(additionalFields[key]);
                 }
                 else
                 {
