@@ -1,8 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ATL.AudioData;
-using System.Collections.Generic;
+﻿using ATL.AudioData;
 using ATL.AudioData.IO;
-using System.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -12,6 +9,7 @@ namespace ATL.test.IO.MetaData
         private readonly string notEmptyFile_bext = "WAV/broadcastwave_bext.wav";
         private readonly string notEmptyFile_info = "WAV/broadcastwave_bext_info.wav";
         private readonly string notEmptyFile_ixml = "WAV/broadcastwave_bext_iXML.wav";
+        private readonly string notEmptyFile_xmp = "WAV/xmp_partial.wav";
         private readonly string notEmptyFile_sample = "WAV/broadcastwave_bext_iXML.wav";
         private readonly string notEmptyFile_cue = "WAV/cue.wav";
 
@@ -30,24 +28,27 @@ namespace ATL.test.IO.MetaData
         {
             notEmptyFile = notEmptyFile_bext;
 
-            testData = new TagHolder();
+            testData = new TagHolder
+            {
+                GeneralDescription = "bext.description"
+            };
 
-            testData.GeneralDescription = "bext.description";
-
-            IDictionary<string, string> tags = new Dictionary<string, string>();
-            tags.Add(new KeyValuePair<string, string>("bext.originator", "bext.originator"));
-            tags.Add(new KeyValuePair<string, string>("bext.originatorReference", "bext.originatorReference"));
-            tags.Add(new KeyValuePair<string, string>("bext.originationDate", "2018-01-09"));
-            tags.Add(new KeyValuePair<string, string>("bext.originationTime", "01:23:45"));
-            tags.Add(new KeyValuePair<string, string>("bext.timeReference", "110801250"));
-            tags.Add(new KeyValuePair<string, string>("bext.version", "2"));
-            tags.Add(new KeyValuePair<string, string>("bext.UMID", "060A2B3401010101010102101300000000000000000000800000000000000000"));
-            tags.Add(new KeyValuePair<string, string>("bext.loudnessValue", (1.23).ToString()));
-            tags.Add(new KeyValuePair<string, string>("bext.loudnessRange", (4.56).ToString()));
-            tags.Add(new KeyValuePair<string, string>("bext.maxTruePeakLevel", (7.89).ToString()));
-            tags.Add(new KeyValuePair<string, string>("bext.maxMomentaryLoudness", (3.33).ToString()));
-            tags.Add(new KeyValuePair<string, string>("bext.maxShortTermLoudness", (-3.33).ToString()));
-            tags.Add(new KeyValuePair<string, string>("bext.codingHistory", "A=MPEG1L3,F=22050,B=56,W=20,M=dual-mono,T=haha"));
+            IDictionary<string, string> tags = new Dictionary<string, string>
+            {
+                {"bext.originator", "bext.originator"},
+                {"bext.originatorReference", "bext.originatorReference"},
+                {"bext.originationDate", "2018-01-09"},
+                {"bext.originationTime", "01:23:45"},
+                {"bext.timeReference", "110801250"},
+                {"bext.version", "2"},
+                {"bext.UMID", "060A2B3401010101010102101300000000000000000000800000000000000000"},
+                {"bext.loudnessValue", (1.23).ToString()},
+                {"bext.loudnessRange", (4.56).ToString()},
+                {"bext.maxTruePeakLevel", (7.89).ToString()},
+                {"bext.maxMomentaryLoudness", (3.33).ToString()},
+                {"bext.maxShortTermLoudness", (-3.33).ToString()},
+                {"bext.codingHistory", "A=MPEG1L3,F=22050,B=56,W=20,M=dual-mono,T=haha"}
+            };
             testData.AdditionalFields = tags;
         }
 
@@ -55,30 +56,33 @@ namespace ATL.test.IO.MetaData
         {
             notEmptyFile = notEmptyFile_info;
 
-            testData = new TagHolder();
+            testData = new TagHolder
+            {
+                Artist = "info.IART",
+                Title = "info.INAM",
+                Album = "info.IPRD",
+                Copyright = "info.ICOP",
+                Genre = "info.IGNR",
+                Comment = "info.ICMT",
+                Date = DateTime.Parse("2018-01-09T01:23:45"),
+                TrackNumber = 5,
+                Popularity = 0.2f,
+                EncodedBy = "info.ITCH",
+                Encoder = "info.ISFT",
+                Language = "info.ILNG"
+            };
 
-            testData.Artist = "info.IART";
-            testData.Title = "info.INAM";
-            testData.Album = "info.IPRD";
-            testData.Copyright = "info.ICOP";
-            testData.Genre = "info.IGNR";
-            testData.Comment = "info.ICMT";
-            testData.Date = System.DateTime.Parse("2018-01-09T01:23:45");
-            testData.TrackNumber = 5;
-            testData.Popularity = 0.2f;
-            testData.EncodedBy = "info.ITCH";
-            testData.Encoder = "info.ISFT";
-            testData.Language = "info.ILNG";
-
-            IDictionary<string, string> tags = new Dictionary<string, string>();
-            tags.Add(new KeyValuePair<string, string>("info.IARL", "info.IARL"));
-            tags.Add(new KeyValuePair<string, string>("info.ICMS", "info.ICMS"));
-            tags.Add(new KeyValuePair<string, string>("info.IENG", "info.IENG"));
-            tags.Add(new KeyValuePair<string, string>("info.IKEY", "info.IKEY"));
-            tags.Add(new KeyValuePair<string, string>("info.IMED", "info.IMED"));
-            tags.Add(new KeyValuePair<string, string>("info.ISBJ", "info.ISBJ"));
-            tags.Add(new KeyValuePair<string, string>("info.ISRC", "info.ISRC"));
-            tags.Add(new KeyValuePair<string, string>("info.ISRF", "info.ISRF"));
+            IDictionary<string, string> tags = new Dictionary<string, string>
+            {
+                {"info.IARL", "info.IARL"},
+                {"info.ICMS", "info.ICMS"},
+                {"info.IENG", "info.IENG"},
+                {"info.IKEY", "info.IKEY"},
+                {"info.IMED", "info.IMED"},
+                {"info.ISBJ", "info.ISBJ"},
+                {"info.ISRC", "info.ISRC"},
+                {"info.ISRF", "info.ISRF"}
+            };
             testData.AdditionalFields = tags;
         }
 
@@ -88,17 +92,19 @@ namespace ATL.test.IO.MetaData
 
             testData = new TagHolder();
 
-            IDictionary<string, string> tags = new Dictionary<string, string>();
-            tags.Add(new KeyValuePair<string, string>("disp.entry[0].type", "CF_TEXT"));
-            tags.Add(new KeyValuePair<string, string>("disp.entry[0].value", "blah"));
-            tags.Add(new KeyValuePair<string, string>("disp.entry[1].type", "CF_BITMAP"));
-            tags.Add(new KeyValuePair<string, string>("disp.entry[1].value", "YmxhaCBibGFo"));
-            tags.Add(new KeyValuePair<string, string>("disp.entry[2].type", "CF_METAFILE"));
-            tags.Add(new KeyValuePair<string, string>("disp.entry[2].value", "YmxlaCBibGVo"));
-            tags.Add(new KeyValuePair<string, string>("disp.entry[3].type", "CF_DIB"));
-            tags.Add(new KeyValuePair<string, string>("disp.entry[3].value", "Ymx1aCBibHVo"));
-            tags.Add(new KeyValuePair<string, string>("disp.entry[4].type", "CF_PALETTE"));
-            tags.Add(new KeyValuePair<string, string>("disp.entry[4].value", "YmzDvGggYmzDvGg="));
+            IDictionary<string, string> tags = new Dictionary<string, string>
+            {
+                {"disp.entry[0].type", "CF_TEXT"},
+                {"disp.entry[0].value", "blah"},
+                {"disp.entry[1].type", "CF_BITMAP"},
+                {"disp.entry[1].value", "YmxhaCBibGFo"},
+                {"disp.entry[2].type", "CF_METAFILE"},
+                {"disp.entry[2].value", "YmxlaCBibGVo"},
+                {"disp.entry[3].type", "CF_DIB"},
+                {"disp.entry[3].value", "Ymx1aCBibHVo"},
+                {"disp.entry[4].type", "CF_PALETTE"},
+                {"disp.entry[4].value", "YmzDvGggYmzDvGg="}
+            };
             testData.AdditionalFields = tags;
         }
 
@@ -108,12 +114,83 @@ namespace ATL.test.IO.MetaData
 
             testData = new TagHolder();
 
-            IDictionary<string, string> tags = new Dictionary<string, string>();
-            tags.Add(new KeyValuePair<string, string>("ixml.PROJECT", "ANewMovie"));
-            tags.Add(new KeyValuePair<string, string>("ixml.SPEED.NOTE", "camera overcranked"));
-            tags.Add(new KeyValuePair<string, string>("ixml.SYNC_POINT_LIST.SYNC_POINT[1].SYNC_POINT_FUNCTION", "SLATE_GENERIC"));
-            tags.Add(new KeyValuePair<string, string>("ixml.TRACK_LIST.TRACK[1].NAME", "Mid"));
-            tags.Add(new KeyValuePair<string, string>("ixml.TRACK_LIST.TRACK[2].NAME", "Side"));
+            IDictionary<string, string> tags = new Dictionary<string, string>
+            {
+                { "ixml.PROJECT", "ANewMovie" },
+                { "ixml.SPEED.NOTE", "camera overcranked" },
+                { "ixml.SYNC_POINT_LIST.SYNC_POINT[1].SYNC_POINT_FUNCTION", "SLATE_GENERIC" },
+                { "ixml.TRACK_LIST.TRACK[1].NAME", "Mid" },
+                { "ixml.TRACK_LIST.TRACK[2].NAME", "Side" }
+            };
+            testData.AdditionalFields = tags;
+        }
+
+        private void initXmpTestData()
+        {
+            notEmptyFile = notEmptyFile_xmp;
+
+            testData = new TagHolder();
+
+            IDictionary<string, string> tags = new Dictionary<string, string>
+            {
+                { "xmp.x:xmptk", "Adobe XMP Core 9.1-c002 79.2c0288b, 2024/01/23-06:33:24        " },
+                { "xmp.rdf:RDF.rdf:Description.dc:title.rdf:Alt.rdf:li[1].xml:lang", "x-default" },
+                { "xmp.rdf:RDF.rdf:Description.dc:title.rdf:Alt.rdf:li[1]", "document title" },
+                { "xmp.rdf:RDF.rdf:Description.dc:creator.rdf:Seq.rdf:li[1]", "author1" },
+                { "xmp.rdf:RDF.rdf:Description.dc:creator.rdf:Seq.rdf:li[2]", "author2" },
+                { "xmp.rdf:RDF.rdf:Description.dc:description.rdf:Alt.rdf:li[1].xml:lang", "x-default" },
+                { "xmp.rdf:RDF.rdf:Description.dc:description.rdf:Alt.rdf:li[1]", "author description" },
+                { "xmp.rdf:RDF.rdf:Description.dc:subject.rdf:Bag.rdf:li[1]", "keyword11" },
+                { "xmp.rdf:RDF.rdf:Description.dc:subject.rdf:Bag.rdf:li[2]", "keyword2" },
+                { "xmp.rdf:RDF.rdf:Description.dc:rights.rdf:Alt.rdf:li[1].xml:lang", "x-default" },
+                { "xmp.rdf:RDF.rdf:Description.dc:rights.rdf:Alt.rdf:li[1]", "copyright notice" },
+                { "xmp.rdf:RDF.rdf:Description.photoshop:Source", "Source" },
+                { "xmp.rdf:RDF.rdf:Description.photoshop:Urgency", "5" },
+                { "xmp.rdf:RDF.rdf:Description.xmp:Rating", "4" },
+                { "xmp.rdf:RDF.rdf:Description.xmpRights:Marked", "True" },
+                { "xmp.rdf:RDF.rdf:Description.xmpRights:WebStatement", "http://copyright/info.u.rl" },
+                { "xmp.rdf:RDF.rdf:Description.xmpRights:UsageTerms.rdf:Alt.rdf:li[1].xml:lang", "x-default" },
+                { "xmp.rdf:RDF.rdf:Description.xmpRights:UsageTerms.rdf:Alt.rdf:li[1]", "right usage terms" },
+                { "xmp.rdf:RDF.rdf:Description.Iptc4xmpCore:CreatorContactInfo.rdf:parseType", "Resource" },
+                { "xmp.rdf:RDF.rdf:Description.Iptc4xmpCore:CreatorContactInfo.Iptc4xmpCore:CiAdrExtadr", "author address" },
+                { "xmp.rdf:RDF.rdf:Description.Iptc4xmpCore:CreatorContactInfo.Iptc4xmpCore:CiUrlWork", "author website1;author website2" },
+                { "xmp.rdf:RDF.rdf:Description.Iptc4xmpCore:IntellectualGenre", "intellectual genre" },
+                { "xmp.rdf:RDF.rdf:Description.Iptc4xmpCore:Scene.rdf:Bag.rdf:li[1]", "IPTC scene code 1" },
+                { "xmp.rdf:RDF.rdf:Description.Iptc4xmpCore:Scene.rdf:Bag.rdf:li[2]", "IPTC scene code 2" },
+                { "xmp.rdf:RDF.rdf:Description.Iptc4xmpCore:AltTextAccessibility.rdf:Alt.rdf:li[1].xml:lang", "x-default" },
+                { "xmp.rdf:RDF.rdf:Description.Iptc4xmpCore:AltTextAccessibility.rdf:Alt.rdf:li[1]", "alt test" },
+                { "xmp.rdf:RDF.rdf:Description.Iptc4xmpCore:ExtDescrAccessibility.rdf:Alt.rdf:li[1].xml:lang", "x-default" },
+                { "xmp.rdf:RDF.rdf:Description.Iptc4xmpCore:ExtDescrAccessibility.rdf:Alt.rdf:li[1]", "extended description" },
+                { "xmp.rdf:RDF.rdf:Description.Iptc4xmpCore:SubjectCode.rdf:Bag.rdf:li[1]", "IPTC subject code 1" },
+                { "xmp.rdf:RDF.rdf:Description.Iptc4xmpCore:SubjectCode.rdf:Bag.rdf:li[2]", "IPTC subject code 2" },
+                { "xmp.rdf:RDF.rdf:Description.xmpDM:tapeName", "tape name" },
+                { "xmp.rdf:RDF.rdf:Description.xmpDM:altTimecode.rdf:parseType", "Resource" },
+                { "xmp.rdf:RDF.rdf:Description.xmpDM:altTimecode.xmpDM:timeValue", "alternate timecode" },
+                { "xmp.rdf:RDF.rdf:Description.xmpDM:artist", "artist" },
+                { "xmp.rdf:RDF.rdf:Description.xmpDM:album", "album" },
+                { "xmp.rdf:RDF.rdf:Description.xmpDM:genre", "genre" },
+                { "xmp.rdf:RDF.rdf:Description.xmpDM:trackNumber", "6" },
+                { "xmp.rdf:RDF.rdf:Description.xmpDM:composer", "composer" },
+                { "xmp.rdf:RDF.rdf:Description.xmpDM:engineer", "engineer" },
+                { "xmp.rdf:RDF.rdf:Description.xmpDM:releaseDate", "2024-02-29T20:55:00" },
+                { "xmp.rdf:RDF.rdf:Description.xmpDM:instrument", "instrument" },
+                { "xmp.rdf:RDF.rdf:Description.xmp:CreateDate", "2024-03-29T00:00:01+01:00" },
+                { "xmp.rdf:RDF.rdf:Description.xmp:CreatorTool", "creator tool" },
+                { "xmp.rdf:RDF.rdf:Description.xmp:Label", "xmp label" },
+                { "xmp.rdf:RDF.rdf:Description.xmp:MetadataDate", "2024-03-29T00:00:03+01:00" },
+                { "xmp.rdf:RDF.rdf:Description.xmp:ModifyDate", "2024-03-29T00:00:02+01:00" },
+                { "xmp.rdf:RDF.rdf:Description.dc:contributor.rdf:Bag.rdf:li[1]", "contributor" },
+                { "xmp.rdf:RDF.rdf:Description.dc:coverage", "coverage" },
+                { "xmp.rdf:RDF.rdf:Description.dc:date.rdf:Seq.rdf:li[1]", "2024-04-29T00:00:00+02:00" },
+                { "xmp.rdf:RDF.rdf:Description.dc:format", "format" },
+                { "xmp.rdf:RDF.rdf:Description.dc:identifier", "identifier" },
+                { "xmp.rdf:RDF.rdf:Description.dc:publisher.rdf:Bag.rdf:li[1]", "publisher" },
+                { "xmp.rdf:RDF.rdf:Description.dc:relation.rdf:Bag.rdf:li[1]", "relation" },
+                { "xmp.rdf:RDF.rdf:Description.dc:source", "source" },
+                { "xmp.rdf:RDF.rdf:Description.dc:type.rdf:Bag.rdf:li[1]", "type" },
+                { "xmp.rdf:RDF.rdf:Description.adid:code", "1234" },
+                { "xmp.rdf:RDF.rdf:Description.adid:brand", "brand" },
+            };
             testData.AdditionalFields = tags;
         }
 
@@ -123,23 +200,25 @@ namespace ATL.test.IO.MetaData
 
             testData = new TagHolder();
 
-            IDictionary<string, string> tags = new Dictionary<string, string>();
-            tags.Add(new KeyValuePair<string, string>("sample.manufacturer", "1"));
-            tags.Add(new KeyValuePair<string, string>("sample.product", "2"));
-            tags.Add(new KeyValuePair<string, string>("sample.period", "3"));
-            tags.Add(new KeyValuePair<string, string>("sample.MIDIUnityNote", "4"));
-            tags.Add(new KeyValuePair<string, string>("sample.MIDIPitchFraction", "5"));
-            tags.Add(new KeyValuePair<string, string>("sample.SMPTEFormat", "24"));
-            tags.Add(new KeyValuePair<string, string>("sample.SMPTEOffset.Hours", "-1"));
-            tags.Add(new KeyValuePair<string, string>("sample.SMPTEOffset.Minutes", "10"));
-            tags.Add(new KeyValuePair<string, string>("sample.SMPTEOffset.Seconds", "20"));
-            tags.Add(new KeyValuePair<string, string>("sample.SMPTEOffset.Frames", "30"));
-            tags.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].CuePointId", "11"));
-            tags.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].Type", "1"));
-            tags.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].Start", "123"));
-            tags.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].End", "456"));
-            tags.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].Fraction", "8"));
-            tags.Add(new KeyValuePair<string, string>("sample.SampleLoop[0].PlayCount", "2"));
+            IDictionary<string, string> tags = new Dictionary<string, string>
+            {
+                { "sample.manufacturer", "1"},
+                { "sample.product", "2"},
+                { "sample.period", "3"},
+                { "sample.MIDIUnityNote", "4"},
+                { "sample.MIDIPitchFraction", "5"},
+                { "sample.SMPTEFormat", "24"},
+                { "sample.SMPTEOffset.Hours", "-1"},
+                { "sample.SMPTEOffset.Minutes", "10"},
+                { "sample.SMPTEOffset.Seconds", "20"},
+                { "sample.SMPTEOffset.Frames", "30"},
+                { "sample.SampleLoop[0].CuePointId", "11"},
+                { "sample.SampleLoop[0].Type", "1"},
+                { "sample.SampleLoop[0].Start", "123"},
+                { "sample.SampleLoop[0].End", "456"},
+                { "sample.SampleLoop[0].Fraction", "8"},
+                { "sample.SampleLoop[0].PlayCount", "2"}
+            };
             testData.AdditionalFields = tags;
         }
 
@@ -250,6 +329,18 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_WAV_XMP_simple()
+        {
+            new ConsoleLogger();
+            initXmpTestData();
+
+            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            readExistingTagsOnFile(theFile, 0);
+        }
+
+        [TestMethod]
         public void TagIO_R_Cue_simple()
         {
             new ConsoleLogger();
@@ -283,6 +374,13 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_WAV_XMP_Empty()
+        {
+            initXmpTestData();
+            test_RW_Empty(emptyFile, true, true, true, true);
+        }
+
+        [TestMethod]
         public void TagIO_RW_WAV_Sample_Empty()
         {
             initSampleTestData();
@@ -293,7 +391,7 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_WAV_Cue_Empty()
         {
             initCueTestRWData();
-            test_RW_Empty(emptyFile, false,true, true, true);
+            test_RW_Empty(emptyFile, false, true, true, true);
         }
 
         [TestMethod]
@@ -309,7 +407,7 @@ namespace ATL.test.IO.MetaData
             initListInfoTestData();
             // Size check impossible because of fields mapped to multiple sub-chunks
             // CRC check impossible because of field order
-            test_RW_Existing(notEmptyFile, 0, true, false, false); 
+            test_RW_Existing(notEmptyFile, 0, true, false, false);
         }
 
         [TestMethod]
@@ -323,6 +421,13 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_WAV_IXML_Existing()
         {
             initIXmlTestData();
+            test_RW_Existing(notEmptyFile, 0, true, false, false); // length-check impossible because of parasite end-of-line characters and padding
+        }
+
+        [TestMethod]
+        public void TagIO_RW_WAV_XMP_Existing()
+        {
+            initXmpTestData();
             test_RW_Existing(notEmptyFile, 0, true, false, false); // length-check impossible because of parasite end-of-line characters and padding
         }
 

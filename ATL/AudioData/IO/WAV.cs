@@ -51,6 +51,7 @@ namespace ATL.AudioData.IO
         // Broadcast Wave metadata sub-chunk
         private const string CHUNK_BEXT = BextTag.CHUNK_BEXT;
         private const string CHUNK_IXML = IXmlTag.CHUNK_IXML;
+        private const string CHUNK_XMP = XmpTag.CHUNK_XMP;
         private const string CHUNK_ID3 = "id3 ";
 
 
@@ -256,6 +257,7 @@ namespace ATL.AudioData.IO
             int dispIndex = 0;
             bool foundBext = false;
             bool foundIXml = false;
+            bool foundXmp = false;
 
             // Sub-chunks loop
             // NB1 : we're testing source.Position + 8 because the chunk header (chunk ID and size) takes up 8 bytes
@@ -414,6 +416,16 @@ namespace ATL.AudioData.IO
 
                     IXmlTag.FromStream(source, this, readTagParams, chunkSize);
                 }
+                else if (subChunkId.Equals(CHUNK_XMP, StringComparison.OrdinalIgnoreCase))
+                {
+                    structureHelper.AddZone(source.Position - 8, (int)(chunkSize + paddingSize + 8), subChunkId);
+                    structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, subChunkId);
+
+                    foundXmp = true;
+                    tagExists = true;
+
+                    XmpTag.FromStream(source, this, readTagParams, chunkSize);
+                }
                 else if (subChunkId.Equals(CHUNK_ID3, StringComparison.OrdinalIgnoreCase))
                 {
                     id3v2Offset = source.Position;
@@ -462,6 +474,11 @@ namespace ATL.AudioData.IO
                 {
                     structureHelper.AddZone(eof, 0, CHUNK_IXML);
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_IXML);
+                }
+                if (!foundXmp)
+                {
+                    structureHelper.AddZone(eof, 0, CHUNK_XMP);
+                    structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_XMP);
                 }
             }
 
@@ -567,6 +584,7 @@ namespace ATL.AudioData.IO
                         else if (zone.Equals(CHUNK_DISP + ".0") && DispTag.IsDataEligible(this)) result += DispTag.ToStream(w, isLittleEndian, this); // Process the 1st position as a whole
                         else if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(this)) result += BextTag.ToStream(w, isLittleEndian, this);
                         else if (zone.Equals(CHUNK_IXML) && IXmlTag.IsDataEligible(this)) result += IXmlTag.ToStream(w, isLittleEndian, this);
+                        else if (zone.Equals(CHUNK_XMP) && XmpTag.IsDataEligible(this)) result += XmpTag.ToStream(w, this, isLittleEndian, true);
 
                         break;
                     }
