@@ -20,6 +20,19 @@ namespace ATL.AudioData
         private readonly ISet<string> structuralAttributes = new HashSet<string>();
         private readonly IDictionary<string, string> defaultNamespaces = new Dictionary<string, string>();
 
+        private sealed class Node
+        {
+            public string Prefix { get; }
+            public string Name { get; }
+
+            public Node(string prefix, string name)
+            {
+                Prefix = prefix;
+                Name = name;
+            }
+        }
+
+
         public XmlArray(
             string prefix,
             string displayPrefix,
@@ -165,16 +178,9 @@ namespace ATL.AudioData
 
             using XmlWriter writer = XmlWriter.Create(w.BaseStream, settings);
             writer.WriteStartDocument();
-            string name = prefix;
-            string pfx = null;
-            int pfxIdfx = name.IndexOf(':');
-            if (pfxIdfx > -1)
-            {
-                pfx = name[..pfxIdfx];
-                name = name[(pfxIdfx + 1)..];
-            }
-            if (null == pfx) writer.WriteStartElement(name);
-            else writer.WriteStartElement(pfx, name, namespaces[pfx]);
+            var node = parseNode(prefix);
+            if (null == node.Prefix) writer.WriteStartElement(node.Name);
+            else writer.WriteStartElement(node.Prefix, node.Name, namespaces[node.Prefix]);
 
             // == Register all useful namespaces on the top level element
 
@@ -231,44 +237,27 @@ namespace ATL.AudioData
                     {
                         var subkey = pathNodes[nodePath];
                         if (subkey.Equals(singleNodes[^1])) continue; // Last node is a leaf, not a node
+                        node = parseNode(subkey);
 
-                        if (subkey.Contains('[')) subkey = subkey[..subkey.IndexOf('[')]; // Remove [x]'s
-
-                        name = subkey;
-                        pfx = null;
-                        pfxIdfx = name.IndexOf(':');
-                        if (pfxIdfx > -1)
-                        {
-                            pfx = name[..pfxIdfx];
-                            name = name[(pfxIdfx + 1)..];
-                        }
-                        if (null == pfx) writer.WriteStartElement(name);
-                        else writer.WriteStartElement(pfx, name, namespaces[pfx]);
+                        if (null == node.Prefix) writer.WriteStartElement(node.Name);
+                        else writer.WriteStartElement(node.Prefix, node.Name, namespaces[node.Prefix]);
                     }
                 }
                 // Write the last node (=leaf) as a proper value if it does not belong to structural attributes
-                name = singleNodes[^1];
-                if (name.Contains('[')) name = name[..name.IndexOf('[')]; // Remove [x]'s
-                pfx = null;
-                pfxIdfx = name.IndexOf(':');
-                if (pfxIdfx > -1)
-                {
-                    pfx = name[..pfxIdfx];
-                    name = name[(pfxIdfx + 1)..];
-                }
+                node = parseNode(singleNodes[^1]);
                 if (structuralAttributes.Contains(singleNodes[^1].ToLower()))
                 {
-                    if (null == pfx) writer.WriteAttributeString(name, additionalFields[key]);
-                    else writer.WriteAttributeString(pfx, name, namespaces[pfx], additionalFields[key]);
+                    if (null == node.Prefix) writer.WriteAttributeString(node.Name, additionalFields[key]);
+                    else writer.WriteAttributeString(node.Prefix, node.Name, namespaces[node.Prefix], additionalFields[key]);
                 }
-                else if (previousPathNodes.Contains(key.Substring(displayPrefix.Length)))
+                else if (previousPathNodes.Contains(key[displayPrefix.Length..]))
                 {
                     writer.WriteString(additionalFields[key]);
                 }
                 else
                 {
-                    if (null == pfx) writer.WriteElementString(name, additionalFields[key]);
-                    else writer.WriteElementString(pfx, name, namespaces[pfx], additionalFields[key]);
+                    if (null == node.Prefix) writer.WriteElementString(node.Name, additionalFields[key]);
+                    else writer.WriteElementString(node.Prefix, node.Name, namespaces[node.Prefix], additionalFields[key]);
                 }
 
                 previousPathNodes = pathNodes.Keys.ToList();
@@ -278,6 +267,23 @@ namespace ATL.AudioData
             for (int i = previousPathNodes.Count - 2; i >= 0; i--) writer.WriteEndElement();
 
             return 14;
+        }
+
+        /**
+         * Returns prefix and name; prefix might be null
+         */
+        private static Node parseNode(string key)
+        {
+            string pfx = null;
+            string name = key;
+            if (name.Contains('[')) name = name[..name.IndexOf('[')]; // Remove [x]'s
+            int pfxIdfx = name.IndexOf(':');
+            if (pfxIdfx > -1)
+            {
+                pfx = name[..pfxIdfx];
+                name = name[(pfxIdfx + 1)..];
+            }
+            return new Node(pfx, name);
         }
     }
 }
