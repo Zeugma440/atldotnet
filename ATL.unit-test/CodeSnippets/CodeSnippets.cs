@@ -212,9 +212,9 @@ namespace ATL.test.CodeSnippets
 
             // Display BEXT, LIST INFO and iXML data
             string originator = "", engineer = "", scene = "";
-            if (theTrack.AdditionalFields.ContainsKey("bext.originator")) originator = theTrack.AdditionalFields["bext.originator"];
-            if (theTrack.AdditionalFields.ContainsKey("info.IENG")) engineer = theTrack.AdditionalFields["info.IENG"];
-            if (theTrack.AdditionalFields.ContainsKey("ixml.SCENE")) scene = theTrack.AdditionalFields["ixml.SCENE"];
+            if (theTrack.AdditionalFields.TryGetValue("bext.originator", out var field)) originator = field;
+            if (theTrack.AdditionalFields.TryGetValue("info.IENG", out var field2)) engineer = field2;
+            if (theTrack.AdditionalFields.TryGetValue("ixml.SCENE", out var field3)) scene = field3;
 
             System.Console.WriteLine("Originator : " + originator);
             System.Console.WriteLine("Engineer : " + engineer);
@@ -225,6 +225,31 @@ namespace ATL.test.CodeSnippets
             theTrack.AdditionalFields["bext.originator"] = "Dave Johnson";
             theTrack.AdditionalFields["info.IENG"] = "John Jackman";
             theTrack.AdditionalFields["ixml.SCENE"] = "42";
+            theTrack.Save();
+        }
+
+        [TestMethod, TestCategory("snippets")]
+        public void CS_XMP()
+        {
+            // Load audio file information into memory
+            Track theTrack = new Track(audioFilePath);
+
+
+            // Display XMP data
+            string photoshopSource = "", rating = "", composer = "";
+            if (theTrack.AdditionalFields.TryGetValue("xmp.rdf:RDF.rdf:Description.photoshop:Source", out var field)) photoshopSource = field;
+            if (theTrack.AdditionalFields.TryGetValue("xmp.rdf:RDF.rdf:Description.xmp:Rating", out var field2)) rating = field2;
+            if (theTrack.AdditionalFields.TryGetValue("xmp.rdf:RDF.rdf:Description.xmpDM:composer", out var field3)) composer = field3;
+
+            System.Console.WriteLine("Source : " + photoshopSource);
+            System.Console.WriteLine("Rating : " + rating);
+            System.Console.WriteLine("Composer : " + composer);
+
+
+            // Modify data
+            theTrack.AdditionalFields["xmp.rdf:RDF.rdf:Description.photoshop:Source"] = "Company A";
+            theTrack.AdditionalFields["xmp.rdf:RDF.rdf:Description.xmp:Rating"] = "5";
+            theTrack.AdditionalFields["xmp.rdf:RDF.rdf:Description.xmpDM:composer"] = "Dave Johnson";
             theTrack.Save();
         }
 
