@@ -132,7 +132,7 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 (3) : MIDI meta events appear on the track's Comment field
 
-(4) : Support for BEXT, LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops), DISP (displayable objects) and iXML metadata chunks
+(4) : Support for LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops), DISP (displayable objects), BEXT, XMP and iXML metadata chunks
 
 (5) : Reads audio properties only, due to the rarity of sample CAF files tagged with actual metadata
 
@@ -166,10 +166,17 @@ Bitrate, Bit depth (bits per sample), Sample rate, Duration, VBR, Codec family, 
 
 #### Custom metadata
 
-Any other field that might be in the tag is readable __and__ editable by ATL
-
+Any other field that might be in the tag is readable __and__ editable by ATL. More information can be found on the [dedicated page](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-non-standard-fields)
 
 NB : Most metadata will be read "as is", with minimal alteration. If your file has invalid tags (e.g. chapter start timecode located after file duration), ATL will give you back that information without trying to auto-correct it.
+
+
+#### Specific industry standards
+
+ATL supports the following specific industry standards :
+- Broadcast wave / BEXT for WAV files
+- Broadcast wave / iXML for WAV files
+- XMP for MP4/M4A and WAV files
 
 
 ### SUPPORTED PLAYLISTS FORMATS
@@ -187,7 +194,7 @@ CUE
 
 ## What is the roadmap of ATL.NET ?
 
-* Support for Broadcast wave metadata : aXML and XMP
+* Support for Broadcast wave metadata : aXML and CART
 * Support for other audio file formats : Speex
 * Connectors to __other library file formats__ (e.g. iTunes)
 
