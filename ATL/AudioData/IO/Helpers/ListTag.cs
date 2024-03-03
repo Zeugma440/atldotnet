@@ -61,7 +61,7 @@ namespace ATL.AudioData.IO
                     var value = Encoding.UTF8.GetString(data, 0, size);
                     meta.SetMetaField("info." + key, Utils.StripEndingZeroChars(value), readTagParams.ReadAllMetaFrames);
 
-                    WavHelper.skipEndPadding(source, maxPos);
+                    WavHelper.SkipEndPadding(source, maxPos);
                 }
             }
         }
@@ -88,7 +88,7 @@ namespace ATL.AudioData.IO
                 else if (id.Equals(CHUNK_NOTE, StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
                 else if (id.Equals(CHUNK_LABELED_TEXT, StringComparison.OrdinalIgnoreCase)) readLabeledTextSubChunk(source, meta, position, size, readTagParams);
 
-                WavHelper.skipEndPadding(source, maxPos);
+                WavHelper.SkipEndPadding(source, maxPos);
                 position++;
             }
         }
@@ -96,7 +96,7 @@ namespace ATL.AudioData.IO
         private static void readLabelSubChunk(Stream source, MetaDataIO meta, int position, int size, ReadTagParams readTagParams)
         {
             byte[] data = new byte[Math.Max(4, size - 4)];
-            WavHelper.readInt32(source, meta, "adtl.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, "adtl.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
 
             source.Read(data, 0, size - 4);
             string value = Encoding.UTF8.GetString(data, 0, size - 4);
@@ -108,13 +108,13 @@ namespace ATL.AudioData.IO
         private static void readLabeledTextSubChunk(Stream source, MetaDataIO meta, int position, int size, ReadTagParams readTagParams)
         {
             byte[] data = new byte[Math.Max(4, size - 4)];
-            WavHelper.readInt32(source, meta, "adtl.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.readInt32(source, meta, "adtl.Labels[" + position + "].SampleLength", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.readInt32(source, meta, "adtl.Labels[" + position + "].PurposeId", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.readInt16(source, meta, "adtl.Labels[" + position + "].Country", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.readInt16(source, meta, "adtl.Labels[" + position + "].Language", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.readInt16(source, meta, "adtl.Labels[" + position + "].Dialect", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.readInt16(source, meta, "adtl.Labels[" + position + "].CodePage", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, "adtl.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, "adtl.Labels[" + position + "].SampleLength", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, "adtl.Labels[" + position + "].PurposeId", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt16(source, meta, "adtl.Labels[" + position + "].Country", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt16(source, meta, "adtl.Labels[" + position + "].Language", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt16(source, meta, "adtl.Labels[" + position + "].Dialect", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt16(source, meta, "adtl.Labels[" + position + "].CodePage", data, readTagParams.ReadAllMetaFrames);
 
             source.Read(data, 0, size - 20);
             string value = Encoding.UTF8.GetString(data, 0, size - 20);
@@ -277,7 +277,7 @@ namespace ATL.AudioData.IO
 
         private static int writeLabelSubChunk(BinaryWriter w, string key, IDictionary<string, string> additionalFields)
         {
-            WavHelper.writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
+            WavHelper.WriteFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
 
             string text = additionalFields[key + ".Text"];
             byte[] buffer = Encoding.UTF8.GetBytes(text);
@@ -297,14 +297,14 @@ namespace ATL.AudioData.IO
 
         private static int writeLabeledTextSubChunk(BinaryWriter w, string key, IDictionary<string, string> additionalFields)
         {
-            WavHelper.writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
-            WavHelper.writeFieldIntValue(key + ".SampleLength", additionalFields, w, 0);
-            WavHelper.writeFieldIntValue(key + ".PurposeId", additionalFields, w, 0);
+            WavHelper.WriteFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
+            WavHelper.WriteFieldIntValue(key + ".SampleLength", additionalFields, w, 0);
+            WavHelper.WriteFieldIntValue(key + ".PurposeId", additionalFields, w, 0);
 
-            WavHelper.writeFieldIntValue(key + ".Country", additionalFields, w, (short)0);
-            WavHelper.writeFieldIntValue(key + ".Language", additionalFields, w, (short)0);
-            WavHelper.writeFieldIntValue(key + ".Dialect", additionalFields, w, (short)0);
-            WavHelper.writeFieldIntValue(key + ".CodePage", additionalFields, w, (short)0);
+            WavHelper.WriteFieldIntValue(key + ".Country", additionalFields, w, (short)0);
+            WavHelper.WriteFieldIntValue(key + ".Language", additionalFields, w, (short)0);
+            WavHelper.WriteFieldIntValue(key + ".Dialect", additionalFields, w, (short)0);
+            WavHelper.WriteFieldIntValue(key + ".CodePage", additionalFields, w, (short)0);
 
             string text = additionalFields[key + ".Text"];
             byte[] buffer = Encoding.UTF8.GetBytes(text);

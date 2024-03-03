@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using ATL.Logging;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -30,7 +31,7 @@ namespace ATL.AudioData.IO
         /// <param name="prefix">Prefix to test with</param>
         /// <param name="keys">Collection to test with</param>
         /// <returns>List of keys from the given collection starting with the given prefix</returns>
-        public static IList<string> getEligibleKeys(string prefix, ICollection<string> keys)
+        public static IList<string> GetEligibleKeys(string prefix, ICollection<string> keys)
         {
             IList<string> result = new List<string>();
             foreach (var s in keys.Where(s => s.StartsWith(prefix + "[")))
@@ -51,7 +52,7 @@ namespace ATL.AudioData.IO
         /// <param name="buffer">Buffer to use</param>
         /// <param name="readAllMetaFrames">Read parameters to use</param>
         /// <returns>Read value</returns>
-        public static int readInt32(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
+        public static int ReadInt32(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
         {
             source.Read(buffer, 0, 4);
             int value = StreamUtils.DecodeInt32(buffer);
@@ -68,7 +69,7 @@ namespace ATL.AudioData.IO
         /// <param name="buffer">Buffer to use</param>
         /// <param name="readAllMetaFrames">Read parameters to use</param>
         /// <returns>Read value</returns>
-        public static void readInt16(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
+        public static void ReadInt16(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
         {
             source.Read(buffer, 0, 2);
             int value = StreamUtils.DecodeInt16(buffer);
@@ -84,15 +85,15 @@ namespace ATL.AudioData.IO
         /// <param name="length">Fixed length of the text to write</param>
         /// <param name="w">Writer to write the value to</param>
         /// <param name="paddingByte">Padding value to use (default : 0x00)</param>
-        public static void writeFixedFieldTextValue(string field, IDictionary<string, string> additionalFields, int length, BinaryWriter w, byte paddingByte = 0)
+        public static void WriteFixedFieldTextValue(string field, IDictionary<string, string> additionalFields, int length, BinaryWriter w, byte paddingByte = 0)
         {
             if (additionalFields.TryGetValue(field, out var additionalField))
             {
-                writeFixedTextValue(additionalField, length, w, paddingByte);
+                WriteFixedTextValue(additionalField, length, w, paddingByte);
             }
             else
             {
-                writeFixedTextValue("", length, w, paddingByte);
+                WriteFixedTextValue("", length, w, paddingByte);
             }
         }
 
@@ -104,20 +105,20 @@ namespace ATL.AudioData.IO
         /// <param name="length">Fixed length of the text to write</param>
         /// <param name="w">Writer to write the value to</param>
         /// <param name="paddingByte">Padding value to use (default : 0x00)</param>
-        public static void writeFixedTextValue(string value, int length, BinaryWriter w, byte paddingByte = 0)
+        public static void WriteFixedTextValue(string value, int length, BinaryWriter w, byte paddingByte = 0)
         {
             w.Write(Utils.BuildStrictLengthStringBytes(value, length, paddingByte, Encoding.UTF8));
         }
 
         /// <summary>
-        /// Write an integer value from the given Map to the given writer
+        /// Write an integer value from the given Map to the given writer using little-endian convention
         /// NB : The method auto-detects which kind of integer to write according to the type of the default value
         /// </summary>
         /// <param name="field">Key of the field to write</param>
         /// <param name="additionalFields">Map to take the value from</param>
         /// <param name="w">Writer to use</param>
         /// <param name="defaultValue">Default value to use in case no value is found in the given Map; type determines the type of the written value</param>
-        public static void writeFieldIntValue(string field, IDictionary<string, string> additionalFields, BinaryWriter w, object defaultValue)
+        public static void WriteFieldIntValue(string field, IDictionary<string, string> additionalFields, BinaryWriter w, object defaultValue)
         {
             if (additionalFields.ContainsKey(field))
             {
@@ -130,6 +131,9 @@ namespace ATL.AudioData.IO
                             break;
                         case ulong _:
                             w.Write(ulong.Parse(additionalFields[field]));
+                            break;
+                        case uint _:
+                            w.Write(uint.Parse(additionalFields[field]));
                             break;
                         case ushort _:
                             w.Write(ushort.Parse(additionalFields[field]));
@@ -161,6 +165,9 @@ namespace ATL.AudioData.IO
                 case ulong value:
                     w.Write(value);
                     break;
+                case uint value:
+                    w.Write(value);
+                    break;
                 case ushort value:
                     w.Write(value);
                     break;
@@ -184,7 +191,7 @@ namespace ATL.AudioData.IO
         /// <param name="additionalFields">Map to take the value from</param>
         /// <param name="w">Writer to use</param>
         /// <param name="defaultValue">Default value to use in case no value is found in the given Map; type determines the type of the written value</param>
-        public static void writeField100DecimalValue(string field, IDictionary<string, string> additionalFields, BinaryWriter w, object defaultValue)
+        public static void WriteField100DecimalValue(string field, IDictionary<string, string> additionalFields, BinaryWriter w, object defaultValue)
         {
             if (additionalFields.ContainsKey(field))
             {
@@ -212,13 +219,12 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="s">Stream to use</param>
         /// <param name="maxPos">Maximum position not to cross</param>
-        public static void skipEndPadding(Stream s, long maxPos)
+        public static void SkipEndPadding(Stream s, long maxPos)
         {
-            if (s.Position < maxPos)
-            {
-                int b = s.ReadByte();
-                if (b > 31 && b < 255) s.Seek(-1, SeekOrigin.Current);
-            }
+            if (s.Position >= maxPos) return;
+
+            int b = s.ReadByte();
+            if (b > 31 && b < 255) s.Seek(-1, SeekOrigin.Current);
         }
     }
 }

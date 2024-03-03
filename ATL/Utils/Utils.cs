@@ -26,6 +26,11 @@ namespace Commons
         /// </summary>
         public static Encoding Latin1Encoding { get; } = Encoding.GetEncoding("ISO-8859-1");
 
+        /// <summary>
+        /// Characters for CR LF (Carriage Return / Line Feed)
+        /// </summary>
+        public static readonly byte[] CR_LF = { 13, 10 };
+
 
         /// <summary>
         /// Transform the given string so that is becomes non-null
@@ -157,6 +162,50 @@ namespace Commons
         }
 
         /// <summary>
+        /// Check the given string against the YYYY-MM-DD or YYYY/MM/DD date formats
+        /// </summary>
+        /// <param name="dateStr">String to check</param>
+        /// <returns>True if formatting is valid; false if not</returns>
+        public static bool CheckDateFormat(string dateStr)
+        {
+            var parts = dateStr.Contains('/') ? dateStr.Split('/') : dateStr.Split('-');
+            // General formatting
+            if (parts.Length != 3) return false;
+            if (parts[0].Length != 4 || !IsNumeric(parts[0])) return false;
+            if (parts[1].Length != 2 || !IsNumeric(parts[1])) return false;
+            if (parts[2].Length != 2 || !IsNumeric(parts[2])) return false;
+            // Range checks
+            var intVal = int.Parse(parts[0]);
+            if (intVal < 1900) return false;
+            intVal = int.Parse(parts[1]);
+            if (intVal < 0 || intVal > 12) return false;
+            intVal = int.Parse(parts[2]);
+            return intVal >= 0 && intVal <= 31;
+        }
+
+        /// <summary>
+        /// Check the given string against the hh:mm:ss time format
+        /// </summary>
+        /// <param name="timeStr">String to check</param>
+        /// <returns>True if formatting is valid; false if not</returns>
+        public static bool CheckTimeFormat(string timeStr)
+        {
+            var parts = timeStr.Split(':');
+            // General formatting
+            if (parts.Length != 3) return false;
+            if (parts[0].Length != 2 || !IsNumeric(parts[0])) return false;
+            if (parts[1].Length != 2 || !IsNumeric(parts[1])) return false;
+            if (parts[2].Length != 2 || !IsNumeric(parts[2])) return false;
+            // Range checks
+            var intVal = int.Parse(parts[0]);
+            if (intVal < 0 || intVal > 23) return false;
+            intVal = int.Parse(parts[1]);
+            if (intVal < 0 || intVal > 59) return false;
+            intVal = int.Parse(parts[2]);
+            return intVal >= 0 && intVal <= 59;
+        }
+
+        /// <summary>
         /// Strip the given string from all ending null '\0' characters
         /// </summary>
         /// <param name="iStr">String to process</param>
@@ -200,7 +249,7 @@ namespace Commons
         {
             string result = value ?? "";
 
-            if (result.Length > length) result = result.Substring(0, length);
+            if (result.Length > length) result = result[..length];
             else if (result.Length < length)
             {
                 if (padRight) result = result.PadRight(length, paddingChar);
@@ -266,27 +315,17 @@ namespace Commons
         /// <returns>Resulting boolean value</returns>
         public static bool ToBoolean(string value)
         {
-            if (value != null)
-            {
-                value = value.Trim();
+            if (value == null) return false;
 
-                if (value.Length > 0)
-                {
-                    // Numeric convert
-                    float f;
-                    if (float.TryParse(value, out f))
-                    {
-                        return f != 0;
-                    }
-                    else
-                    {
-                        value = value.ToLower();
-                        return "true".Equals(value);
-                    }
-                }
-            }
+            value = value.Trim();
+            if (value.Length <= 0) return false;
 
-            return false;
+            // Numeric conversion
+            if (float.TryParse(value, out var f)) return f != 0;
+
+            // Boolean conversion
+            value = value.ToLower();
+            return "true".Equals(value);
         }
 
         /// <summary>
@@ -552,10 +591,10 @@ namespace Commons
                 Console.WriteLine(e.StackTrace);
                 if (e.InnerException != null)
                 {
-                    Console.WriteLine("Inner Exception BEGIN");
+                    Console.WriteLine(@"Inner Exception BEGIN");
                     Console.WriteLine(e.InnerException.Message);
                     Console.WriteLine(e.InnerException.StackTrace);
-                    Console.WriteLine("Inner Exception END");
+                    Console.WriteLine(@"Inner Exception END");
                 }
             }
             LogDelegator.GetLogDelegate()(level, e.Message);

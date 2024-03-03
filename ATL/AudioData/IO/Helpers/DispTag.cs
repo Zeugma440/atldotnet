@@ -48,7 +48,7 @@ namespace ATL.AudioData.IO
             if (chunkSize < 8) return;
             byte[] data = new byte[chunkSize - 4];
 
-            IList<string> keys = WavHelper.getEligibleKeys("disp.entry", meta.AdditionalFields.Keys);
+            IList<string> keys = WavHelper.GetEligibleKeys("disp.entry", meta.AdditionalFields.Keys);
             int index = keys.Count;
 
             // Type
@@ -109,7 +109,7 @@ namespace ATL.AudioData.IO
         {
             IDictionary<string, string> additionalFields = meta.AdditionalFields;
 
-            IList<string> keys = WavHelper.getEligibleKeys("disp.entry", additionalFields.Keys);
+            IList<string> keys = WavHelper.GetEligibleKeys("disp.entry", additionalFields.Keys);
             foreach (string key in keys) writeDispChunk(w, isLittleEndian, additionalFields, key);
 
             return keys.Count;

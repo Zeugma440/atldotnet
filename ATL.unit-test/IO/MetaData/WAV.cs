@@ -1,4 +1,5 @@
-﻿using ATL.AudioData;
+﻿using System.Globalization;
+using ATL.AudioData;
 using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
@@ -12,6 +13,7 @@ namespace ATL.test.IO.MetaData
         private readonly string notEmptyFile_xmp = "WAV/xmp_partial.wav";
         private readonly string notEmptyFile_sample = "WAV/broadcastwave_bext_iXML.wav";
         private readonly string notEmptyFile_cue = "WAV/cue.wav";
+        private readonly string notEmptyFile_cart = "WAV/cart.wav";
 
         public WAV()
         {
@@ -42,10 +44,10 @@ namespace ATL.test.IO.MetaData
                 {"bext.timeReference", "110801250"},
                 {"bext.version", "2"},
                 {"bext.UMID", "060A2B3401010101010102101300000000000000000000800000000000000000"},
-                {"bext.loudnessValue", (1.23).ToString()},
-                {"bext.loudnessRange", (4.56).ToString()},
-                {"bext.maxTruePeakLevel", (7.89).ToString()},
-                {"bext.maxMomentaryLoudness", (3.33).ToString()},
+                {"bext.loudnessValue", 1.23.ToString()},
+                {"bext.loudnessRange", 4.56.ToString()},
+                {"bext.maxTruePeakLevel", 7.89.ToString()},
+                {"bext.maxMomentaryLoudness", 3.33.ToString()},
                 {"bext.maxShortTermLoudness", (-3.33).ToString()},
                 {"bext.codingHistory", "A=MPEG1L3,F=22050,B=56,W=20,M=dual-mono,T=haha"}
             };
@@ -194,6 +196,52 @@ namespace ATL.test.IO.MetaData
             testData.AdditionalFields = tags;
         }
 
+        private void initCartTestData()
+        {
+            notEmptyFile = notEmptyFile_cart;
+
+            testData = new TagHolder();
+
+            IDictionary<string, string> tags = new Dictionary<string, string>
+            {
+                { "cart.version", "1.01" },
+                { "cart.title", "title" },
+                { "cart.artist", "artist" },
+                { "cart.cutNumber", "cutId" },
+                { "cart.clientId", "clientId" },
+                { "cart.category", "category" },
+                { "cart.classification", "classification" },
+                { "cart.outCue", "outCue" },
+                { "cart.startDate", "1900/01/01" },
+                { "cart.startTime", "12:34:56" },
+                { "cart.endDate", "2199/12/31" },
+                { "cart.endTime", "21:43:56" },
+                { "cart.producerAppId", "producerApplicationId" },
+                { "cart.producerAppVersion", "producerApplicationVersion" },
+                { "cart.userDef", "userDefined" },
+                { "cart.dwLevelReference", "32768" },
+                { "cart.postTimerUsageId[1]", "" },
+                { "cart.postTimerValue[1]", "0" },
+                { "cart.postTimerUsageId[2]", "" },
+                { "cart.postTimerValue[2]", "0" },
+                { "cart.postTimerUsageId[3]", "" },
+                { "cart.postTimerValue[3]", "0" },
+                { "cart.postTimerUsageId[4]", "" },
+                { "cart.postTimerValue[4]", "0" },
+                { "cart.postTimerUsageId[5]", "" },
+                { "cart.postTimerValue[5]", "0" },
+                { "cart.postTimerUsageId[6]", "" },
+                { "cart.postTimerValue[6]", "0" },
+                { "cart.postTimerUsageId[7]", "" },
+                { "cart.postTimerValue[7]", "0" },
+                { "cart.postTimerUsageId[8]", "" },
+                { "cart.postTimerValue[8]", "0" },
+                { "cart.url", "URL" },
+                { "cart.tagText", "tagText" }
+            };
+            testData.AdditionalFields = tags;
+        }
+
         private void initSampleTestData()
         {
             notEmptyFile = notEmptyFile_sample;
@@ -228,27 +276,28 @@ namespace ATL.test.IO.MetaData
 
             testData = new TagHolder();
 
-            IDictionary<string, string> tags = new Dictionary<string, string>();
-            tags.Add(new KeyValuePair<string, string>("cue.NumCuePoints", "10"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].CuePointId", "1"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].Position", "88200"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].DataChunkId", "data"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].ChunkStart", "0"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].BlockStart", "0"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].SampleOffset", "88200"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].CuePointId", "10"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].Position", "1730925"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].DataChunkId", "data"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].ChunkStart", "0"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].BlockStart", "0"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[9].SampleOffset", "1730925"));
-
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[0].Type", "labl"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[0].CuePointId", "1"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[0].Text", "MARKEURRRR 1"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[9].Type", "labl"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[9].CuePointId", "10"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[9].Text", "MARKEURRRR 8"));
+            IDictionary<string, string> tags = new Dictionary<string, string>
+            {
+                {"cue.NumCuePoints", "10"},
+                {"cue.CuePoints[0].CuePointId", "1"},
+                {"cue.CuePoints[0].Position", "88200"},
+                {"cue.CuePoints[0].DataChunkId", "data"},
+                {"cue.CuePoints[0].ChunkStart", "0"},
+                {"cue.CuePoints[0].BlockStart", "0"},
+                {"cue.CuePoints[0].SampleOffset", "88200"},
+                {"cue.CuePoints[9].CuePointId", "10"},
+                {"cue.CuePoints[9].Position", "1730925"},
+                {"cue.CuePoints[9].DataChunkId", "data"},
+                {"cue.CuePoints[9].ChunkStart", "0"},
+                {"cue.CuePoints[9].BlockStart", "0"},
+                {"cue.CuePoints[9].SampleOffset", "1730925"},
+                {"adtl.Labels[0].Type", "labl"},
+                {"adtl.Labels[0].CuePointId", "1"},
+                {"adtl.Labels[0].Text", "MARKEURRRR 1"},
+                {"adtl.Labels[9].Type", "labl"},
+                {"adtl.Labels[9].CuePointId", "10"},
+                {"adtl.Labels[9].Text", "MARKEURRRR 8"}
+            };
             testData.AdditionalFields = tags;
         }
 
@@ -258,37 +307,36 @@ namespace ATL.test.IO.MetaData
 
             testData = new TagHolder();
 
-            IDictionary<string, string> tags = new Dictionary<string, string>();
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].CuePointId", "1"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].Position", "88200"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].DataChunkId", "data"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].ChunkStart", "0"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].BlockStart", "0"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[0].SampleOffset", "88200"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].CuePointId", "10"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].Position", "1730925"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].DataChunkId", "data"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].ChunkStart", "0"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].BlockStart", "0"));
-            tags.Add(new KeyValuePair<string, string>("cue.CuePoints[1].SampleOffset", "1730925"));
-
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[0].Type", "labl"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[0].CuePointId", "1"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[0].Text", "MARKEURRRR 1"));
-
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[1].Type", "note"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[1].CuePointId", "10"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[1].Text", "MARKEURRRR 8"));
-
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].Type", "ltxt"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].CuePointId", "11"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].SampleLength", "1234"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].PurposeId", "5678"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].Country", "2"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].Language", "4"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].Dialect", "6"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].CodePage", "8"));
-            tags.Add(new KeyValuePair<string, string>("adtl.Labels[2].Text", "HEYHEY 10"));
+            IDictionary<string, string> tags = new Dictionary<string, string>
+            {
+                {"cue.CuePoints[0].CuePointId", "1"},
+                {"cue.CuePoints[0].Position", "88200"},
+                {"cue.CuePoints[0].DataChunkId", "data"},
+                {"cue.CuePoints[0].ChunkStart", "0"},
+                {"cue.CuePoints[0].BlockStart", "0"},
+                {"cue.CuePoints[0].SampleOffset", "88200"},
+                {"cue.CuePoints[1].CuePointId", "10"},
+                {"cue.CuePoints[1].Position", "1730925"},
+                {"cue.CuePoints[1].DataChunkId", "data"},
+                {"cue.CuePoints[1].ChunkStart", "0"},
+                {"cue.CuePoints[1].BlockStart", "0"},
+                {"cue.CuePoints[1].SampleOffset", "1730925"},
+                {"adtl.Labels[0].Type", "labl"},
+                {"adtl.Labels[0].CuePointId", "1"},
+                {"adtl.Labels[0].Text", "MARKEURRRR 1"},
+                {"adtl.Labels[1].Type", "note"},
+                {"adtl.Labels[1].CuePointId", "10"},
+                {"adtl.Labels[1].Text", "MARKEURRRR 8"},
+                {"adtl.Labels[2].Type", "ltxt"},
+                {"adtl.Labels[2].CuePointId", "11"},
+                {"adtl.Labels[2].SampleLength", "1234"},
+                {"adtl.Labels[2].PurposeId", "5678"},
+                {"adtl.Labels[2].Country", "2"},
+                {"adtl.Labels[2].Language", "4"},
+                {"adtl.Labels[2].Dialect", "6"},
+                {"adtl.Labels[2].CodePage", "8"},
+                {"adtl.Labels[2].Text", "HEYHEY 10"}
+            };
             testData.AdditionalFields = tags;
         }
 
@@ -341,6 +389,18 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_WAV_Cart_simple()
+        {
+            new ConsoleLogger();
+            initCartTestData();
+
+            string location = TestUtils.GetResourceLocationRoot() + notEmptyFile;
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            readExistingTagsOnFile(theFile, 0);
+        }
+
+        [TestMethod]
         public void TagIO_R_Cue_simple()
         {
             new ConsoleLogger();
@@ -378,6 +438,13 @@ namespace ATL.test.IO.MetaData
         {
             initXmpTestData();
             test_RW_Empty(emptyFile, true, true, true, true);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_WAV_Cart_Empty()
+        {
+            initCartTestData();
+            test_RW_Empty(emptyFile, false, true, true, true);
         }
 
         [TestMethod]
@@ -428,6 +495,13 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_WAV_XMP_Existing()
         {
             initXmpTestData();
+            test_RW_Existing(notEmptyFile, 0, true, false, false); // length-check impossible because of parasite end-of-line characters and padding
+        }
+
+        [TestMethod]
+        public void TagIO_RW_WAV_Cart_Existing()
+        {
+            initCartTestData();
             test_RW_Existing(notEmptyFile, 0, true, false, false); // length-check impossible because of parasite end-of-line characters and padding
         }
 

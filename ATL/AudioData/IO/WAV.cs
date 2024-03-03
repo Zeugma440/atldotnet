@@ -52,6 +52,7 @@ namespace ATL.AudioData.IO
         private const string CHUNK_BEXT = BextTag.CHUNK_BEXT;
         private const string CHUNK_IXML = IXmlTag.CHUNK_IXML;
         private const string CHUNK_XMP = XmpTag.CHUNK_XMP;
+        private const string CHUNK_CART = CartTag.CHUNK_CART;
         private const string CHUNK_ID3 = "id3 ";
 
 
@@ -258,6 +259,7 @@ namespace ATL.AudioData.IO
             bool foundBext = false;
             bool foundIXml = false;
             bool foundXmp = false;
+            bool foundCart = false;
 
             // Sub-chunks loop
             // NB1 : we're testing source.Position + 8 because the chunk header (chunk ID and size) takes up 8 bytes
@@ -426,6 +428,16 @@ namespace ATL.AudioData.IO
 
                     XmpTag.FromStream(source, this, readTagParams, chunkSize);
                 }
+                else if (subChunkId.Equals(CHUNK_CART, StringComparison.OrdinalIgnoreCase))
+                {
+                    structureHelper.AddZone(source.Position - 8, (int)(chunkSize + paddingSize + 8), subChunkId);
+                    structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, subChunkId);
+
+                    foundCart = true;
+                    tagExists = true;
+
+                    CartTag.FromStream(source, this, readTagParams, chunkSize);
+                }
                 else if (subChunkId.Equals(CHUNK_ID3, StringComparison.OrdinalIgnoreCase))
                 {
                     id3v2Offset = source.Position;
@@ -479,6 +491,11 @@ namespace ATL.AudioData.IO
                 {
                     structureHelper.AddZone(eof, 0, CHUNK_XMP);
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_XMP);
+                }
+                if (!foundCart)
+                {
+                    structureHelper.AddZone(eof, 0, CHUNK_CART);
+                    structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_CART);
                 }
             }
 
@@ -585,6 +602,7 @@ namespace ATL.AudioData.IO
                         else if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(this)) result += BextTag.ToStream(w, isLittleEndian, this);
                         else if (zone.Equals(CHUNK_IXML) && IXmlTag.IsDataEligible(this)) result += IXmlTag.ToStream(w, isLittleEndian, this);
                         else if (zone.Equals(CHUNK_XMP) && XmpTag.IsDataEligible(this)) result += XmpTag.ToStream(w, this, isLittleEndian, true);
+                        else if (zone.Equals(CHUNK_CART) && CartTag.IsDataEligible(this)) result += CartTag.ToStream(w, isLittleEndian, this);
 
                         break;
                     }

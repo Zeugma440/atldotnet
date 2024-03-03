@@ -5,6 +5,7 @@ using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
 using System;
 using System.Text;
+using System.Globalization;
 
 namespace ATL.AudioData.IO
 {
@@ -18,7 +19,6 @@ namespace ATL.AudioData.IO
         /// </summary>
         public const string CHUNK_BEXT = "bext";
 
-        private static readonly byte[] CR_LF = { 13, 10 };
 
         /// <summary>
         /// Read a bext chunk from the given source into the given Metadata I/O, using the given read parameters
@@ -104,7 +104,7 @@ namespace ATL.AudioData.IO
 
             // CodingHistory
             long initialPos = source.Position;
-            if (StreamUtils.FindSequence(source, CR_LF))
+            if (StreamUtils.FindSequence(source, Utils.CR_LF))
             {
                 long endPos = source.Position - 2;
                 source.Seek(initialPos, SeekOrigin.Begin);
@@ -148,15 +148,15 @@ namespace ATL.AudioData.IO
             string description = Utils.ProtectValue(meta.GeneralDescription);
             if (0 == description.Length && additionalFields.TryGetValue("bext.description", out var field)) description = field;
 
-            WavHelper.writeFixedTextValue(description, 256, w);
-            WavHelper.writeFixedFieldTextValue("bext.originator", additionalFields, 32, w);
-            WavHelper.writeFixedFieldTextValue("bext.originatorReference", additionalFields, 32, w);
-            WavHelper.writeFixedFieldTextValue("bext.originationDate", additionalFields, 10, w);
-            WavHelper.writeFixedFieldTextValue("bext.originationTime", additionalFields, 8, w);
+            WavHelper.WriteFixedTextValue(description, 256, w);
+            WavHelper.WriteFixedFieldTextValue("bext.originator", additionalFields, 32, w);
+            WavHelper.WriteFixedFieldTextValue("bext.originatorReference", additionalFields, 32, w);
+            WavHelper.WriteFixedFieldTextValue("bext.originationDate", additionalFields, 10, w);
+            WavHelper.WriteFixedFieldTextValue("bext.originationTime", additionalFields, 8, w);
 
             // Int values
-            WavHelper.writeFieldIntValue("bext.timeReference", additionalFields, w, (ulong)0);
-            WavHelper.writeFieldIntValue("bext.version", additionalFields, w, (ushort)0);
+            WavHelper.WriteFieldIntValue("bext.timeReference", additionalFields, w, (ulong)0);
+            WavHelper.WriteFieldIntValue("bext.version", additionalFields, w, (ushort)0);
 
             // UMID
             if (additionalFields.ContainsKey("bext.UMID"))
@@ -184,11 +184,11 @@ namespace ATL.AudioData.IO
 
 
             // Float values
-            WavHelper.writeField100DecimalValue("bext.loudnessValue", additionalFields, w, (short)0);
-            WavHelper.writeField100DecimalValue("bext.loudnessRange", additionalFields, w, (short)0);
-            WavHelper.writeField100DecimalValue("bext.maxTruePeakLevel", additionalFields, w, (short)0);
-            WavHelper.writeField100DecimalValue("bext.maxMomentaryLoudness", additionalFields, w, (short)0);
-            WavHelper.writeField100DecimalValue("bext.maxShortTermLoudness", additionalFields, w, (short)0);
+            WavHelper.WriteField100DecimalValue("bext.loudnessValue", additionalFields, w, (short)0);
+            WavHelper.WriteField100DecimalValue("bext.loudnessRange", additionalFields, w, (short)0);
+            WavHelper.WriteField100DecimalValue("bext.maxTruePeakLevel", additionalFields, w, (short)0);
+            WavHelper.WriteField100DecimalValue("bext.maxMomentaryLoudness", additionalFields, w, (short)0);
+            WavHelper.WriteField100DecimalValue("bext.maxShortTermLoudness", additionalFields, w, (short)0);
 
             // Reserved
             for (int i = 0; i < 180; i++) w.Write((byte)0);
@@ -200,7 +200,7 @@ namespace ATL.AudioData.IO
                 textData = Utils.Latin1Encoding.GetBytes(additionalField);
                 w.Write(textData);
             }
-            w.Write(new byte[] { 13, 10 } /* CR LF */);
+            w.Write(Utils.CR_LF);
 
             // Emulation of the BWFMetaEdit padding behaviour (256 characters)
             for (int i = 0; i < 256 - (textData.Length + 2) % 256; i++) w.Write((byte)0);

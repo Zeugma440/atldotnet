@@ -15,22 +15,22 @@ namespace ATL.AudioData.IO
             byte[] data = new byte[256];
 
             // Manufacturer
-            WavHelper.readInt32(source, meta, "sample.manufacturer", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, "sample.manufacturer", data, readTagParams.ReadAllMetaFrames);
 
             // Product
-            WavHelper.readInt32(source, meta, "sample.product", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, "sample.product", data, readTagParams.ReadAllMetaFrames);
 
             // Period
-            WavHelper.readInt32(source, meta, "sample.period", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, "sample.period", data, readTagParams.ReadAllMetaFrames);
 
             // MIDI unity note
-            WavHelper.readInt32(source, meta, "sample.MIDIUnityNote", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, "sample.MIDIUnityNote", data, readTagParams.ReadAllMetaFrames);
 
             // MIDI pitch fraction
-            WavHelper.readInt32(source, meta, "sample.MIDIPitchFraction", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, "sample.MIDIPitchFraction", data, readTagParams.ReadAllMetaFrames);
 
             // SMPTE format
-            WavHelper.readInt32(source, meta, "sample.SMPTEFormat", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, "sample.SMPTEFormat", data, readTagParams.ReadAllMetaFrames);
 
             // SMPTE offsets
             source.Read(data, 0, 4);
@@ -40,7 +40,7 @@ namespace ATL.AudioData.IO
             meta.SetMetaField("sample.SMPTEOffset.Frames", data[3].ToString(), readTagParams.ReadAllMetaFrames);
 
             // Num sample loops
-            int numSampleLoops = WavHelper.readInt32(source, meta, "sample.NumSampleLoops", data, readTagParams.ReadAllMetaFrames);
+            int numSampleLoops = WavHelper.ReadInt32(source, meta, "sample.NumSampleLoops", data, readTagParams.ReadAllMetaFrames);
 
             // Sample loops size (not useful here)
             source.Seek(4, SeekOrigin.Current);
@@ -48,22 +48,22 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < numSampleLoops; i++)
             {
                 // Cue point ID
-                WavHelper.readInt32(source, meta, "sample.SampleLoop[" + i + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, "sample.SampleLoop[" + i + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
 
                 // Type
-                WavHelper.readInt32(source, meta, "sample.SampleLoop[" + i + "].Type", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, "sample.SampleLoop[" + i + "].Type", data, readTagParams.ReadAllMetaFrames);
 
                 // Start
-                WavHelper.readInt32(source, meta, "sample.SampleLoop[" + i + "].Start", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, "sample.SampleLoop[" + i + "].Start", data, readTagParams.ReadAllMetaFrames);
 
                 // End
-                WavHelper.readInt32(source, meta, "sample.SampleLoop[" + i + "].End", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, "sample.SampleLoop[" + i + "].End", data, readTagParams.ReadAllMetaFrames);
 
                 // Fraction
-                WavHelper.readInt32(source, meta, "sample.SampleLoop[" + i + "].Fraction", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, "sample.SampleLoop[" + i + "].Fraction", data, readTagParams.ReadAllMetaFrames);
 
                 // Play count
-                WavHelper.readInt32(source, meta, "sample.SampleLoop[" + i + "].PlayCount", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, "sample.SampleLoop[" + i + "].PlayCount", data, readTagParams.ReadAllMetaFrames);
             }
         }
 
@@ -81,18 +81,18 @@ namespace ATL.AudioData.IO
             w.Write(0); // Placeholder for chunk size that will be rewritten at the end of the method
 
             // Int values
-            WavHelper.writeFieldIntValue("sample.manufacturer", additionalFields, w, 0);
-            WavHelper.writeFieldIntValue("sample.product", additionalFields, w, 0);
-            WavHelper.writeFieldIntValue("sample.period", additionalFields, w, 1);
-            WavHelper.writeFieldIntValue("sample.MIDIUnityNote", additionalFields, w, 0);
-            WavHelper.writeFieldIntValue("sample.MIDIPitchFraction", additionalFields, w, 0);
-            WavHelper.writeFieldIntValue("sample.SMPTEFormat", additionalFields, w, 0);
+            WavHelper.WriteFieldIntValue("sample.manufacturer", additionalFields, w, 0);
+            WavHelper.WriteFieldIntValue("sample.product", additionalFields, w, 0);
+            WavHelper.WriteFieldIntValue("sample.period", additionalFields, w, 1);
+            WavHelper.WriteFieldIntValue("sample.MIDIUnityNote", additionalFields, w, 0);
+            WavHelper.WriteFieldIntValue("sample.MIDIPitchFraction", additionalFields, w, 0);
+            WavHelper.WriteFieldIntValue("sample.SMPTEFormat", additionalFields, w, 0);
 
             // SMPTE offset
-            WavHelper.writeFieldIntValue("sample.SMPTEOffset.Hours", additionalFields, w, (sbyte)0);
-            WavHelper.writeFieldIntValue("sample.SMPTEOffset.Minutes", additionalFields, w, (byte)0);
-            WavHelper.writeFieldIntValue("sample.SMPTEOffset.Seconds", additionalFields, w, (byte)0);
-            WavHelper.writeFieldIntValue("sample.SMPTEOffset.Frames", additionalFields, w, (byte)0);
+            WavHelper.WriteFieldIntValue("sample.SMPTEOffset.Hours", additionalFields, w, (sbyte)0);
+            WavHelper.WriteFieldIntValue("sample.SMPTEOffset.Minutes", additionalFields, w, (byte)0);
+            WavHelper.WriteFieldIntValue("sample.SMPTEOffset.Seconds", additionalFields, w, (byte)0);
+            WavHelper.WriteFieldIntValue("sample.SMPTEOffset.Frames", additionalFields, w, (byte)0);
 
             // == Sample loops
 
@@ -113,12 +113,12 @@ namespace ATL.AudioData.IO
             // Sample loops data
             foreach (string key in keys)
             {
-                WavHelper.writeFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
-                WavHelper.writeFieldIntValue(key + ".Type", additionalFields, w, 0);
-                WavHelper.writeFieldIntValue(key + ".Start", additionalFields, w, 0);
-                WavHelper.writeFieldIntValue(key + ".End", additionalFields, w, 0);
-                WavHelper.writeFieldIntValue(key + ".Fraction", additionalFields, w, 0);
-                WavHelper.writeFieldIntValue(key + ".PlayCount", additionalFields, w, 0);
+                WavHelper.WriteFieldIntValue(key + ".CuePointId", additionalFields, w, 0);
+                WavHelper.WriteFieldIntValue(key + ".Type", additionalFields, w, 0);
+                WavHelper.WriteFieldIntValue(key + ".Start", additionalFields, w, 0);
+                WavHelper.WriteFieldIntValue(key + ".End", additionalFields, w, 0);
+                WavHelper.WriteFieldIntValue(key + ".Fraction", additionalFields, w, 0);
+                WavHelper.WriteFieldIntValue(key + ".PlayCount", additionalFields, w, 0);
             }
 
             long finalPos = w.BaseStream.Position;

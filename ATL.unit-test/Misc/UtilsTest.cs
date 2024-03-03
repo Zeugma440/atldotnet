@@ -41,6 +41,44 @@ namespace ATL.test
         }
 
         [TestMethod]
+        public void Utils_CheckDateFormat()
+        {
+            Assert.IsFalse(Utils.CheckDateFormat("sds"));
+            Assert.IsFalse(Utils.CheckDateFormat("31-44"));
+            Assert.IsFalse(Utils.CheckDateFormat("31-44-55"));
+            Assert.IsFalse(Utils.CheckDateFormat("1131-4-55"));
+            Assert.IsFalse(Utils.CheckDateFormat("1131-44-5"));
+            Assert.IsFalse(Utils.CheckDateFormat("1800-01-01"));
+            Assert.IsFalse(Utils.CheckDateFormat("1900-13-01"));
+            Assert.IsFalse(Utils.CheckDateFormat("1900-01-32"));
+            Assert.IsFalse(Utils.CheckDateFormat("1900-01/99"));
+
+            Assert.IsTrue(Utils.CheckDateFormat("1900-01-01"));
+            Assert.IsTrue(Utils.CheckDateFormat("1900-12-01"));
+            Assert.IsTrue(Utils.CheckDateFormat("1900-01-31"));
+            Assert.IsTrue(Utils.CheckDateFormat("3000-12-31"));
+            Assert.IsTrue(Utils.CheckDateFormat("3000/12/31"));
+        }
+
+        [TestMethod]
+        public void Utils_CheckTimeFormat()
+        {
+            Assert.IsFalse(Utils.CheckTimeFormat("sds"));
+            Assert.IsFalse(Utils.CheckTimeFormat("31:44"));
+            Assert.IsFalse(Utils.CheckTimeFormat("3:44:55"));
+            Assert.IsFalse(Utils.CheckTimeFormat("33:4:55"));
+            Assert.IsFalse(Utils.CheckTimeFormat("33-44-5"));
+            Assert.IsFalse(Utils.CheckTimeFormat("24:01:01"));
+            Assert.IsFalse(Utils.CheckTimeFormat("01:60:01"));
+            Assert.IsFalse(Utils.CheckTimeFormat("01:01:60"));
+
+            Assert.IsTrue(Utils.CheckTimeFormat("00:00:00"));
+            Assert.IsTrue(Utils.CheckTimeFormat("23:00:00"));
+            Assert.IsTrue(Utils.CheckTimeFormat("00:59:00"));
+            Assert.IsTrue(Utils.CheckTimeFormat("00:00:59"));
+        }
+
+        [TestMethod]
         public void Utils_StrictLengthString()
         {
             Assert.AreEqual("0000", Utils.BuildStrictLengthString(null, 4, '0', false));
