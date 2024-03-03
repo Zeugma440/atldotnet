@@ -9,7 +9,7 @@ using System.Linq;
 namespace ATL.AudioData.IO
 {
     /// <summary>
-    /// Represents a CART ("cart"; see AES Standard AES46-2002) metadata set
+    /// Represents a CART (Radio traffic delivery data / AES Standard AES46-2002) metadata set
     ///
     /// Implementation notes
     ///     - Does not support old implementations prior to v1.00

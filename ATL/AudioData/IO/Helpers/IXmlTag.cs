@@ -5,6 +5,9 @@ using static ATL.AudioData.IO.MetaDataIO;
 
 namespace ATL.AudioData.IO
 {
+    /// <summary>
+    /// Represents a Broadcast Wave Format iXML metadata set
+    /// </summary>
     internal static class IXmlTag
     {
         public const string CHUNK_IXML = "iXML";

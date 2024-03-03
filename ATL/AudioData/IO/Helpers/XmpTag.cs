@@ -6,6 +6,9 @@ using static ATL.AudioData.IO.MetaDataIO;
 
 namespace ATL.AudioData.IO
 {
+    /// <summary>
+    /// Represents an XMP ("Extensible Metadata Platform"; see ISO-16684–1) metadata set
+    /// </summary>
     internal static class XmpTag
     {
         public const string CHUNK_XMP = "_PMX";
