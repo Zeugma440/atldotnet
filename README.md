@@ -65,7 +65,7 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 * ATL supports __lyrics__ natively
 
-* ATL supports BEXT, LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops), DISP (displayable objects) and iXML metadata chunks in RIFF / WAV files
+* ATL supports BEXT, LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops), DISP (displayable objects), XMP, CART and iXML metadata chunks in RIFF / WAV files
 
 * ATL supports __Playlists and Cuesheets__
 
@@ -132,7 +132,7 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 
 (3) : MIDI meta events appear on the track's Comment field
 
-(4) : Support for LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops), DISP (displayable objects), BEXT, XMP and iXML metadata chunks
+(4) : Support for LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops), DISP (displayable objects), BEXT, CART, XMP and iXML metadata chunks
 
 (5) : Reads audio properties only, due to the rarity of sample CAF files tagged with actual metadata
 
@@ -171,12 +171,13 @@ Any other field that might be in the tag is readable __and__ editable by ATL. Mo
 NB : Most metadata will be read "as is", with minimal alteration. If your file has invalid tags (e.g. chapter start timecode located after file duration), ATL will give you back that information without trying to auto-correct it.
 
 
-#### Specific industry standards
+#### Industry standards
 
-ATL supports the following specific industry standards :
-- Broadcast wave / BEXT for WAV files
+ATL supports the following industry standards :
+- Broadcast wave / BEXT (EBU – TECH 3285) for WAV files
+- Broadcast wave / CART (AES Standard AES46-2002) for WAV files
 - Broadcast wave / iXML for WAV files
-- XMP for MP4/M4A and WAV files
+- XMP (ISO 16684–1) for MP4/M4A and WAV files
 
 
 ### SUPPORTED PLAYLISTS FORMATS
@@ -194,7 +195,7 @@ CUE
 
 ## What is the roadmap of ATL.NET ?
 
-* Support for Broadcast wave metadata : aXML and CART
+* Support for Broadcast wave metadata : aXML
 * Support for other audio file formats : Speex
 * Connectors to __other library file formats__ (e.g. iTunes)
 
