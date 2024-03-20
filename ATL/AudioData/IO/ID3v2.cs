@@ -840,7 +840,7 @@ namespace ATL.AudioData.IO
             if (Frame.ID.StartsWith("PRIV"))
             {
                 long privStartOffset = source.Position;
-                string owner = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
+                string owner = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
                 Frame.ID += "." + owner;
                 dataSize -= (int)(source.Position - privStartOffset);
                 frameEncoding = Utils.Latin1Encoding; // Decode private data using Latin-1
@@ -1916,8 +1916,7 @@ namespace ATL.AudioData.IO
             }
             else if (frameCode.StartsWith("PRIV")) // Private frame
             {
-                w.Write(encodeID3v2CharEncoding(tagEncoding));
-                w.Write(tagEncoding.GetBytes(actualFrameCode + '\0')); // Owner
+                w.Write(Utils.Latin1Encoding.GetBytes(actualFrameCode + '\0')); // Owner
 
                 isExplicitLatin1Encoding = true; // Writing something else than Latin-1 is unsupported for now
                 writeTextEncoding = false;
