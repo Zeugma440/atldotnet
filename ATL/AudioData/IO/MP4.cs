@@ -1883,7 +1883,7 @@ namespace ATL.AudioData.IO
             if (!frameCode.StartsWith("WM/", StringComparison.OrdinalIgnoreCase))
             {
                 // Non-Microsoft custom metadata
-                if (frameCode.Length > FieldCodeFixedLength)
+                if (frameCode.Length != FieldCodeFixedLength)
                 {
                     string[] frameCodeComponents = frameCode.Split(':');
                     string nmespace = DEFAULT_NAMESPACE;
