@@ -849,16 +849,16 @@ namespace ATL
 
         private static bool canUseValue(DateTime? value)
         {
-            return (value.HasValue && (Settings.NullAbsentValues || !value.Equals(DateTime.MinValue)));
+            return value.HasValue && (Settings.NullAbsentValues || !value.Equals(DateTime.MinValue));
         }
         private static bool canUseValue(int? value)
         {
-            return (value.HasValue && (Settings.NullAbsentValues || value != 0));
+            return value.HasValue && (Settings.NullAbsentValues || value != 0);
         }
 
         private static bool canUseValue(float value)
         {
-            return (Settings.NullAbsentValues || value != 0.0);
+            return Settings.NullAbsentValues || !Utils.ApproxEquals(value, 0);
         }
 
         private static string toTagValue(DateTime? value)

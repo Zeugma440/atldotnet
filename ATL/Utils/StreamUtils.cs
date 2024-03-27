@@ -903,7 +903,7 @@ namespace ATL
             bool forward = offsetTo > offsetFrom;
             long nbIterations = (long)Math.Ceiling(length * 1f / bufferSize);
             long resolution = (long)Math.Ceiling(nbIterations / 10f);
-            float iteration = 0;
+            long iteration = 0;
 
             while (written < length)
             {
@@ -926,7 +926,7 @@ namespace ATL
                 if (progress != null)
                 {
                     iteration++;
-                    if (0 == iteration % resolution) progress.Report(iteration / nbIterations);
+                    if (0 == iteration % resolution) progress.Report((float)iteration / nbIterations);
                 }
             }
         }

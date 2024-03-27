@@ -382,7 +382,7 @@ namespace ATL.AudioData.IO
                         if (secondsPerByte > 0) Duration = chunkSize * secondsPerByte * 1000;
                         break;
                     case CHUNK_PACKET_TABLE:
-                        if (0 == secondsPerByte) readPaktChunk(reader);
+                        if (Utils.ApproxEquals(secondsPerByte, 0)) readPaktChunk(reader);
                         break;
                 }
                 reader.Seek(cursorPos + chunkSize + 12, SeekOrigin.Begin);

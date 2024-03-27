@@ -87,12 +87,11 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                 {
                     string s = source.ReadLine();
                     Track physicalTrack = null;
-                    string audioFilePath;
 
                     Track currentTrack = null;
                     Track previousTrack = null;
                     double previousTimeOffset = 0;
-                    double indexRelativePosition = 0;
+                    int indexRelativePosition = 0;
 
                     while (s != null)
                     {
@@ -118,7 +117,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                             }
                             else if ("FILE".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                             {
-                                audioFilePath = s.Substring(firstBlank + 1, s.Length - firstBlank - 1);
+                                var audioFilePath = s.Substring(firstBlank + 1, s.Length - firstBlank - 1);
                                 audioFilePath = audioFilePath.Substring(0, audioFilePath.LastIndexOf(' ')); // Get rid of the last word representing the audio format
                                 audioFilePath = stripBeginEndQuotes(audioFilePath);
 
@@ -188,7 +187,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                             {
                                 currentTrack.Title = stripBeginEndQuotes(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
                             }
-                            else if (("PREGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase)) || ("POSTGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase)))
+                            else if ("PREGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase) || ("POSTGAP".Equals(firstWord, StringComparison.OrdinalIgnoreCase)))
                             {
                                 if (trackInfo.Length > 0) currentTrack.DurationMs += decodeTimecodeToMs(trackInfo[1]);
                             }

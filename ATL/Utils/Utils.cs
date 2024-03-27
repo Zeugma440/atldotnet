@@ -321,7 +321,7 @@ namespace Commons
             if (value.Length <= 0) return false;
 
             // Numeric conversion
-            if (float.TryParse(value, out var f)) return f != 0;
+            if (float.TryParse(value, out var f)) return !ApproxEquals(f, 0);
 
             // Boolean conversion
             value = value.ToLower();
@@ -606,6 +606,18 @@ namespace Commons
                 LogDelegator.GetLogDelegate()(level, e.InnerException.StackTrace);
                 LogDelegator.GetLogDelegate()(level, "Inner Exception END");
             }
+        }
+
+        /// <summary>
+        /// Indicate whether the given double is approiximately equal to the given value
+        /// (tolerance is 0.001)
+        /// </summary>
+        /// <param name="f">Double to compare</param>
+        /// <param name="val">Value to compare to</param>
+        /// <returns>True if both values are approximately equal; false if not</returns>
+        public static bool ApproxEquals(double f, int val)
+        {
+            return Math.Abs(f - val) < 0.001;
         }
     }
 }

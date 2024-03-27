@@ -127,7 +127,7 @@ namespace ATL.AudioData.IO
         // Calculate duration time
         private double getDuration()
         {
-            if (0 == bitrate) return 0;
+            if (Utils.ApproxEquals(bitrate, 0)) return 0;
             return 8.0 * (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 1000 / bitrate;
         }
 

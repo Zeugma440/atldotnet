@@ -8,6 +8,7 @@ using static ATL.TagData;
 using System.Threading.Tasks;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
+using Commons;
 
 namespace ATL.AudioData.IO
 {
@@ -214,7 +215,7 @@ namespace ATL.AudioData.IO
         // Calculate duration time
         private double getDuration()
         {
-            if (0 == BitRate) return 0;
+            if (Utils.ApproxEquals(BitRate,0)) return 0;
             return AudioDataSize / (BitRate * 1000);
         }
 
