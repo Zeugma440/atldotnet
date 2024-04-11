@@ -48,7 +48,7 @@ namespace ATL.AudioData.IO
          *      - Disc number : "disc", "discnumber" frames
          *      - Album Artist : "albumartist", "album artist" frames
          */
-        private static readonly IDictionary<string, Field> frameMapping = new Dictionary<string, Field>()
+        private static readonly IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
         {
             { "TITLE", Field.TITLE },
             { "ARTIST", Field.ARTIST },
@@ -74,6 +74,30 @@ namespace ATL.AudioData.IO
             { "ISRC", Field.ISRC },
             { "CATALOGNUMBER", Field.CATALOG_NUMBER },
             { "LYRICIST", Field.LYRICIST }
+        };
+
+        private static readonly IDictionary<PictureInfo.PIC_TYPE, string> picMapping = new Dictionary<PictureInfo.PIC_TYPE, string>
+        {
+            { PictureInfo.PIC_TYPE.Icon, "Cover Art (Icon)"},
+            { PictureInfo.PIC_TYPE.Front, "Cover Art (Front)"},
+            { PictureInfo.PIC_TYPE.Back, "Cover Art (Back)"},
+            { PictureInfo.PIC_TYPE.Leaflet, "Cover Art (Leaflet)"},
+            { PictureInfo.PIC_TYPE.CD, "Cover Art (Media)"},
+            { PictureInfo.PIC_TYPE.LeadArtist, "Cover Art (Lead artist)"},
+            { PictureInfo.PIC_TYPE.Artist, "Cover Art (Artist)"},
+            { PictureInfo.PIC_TYPE.Conductor, "Cover Art (Conductor)"},
+            { PictureInfo.PIC_TYPE.Band, "Cover Art (Band)"},
+            { PictureInfo.PIC_TYPE.Composer, "Cover Art (Composer)"},
+            { PictureInfo.PIC_TYPE.Lyricist, "Cover Art (Lyricist)"},
+            { PictureInfo.PIC_TYPE.RecordingLocation, "Cover Art (Recording location)"},
+            { PictureInfo.PIC_TYPE.DuringRecording, "Cover Art (During recording)"},
+            { PictureInfo.PIC_TYPE.DuringPerformance, "Cover Art (During performance)"},
+            { PictureInfo.PIC_TYPE.MovieCapture, "Cover Art (Movie capture)"},
+            { PictureInfo.PIC_TYPE.Fishie, "Cover Art (A bright coloured fish)"},
+            { PictureInfo.PIC_TYPE.Illustration, "Cover Art (Illustration)"},
+            { PictureInfo.PIC_TYPE.BandLogo, "Cover Art (Band logotype)"},
+            { PictureInfo.PIC_TYPE.PublisherLogo, "Cover Art (Publisher logotype)"},
+            { PictureInfo.PIC_TYPE.Generic, "Cover Art (Other)"}
         };
 
 
@@ -191,6 +215,9 @@ namespace ATL.AudioData.IO
         private bool readFrames(BufferedBinaryReader source, TagInfo Tag, ReadTagParams readTagParams)
         {
             source.Seek(Tag.FileSize - Tag.DataShift - Tag.Size, SeekOrigin.Begin);
+
+            var picValuesLower = picMapping.Values.Select(v => v.ToLower()).ToHashSet();
+
             // Read all stored fields
             for (int iterator = 0; iterator < Tag.FrameCount; iterator++)
             {
@@ -208,7 +235,10 @@ namespace ATL.AudioData.IO
 
                 if (frameDataSize > 0)
                 {
-                    if (frameDataSize <= 1000 || frameName.ToLower().Contains("lyrics"))
+                    var frameNameLow = frameName.ToLower();
+                    var isPicture = picValuesLower.Contains(frameNameLow) ||
+                                    (frameDataSize > 1000 && !frameNameLow.Contains("lyrics") && !frameNameLow.Equals("logfile"));
+                    if (!isPicture)
                     {
                         /*
                          * According to spec : "Items are not zero-terminated like in C / C++.
@@ -223,7 +253,7 @@ namespace ATL.AudioData.IO
                         strValue = strValue.Replace('\0', Settings.InternalValueSeparator).Trim();
                         SetMetaField(frameName.Trim().ToUpper(), strValue, readTagParams.ReadAllMetaFrames);
                     }
-                    else // Size > 1000; non-lyrics => Probably an embedded picture
+                    else // Pictures
                     {
                         PictureInfo.PIC_TYPE picType = decodeAPEPictureType(frameName);
 
@@ -260,31 +290,11 @@ namespace ATL.AudioData.IO
         /// <returns>ATL picture type corresponding to the given APE picture code; PIC_TYPE.Unsupported by default</returns>
         private static PictureInfo.PIC_TYPE decodeAPEPictureType(string picCode)
         {
-            switch (picCode.Trim().ToUpper())
+            foreach (var picTypePair in picMapping)
             {
-                case "COVER ART":
-                case "COVER ART (OTHER)": return PictureInfo.PIC_TYPE.Generic;
-                case "COVER ART (ICON)": return PictureInfo.PIC_TYPE.Icon;
-                case "COVER ART (FRONT)": return PictureInfo.PIC_TYPE.Front;
-                case "COVER ART (BACK)": return PictureInfo.PIC_TYPE.Back;
-                case "COVER ART (LEAFLET)": return PictureInfo.PIC_TYPE.Leaflet;
-                case "COVER ART (MEDIA)": return PictureInfo.PIC_TYPE.CD;
-                case "COVER ART (LEAD ARTIST)": return PictureInfo.PIC_TYPE.LeadArtist;
-                case "COVER ART (ARTIST)": return PictureInfo.PIC_TYPE.Artist;
-                case "COVER ART (CONDUCTOR)": return PictureInfo.PIC_TYPE.Conductor;
-                case "COVER ART (BAND)": return PictureInfo.PIC_TYPE.Band;
-                case "COVER ART (COMPOSER)": return PictureInfo.PIC_TYPE.Composer;
-                case "COVER ART (LYRICIST)": return PictureInfo.PIC_TYPE.Lyricist;
-                case "COVER ART (RECORDING LOCATION)": return PictureInfo.PIC_TYPE.RecordingLocation;
-                case "COVER ART (DURING RECORDING)": return PictureInfo.PIC_TYPE.DuringRecording;
-                case "COVER ART (DURING PERFORMANCE)": return PictureInfo.PIC_TYPE.DuringPerformance;
-                case "COVER ART (MOVIE CAPTURE)": return PictureInfo.PIC_TYPE.MovieCapture;
-                case "COVER ART (A BRIGHT COLOURED FISH)": return PictureInfo.PIC_TYPE.Fishie;
-                case "COVER ART (ILLUSTRATION)": return PictureInfo.PIC_TYPE.Illustration;
-                case "COVER ART (BAND LOGOTYPE)": return PictureInfo.PIC_TYPE.BandLogo;
-                case "COVER ART (PUBLISHER LOGOTYPE)": return PictureInfo.PIC_TYPE.PublisherLogo;
-                default: return PictureInfo.PIC_TYPE.Unsupported;
+                if (picTypePair.Value.Equals(picCode, StringComparison.OrdinalIgnoreCase)) return picTypePair.Key;
             }
+            return PictureInfo.PIC_TYPE.Unsupported;
         }
 
         /// <summary>
@@ -294,29 +304,7 @@ namespace ATL.AudioData.IO
         /// <returns>APE picture code corresponding to the given ATL picture type; "Cover Art (Other)" by default</returns>
         private static string encodeAPEPictureType(PictureInfo.PIC_TYPE picType)
         {
-            switch (picType)
-            {
-                case PictureInfo.PIC_TYPE.Icon: return "Cover Art (Icon)";
-                case PictureInfo.PIC_TYPE.Front: return "Cover Art (Front)";
-                case PictureInfo.PIC_TYPE.Back: return "Cover Art (Back)";
-                case PictureInfo.PIC_TYPE.Leaflet: return "Cover Art (Leaflet)";
-                case PictureInfo.PIC_TYPE.CD: return "Cover Art (Media)";
-                case PictureInfo.PIC_TYPE.LeadArtist: return "Cover Art (Lead artist)";
-                case PictureInfo.PIC_TYPE.Artist: return "Cover Art (Artist)";
-                case PictureInfo.PIC_TYPE.Conductor: return "Cover Art (Conductor)";
-                case PictureInfo.PIC_TYPE.Band: return "Cover Art (Band)";
-                case PictureInfo.PIC_TYPE.Composer: return "Cover Art (Composer)";
-                case PictureInfo.PIC_TYPE.Lyricist: return "Cover Art (Lyricist)";
-                case PictureInfo.PIC_TYPE.RecordingLocation: return "Cover Art (Recording location)";
-                case PictureInfo.PIC_TYPE.DuringRecording: return "Cover Art (During recording)";
-                case PictureInfo.PIC_TYPE.DuringPerformance: return "Cover Art (During performance)";
-                case PictureInfo.PIC_TYPE.MovieCapture: return "Cover Art (Movie capture)";
-                case PictureInfo.PIC_TYPE.Fishie: return "Cover Art (A bright coloured fish)";
-                case PictureInfo.PIC_TYPE.Illustration: return "Cover Art (Illustration)";
-                case PictureInfo.PIC_TYPE.BandLogo: return "Cover Art (Band logotype)";
-                case PictureInfo.PIC_TYPE.PublisherLogo: return "Cover Art (Publisher logotype)";
-                default: return "Cover Art (Other)";
-            }
+            return picMapping.TryGetValue(picType, out var type) ? type : "Cover Art (Other)";
         }
 
         /// <inheritdoc/>
