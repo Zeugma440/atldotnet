@@ -35,9 +35,11 @@ namespace ATL.AudioData.IO
             {"xmp","http://ns.adobe.com/xap/1.0/"},
             {"xmpDM","http://ns.adobe.com/xmp/1.0/DynamicMedia/"},
             {"xmpRights","http://ns.adobe.com/xap/1.0/rights/"},
-            {"stDim","http://ns.adobe.com/xap/1.0/sType/Dimensions#"},
             {"tiff","http://ns.adobe.com/tiff/1.0/"},
+            {"exif","http://ns.adobe.com/exif/1.0"},
             {"xmpMM","http://ns.adobe.com/xap/1.0/mm/"},
+            {"stFnt","http://ns.adobe.com/xap/1.0/sType/Font#"},
+            {"stDim","http://ns.adobe.com/xap/1.0/sType/Dimensions#"},
             {"stEvt","http://ns.adobe.com/xap/1.0/sType/ResourceEvent#"},
             {"stRef","http://ns.adobe.com/xap/1.0/sType/ResourceRef#"},
             {"Iptc4xmpCore","http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/"},
@@ -47,7 +49,12 @@ namespace ATL.AudioData.IO
             {"tmi", "http://titus.com/tmi/1.0/"},
             {"photoshop","http://ns.adobe.com/photoshop/1.0/"},
             {"plus","http://ns.useplus.org/ldf/xmp/1.0/"},
-            {"adid", "http://ns.ad-id.org/adid/1.0/"}
+            {"adid", "http://ns.ad-id.org/adid/1.0/"},
+            {"tsc", "http://www.techsmith.com/xmp/tsc/"},
+            {"tscDM", "http://www.techsmith.com/xmp/tscDM/"},
+            {"tscSC", "http://www.techsmith.com/xmp/tsc/"},
+            {"tscIQ", "http://www.techsmith.com/xmp/tscIQ/"},
+            {"tscHS", "http://www.techsmith.com/xmp/tscHS/"},
         };
 
 
