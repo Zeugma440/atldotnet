@@ -1558,30 +1558,38 @@ namespace ATL.AudioData.IO
 
         private static uint navigateToAtom(Stream source, string atomKey)
         {
-            uint atomSize = 0;
+            long atomSize = 0;
             string atomHeader;
             bool first = true;
             int iterations = 0;
-            byte[] data = new byte[4];
+            int atomHeaderSize;
+            byte[] data = new byte[8];
 
             do
             {
-                if (!first) source.Seek((long)atomSize - 8, SeekOrigin.Current);
+                atomHeaderSize = 16;
+                if (!first) source.Seek(atomSize - 8, SeekOrigin.Current);
                 source.Read(data, 0, 4);
                 atomSize = StreamUtils.DecodeBEUInt32(data);
                 source.Read(data, 0, 4);
-                atomHeader = Utils.Latin1Encoding.GetString(data);
+                atomHeader = Utils.Latin1Encoding.GetString(data, 0, 4);
+                if (1 == atomSize) // 64-bit variant
+                {
+                    atomHeaderSize += 8;
+                    source.Read(data, 0, 8);
+                    atomSize = StreamUtils.DecodeBEInt64(data);
+                }
 
                 if (first) first = false;
                 if (++iterations > 100) return 0;
-            } while (!atomKey.Equals(atomHeader) && source.Position + atomSize - 16 < source.Length);
+            } while (!atomKey.Equals(atomHeader) && source.Position + atomSize - atomHeaderSize < source.Length);
 
-            if (source.Position + atomSize - 16 > source.Length)
+            if (source.Position + atomSize - atomHeaderSize > source.Length)
             {
                 // atom found, but its declared size goes beyond file size
                 if (atomKey.Equals(atomHeader))
                 {
-                    uint actualSize = (uint)(source.Length - source.Position + 16);
+                    uint actualSize = (uint)(source.Length - source.Position + atomHeaderSize);
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "atom " + atomKey + " has been declared with an incorrect size; using its actual size (" + actualSize + " bytes)");
                     return actualSize;
                 }
@@ -1589,7 +1597,7 @@ namespace ATL.AudioData.IO
                 return 0;
             }
 
-            return atomKey.Equals(atomHeader) ? atomSize : 0;
+            return atomKey.Equals(atomHeader) ? (uint)atomSize : 0;
         }
 
 
