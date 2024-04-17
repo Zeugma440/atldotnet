@@ -373,7 +373,7 @@ namespace ATL.AudioData.IO
             }
 
             // === Physical data header
-            if (0 == navigateToAtom(source, "mvhd"))
+            if (0 == navigateToAtom(source.BaseStream, "mvhd"))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mvhd atom could not be found; aborting read");
                 return false;
@@ -442,14 +442,16 @@ namespace ATL.AudioData.IO
             // == Audio binary data, chapter or subtitle data
             // Per convention, audio binary data always seems to be in the 1st mdat atom of the file
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            uint mdatSize = navigateToAtom(source, "mdat");
+            var mdatAtomData = navigateToAtomSize(source.BaseStream, "mdat");
+            uint mdatSize = mdatAtomData.Item1;
+            int mdatHeaderSize = mdatAtomData.Item2;
             if (0 == mdatSize)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdat atom could not be found; aborting read");
                 return false;
             }
             long mdatOffset = source.BaseStream.Position;
-            AudioDataOffset = mdatOffset - 8;
+            AudioDataOffset = mdatOffset - mdatHeaderSize;
             AudioDataSize = mdatSize;
             bitrate = (int)Math.Round(mdatSize * 8 / calculatedDurationMs * 1000.0, 0);
 
@@ -534,23 +536,25 @@ namespace ATL.AudioData.IO
                         // On some files, there's a single MDAT atom that contains both chapter references and audio data
                         // => limit zone size to the actual size of the chapters
                         // TODO handle non-contiguous chapters (e.g. chapter data interleaved with audio data)
-                        if (minChapterOffset >= source.BaseStream.Position && minChapterOffset < source.BaseStream.Position - 8 + mdatSize)
+                        if (minChapterOffset >= source.BaseStream.Position && minChapterOffset < source.BaseStream.Position - mdatHeaderSize + mdatSize)
                         {
-                            chapMdatOffset = source.BaseStream.Position - 8;
+                            chapMdatOffset = source.BaseStream.Position - mdatHeaderSize;
                             // Zone size = size of chapter data (text and pictures)
                             chapMdatDataSize = chapterTextSize + chapterPictureSize;
                             chapMdatChapSize = mdatSize;
                         }
 
-                        source.BaseStream.Seek(mdatSize - 8, SeekOrigin.Current);
-                        mdatSize = navigateToAtom(source, "mdat");
+                        source.BaseStream.Seek(mdatSize - mdatHeaderSize, SeekOrigin.Current);
+                        mdatAtomData = navigateToAtomSize(source.BaseStream, "mdat");
+                        mdatSize = mdatAtomData.Item1;
+                        mdatHeaderSize = mdatAtomData.Item2;
                     } while (mdatSize > 0);
                 } // QT chapters are present
 
                 // Memorize the definitive chapter data location as a zone
                 if (chapMdatDataSize > -1)
                 {
-                    structureHelper.AddZone(chapMdatOffset + 8, chapMdatDataSize, ZONE_MP4_QT_CHAP_MDAT);
+                    structureHelper.AddZone(chapMdatOffset + mdatHeaderSize, chapMdatDataSize, ZONE_MP4_QT_CHAP_MDAT);
                     structureHelper.AddSize(chapMdatOffset, chapMdatChapSize, ZONE_MP4_QT_CHAP_MDAT);
                 }
             } // Write mode
@@ -562,7 +566,7 @@ namespace ATL.AudioData.IO
             // == Padding management
             // Seek the generic padding atom
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            initialPaddingSize = navigateToAtom(source, "free");
+            initialPaddingSize = navigateToAtom(source.BaseStream, "free");
             if (initialPaddingSize > 0) tagData.PaddingSize = initialPaddingSize;
 
             if (readTagParams.PrepareForWriting)
@@ -613,7 +617,7 @@ namespace ATL.AudioData.IO
 
             string trackZoneName = "";
 
-            uint trakSize = navigateToAtom(source, "trak");
+            uint trakSize = navigateToAtom(source.BaseStream, "trak");
             if (0 == trakSize)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "total tracks found : " + (currentTrakIndex - 1));
@@ -622,7 +626,7 @@ namespace ATL.AudioData.IO
             var trakPosition = source.BaseStream.Position - 8;
 
             // Read track ID
-            if (0 == navigateToAtom(source, "tkhd"))
+            if (0 == navigateToAtom(source.BaseStream, "tkhd"))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "trak.tkhd atom could not be found; aborting read on track " + currentTrakIndex);
                 source.BaseStream.Seek(trakPosition + trakSize, SeekOrigin.Begin);
@@ -861,7 +865,7 @@ namespace ATL.AudioData.IO
             {
                 uint nbSizes = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                 uint max = 0;
-                uint min = UInt32.MaxValue;
+                uint min = uint.MaxValue;
 
                 for (int i = 0; i < nbSizes; i++)
                 {
@@ -1558,6 +1562,24 @@ namespace ATL.AudioData.IO
 
         private static uint navigateToAtom(Stream source, string atomKey)
         {
+            return navigateToAtomSize(source, atomKey).Item1;
+        }
+
+        /// <summary>
+        /// Look for the atom segment starting with the given key, at the current atom level
+        /// Returns with Source positioned right after the atom header, on the 1st byte of data
+        /// 
+        /// Warning : stream must be positioned at the end of a previous atom before being called
+        /// </summary>
+        /// <param name="source">Source to read from</param>
+        /// <param name="atomKey">Atom key to look for (e.g. "udta")</param>
+        /// <returns>
+        ///  - Item1 : If atom found : raw size of the atom (including the already-read 8-byte header);
+        ///  If atom not found : 0
+        ///  - Item2 : Size of the atom header (may vary if using the 64-bit variant)
+        /// </returns>
+        private static Tuple<uint, int> navigateToAtomSize(Stream source, string atomKey)
+        {
             long atomSize = 0;
             string atomHeader;
             bool first = true;
@@ -1567,7 +1589,7 @@ namespace ATL.AudioData.IO
 
             do
             {
-                atomHeaderSize = 16;
+                atomHeaderSize = 8;
                 if (!first) source.Seek(atomSize - 8, SeekOrigin.Current);
                 source.Read(data, 0, 4);
                 atomSize = StreamUtils.DecodeBEUInt32(data);
@@ -1581,7 +1603,7 @@ namespace ATL.AudioData.IO
                 }
 
                 if (first) first = false;
-                if (++iterations > 100) return 0;
+                if (++iterations > 100) return new Tuple<uint, int>(0, atomHeaderSize);
             } while (!atomKey.Equals(atomHeader) && source.Position + atomSize - atomHeaderSize < source.Length);
 
             if (source.Position + atomSize - atomHeaderSize > source.Length)
@@ -1591,13 +1613,14 @@ namespace ATL.AudioData.IO
                 {
                     uint actualSize = (uint)(source.Length - source.Position + atomHeaderSize);
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "atom " + atomKey + " has been declared with an incorrect size; using its actual size (" + actualSize + " bytes)");
-                    return actualSize;
+                    return new Tuple<uint, int>(actualSize, atomHeaderSize);
                 }
                 // atom not found
-                return 0;
+                return new Tuple<uint, int>(0, atomHeaderSize);
             }
 
-            return atomKey.Equals(atomHeader) ? (uint)atomSize : 0;
+            var result = atomKey.Equals(atomHeader) ? (uint)atomSize : 0;
+            return new Tuple<uint, int>(result, atomHeaderSize);
         }
 
 
