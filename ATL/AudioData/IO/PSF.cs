@@ -404,6 +404,8 @@ namespace ATL.AudioData.IO
         private int write(TagData tag, BinaryWriter w)
         {
             int result = 0;
+            // Keep these in memory to prevent setting them twice using AdditionalFields
+            var writtenFieldCodes = new HashSet<string>();
 
             w.Write(Utils.Latin1Encoding.GetBytes(TAG_HEADER));
 
@@ -423,6 +425,7 @@ namespace ATL.AudioData.IO
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
                             writeTextFrame(w, s, map[frameType]);
+                            writtenFieldCodes.Add(s.ToUpper());
                             result++;
                         }
                         break;
@@ -433,7 +436,11 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && !fieldInfo.NativeFieldCode.Equals("utf8")) // utf8 already written
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
+                    && !fieldInfo.MarkedForDeletion 
+                    && !fieldInfo.NativeFieldCode.Equals("utf8") // utf8 already written
+                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
+                    ) 
                 {
                     writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                     result++;

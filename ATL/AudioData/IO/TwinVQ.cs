@@ -297,6 +297,9 @@ namespace ATL.AudioData.IO
         protected override int write(TagData tag, Stream s, string zone)
         {
             int result = 0;
+            // Keep these in memory to prevent setting them twice using AdditionalFields
+            var writtenFieldCodes = new HashSet<string>();
+
             string recordingYear = "";
 
             IDictionary<Field, string> map = tag.ToMap();
@@ -326,6 +329,7 @@ namespace ATL.AudioData.IO
                         {
                             string value = formatBeforeWriting(frameType, tag, map);
                             writeTextFrame(s, str, value);
+                            writtenFieldCodes.Add(str.ToUpper());
                             result++;
                         }
                         break;
@@ -336,7 +340,10 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && fieldInfo.NativeFieldCode.Length > 0)
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
+                    && !fieldInfo.MarkedForDeletion && fieldInfo.NativeFieldCode.Length > 0
+                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
+                    )
                 {
                     writeTextFrame(s, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                     result++;

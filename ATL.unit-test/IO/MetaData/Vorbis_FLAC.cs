@@ -58,6 +58,8 @@ namespace ATL.test.IO.MetaData
             emptyFile = "FLAC/empty.flac";
             notEmptyFile = "FLAC/flac.flac";
             tagType = MetaDataIOFactory.TagType.NATIVE;
+            titleFieldCode = "TITLE";
+
             var pics = testData.EmbeddedPictures;
             foreach (PictureInfo pic in pics) pic.TagType = tagType;
             testData.EmbeddedPictures = pics;
@@ -209,6 +211,32 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("父", theFile.NativeTag.Copyright);
             Assert.AreEqual("John Johnson Jr.", theFile.NativeTag.Conductor);
             Assert.AreEqual(550, theFile.NativeTag.BPM);
+
+
+            // Setting a standard field using additional fields shouldn't be possible
+            theTag.Title = "THE TITLE";
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            var meta = theFile.getMeta(tagType);
+            Assert.IsNotNull(meta);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual("THE TITLE", meta.Title);
+
+            theTag.AdditionalFields = new Dictionary<string, string> { { titleFieldCode, "THAT TITLE" } };
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            meta = theFile.getMeta(tagType);
+            Assert.IsNotNull(meta);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual("THE TITLE", meta.Title);
 
 
             // Remove the tag and check that it has been indeed removed

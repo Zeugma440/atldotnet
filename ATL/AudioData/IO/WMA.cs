@@ -8,6 +8,7 @@ using System.Linq;
 using System.Collections.Concurrent;
 using static ATL.TagData;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace ATL.AudioData.IO
 {
@@ -121,6 +122,8 @@ namespace ATL.AudioData.IO
 
         public static readonly IDictionary<string, Field> frameMappingLower = new Dictionary<string, Field>();
 
+        public static readonly IDictionary<Field, string> invertedFrameMapping = new Dictionary<Field, string>();
+
         // Field that are embedded in standard ASF description, and do not need to be written in any other frame
         private static readonly IList<string> embeddedFields = new List<string>
         {
@@ -142,6 +145,9 @@ namespace ATL.AudioData.IO
         private IList<string> languages; // Optional language index described in the WMA header
 
         private AudioDataManager.SizeInfo m_sizeInfo;
+
+        // Keep these in memory to prevent setting them twice using AdditionalFields
+        private readonly ISet<string> m_writtenFieldCodes = new HashSet<string>();
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -678,6 +684,12 @@ namespace ATL.AudioData.IO
             return result;
         }
 
+        protected override void preprocessWrite(TagData dataToWrite)
+        {
+            base.preprocessWrite(dataToWrite);
+            m_writtenFieldCodes.Clear();
+        }
+
         /// <inheritdoc/>
         protected override int write(TagData tag, Stream s, string zone)
         {
@@ -691,15 +703,15 @@ namespace ATL.AudioData.IO
 
             return zone switch
             {
-                ZONE_CONTENT_DESCRIPTION => writeContentDescription(tag, w),
+                ZONE_CONTENT_DESCRIPTION => writeContentDescription(tag, m_writtenFieldCodes, w),
                 ZONE_EXTENDED_HEADER_METADATA => writeExtendedHeaderMeta(tag, w),
                 ZONE_EXTENDED_HEADER_METADATA_LIBRARY => writeExtendedHeaderMetaLibrary(tag, w),
-                ZONE_EXTENDED_CONTENT_DESCRIPTION => writeExtendedContentDescription(tag, w),
+                ZONE_EXTENDED_CONTENT_DESCRIPTION => writeExtendedContentDescription(tag, m_writtenFieldCodes, w),
                 _ => 0
             };
         }
 
-        private static int writeContentDescription(TagData tag, BinaryWriter w)
+        private static int writeContentDescription(TagData tag, ISet<string> writtenFieldCodes, BinaryWriter w)
         {
             var beginPos = w.BaseStream.Position;
             w.Write(WMA_CONTENT_DESCRIPTION_ID);
@@ -713,6 +725,13 @@ namespace ATL.AudioData.IO
             string rating = "";
 
             IDictionary<Field, string> map = tag.ToMap();
+            if (0 == invertedFrameMapping.Count)
+            {
+                foreach (var kvp in frameMapping)
+                {
+                    invertedFrameMapping[kvp.Value] = kvp.Key.ToLower();
+                }
+            }
 
             // Supported textual fields
             foreach (Field frameType in map.Keys)
@@ -723,18 +742,23 @@ namespace ATL.AudioData.IO
                 {
                     case Field.TITLE:
                         title = map[frameType];
+                        writtenFieldCodes.Add(invertedFrameMapping[frameType]);
                         break;
                     case Field.ARTIST:
                         author = map[frameType];
+                        writtenFieldCodes.Add(invertedFrameMapping[frameType]);
                         break;
                     case Field.COPYRIGHT:
                         copyright = map[frameType];
+                        writtenFieldCodes.Add(invertedFrameMapping[frameType]);
                         break;
                     case Field.COMMENT:
                         comment = map[frameType];
+                        writtenFieldCodes.Add(invertedFrameMapping[frameType]);
                         break;
                     case Field.RATING:
                         rating = map[frameType];
+                        writtenFieldCodes.Add(invertedFrameMapping[frameType]);
                         break;
                 }
             }
@@ -761,7 +785,7 @@ namespace ATL.AudioData.IO
             return (title.Length > 0 ? 1 : 0) + (author.Length > 0 ? 1 : 0) + (copyright.Length > 0 ? 1 : 0) + (comment.Length > 0 ? 1 : 0) + (rating.Length > 0 ? 1 : 0);
         }
 
-        private int writeExtendedContentDescription(TagData tag, BinaryWriter w)
+        private int writeExtendedContentDescription(TagData tag, ISet<string> writtenFieldCodes, BinaryWriter w)
         {
             ushort counter = 0;
 
@@ -772,7 +796,7 @@ namespace ATL.AudioData.IO
             var counterPos = w.BaseStream.Position;
             w.Write((ushort)0); // Counter placeholder to be rewritten at the end of the method
 
-            IDictionary<Field, String> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToMap();
 
             // Supported textual fields
             foreach (Field frameType in map.Keys)
@@ -786,6 +810,7 @@ namespace ATL.AudioData.IO
                             string value = formatBeforeWriting(frameType, tag, map);
 
                             writeTextFrame(w, s, value);
+                            writtenFieldCodes.Add(s.ToLower());
                             counter++;
                         }
                         break;
@@ -796,7 +821,11 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && (ZONE_EXTENDED_CONTENT_DESCRIPTION.Equals(fieldInfo.Zone) || "".Equals(fieldInfo.Zone)))
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
+                    && !fieldInfo.MarkedForDeletion
+                    && (ZONE_EXTENDED_CONTENT_DESCRIPTION.Equals(fieldInfo.Zone) || "".Equals(fieldInfo.Zone))
+                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToLower())
+                    )
                 {
                     writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                     counter++;

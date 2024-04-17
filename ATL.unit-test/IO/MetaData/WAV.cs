@@ -22,6 +22,7 @@ namespace ATL.test.IO.MetaData
             tagType = MetaDataIOFactory.TagType.NATIVE;
             supportsInternationalChars = false;
             supportsExtraEmbeddedPictures = false;
+            titleFieldCode = "info.INAM";
 
             testData.TrackTotal = 0;
         }
@@ -420,7 +421,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_WAV_INFO_Empty()
+        public void TagIO_RW_WAV_LIST_INFO_Empty()
         {
             initListInfoTestData();
             test_RW_Empty(emptyFile, true, true, true, true);

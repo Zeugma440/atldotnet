@@ -35,6 +35,7 @@ namespace ATL.test.IO.MetaData
             testData.OriginalReleaseDate = new DateTime(2003, 03, 23);
 
             tagType = MetaDataIOFactory.TagType.ID3V2;
+            titleFieldCode = "TIT2";
             var pics = testData.EmbeddedPictures;
             foreach (PictureInfo pic in pics) pic.TagType = tagType;
             testData.EmbeddedPictures = pics;

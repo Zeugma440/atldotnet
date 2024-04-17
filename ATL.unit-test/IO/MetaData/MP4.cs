@@ -63,6 +63,7 @@ namespace ATL.test.IO.MetaData
             emptyFile = "MP4/empty.m4a"; // Has empty udta/meta tags
             notEmptyFile = "MP4/mp4.m4a";
             tagType = MetaDataIOFactory.TagType.NATIVE;
+            titleFieldCode = "©nam";
 
             // MP4 does not support leading zeroes
             testData.TrackNumber = 1;

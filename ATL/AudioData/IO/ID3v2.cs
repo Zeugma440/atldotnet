@@ -1209,12 +1209,6 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        // Writes tag info using ID3v2.4 conventions
-        internal int writeInternal(TagData tag, BinaryWriter w)
-        {
-            return write(tag, w);
-        }
-
         /// <summary>
         /// Writes the given tag into the given Writer using ID3v2.4 conventions
         /// </summary>
@@ -1437,6 +1431,8 @@ namespace ATL.AudioData.IO
 
             IDictionary<string, Field> mapping = frameMapping_v24;
             if (3 == Settings.ID3v2_tagSubVersion) mapping = frameMapping_v23;
+            // Keep these in memory to prevent setting them twice using AdditionalFields
+            var writtenFieldCodes = new HashSet<string>();
 
             foreach (Field frameType in map.Keys)
             {
@@ -1448,6 +1444,7 @@ namespace ATL.AudioData.IO
 
                     string value = formatBeforeWriting(frameType, tag, map);
                     writeTextFrame(w, s, value, tagEncoding);
+                    writtenFieldCodes.Add(s.ToUpper());
                     nbFrames++;
                     break;
                 }
@@ -1468,7 +1465,10 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
+                    && !fieldInfo.MarkedForDeletion
+                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
+                    )
                 {
                     var fieldCode = fieldInfo.NativeFieldCode;
                     if (fieldCode.Equals(VorbisTag.VENDOR_METADATA_ID)) continue; // Specific mandatory field exclusive to VorbisComment

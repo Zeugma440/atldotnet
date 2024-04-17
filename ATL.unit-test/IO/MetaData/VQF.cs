@@ -40,6 +40,8 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "VQF/empty.vqf";
             notEmptyFile = "VQF/vqf.vqf";
+            titleFieldCode = "NAME";
+            tagType = MetaDataIOFactory.TagType.NATIVE;
         }
 
         [TestMethod]
@@ -98,6 +100,31 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(2008, theFile.NativeTag.Date.Year);
             Assert.AreEqual("FPS", theFile.NativeTag.Genre);
             Assert.AreEqual(22, theFile.NativeTag.TrackNumber);
+
+
+            // Setting a standard field using additional fields shouldn't be possible
+            theTag.Title = "THE TITLE";
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            var meta = theFile.getMeta(tagType);
+            Assert.IsNotNull(meta);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual("THE TITLE", meta.Title);
+
+            theTag.AdditionalFields = new Dictionary<string, string> { { titleFieldCode, "THAT TITLE" } };
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            meta = theFile.getMeta(tagType);
+            Assert.IsNotNull(meta);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual("THE TITLE", meta.Title);
 
 
             // Remove the tag and check that it has been indeed removed

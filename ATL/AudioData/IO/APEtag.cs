@@ -415,6 +415,8 @@ namespace ATL.AudioData.IO
         private int writeFrames(TagData tag, BinaryWriter w)
         {
             int nbFrames = 0;
+            // Keep these in memory to prevent setting them twice using AdditionalFields
+            var writtenFieldCodes = new HashSet<string>();
 
             // Picture fields (first before textual fields, since APE tag is located on the footer)
             foreach (PictureInfo picInfo in tag.Pictures)
@@ -445,6 +447,7 @@ namespace ATL.AudioData.IO
                         {
                             string value = formatBeforeWriting(frameType, tag, map);
                             writeTextFrame(w, s, value);
+                            writtenFieldCodes.Add(s.ToUpper());
                             nbFrames++;
                         }
                         break;
@@ -455,7 +458,10 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
+                    && !fieldInfo.MarkedForDeletion
+                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
+                    )
                 {
                     writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                     nbFrames++;

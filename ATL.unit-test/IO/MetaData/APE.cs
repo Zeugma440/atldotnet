@@ -14,6 +14,7 @@ namespace ATL.test.IO.MetaData
             emptyFile = "MP3/empty.mp3";
             notEmptyFile = "MP3/APE.mp3";
             tagType = MetaDataIOFactory.TagType.APE;
+            titleFieldCode = "TITLE";
 
             // Initialize specific test data (Publisher and Description fields not supported in APE tag)
             testData.Publisher = null;

@@ -1828,6 +1828,8 @@ namespace ATL.AudioData.IO
         private int writeFrames(TagData tag, BinaryWriter w)
         {
             int counter = 0;
+            // Keep these in memory to prevent setting them twice using AdditionalFields
+            var writtenFieldCodes = new HashSet<string>();
 
             IDictionary<Field, string> map = tag.ToMap();
 
@@ -1843,6 +1845,7 @@ namespace ATL.AudioData.IO
                             string value = formatBeforeWriting(frameType, tag, map);
 
                             writeTextFrame(w, s, value);
+                            writtenFieldCodes.Add(s.ToUpper());
                             counter++;
                         }
                         break;
@@ -1858,6 +1861,7 @@ namespace ATL.AudioData.IO
                     && !fieldInfo.MarkedForDeletion
                     && !fieldInfo.NativeFieldCode.StartsWith("uuid.")
                     && !fieldInfo.NativeFieldCode.StartsWith("xmp.")
+                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
                     )
                 {
                     writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));

@@ -488,6 +488,8 @@ namespace ATL.AudioData.IO
             uint nbFrames = 0;
 
             IDictionary<Field, string> map = tag.ToMap();
+            // Keep these in memory to prevent setting them twice using AdditionalFields
+            var writtenFieldCodes = new HashSet<string>();
 
             // Supported textual fields
             foreach (Field frameType in map.Keys)
@@ -496,7 +498,7 @@ namespace ATL.AudioData.IO
                 {
                     if (frameType == frameMapping[s])
                     {
-                        if (map[frameType].Length > 0) // No frame with empty value
+                        if (map[frameType].Length > 0) // Don't write frames with empty values
                         {
                             string value = formatBeforeWriting(frameType, tag, map);
                             if (frameType == Field.ARTIST && value.Contains(Settings.DisplayValueSeparator + ""))
@@ -509,6 +511,7 @@ namespace ATL.AudioData.IO
                             {
                                 writeTextFrame(w, s, value);
                             }
+                            writtenFieldCodes.Add(s.ToUpper());
                             nbFrames++;
                         }
                         break;
@@ -522,7 +525,11 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion && !fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID))
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
+                    && !fieldInfo.MarkedForDeletion
+                    && !fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID)
+                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
+                    )
                 {
                     writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                     nbFrames++;

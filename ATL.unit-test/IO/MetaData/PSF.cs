@@ -40,6 +40,8 @@ namespace ATL.test.IO.MetaData
         {
             emptyFile = "PSF/empty.psf";
             notEmptyFile = "PSF/psf.psf";
+            titleFieldCode = "title";
+            tagType = MetaDataIOFactory.TagType.NATIVE;
         }
 
         [TestMethod]
@@ -97,8 +99,33 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("FPS", theFile.NativeTag.Genre);
 
 
+            // Setting a standard field using additional fields shouldn't be possible
+            theTag.Title = "THE TITLE";
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            var meta = theFile.getMeta(tagType);
+            Assert.IsNotNull(meta);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual("THE TITLE", meta.Title);
+
+            theTag.AdditionalFields = new Dictionary<string, string> { { titleFieldCode, "THAT TITLE" } };
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
+
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            meta = theFile.getMeta(tagType);
+            Assert.IsNotNull(meta);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual("THE TITLE", meta.Title);
+
+
             // Remove the tag and check that it has been indeed removed
-            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TagType.NATIVE));
+            Assert.IsTrue(theFile.RemoveTagFromFile(tagType));
 
             Assert.IsTrue(theFile.ReadFromFile());
 

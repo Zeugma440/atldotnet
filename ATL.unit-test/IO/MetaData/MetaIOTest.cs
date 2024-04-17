@@ -50,6 +50,7 @@ namespace ATL.test.IO.MetaData
         protected bool supportsExtraEmbeddedPictures = true;
         protected bool supportsInternationalChars = true;
         protected bool canMetaNotExist = true;
+        protected string titleFieldCode = "";
 
         public delegate void StreamDelegate(FileStream fs);
 
@@ -565,6 +566,34 @@ namespace ATL.test.IO.MetaData
                 Assert.IsTrue(meta.Exists);
 
                 Assert.AreEqual(testData.AdditionalFields.Count - 1, meta.AdditionalFields.Count);
+            }
+
+            // Setting a standard field using additional fields shouldn't be possible
+            if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0 && titleFieldCode.Length > 0)
+            {
+                theTag.Title = "THE TITLE";
+
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
+
+                Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+                meta = theFile.getMeta(tagType);
+                Assert.IsNotNull(meta);
+                Assert.IsTrue(meta.Exists);
+
+                Assert.AreEqual("THE TITLE", meta.Title);
+
+                theTag.AdditionalFields = new Dictionary<string, string> { { titleFieldCode, "THAT TITLE" } };
+
+                Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
+
+                Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+                meta = theFile.getMeta(tagType);
+                Assert.IsNotNull(meta);
+                Assert.IsTrue(meta.Exists);
+
+                Assert.AreEqual("THE TITLE", meta.Title);
             }
 
 
