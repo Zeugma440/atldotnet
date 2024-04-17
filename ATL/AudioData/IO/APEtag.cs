@@ -290,11 +290,10 @@ namespace ATL.AudioData.IO
         /// <returns>ATL picture type corresponding to the given APE picture code; PIC_TYPE.Unsupported by default</returns>
         private static PictureInfo.PIC_TYPE decodeAPEPictureType(string picCode)
         {
-            foreach (var picTypePair in picMapping)
-            {
-                if (picTypePair.Value.Equals(picCode, StringComparison.OrdinalIgnoreCase)) return picTypePair.Key;
-            }
-            return PictureInfo.PIC_TYPE.Unsupported;
+            var picTypePair = picMapping.FirstOrDefault(ptp =>
+                ptp.Value.Equals(picCode, StringComparison.OrdinalIgnoreCase));
+
+            return picTypePair.Equals(default(KeyValuePair<PictureInfo.PIC_TYPE, string>)) ? PictureInfo.PIC_TYPE.Unsupported : picTypePair.Key;
         }
 
         /// <summary>
