@@ -1590,12 +1590,12 @@ namespace ATL.AudioData.IO
             do
             {
                 if (!first) source.Seek(atomSize - atomHeaderSize, SeekOrigin.Current);
-                atomHeaderSize = 8; // Default 8-bit variant
+                atomHeaderSize = 8; // Default variant where size takes up 32-bit
                 source.Read(data, 0, 4);
                 atomSize = StreamUtils.DecodeBEUInt32(data);
                 source.Read(data, 0, 4);
                 atomHeader = Utils.Latin1Encoding.GetString(data, 0, 4);
-                if (1 == atomSize) // 64-bit variant
+                if (1 == atomSize) // 64-bit size variant
                 {
                     atomHeaderSize += 8;
                     source.Read(data, 0, 8);
