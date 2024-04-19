@@ -1574,7 +1574,7 @@ namespace ATL.AudioData.IO
         /// <param name="source">Source to read from</param>
         /// <param name="atomKey">Atom key to look for (e.g. "udta")</param>
         /// <returns>
-        ///  - Item1 : If atom found : raw size of the atom (including the already-read 8-byte header);
+        ///  - Item1 : If atom found : raw size of the atom (including the already-read 8 or 16-byte header);
         ///  If atom not found : 0
         ///  - Item2 : Size of the atom header (may vary if using the 64-bit variant)
         /// </returns>
@@ -1584,13 +1584,13 @@ namespace ATL.AudioData.IO
             string atomHeader;
             bool first = true;
             int iterations = 0;
-            int atomHeaderSize;
+            int atomHeaderSize = 8;
             byte[] data = new byte[8];
 
             do
             {
-                atomHeaderSize = 8;
-                if (!first) source.Seek(atomSize - 8, SeekOrigin.Current);
+                if (!first) source.Seek(atomSize - atomHeaderSize, SeekOrigin.Current);
+                atomHeaderSize = 8; // Default 8-bit variant
                 source.Read(data, 0, 4);
                 atomSize = StreamUtils.DecodeBEUInt32(data);
                 source.Read(data, 0, 4);
