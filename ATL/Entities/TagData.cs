@@ -3,6 +3,7 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace ATL
 {
@@ -501,10 +502,11 @@ namespace ATL
 
         /// <summary>
         /// Indexer
+        /// TODO that code could be more performant and not rely on the creation of a new Map
         /// </summary>
         /// <param name="index">ATL field code to search for</param>
         /// <returns>Value associated with the given ATL field code</returns>
-        public string this[Field index] => Fields.ContainsKey(index) ? Fields[index] : null;
+        public string this[Field index] => ToMap().TryGetValue(index, out var value) ? value : null;
 
         /// <summary>
         /// Convert non-null 'classic' fields values into a properties Map
@@ -514,9 +516,7 @@ namespace ATL
         /// <returns>Map containing all 'classic' metadata fields</returns>
         public IDictionary<Field, string> ToMap(bool supportsSyncLyrics = false)
         {
-            IDictionary<Field, string> result = new Dictionary<Field, string>();
-
-            foreach (KeyValuePair<Field, string> kvp in Fields) result[kvp.Key] = kvp.Value;
+            IDictionary<Field, string> result = new Dictionary<Field, string>(Fields);
 
             if (result.ContainsKey(Field.RECORDING_DATE_OR_YEAR))
             {

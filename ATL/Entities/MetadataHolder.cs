@@ -3,6 +3,7 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using static ATL.TagData;
 
@@ -84,7 +85,7 @@ namespace ATL
             {
                 if (tagData[Field.TRACK_NUMBER_TOTAL] != null)
                     return TrackUtils.ExtractTrackNumber(tagData[Field.TRACK_NUMBER_TOTAL]);
-                else return TrackUtils.ExtractTrackNumber(tagData[Field.TRACK_NUMBER]);
+                return TrackUtils.ExtractTrackNumber(tagData[Field.TRACK_NUMBER]);
             }
             set => tagData.IntegrateValue(Field.TRACK_NUMBER, value.ToString());
         }
@@ -95,9 +96,9 @@ namespace ATL
             {
                 if (tagData[Field.TRACK_NUMBER_TOTAL] != null)
                     return TrackUtils.ExtractTrackTotal(tagData[Field.TRACK_NUMBER_TOTAL]);
-                else if (Utils.IsNumeric(tagData[Field.TRACK_TOTAL]))
+                if (Utils.IsNumeric(tagData[Field.TRACK_TOTAL]))
                     return ushort.Parse(tagData[Field.TRACK_TOTAL]);
-                else return TrackUtils.ExtractTrackTotal(tagData[Field.TRACK_NUMBER]);
+                return TrackUtils.ExtractTrackTotal(tagData[Field.TRACK_NUMBER]);
             }
             set => tagData.IntegrateValue(Field.TRACK_TOTAL, value.ToString());
         }
@@ -108,7 +109,7 @@ namespace ATL
             {
                 if (tagData[Field.DISC_NUMBER_TOTAL] != null)
                     return TrackUtils.ExtractTrackNumber(tagData[Field.DISC_NUMBER_TOTAL]);
-                else return TrackUtils.ExtractTrackNumber(tagData[Field.DISC_NUMBER]);
+                return TrackUtils.ExtractTrackNumber(tagData[Field.DISC_NUMBER]);
             }
             set => tagData.IntegrateValue(Field.DISC_NUMBER, value.ToString());
         }
@@ -119,9 +120,9 @@ namespace ATL
             {
                 if (tagData[Field.DISC_NUMBER_TOTAL] != null)
                     return TrackUtils.ExtractTrackTotal(tagData[Field.DISC_NUMBER_TOTAL]);
-                else if (Utils.IsNumeric(tagData[Field.DISC_TOTAL]))
+                if (Utils.IsNumeric(tagData[Field.DISC_TOTAL]))
                     return ushort.Parse(tagData[Field.DISC_TOTAL]);
-                else return TrackUtils.ExtractTrackTotal(tagData[Field.DISC_NUMBER]);
+                return TrackUtils.ExtractTrackTotal(tagData[Field.DISC_NUMBER]);
             }
             set => tagData.IntegrateValue(Field.DISC_TOTAL, value.ToString());
         }
@@ -130,11 +131,30 @@ namespace ATL
         {
             get
             {
-                DateTime result;
-                if (!DateTime.TryParse(Utils.ProtectValue(tagData[Field.RECORDING_DATE]), out result)) // First try with a proper Recording date field
+                DateTime result = DateTime.MinValue;
+                bool success = false;
+
+                // The field may be holding multiple values => split it and order it by size desc
+                string[] dateValues = Array.Empty<string>();
+                if (tagData.hasKey(Field.RECORDING_DATE))
                 {
-                    bool success = false;
-                    string dayMonth = Utils.ProtectValue(tagData[Field.RECORDING_DAYMONTH]); // If not, try to assemble year and dateMonth (e.g. ID3v2)
+                    dateValues = tagData[Field.RECORDING_DATE]
+                        .Split(Settings.InternalValueSeparator)
+                        .OrderByDescending(s => s.Length)
+                        .ToArray();
+
+                    // First try with a proper Recording date field
+                    foreach (var dateValue in dateValues)
+                    {
+                        success = DateTime.TryParse(Utils.ProtectValue(dateValue), out result);
+                        if (success) break;
+                    }
+                }
+
+                // If not, try to assemble year and dateMonth (e.g. ID3v2)
+                if (!success)
+                {
+                    string dayMonth = Utils.ProtectValue(tagData[Field.RECORDING_DAYMONTH]);
                     string year = Utils.ProtectValue(tagData[Field.RECORDING_YEAR]);
                     if (4 == dayMonth.Length && 4 == year.Length)
                     {
@@ -152,10 +172,19 @@ namespace ATL
                         }
                         success = DateTime.TryParse(dateTimeBuilder.ToString(), out result);
                     }
-                    if (!success) // Year only
+
+                    // Year only
+                    if (!success)
                     {
-                        if (year.Length != 4) year = Utils.ProtectValue(tagData[Field.RECORDING_DATE]); // ...then with RecordingDate
-                        if (4 == year.Length) // We have a year !
+                        // ...then try with RecordingDate
+                        foreach (var dateValue in dateValues)
+                        {
+                            if (4 == year.Length) break;
+                            year = Utils.ProtectValue(dateValue);
+                        }
+
+                        // We have a year !
+                        if (4 == year.Length)
                         {
                             StringBuilder dateTimeBuilder = new StringBuilder();
                             dateTimeBuilder.Append(year).Append("-01-01");
@@ -165,12 +194,11 @@ namespace ATL
                                 dateTimeBuilder.Append('T');
                                 dateTimeBuilder.Append(time[..2]).Append(':');
                                 dateTimeBuilder.Append(time.Substring(2, 2)).Append(':');
-                                dateTimeBuilder.Append((6 == time.Length) ? time.Substring(4, 2) : "00");
+                                dateTimeBuilder.Append(6 == time.Length ? time.Substring(4, 2) : "00");
                             }
-                            success = DateTime.TryParse(dateTimeBuilder.ToString(), out result);
+                            DateTime.TryParse(dateTimeBuilder.ToString(), out result);
                         }
                     }
-                    if (!success) result = DateTime.MinValue;
                 }
                 return result;
             }
