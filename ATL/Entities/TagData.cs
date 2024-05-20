@@ -244,7 +244,7 @@ namespace ATL
         /// <summary>
         /// All standard fields, stored according to their code
         /// </summary>
-        private IDictionary<Field, string> Fields { get; set; }
+        private IDictionary<Field, string> Fields { get; }
 
         /// <summary>
         /// Additional fields = non-classic fields
@@ -502,11 +502,47 @@ namespace ATL
 
         /// <summary>
         /// Indexer
-        /// TODO that code could be more performant and not rely on the creation of a new Map
         /// </summary>
         /// <param name="index">ATL field code to search for</param>
         /// <returns>Value associated with the given ATL field code</returns>
-        public string this[Field index] => ToMap().TryGetValue(index, out var value) ? value : null;
+        public string this[Field index] => getField(index);
+
+        /// <summary>
+        /// Field accessor 
+        /// </summary>
+        /// <param name="index">ATL field code to search for</param>
+        /// <param name="supportsSyncLyrics">true if synched lyrics are supported</param>
+        /// <returns>Value associated with the given ATL field code</returns>
+        private string getField(Field index, bool supportsSyncLyrics = false)
+        {
+            Fields.TryGetValue(index, out var result);
+
+            if (null == result
+                && (index == Field.RECORDING_YEAR || index == Field.RECORDING_DATE)
+                && Fields.TryGetValue(Field.RECORDING_DATE_OR_YEAR, out var recYearOrDate))
+                result = recYearOrDate;
+
+            if (null == result
+                && index == Field.RECORDING_DATE_OR_YEAR
+                && Fields.TryGetValue(Field.RECORDING_DATE, out var recDate))
+                result = recDate;
+
+            if (null == result
+                && index == Field.RECORDING_DATE_OR_YEAR
+                && Fields.TryGetValue(Field.RECORDING_YEAR, out var recYear))
+                result = recYear;
+
+            if (null == result
+                && index == Field.LYRICS_UNSYNCH
+                && Lyrics != null)
+            {
+                // Synch lyrics override unsynch lyrics when the target format cannot support both of them
+                if (!supportsSyncLyrics && Lyrics.SynchronizedLyrics.Count > 0) result = Lyrics.FormatSynchToLRC();
+                else if (!string.IsNullOrEmpty(Lyrics.UnsynchronizedLyrics)) result = Lyrics.UnsynchronizedLyrics;
+            }
+
+            return result;
+        }
 
         /// <summary>
         /// Convert non-null 'classic' fields values into a properties Map
@@ -520,25 +556,21 @@ namespace ATL
 
             if (result.ContainsKey(Field.RECORDING_DATE_OR_YEAR))
             {
-                string recYearOrDate = result[Field.RECORDING_DATE_OR_YEAR];
-                result[Field.RECORDING_YEAR] ??= recYearOrDate;
-                result[Field.RECORDING_DATE] ??= recYearOrDate;
+                checkField(result, Field.RECORDING_YEAR, supportsSyncLyrics);
+                checkField(result, Field.RECORDING_DATE, supportsSyncLyrics);
             }
-            else
-            {
-                if (result.ContainsKey(Field.RECORDING_DATE))
-                    result[Field.RECORDING_DATE_OR_YEAR] = result[Field.RECORDING_DATE];
-                else if (result.ContainsKey(Field.RECORDING_YEAR))
-                    result[Field.RECORDING_DATE_OR_YEAR] = result[Field.RECORDING_YEAR];
-            }
+            else checkField(result, Field.RECORDING_DATE_OR_YEAR, supportsSyncLyrics);
 
-            if (Lyrics == null) return result;
-
-            // Synch lyrics override unsynch lyrics when the target format cannot support both of them
-            if (!supportsSyncLyrics && Lyrics.SynchronizedLyrics.Count > 0) result[Field.LYRICS_UNSYNCH] = Lyrics.FormatSynchToLRC();
-            else if (!string.IsNullOrEmpty(Lyrics.UnsynchronizedLyrics)) result[Field.LYRICS_UNSYNCH] = Lyrics.UnsynchronizedLyrics;
+            checkField(result, Field.LYRICS_UNSYNCH, supportsSyncLyrics);
 
             return result;
+        }
+
+        private void checkField(IDictionary<Field, string> map, Field index, bool supportsSyncLyrics = false)
+        {
+            if (map.ContainsKey(index)) return;
+            var value = getField(index, supportsSyncLyrics);
+            if (value != null) map[index] = value;
         }
 
         /// <summary>
