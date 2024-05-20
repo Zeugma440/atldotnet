@@ -188,20 +188,20 @@ namespace ATL
         /// <summary>
         /// Construct picture information from its raw, binary data
         /// </summary>
-        /// <param name="stream">Stream containing raw picture data, positioned at the beginning of picture data</param>
-        /// <param name="length">Length of the picture data to read inside the given stream</param>
+        /// <param name="inStream">Stream containing raw picture data, positioned at the beginning of picture data</param>
+        /// <param name="length">Length of the picture data to read inside the given Stream</param>
         /// <param name="picType">Type of the picture (default : Generic)</param>
         /// <param name="tagType">Type of the containing tag (default : TAG_ANY)</param>
         /// <param name="nativePicCode">Native code of the picture, as stated in its containing format's specs (default : not set)</param>
         /// <param name="position">Position of the picture among the other pictures of the same file (default : 1)</param>
         /// <returns></returns>
-        public static PictureInfo fromBinaryData(Stream stream, int length, PIC_TYPE picType, TagType tagType, object nativePicCode, int position = 1)
+        public static PictureInfo fromBinaryData(Stream inStream, int length, PIC_TYPE picType, TagType tagType, object nativePicCode, int position = 1)
         {
-            if (null == stream) throw new ArgumentException("Stream should not be null");
+            if (null == inStream) throw new ArgumentException("Stream should not be null");
 
-            byte[] data = new byte[length];
-            stream.Read(data, 0, length);
-            return new PictureInfo(picType, tagType, nativePicCode, position, data);
+            using MemoryStream outStream = new MemoryStream(length);
+            StreamUtils.CopyStream(inStream, outStream, length);
+            return new PictureInfo(picType, tagType, nativePicCode, position, outStream.ToArray());
         }
 
         // ---------------- CONSTRUCTORS

@@ -8,7 +8,6 @@ using System.Linq;
 using System.Collections.Concurrent;
 using static ATL.TagData;
 using System.Threading.Tasks;
-using System.Reflection;
 
 namespace ATL.AudioData.IO
 {

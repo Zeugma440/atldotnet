@@ -913,7 +913,7 @@ namespace ATL.AudioData.IO
                         chapter.StartOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                         chapter.EndOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
 
-                        chapter.UseOffset = (chapter.StartOffset != uint.MaxValue);
+                        chapter.UseOffset = chapter.StartOffset != uint.MaxValue;
 
                         long remainingData = dataSize - (source.Position - initPos);
                         while (remainingData > 0)
