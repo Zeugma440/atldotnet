@@ -1073,8 +1073,9 @@ namespace ATL.AudioData.IO
                         }
                         else
                         {
-                            data = new byte[picSize];
-                            source.Read(data, 0, picSize);
+                            using MemoryStream outStream = new MemoryStream(picSize);
+                            StreamUtils.CopyStream(source, outStream, picSize);
+                            data = outStream.ToArray();
                         }
                         PictureInfo picInfo = PictureInfo.fromBinaryData(data, picType, getImplementedTagType(), picCode, picturePosition);
                         picInfo.Description = description;
