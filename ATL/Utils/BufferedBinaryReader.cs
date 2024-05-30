@@ -188,7 +188,13 @@ namespace ATL
                 }
 
                 // ...then retrieve the rest by reading the stream
-                int readBytes = stream.Read(buffer, offset + availableBytes, count - availableBytes);
+                var readBytes = 0;
+                while (readBytes != count - availableBytes)
+                {
+                    var read = stream.Read(buffer, offset + availableBytes + readBytes, count - availableBytes - readBytes);
+                    readBytes += read;
+                    if (0 == read && stream.Length == stream.Position) break;
+                }
 
                 streamPosition += readBytes;
                 stream.Position = streamPosition;
