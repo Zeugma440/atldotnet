@@ -6,7 +6,7 @@ __Optimized with__ : [ReSharper](https://jb.gg/OpenSourceSupport), [BenchmarkDot
 
 ## Current status
 
-[![.NET](https://github.com/Zeugma440/atldotnet/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/Zeugma440/atldotnet/actions/workflows/dotnet.yml) [![codecov](https://codecov.io/gh/Zeugma440/atldotnet/branch/main/graph/badge.svg)](https://codecov.io/gh/Zeugma440/atldotnet) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Zeugma440_atldotnet&metric=alert_status)](https://sonarcloud.io/dashboard?id=Zeugma440_atldotnet)
+[![.NET](https://github.com/Zeugma440/atldotnet/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/Zeugma440/atldotnet/actions/workflows/dotnet.yml) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Zeugma440_atldotnet&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Zeugma440_atldotnet) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Zeugma440_atldotnet&metric=alert_status)](https://sonarcloud.io/dashboard?id=Zeugma440_atldotnet)
 
 ## What is ATL .NET ?
 
