@@ -325,7 +325,17 @@ namespace ATL
                     case Field.LYRICS_UNSYNCH:
                         {
                             if (null == Lyrics) Lyrics = new LyricsInfo();
-                            if (value.Contains("[0")) Lyrics.ParseLRC(value);
+                            if (value.Contains("[0"))
+                            {
+                                try
+                                {
+                                    Lyrics.ParseLRC(value);
+                                }
+                                catch (Exception e)
+                                {
+                                    Lyrics.UnsynchronizedLyrics = value;
+                                }
+                            }
                             else Lyrics.UnsynchronizedLyrics = value;
                             break;
                         }
