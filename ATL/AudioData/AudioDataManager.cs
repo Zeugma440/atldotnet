@@ -357,10 +357,24 @@ namespace ATL.AudioData
         /// <param name="writeProgress">ProgressManager to report with (optional)</param>
         /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public async Task<bool> UpdateTagInFileAsync(TagData theTag, TagType tagType, ProgressManager writeProgress = null)
+        public async Task<bool> UpdateTagInFileAsync(
+            TagData theTag,
+            TagType tagType,
+            string? targetPath = null,
+            Stream? targetStream = null,
+            ProgressManager writeProgress = null)
         {
             bool result = true;
-            LogDelegator.GetLocateDelegate()(fileName);
+            if (null == targetPath && null == targetStream)
+            {
+                targetPath = fileName;
+                targetStream = stream;
+            }
+
+            //targetPath ??= fileName;
+            //targetStream ??= stream;
+
+            LogDelegator.GetLocateDelegate()(targetPath);
             theTag.DurationMs = audioDataIO.Duration;
 
             if (isMetaSupported(tagType))
@@ -369,7 +383,7 @@ namespace ATL.AudioData
                 {
                     var theMetaIO = getMeta(tagType);
 
-                    var s = stream ?? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions | FileOptions.Asynchronous);
+                    var s = targetStream ?? new FileStream(targetPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions | FileOptions.Asynchronous);
                     try
                     {
                         // If current file can embed metadata, do a 1st pass to detect embedded metadata position
@@ -381,7 +395,7 @@ namespace ATL.AudioData
                     }
                     finally
                     {
-                        if (null == stream) s.Close();
+                        if (null == targetStream) s.Close();
                     }
                 }
                 catch (Exception e)

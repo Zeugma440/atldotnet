@@ -1439,6 +1439,145 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
+        public void TagIO_RW_SaveTo()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/APE.mp3");
+            string testFileLocation2 = testFileLocation.Replace(".mp3", "_2.mp3");
+            string testFileLocation3 = testFileLocation.Replace(".mp3", "_3.mp3");
+
+            // SYNC
+            try
+            {
+                // File -> File
+                Track theTrack = new Track(testFileLocation);
+                Assert.IsTrue(theTrack.SaveTo(testFileLocation2));
+                Assert.IsTrue(File.Exists(testFileLocation2));
+                FileInfo testFileInfo = new FileInfo(testFileLocation);
+                FileInfo testFileInfo2 = new FileInfo(testFileLocation2);
+                Assert.AreEqual(testFileInfo.Length, testFileInfo2.Length);
+
+                // File -> Stream
+                theTrack = new Track(testFileLocation);
+                using (FileStream target = new FileStream(testFileLocation3, FileMode.Create, FileAccess.ReadWrite,
+                           FileShare.Read))
+                {
+                    Assert.IsTrue(theTrack.SaveTo(target));
+                }
+                Assert.IsTrue(File.Exists(testFileLocation3));
+                FileInfo testFileInfo3 = new FileInfo(testFileLocation3);
+                Assert.AreEqual(testFileInfo.Length, testFileInfo3.Length);
+            }
+            finally
+            {
+                if (File.Exists(testFileLocation2)) File.Delete(testFileLocation2);
+                if (File.Exists(testFileLocation3)) File.Delete(testFileLocation3);
+            }
+
+            // ASYNC
+            try
+            {
+                // File -> File
+                Track theTrack = new Track(testFileLocation);
+                Assert.IsTrue(theTrack.SaveToAsync(testFileLocation2).Result);
+                Assert.IsTrue(File.Exists(testFileLocation2));
+                FileInfo testFileInfo = new FileInfo(testFileLocation);
+                FileInfo testFileInfo2 = new FileInfo(testFileLocation2);
+                Assert.AreEqual(testFileInfo.Length, testFileInfo2.Length);
+
+                // File -> Stream
+                theTrack = new Track(testFileLocation);
+                using (FileStream target = new FileStream(testFileLocation3, FileMode.Create, FileAccess.ReadWrite,
+                           FileShare.Read))
+                {
+                    Assert.IsTrue(theTrack.SaveToAsync(target).Result);
+                }
+                Assert.IsTrue(File.Exists(testFileLocation3));
+                FileInfo testFileInfo3 = new FileInfo(testFileLocation3);
+                Assert.AreEqual(testFileInfo.Length, testFileInfo3.Length);
+            }
+            finally
+            {
+                if (File.Exists(testFileLocation2)) File.Delete(testFileLocation2);
+                if (File.Exists(testFileLocation3)) File.Delete(testFileLocation3);
+            }
+
+
+            // SYNC
+            try
+            {
+                // Stream -> File
+                using (FileStream source = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    Track theTrack = new Track(source);
+                    Assert.IsTrue(theTrack.SaveTo(testFileLocation2));
+
+                    Assert.IsTrue(File.Exists(testFileLocation2));
+                    FileInfo originalFileInfo = new FileInfo(testFileLocation);
+                    FileInfo testFileInfo = new FileInfo(testFileLocation2);
+                    Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+                }
+
+                // Stream -> Stream
+                using (FileStream source = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    Track theTrack = new Track(source);
+                    using (FileStream target = new FileStream(testFileLocation3, FileMode.Create, FileAccess.ReadWrite, FileShare.Read))
+                    {
+                        Assert.IsTrue(theTrack.SaveTo(target));
+                    }
+                    Assert.IsTrue(File.Exists(testFileLocation3));
+                    FileInfo originalFileInfo = new FileInfo(testFileLocation);
+                    FileInfo testFileInfo = new FileInfo(testFileLocation3);
+                    Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+                }
+            }
+            finally
+            {
+                if (File.Exists(testFileLocation2)) File.Delete(testFileLocation2);
+                if (File.Exists(testFileLocation3)) File.Delete(testFileLocation3);
+            }
+
+
+            // ASYNC
+            try
+            {
+                // Stream -> File
+                using (FileStream source = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    Track theTrack = new Track(source);
+                    Assert.IsTrue(theTrack.SaveToAsync(testFileLocation2).Result);
+
+                    Assert.IsTrue(File.Exists(testFileLocation2));
+                    FileInfo originalFileInfo = new FileInfo(testFileLocation);
+                    FileInfo testFileInfo = new FileInfo(testFileLocation2);
+                    Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+                }
+
+                // Stream -> Stream
+                using (FileStream source =
+                       new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    Track theTrack = new Track(source);
+                    using (FileStream target = new FileStream(testFileLocation3, FileMode.Create, FileAccess.ReadWrite,
+                               FileShare.Read))
+                    {
+                        Assert.IsTrue(theTrack.SaveToAsync(target).Result);
+                    }
+
+                    Assert.IsTrue(File.Exists(testFileLocation3));
+                    FileInfo originalFileInfo = new FileInfo(testFileLocation);
+                    FileInfo testFileInfo = new FileInfo(testFileLocation3);
+                    Assert.AreEqual(originalFileInfo.Length, testFileInfo.Length);
+                }
+            }
+            finally
+            {
+                if (File.Exists(testFileLocation2)) File.Delete(testFileLocation2);
+                if (File.Exists(testFileLocation3)) File.Delete(testFileLocation3);
+            }
+        }
+
+        [TestMethod]
         public void VersionExists()
         {
             Assert.IsTrue(ATL.Version.getVersion().Length > 0);

@@ -51,12 +51,28 @@ namespace ATL
             Update();
         }
 
-        //=== METADATA
+        //=== LOCATION
 
         /// <summary>
         /// Full path of the underlying file
         /// </summary>
-        public readonly string Path;
+        public string Path { get; private set; }
+
+        /// <summary>
+        /// Stream used to access in-memory Track contents (alternative to path, which is used to access on-disk Track contents)
+        /// </summary>
+        private Stream stream;
+        /// <summary>
+        /// MIME-type that describes in-memory Track contents (used in conjunction with stream)
+        /// </summary>
+        private string mimeType;
+
+
+        private AudioFileIO fileIO;
+
+
+        //=== METADATA
+
         /// <summary>
 		/// Title
 		/// </summary>
@@ -371,16 +387,6 @@ namespace ATL
         /// </summary>
         public IList<PictureInfo> EmbeddedPictures => getEmbeddedPictures();
 
-        /// <summary>
-        /// Stream used to access in-memory Track contents (alternative to path, which is used to access on-disk Track contents)
-        /// </summary>
-        private readonly Stream stream;
-        /// <summary>
-        /// MIME-type that describes in-memory Track contents (used in conjunction with stream)
-        /// </summary>
-        private readonly string mimeType;
-        private AudioFileIO fileIO;
-
 
         // ========== METHODS
 
@@ -411,6 +417,8 @@ namespace ATL
 
             IMetaDataIO metadata = fileIO.Metadata;
             MetadataFormats = new List<Format>(metadata.MetadataFormats);
+
+            mimeType = fileIO.AudioFormat.MimeList.FirstOrDefault();
 
             if (onlyReadEmbeddedPictures)
             {
@@ -660,6 +668,155 @@ namespace ATL
             return result;
         }
 
+        /// <summary>
+        /// Save Track to the given file using all existing tag types
+        /// Use SaveTo instead of SaveToAsync if you're looking for pure performance
+        /// or if you don't need any progress feedback (e.g. console app, mass-updating files)
+        ///
+        /// After completion, any further update on this object will be made on the _target_ file.
+        /// </summary>
+        /// <param name="target">Absolute path of the file to save the Track to</param>
+        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
+        /// <returns>True if save succeeds; false if it fails
+        /// NB : Failure reason is saved to the ATL log</returns>
+        public bool SaveTo(string target, Action<float> writeProgress = null)
+        {
+            // Copy the contents of the file
+            if (null == this.stream)
+            {
+                File.Copy(Path, target, true);
+            }
+            else
+            {
+                this.stream.Seek(0, SeekOrigin.Begin);
+                using FileStream to = new FileStream(target, FileMode.Create, FileAccess.Write, FileShare.Read);
+                StreamUtils.CopyStream(this.stream, to);
+            }
+            // Write what needs to be written
+            bool result = fileIO.Save(toTagData(), null, target, null, new ProgressToken<float>(writeProgress));
+            // Update internal references
+            if (result)
+            {
+                Path = target;
+                stream = null;
+                Update();
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Save Track to the given target Stream using all existing tag types
+        /// Use SaveTo instead of SaveToAsync if you're looking for pure performance
+        /// or if you don't need any progress feedback (e.g. console app, mass-updating files)
+        ///
+        /// After completion, any further update on this object will be made on the _target_ Stream.
+        /// </summary>
+        /// <param name="target">Stream to save to</param>
+        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
+        /// <returns>True if save succeeds; false if it fails
+        /// NB : Failure reason is saved to the ATL log</returns>
+        public bool SaveTo(Stream target, Action<float> writeProgress = null)
+        {
+            // Copy the contents of the file
+            if (null == this.stream)
+            {
+                using FileStream from = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                StreamUtils.CopyStream(from, target);
+            }
+            else
+            {
+                this.stream.Seek(0, SeekOrigin.Begin);
+                StreamUtils.CopyStream(this.stream, target);
+            }
+            target.Seek(0, SeekOrigin.Begin);
+            // Write what needs to be written
+            bool result = fileIO.Save(toTagData(), null, null, target, new ProgressToken<float>(writeProgress));
+            // Update internal references
+            if (result)
+            {
+                this.stream = target;
+                this.Path = InMemoryPath;
+                Update();
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Save Track to disk using all existing tag types
+        /// Use SaveTo instead of SaveToAsync if you're looking for pure performance
+        /// or if you don't need any progress feedback (e.g. console app, mass-updating files)
+        ///
+        /// After completion, any further update on this object will be made on the _target_ file.
+        /// </summary>
+        /// <param name="target">Absolute path of the file to save the Track to</param>
+        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
+        /// <returns>True if save succeeds; false if it fails
+        /// NB : Failure reason is saved to the ATL log</returns>
+        public async Task<bool> SaveToAsync(string target, Action<float> writeProgress = null)
+        {
+            // Copy the contents of the file
+            if (null == this.stream)
+            {
+                File.Copy(Path, target, true);
+            }
+            else
+            {
+                this.stream.Seek(0, SeekOrigin.Begin);
+                await using FileStream to = new FileStream(target, FileMode.Create, FileAccess.Write, FileShare.Read);
+                await StreamUtils.CopyStreamAsync(this.stream, to);
+            }
+            // Write what needs to be written
+            bool result = await fileIO.SaveAsync(toTagData(), null, target, null, new ProgressToken<float>(writeProgress));
+            // Update internal references
+            if (result)
+            {
+                Path = target;
+                stream = null;
+                Update();
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Save Track to the target Stream using all existing tag types
+        /// Use SaveTo instead of SaveToAsync if you're looking for pure performance
+        /// or if you don't need any progress feedback (e.g. console app, mass-updating files)
+        ///
+        /// After completion, any further update on this object will be made on the _target_ Stream.
+        /// </summary>
+        /// <param name="target">Stream to save to</param>
+        /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
+        /// <returns>True if save succeeds; false if it fails
+        /// NB : Failure reason is saved to the ATL log</returns>
+        public async Task<bool> SaveToAsync(Stream target, Action<float> writeProgress = null)
+        {
+            // Copy the contents
+            if (null == this.stream)
+            {
+                await using FileStream from = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                await StreamUtils.CopyStreamAsync(from, target);
+            }
+            else
+            {
+                this.stream.Seek(0, SeekOrigin.Begin);
+                await StreamUtils.CopyStreamAsync(this.stream, target);
+            }
+            target.Seek(0, SeekOrigin.Begin);
+            // Write what needs to be written
+            bool result = await fileIO.SaveAsync(toTagData(), null, null, target, new ProgressToken<float>(writeProgress));
+            // Update internal references
+            if (result)
+            {
+                this.stream = target;
+                this.Path = InMemoryPath;
+                Update();
+            }
+
+            return result;
+        }
 
         /// <summary>
         /// Save Track to disk using all existing tag types
@@ -671,7 +828,7 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public bool Save(Action<float> writeProgress = null)
         {
-            bool result = fileIO.Save(toTagData(), null, new ProgressToken<float>(writeProgress));
+            bool result = fileIO.Save(toTagData(), null, null, null, new ProgressToken<float>(writeProgress));
             if (result) Update();
 
             return result;
@@ -690,7 +847,7 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public bool Save(MetaDataIOFactory.TagType tagType, Action<float> writeProgress = null)
         {
-            bool result = fileIO.Save(toTagData(), tagType, new ProgressToken<float>(writeProgress));
+            bool result = fileIO.Save(toTagData(), tagType, null, null, new ProgressToken<float>(writeProgress));
             if (result) Update();
 
             return result;
@@ -706,7 +863,7 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public async Task<bool> SaveAsync(IProgress<float> writeProgress = null)
         {
-            bool result = await fileIO.SaveAsync(toTagData(), null, new ProgressToken<float>(writeProgress));
+            bool result = await fileIO.SaveAsync(toTagData(), null, null, null, new ProgressToken<float>(writeProgress));
             if (result) Update();
 
             return result;
@@ -725,7 +882,7 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public async Task<bool> SaveAsync(MetaDataIOFactory.TagType tagType, IProgress<float> writeProgress = null)
         {
-            bool result = await fileIO.SaveAsync(toTagData(), tagType, new ProgressToken<float>(writeProgress));
+            bool result = await fileIO.SaveAsync(toTagData(), tagType, null, null, new ProgressToken<float>(writeProgress));
             if (result) Update();
 
             return result;

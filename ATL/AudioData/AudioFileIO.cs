@@ -145,7 +145,12 @@ namespace ATL.AudioData
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public async Task<bool> SaveAsync(TagData data, TagType? tagType, ProgressToken<float> writeProgress = null)
+        public async Task<bool> SaveAsync(
+            TagData data,
+            TagType? tagType,
+            string targetPath = null,
+            Stream targetStream = null,
+            ProgressToken<float> writeProgress = null)
         {
             IList<TagType> metasToWrite = new List<TagType>();
             ISet<TagType> supportedMetas = audioManager.getSupportedMetas();
@@ -168,7 +173,7 @@ namespace ATL.AudioData
             }
             foreach (var meta in metasToWrite)
             {
-                result &= await audioManager.UpdateTagInFileAsync(data, meta, progressManager);
+                result &= await audioManager.UpdateTagInFileAsync(data, meta, targetPath, targetStream, progressManager);
                 if (progressManager != null) progressManager.CurrentSection++;
             }
             return result;
