@@ -356,7 +356,7 @@ namespace ATL.AudioData.IO
         {
             int nbExistingPictures = 0;
             int lastPictureZoneIndex = -1;
-            long lastPictureZoneOffset = -1;
+            long lastPictureZoneEnd = -1;
 
             for (int i = 0; i < zones.Count; i++)
             {
@@ -364,7 +364,7 @@ namespace ATL.AudioData.IO
                 {
                     nbExistingPictures++;
                     lastPictureZoneIndex = i;
-                    lastPictureZoneOffset = zones[i].Offset;
+                    lastPictureZoneEnd = zones[i].Offset + zones[i].Size;
                 }
             }
 
@@ -372,14 +372,14 @@ namespace ATL.AudioData.IO
             if (nbExistingPictures < picturesToWrite.Count)
             {
                 for (int i = 0; i < picturesToWrite.Count - nbExistingPictures; i++)
-                    zones.Insert(lastPictureZoneIndex + 1, new Zone(META_PICTURE + "." + zones.Count, lastPictureZoneOffset, 0, Array.Empty<byte>(), true, META_PICTURE));
+                    zones.Insert(lastPictureZoneIndex + 1, new Zone(META_PICTURE + "." + zones.Count, lastPictureZoneEnd, 0, Array.Empty<byte>(), true, META_PICTURE));
             }
         }
 
         public static WriteResult writeVorbisCommentBlock(Stream w, TagData tag, VorbisTag vorbisTag, bool isLastMetaBlock = false)
         {
             byte toWrite = META_VORBIS_COMMENT;
-            if (isLastMetaBlock) toWrite |= 0x80;
+            if (isLastMetaBlock) toWrite |= FLAG_LAST_METADATA_BLOCK;
             w.Write(new byte[] { toWrite }, 0, 1);
             var sizePos = w.Position;
             w.Write(new byte[] { 0, 0, 0 }, 0, 3); // Placeholder for 24-bit integer that will be rewritten at the end of the method
@@ -401,7 +401,7 @@ namespace ATL.AudioData.IO
             if (paddingSizeToWrite > 0)
             {
                 byte toWrite = META_PADDING;
-                if (isLastMetaBlock) toWrite |= 0x80;
+                if (isLastMetaBlock) toWrite |= FLAG_LAST_METADATA_BLOCK;
                 w.Write(toWrite);
                 w.Write(StreamUtils.EncodeBEUInt24((uint)paddingSizeToWrite));
                 for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
@@ -450,6 +450,7 @@ namespace ATL.AudioData.IO
                 if (!pictureExists) return new WriteResult(WriteMode.REPLACE, writePictureBlock(w, pictureToWrite));
                 else
                 {
+                    // Keep existing picture block as is
                     w.Write(META_PICTURE);
                     return new WriteResult(WriteMode.OVERWRITE, 1);
                 }
@@ -460,7 +461,7 @@ namespace ATL.AudioData.IO
         private static int writePictureBlock(BinaryWriter w, PictureInfo picture, bool isLastMetaBlock = false)
         {
             byte toWrite = META_PICTURE;
-            if (isLastMetaBlock) toWrite |= 0x80;
+            if (isLastMetaBlock) toWrite |= FLAG_LAST_METADATA_BLOCK;
             w.Write(toWrite);
 
             var sizePos = w.BaseStream.Position;
