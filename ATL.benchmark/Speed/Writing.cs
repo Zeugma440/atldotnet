@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Running;
 using System.Collections;
+using ATL.AudioData;
 
 namespace ATL.benchmark
 {
@@ -59,12 +60,20 @@ namespace ATL.benchmark
             new ConsoleLogger();
             Track theFile = new Track(filePath);
 
-            //theFile.Album = "test";
-
             /*
+            PictureInfo pic = PictureInfo.fromBinaryData(File.ReadAllBytes(@"D:\temp\flac\272\cover.jpg"),
+                PictureInfo.PIC_TYPE.Front,
+                MetaDataIOFactory.TagType.RECOMMENDED
+            );
+            */
             PictureInfo pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"));
             theFile.EmbeddedPictures.Add(pic);
-            */
+
+            theFile.Save();
+
+            theFile = new Track(filePath);
+
+            theFile.EmbeddedPictures.Add(pic);
 
             theFile.Save();
 

@@ -759,7 +759,7 @@ namespace ATL
             // Copy the contents of the file
             if (null == this.stream)
             {
-                File.Copy(Path, target, true);
+                await StreamUtils.CopyFileAsync(Path, target);
             }
             else
             {

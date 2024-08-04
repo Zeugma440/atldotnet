@@ -65,9 +65,9 @@ namespace ATL.UI_test
 
         public static async Task CopyFileAsync(string sourceFile, string destinationFile)
         {
-            using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, 8 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan))
-            using (var destinationStream = new FileStream(destinationFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, 8 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan))
-                await sourceStream.CopyToAsync(destinationStream);
+            await using var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, 8 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            await using var destinationStream = new FileStream(destinationFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, 8 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            await sourceStream.CopyToAsync(destinationStream);
         }
 
         public static string GetFileMD5Hash(string filename)
