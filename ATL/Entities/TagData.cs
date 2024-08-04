@@ -375,6 +375,7 @@ namespace ATL
             if (targetData.PaddingSize > -1) PaddingSize = targetData.PaddingSize; else PaddingSize = -1;
 
             // Pictures
+            // TODO merge with Track.toTagData ?
             if (integratePictures && targetData.Pictures != null)
             {
                 IList<PictureInfo> resultPictures = new List<PictureInfo>();

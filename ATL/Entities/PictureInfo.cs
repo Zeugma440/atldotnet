@@ -158,12 +158,7 @@ namespace ATL
         /// <summary>
         /// Get the MIME-type associated with the picture
         /// </summary>
-        public string MimeType
-        {
-            get { return ImageUtils.GetMimeTypeFromImageFormat(NativeFormat); }
-        }
-
-
+        public string MimeType => ImageUtils.GetMimeTypeFromImageFormat(NativeFormat);
 
 
         // ---------------- STATIC CONSTRUCTORS
@@ -342,13 +337,12 @@ namespace ATL
         {
             if (0 == TagType || TagType != picInfo.TagType) return false;
             if (NativePicCode > 0 && NativePicCode == picInfo.NativePicCode) return true;
-            if (!string.IsNullOrEmpty(NativePicCodeStr) && NativePicCodeStr == picInfo.NativePicCodeStr) return true;
-            return false;
+            return !string.IsNullOrEmpty(NativePicCodeStr) && NativePicCodeStr == picInfo.NativePicCodeStr;
         }
 
         private bool equalsGeneric(PictureInfo picInfo)
         {
-            return (PIC_TYPE.Unsupported != PicType && PicType == picInfo.PicType);
+            return PIC_TYPE.Unsupported != PicType && PicType == picInfo.PicType;
         }
 
         // ---------------- OVERRIDES FOR DICTIONARY STORING & UTILS
@@ -365,7 +359,7 @@ namespace ATL
         private string valueToString()
         {
             if (NativePicCode > 0 && TagType > 0)
-                return (10000000 * (int)TagType + "N" + NativePicCode);
+                return 10000000 * (int)TagType + "N" + NativePicCode;
             else if (!string.IsNullOrEmpty(NativePicCodeStr) && TagType > 0)
                 return 10000000 * (int)TagType + "N" + NativePicCodeStr;
             else if (PicType != PIC_TYPE.Unsupported)
