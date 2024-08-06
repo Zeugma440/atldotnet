@@ -674,6 +674,8 @@ namespace ATL
         /// or if you don't need any progress feedback (e.g. console app, mass-updating files)
         ///
         /// After completion, any further update on this object will be made on the _target_ file.
+        ///
+        /// Please note that saving to the file you're already using will result in failure.
         /// </summary>
         /// <param name="target">Absolute path of the file to save the Track to</param>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
@@ -681,6 +683,8 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public bool SaveTo(string target, Action<float> writeProgress = null)
         {
+            if (null == target || target == Path) return false;
+
             // Copy the contents of the file
             if (null == this.stream)
             {
@@ -711,6 +715,8 @@ namespace ATL
         /// or if you don't need any progress feedback (e.g. console app, mass-updating files)
         ///
         /// After completion, any further update on this object will be made on the _target_ Stream.
+        ///
+        /// Please note that saving to the Stream you're already using will result in failure.
         /// </summary>
         /// <param name="target">Stream to save to</param>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
@@ -718,6 +724,8 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public bool SaveTo(Stream target, Action<float> writeProgress = null)
         {
+            if (null == target || target == this.stream) return false;
+
             // Copy the contents of the file
             if (null == this.stream)
             {
@@ -749,6 +757,8 @@ namespace ATL
         /// or if you don't need any progress feedback (e.g. console app, mass-updating files)
         ///
         /// After completion, any further update on this object will be made on the _target_ file.
+        ///
+        /// Please note that saving to the file you're already using will result in failure.
         /// </summary>
         /// <param name="target">Absolute path of the file to save the Track to</param>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
@@ -756,6 +766,8 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public async Task<bool> SaveToAsync(string target, Action<float> writeProgress = null)
         {
+            if (null == target || target == Path) return false;
+
             // Copy the contents of the file
             if (null == this.stream)
             {
@@ -786,6 +798,8 @@ namespace ATL
         /// or if you don't need any progress feedback (e.g. console app, mass-updating files)
         ///
         /// After completion, any further update on this object will be made on the _target_ Stream.
+        ///
+        /// Please note that saving to the Stream you're already using will result in failure.
         /// </summary>
         /// <param name="target">Stream to save to</param>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
@@ -793,6 +807,8 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public async Task<bool> SaveToAsync(Stream target, Action<float> writeProgress = null)
         {
+            if (null == target || target == this.stream) return false;
+
             // Copy the contents
             if (null == this.stream)
             {
