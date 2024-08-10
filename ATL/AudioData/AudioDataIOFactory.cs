@@ -75,8 +75,9 @@ namespace ATL.AudioData
         public const int CID_MP4 = 26000;
         public const int CID_AA = 27000;
         public const int CID_CAF = 28000;
+        public const int CID_MKA = 29000;
 
-        public const int NB_CODECS = 29;
+        public const int NB_CODECS = 30;
 #pragma warning restore CS1591 // Missing XML comment
 
         // ------------------------------------------------------------------------------------------
@@ -137,7 +138,7 @@ namespace ATL.AudioData
                     tempFmt.CheckHeader = WMA.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
-                    tempFmt = new Format(CID_AAC, "Advanced Audio Coding");
+                    tempFmt = new Format(CID_AAC, "Advanced Audio Coding", "AAC");
                     tempFmt.AddMimeType("audio/aac");
                     tempFmt.AddExtension(".aac");
                     tempFmt.CheckHeader = AAC.IsValidHeader;
@@ -336,6 +337,12 @@ namespace ATL.AudioData
                     tempFmt.AddExtension(".caf");
                     tempFmt.CheckHeader = CAF.IsValidHeader;
                     theFactory.addFormat(tempFmt);
+
+                    tempFmt = new Format(CID_MKA, "Matroska", "MKA");
+                    tempFmt.AddMimeType("audio/x-matroska");
+                    tempFmt.AddExtension(".mka");
+                    tempFmt.CheckHeader = CAF.IsValidHeader;
+                    theFactory.addFormat(tempFmt);
                 }
             }
 
@@ -496,6 +503,8 @@ namespace ATL.AudioData
                     return new AA(path, theFormat);
                 case CID_CAF:
                     return new CAF(path, theFormat);
+                case CID_MKA:
+                    return new MKA(path, theFormat);
                 default:
                     return new DummyReader(path);
             }

@@ -92,6 +92,7 @@
         {
             switch (nbChannels)
             {
+                case 0: return UNKNOWN;
                 case 1: return MONO;
                 case 2: return STEREO;
                 case 3: return ISO_3_0_0;

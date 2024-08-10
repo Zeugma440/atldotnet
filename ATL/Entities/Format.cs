@@ -43,7 +43,7 @@ namespace ATL
         /// <param name="writable">Indicate if ATL implements writing for this Format</param>
         public Format(int id, string name, string shortName = "", bool writable = true)
         {
-            init(id, name, (0 == shortName.Length) ? name : shortName, writable);
+            init(id, name, 0 == shortName.Length ? name : shortName, writable);
         }
 
         /// <summary>

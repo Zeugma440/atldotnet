@@ -93,7 +93,7 @@ namespace ATL.AudioData.IO
             /// </summary>
             /// <param name="readPictures">true if pictures have to be read</param>
             /// <param name="readAllMetaFrames">true if all meta frames have t be read</param>
-            public ReadTagParams(bool readPictures, bool readAllMetaFrames)
+            public ReadTagParams(bool readPictures = false, bool readAllMetaFrames = false)
             {
                 ReadPictures = readPictures;
                 ReadAllMetaFrames = readAllMetaFrames;

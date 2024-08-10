@@ -120,7 +120,7 @@ namespace ATL.AudioData
         /// <returns>Rating level, in float form (0 = 0% to 1 = 100%)</returns>
         public static double? DecodePopularity(string ratingString, int convention)
         {
-            if ((null == ratingString) || (0 == ratingString.Trim().Length)) return null;
+            if (null == ratingString || 0 == ratingString.Trim().Length) return null;
 
             if (Utils.IsNumeric(ratingString))
             {
