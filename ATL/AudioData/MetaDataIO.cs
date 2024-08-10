@@ -320,10 +320,12 @@ namespace ATL.AudioData.IO
             // If ID has been mapped with an 'classic' ATL field, store it in the dedicated place...
             if (supportedMetaID != Field.NO_FIELD)
             {
+                tagExists = true;
                 setMetaField(supportedMetaID, data);
             }
             else if (readAllMetaFrames && ID.Length > 0) // ...else store it in the additional fields Dictionary
             {
+                tagExists = true;
                 MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
                 if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
                 {

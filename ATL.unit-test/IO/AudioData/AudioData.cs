@@ -322,6 +322,12 @@ namespace ATL.test.IO
         {
             testGenericAudio("CAF/caf.caf", 3235, 176, 16, 11025, false, CF_LOSSLESS, STEREO, "Apple Core Audio / Linear PCM", 4080, 71340);
         }
+
+        [TestMethod]
+        public void Audio_MKA()
+        {
+            testGenericAudio("MKA/mka.mka", 3422, 128, -1, 44100, false, CF_LOSSY, STEREO, "Matroska / MPEG", 459, 0 /* TODO */);
+        }
 #pragma warning restore S2699 // Tests should include assertions
     }
 }

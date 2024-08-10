@@ -236,13 +236,7 @@ namespace ATL.AudioData.IO
             if (blockStream != null)
             {
                 AudioDataOffset = blockStream.Offset;
-                var cues = doc.GetContainer(MatroskaId.Segment, MatroskaId.Cues);
-                if (cues?.Stream != null)
-                {
-                    // Rough figure as it also contains Block data,
-                    // and parsing all Clusters to count them and their size would be quite expensive
-                    AudioDataSize = cues.Stream.Offset - 12 - AudioDataOffset;
-                }
+                // TODO AudioDataSize preferrably witout scanning all Clusters
 
                 // Physical properties using the actual audio data header
                 try
@@ -311,8 +305,8 @@ namespace ATL.AudioData.IO
         {
             foreach (var tag in tags)
             {
-                var tagName = tag.GetElement<StringElement>(MatroskaId.TagName)?.Data ?? "";
-                var tagValue = tag.GetElement<StringElement>(MatroskaId.TagString)?.Data ?? "";
+                var tagName = tag.GetElement<UTF8StringElement>(MatroskaId.TagName)?.Data ?? "";
+                var tagValue = tag.GetElement<UTF8StringElement>(MatroskaId.TagString)?.Data ?? "";
                 SetMetaField(prefix + "." + tagName.ToLower(), tagValue, true);
             }
         }
@@ -325,10 +319,16 @@ namespace ATL.AudioData.IO
                 Stream stream = data.Stream;
                 if (stream != null)
                 {
-                    var description = file.GetElement<StringElement>(MatroskaId.FileDescription)?.Data ?? "";
-                    var name = file.GetElement<StringElement>(MatroskaId.FileName)?.Data ?? "";
-                    var pic = PictureInfo.fromBinaryData(stream, (int)data.Length, PictureInfo.PIC_TYPE.Generic, MetaDataIOFactory.TagType.NATIVE, 0);
-                    pic.Description = description.Length > 0 ? description : name;
+                    var description = file.GetElement<UTF8StringElement>(MatroskaId.FileDescription)?.Data ?? "";
+                    var name = file.GetElement<UTF8StringElement>(MatroskaId.FileName)?.Data ?? "";
+                    
+                    var picType = PictureInfo.PIC_TYPE.Generic;
+                    if (name.Contains("cover", StringComparison.InvariantCultureIgnoreCase)) picType = PictureInfo.PIC_TYPE.Front;
+
+                    stream.Position = 0;
+                    var pic = PictureInfo.fromBinaryData(stream, (int)data.Length, picType, MetaDataIOFactory.TagType.NATIVE, 0);
+                    pic.NativePicCodeStr = name;
+                    pic.Description = description;
                     tagData.Pictures.Add(pic);
                 }
             }

@@ -899,7 +899,7 @@ namespace ATL.test.IO.MetaData
                     foreach (PictureInfo testPicInfo in testData.EmbeddedPictures)
                     {
                         if ((pic.NativePicCode > -1 && pic.NativePicCode.Equals(testPicInfo.NativePicCode))
-                            || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(testPicInfo.NativePicCodeStr, System.StringComparison.OrdinalIgnoreCase))
+                            || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(testPicInfo.NativePicCodeStr, StringComparison.OrdinalIgnoreCase))
                            )
                         {
                             nbFound++;
