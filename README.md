@@ -1,4 +1,4 @@
-# Audio Tools Library (ATL) for .NET ![NetCore](https://img.shields.io/badge/.NET%20Core-3.1-lightgrey.svg) ![NetStandard](https://img.shields.io/badge/.NET%20Standard-2.1-lightgrey.svg) ![.NET](https://img.shields.io/badge/.NET-6-lightgrey.svg)
+# Audio Tools Library (ATL) for .NET ![NetStandard](https://img.shields.io/badge/.NET%20Standard-2.1-lightgrey.svg) ![.NET](https://img.shields.io/badge/.NET-6-lightgrey.svg)
 
 __Latest stable version__ : [![NuGet](https://img.shields.io/nuget/v/z440.atl.core.svg)](https://www.nuget.org/packages/z440.atl.core/)
 
@@ -107,6 +107,7 @@ Extended Module | .XM |  |  |  | R/W (2)
 Free Lossless Audio Codec | .FLAC |  | R/W |  | R/W
 Genesis YM2612 | .GYM |  |  |  | R/W
 Impulse Tracker | .IT |  |  |  | R/W (2)
+Matroska Audio | .MKA |  |  |  | R (6)
 Musical Instruments Digital Interface | .MID, .MIDI |  |  |  | R/W (3)
 Monkey's Audio | .APE | R/W | R/W | R/W | 
 MPEG Audio Layer | .MP1, .MP2, .MP3 | R/W | R/W | R/W | |
@@ -135,6 +136,8 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 (4) : Support for LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops), DISP (displayable objects), BEXT, CART, XMP and iXML metadata chunks
 
 (5) : Reads audio properties only, due to the rarity of sample CAF files tagged with actual metadata
+
+(6) : Read-only support so far
 
 
 ### DETECTED FIELDS
@@ -209,6 +212,8 @@ ATL.NET is based on :
 * Audio Tools Library 2.3  by Jurgen Faul, Mattias Dahlberg, Gambit, MaDah and Erik Stenborg (code ported from Pascal to C# and refactored)
 
 * MIDI class 1.5 by Valentin Schmidt & Michael Mlivoncic (code ported from PHP to C# and refactored)
+
+* [SpawnDev.EBML](https://github.com/LostBeard/SpawnDev.EBML) by LostBeard (adjusted to ensure .NET Standard 2.1 compatibility)
 
 
 ## Special thanks for their contributions to...
