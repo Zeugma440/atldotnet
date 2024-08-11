@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ATL.Logging;
+using Commons;
 using SpawnDev.EBML;
 using SpawnDev.EBML.Matroska;
 using SpawnDev.EBML.WebM;
@@ -15,6 +16,8 @@ namespace ATL.AudioData.IO
     /// Class for Matroska Audio files manipulation (extension : .MKA)
     /// 
     /// Implementation notes
+    ///
+    /// Writing is not available yet as I encouter issues with the SpawnDev.EBML library
     /// 
     /// </summary>
     class MKA : MetaDataIO, IAudioDataIO
@@ -265,7 +268,7 @@ namespace ATL.AudioData.IO
             }
 
             // Try getting Duration from MKA metadata
-            if (0 == Duration)
+            if (Utils.ApproxEquals(Duration, 0))
             {
                 var info = doc.SegmentInfo;
                 if (info != null)

@@ -354,14 +354,16 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="theTag">Metadata to save</param>
         /// <param name="tagType">TagType to save the given metadata with</param>
+        /// <param name="targetPath">Target path to save the data to (default : null = use current file)</param>
+        /// <param name="targetStream">Target Stream to save the data to (default : null = use current Stream)</param>
         /// <param name="writeProgress">ProgressManager to report with (optional)</param>
         /// <returns>True if the operation succeeds; false if an issue happened (in that case, the problem is logged on screen + in a Log)</returns>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async Task<bool> UpdateTagInFileAsync(
             TagData theTag,
             TagType tagType,
-            string? targetPath = null,
-            Stream? targetStream = null,
+            string targetPath = null,
+            Stream targetStream = null,
             ProgressManager writeProgress = null)
         {
             bool result = true;
@@ -370,9 +372,6 @@ namespace ATL.AudioData
                 targetPath = fileName;
                 targetStream = stream;
             }
-
-            //targetPath ??= fileName;
-            //targetStream ??= stream;
 
             LogDelegator.GetLocateDelegate()(targetPath);
             theTag.DurationMs = audioDataIO.Duration;
@@ -416,8 +415,10 @@ namespace ATL.AudioData
         {
             if (audioDataIO is IMetaDataEmbedder embedder)
             {
-                MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams(false, false);
-                readTagParams.PrepareForWriting = true;
+                MetaDataIO.ReadTagParams readTagParams = new MetaDataIO.ReadTagParams()
+                {
+                    PrepareForWriting = true
+                };
 
                 audioDataIO.Read(r, sizeInfo, readTagParams);
                 theMetaIO.SetEmbedder(embedder);
