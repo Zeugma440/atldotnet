@@ -121,23 +121,13 @@ namespace ATL.AudioData.IO
         public int BitDepth { get; private set; }
         public double Duration { get; private set; }
         public int SampleRate { get; private set; }
-
         public ChannelsArrangement ChannelsArrangement { get; private set; }
 
-        public List<MetaDataIOFactory.TagType> GetSupportedMetas()
-        {
-            return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
-        }
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas() => new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
 
-        protected override int getDefaultTagOffset()
-        {
-            return TO_BUILTIN;
-        }
+        protected override int getDefaultTagOffset() => TO_BUILTIN;
 
-        protected override MetaDataIOFactory.TagType getImplementedTagType()
-        {
-            return MetaDataIOFactory.TagType.NATIVE;
-        }
+        protected override MetaDataIOFactory.TagType getImplementedTagType() => MetaDataIOFactory.TagType.NATIVE;
 
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
@@ -172,7 +162,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         public MKA(string filePath, Format format)
         {
-            this.FileName = filePath;
+            FileName = filePath;
             containerAudioFormat = format;
             resetData();
         }
