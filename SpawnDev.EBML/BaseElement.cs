@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
+using System;
 
 namespace SpawnDev.EBML
 {
@@ -55,7 +55,7 @@ namespace SpawnDev.EBML
         /// An array of ElementIds ending with this elements id, preceded by this element's parent's id, and so on
         /// </summary>
         public Enum[] IdChain { get; protected set; }
-        protected Lazy<SegmentSource?> _DataStream = new Lazy<SegmentSource?>();
+        protected Lazy<SegmentSource?> _DataStream = new Lazy<SegmentSource?>(() => new EmptySegment());
         /// <summary>
         /// The segment source of this element
         /// </summary>
@@ -198,7 +198,7 @@ namespace SpawnDev.EBML
             {
                 //var isEqual = EqualityComparer<T>.Default.Equals(_Data, value);
                 //if (isEqual) return;
-                _DataValue = new Lazy<T>(value);
+                _DataValue = new Lazy<T>(() => value);
                 //_Data = value;
                 UpdateByData();
                 DataChangedInvoke();
