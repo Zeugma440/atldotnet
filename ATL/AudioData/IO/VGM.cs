@@ -280,11 +280,7 @@ namespace ATL.AudioData.IO
                 usedSource = new BufferedBinaryReader(memStream);
             }
 
-            if (readHeader(usedSource, readTagParams) && gd3TagOffset > VGM_HEADER_SIZE)
-            {
-                tagExists = true;
-                readGd3Tag(usedSource, gd3TagOffset);
-            }
+            if (readHeader(usedSource, readTagParams) && gd3TagOffset > VGM_HEADER_SIZE) readGd3Tag(usedSource, gd3TagOffset);
 
             return true;
         }

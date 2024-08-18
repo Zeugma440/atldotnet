@@ -829,7 +829,7 @@ namespace ATL.test.IO.MetaData
             // Check that it is indeed tag-free
             Assert.IsTrue(theFile.ReadFromFile(true, true));
             Assert.IsNotNull(theFile.NativeTag);
-            Assert.IsFalse(theFile.NativeTag.Exists);
+            Assert.IsTrue(theFile.NativeTag.Exists); // True because of the one VORBIS_VENDOR default metadata
 
             // Check if VORBIS_VENDOR is set
             IMetaDataIO theTag = theFile.getMeta(MetaDataIOFactory.TagType.NATIVE);

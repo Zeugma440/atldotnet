@@ -384,8 +384,6 @@ namespace ATL.AudioData.IO
                 source.Seek((long)(4 + header.CompressedProgramLength + header.ReservedAreaLength), SeekOrigin.Current);
 
                 if (!readTag(source, ref tag, readTagParams)) throw new InvalidDataException("Not a PSF tag");
-
-                tagExists = true;
             }
 
             AudioDataSize = sizeInfo.FileSize - tag.size;

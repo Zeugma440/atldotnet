@@ -228,7 +228,6 @@ namespace ATL.AudioData.IO
 
             uint fileSize = StreamUtils.DecodeBEUInt32(buffer);
 
-            tagExists = true;
             AudioDataOffset = source.Position - 4;
             tocOffset = source.Position;
             toc = readToc(source);

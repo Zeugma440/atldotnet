@@ -107,10 +107,6 @@ namespace ATL.AudioData.IO
         // ------ PROPERTIES -----------------------------------------------------
 
         /// <summary>
-        /// True if the tag exists
-        /// </summary>
-        protected bool tagExists;
-        /// <summary>
         /// Version of the tag
         /// </summary>
         protected int m_tagVersion;
@@ -127,7 +123,7 @@ namespace ATL.AudioData.IO
         // ------ READ-ONLY "PHYSICAL" TAG INFO FIELDS ACCESSORS -----------------------------------------------------
 
         /// <inheritdoc/>
-        public bool Exists => tagExists;
+        public bool Exists => tagData.Exists();
 
         /// <inheritdoc/>
         public override IList<Format> MetadataFormats
@@ -294,7 +290,6 @@ namespace ATL.AudioData.IO
         /// </summary>
         protected void ResetData()
         {
-            tagExists = false;
             m_tagVersion = 0;
 
             tagData.Clear();
@@ -320,12 +315,10 @@ namespace ATL.AudioData.IO
             // If ID has been mapped with an 'classic' ATL field, store it in the dedicated place...
             if (supportedMetaID != Field.NO_FIELD)
             {
-                tagExists = true;
                 setMetaField(supportedMetaID, data);
             }
             else if (readAllMetaFrames && ID.Length > 0) // ...else store it in the additional fields Dictionary
             {
-                tagExists = true;
                 MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
                 if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
                 {
@@ -459,7 +452,7 @@ namespace ATL.AudioData.IO
             TagData dataToWrite = prepareWrite(s, tag);
 
             FileSurgeon surgeon = new FileSurgeon(structureHelper, m_embedder, getImplementedTagType(), getDefaultTagOffset(), writeProgress);
-            bool result = await surgeon.RewriteZonesAsync(s, writeAdapter, Zones, dataToWrite, tagExists);
+            bool result = await surgeon.RewriteZonesAsync(s, writeAdapter, Zones, dataToWrite, Exists);
 
             // Update tag information without calling Read
             if (result) tagData.IntegrateValues(dataToWrite);
@@ -511,7 +504,7 @@ namespace ATL.AudioData.IO
             }
 
             // Give engine something to work with if the tag is really empty
-            if (!tagExists && 0 == Zones.Count)
+            if (!Exists && 0 == Zones.Count)
             {
                 structureHelper.AddZone(0, 0);
             }

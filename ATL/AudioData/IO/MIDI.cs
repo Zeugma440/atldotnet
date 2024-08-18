@@ -462,8 +462,6 @@ namespace ATL.AudioData.IO
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "SMF type 2 MIDI files are partially supported; results may be approximate");
             }
 
-            tagExists = true;
-
             timebase = (buffer[8] << 8) + buffer[9];
 
             tempo = 0; // maybe (hopefully!) overwritten by parseTrack

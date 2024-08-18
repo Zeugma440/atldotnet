@@ -275,8 +275,6 @@ namespace ATL.AudioData.IO
                 PictureInfo picInfo = PictureInfo.fromBinaryData(s, block.picDataLength, block.picType, getImplementedTagType(), block.nativePicCode, picturePosition);
                 picInfo.Description = block.description;
                 tagData.Pictures.Add(picInfo);
-
-                if (!tagExists) tagExists = true;
             }
         }
 
@@ -396,8 +394,6 @@ namespace ATL.AudioData.IO
                 index++;
             } while (index <= nbFields);
 
-            // All fields have been read
-            tagExists = (nbFields > 0); // If the only available field is the mandatory vendor field, tag is not considered existent
             structureHelper.AddZone(initialTagOffset, (int)(reader.Position - initialTagOffset), hasCoreSignature ? OGG_CORE_SIGNATURE : Array.Empty<byte>());
 
             if (readTagParams.PrepareForWriting)

@@ -587,7 +587,6 @@ namespace ATL.AudioData.IO
                     // -> standard, pre-defined metadata
                     else if (WMA_CONTENT_DESCRIPTION_ID.SequenceEqual(ID) && readTagParams.ReadTag)
                     {
-                        tagExists = true;
                         structureHelper.AddZone(position, (int)objectSize, ZONE_CONTENT_DESCRIPTION);
                         // Store frame information for future editing, since current frame is optional
                         if (readTagParams.PrepareForWriting)
@@ -601,7 +600,6 @@ namespace ATL.AudioData.IO
                     // -> extended, dynamic metadata
                     else if (WMA_EXTENDED_CONTENT_DESCRIPTION_ID.SequenceEqual(ID) && readTagParams.ReadTag)
                     {
-                        tagExists = true;
                         structureHelper.AddZone(position, (int)objectSize, ZONE_EXTENDED_CONTENT_DESCRIPTION);
                         // Store frame information for future editing, since current frame is optional
                         if (readTagParams.PrepareForWriting)

@@ -1047,7 +1047,7 @@ namespace ATL.test.IO.MetaData
             assumeRatingInFile("_Ratings/musicBee_3.1.6512/4.5.mp3", 4.5 / 5, MetaDataIOFactory.TagType.ID3V2);
             assumeRatingInFile("_Ratings/musicBee_3.1.6512/5.mp3", 1, MetaDataIOFactory.TagType.ID3V2);
 
-            assumeRatingInFile("_Ratings/windows7/0.mp3", 0, MetaDataIOFactory.TagType.ID3V2);
+            assumeRatingInFile("_Ratings/windows7/0.mp3", 0, MetaDataIOFactory.TagType.ID3V2, true);
             assumeRatingInFile("_Ratings/windows7/1.mp3", 1.0 / 5, MetaDataIOFactory.TagType.ID3V2);
             assumeRatingInFile("_Ratings/windows7/2.mp3", 2.0 / 5, MetaDataIOFactory.TagType.ID3V2);
             assumeRatingInFile("_Ratings/windows7/3.mp3", 3.0 / 5, MetaDataIOFactory.TagType.ID3V2);

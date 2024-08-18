@@ -321,8 +321,6 @@ namespace ATL.AudioData.IO
             // Process data if loaded and footer valid
             if (!result) return false;
 
-
-            tagExists = true;
             // Fill properties with footer data
             m_tagVersion = Tag.Version;
 

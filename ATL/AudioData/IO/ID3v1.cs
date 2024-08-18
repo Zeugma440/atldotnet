@@ -351,8 +351,7 @@ namespace ATL.AudioData.IO
             bool result = ReadTag(reader);
 
             // Process data if loaded successfuly
-            if (result) tagExists = true;
-            else ResetData();
+            if (!result) ResetData();
 
             return result;
         }

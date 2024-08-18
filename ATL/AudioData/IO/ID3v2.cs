@@ -1190,7 +1190,6 @@ namespace ATL.AudioData.IO
             // Process data if loaded and header valid
             if (result && IsValidHeader(tagHeader.ID))
             {
-                tagExists = true;
                 // Fill properties with header data
                 m_tagVersion = tagHeader.Version;
 

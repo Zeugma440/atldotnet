@@ -401,8 +401,6 @@ namespace ATL.AudioData.IO
             }
             bSource.Seek(1, SeekOrigin.Current); // globalVolume (8b)
 
-            tagExists = true;
-
             initialSpeed = bSource.ReadByte();
             initialTempo = bSource.ReadByte();
 

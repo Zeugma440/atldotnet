@@ -1,6 +1,7 @@
 ﻿using ATL.AudioData;
 using ATL.AudioData.IO;
 using System.Drawing;
+using Commons;
 using static ATL.PictureInfo;
 
 namespace ATL.test.IO.MetaData
@@ -913,7 +914,7 @@ namespace ATL.test.IO.MetaData
             }
         }
 
-        protected void assumeRatingInFile(string file, double rating, MetaDataIOFactory.TagType tagType)
+        protected void assumeRatingInFile(string file, double rating, MetaDataIOFactory.TagType tagType, bool canHaveNoTag = false)
         {
             string location = TestUtils.GetResourceLocationRoot() + file;
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
@@ -923,10 +924,11 @@ namespace ATL.test.IO.MetaData
             IMetaDataIO meta = theFile.getMeta(tagType);
 
             Assert.IsNotNull(meta);
-            Assert.IsTrue(meta.Exists);
+            // Having no tag at all passes if rating is 0 (that's the cas
+            Assert.IsTrue(meta.Exists || canHaveNoTag);
 
-            if (0 == rating)
-                Assert.IsTrue(!meta.Popularity.HasValue || (float)rating == meta.Popularity.Value);
+            if (Utils.ApproxEquals(rating, 0))
+                Assert.IsTrue(!meta.Popularity.HasValue || Math.Abs((float)rating - meta.Popularity.Value) < 0.001);
             else
                 Assert.AreEqual((float)rating, meta.Popularity);
         }

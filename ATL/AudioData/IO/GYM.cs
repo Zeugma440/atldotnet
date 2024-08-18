@@ -128,8 +128,6 @@ namespace ATL.AudioData.IO
                     structureHelper.AddZone(source.Position, 416, CORE_SIGNATURE);
                 }
 
-                tagExists = true;
-
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();
                 tagData.IntegrateValue(Field.TITLE, str);
                 str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(source.ReadBytes(32))).Trim();

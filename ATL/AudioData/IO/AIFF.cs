@@ -355,8 +355,6 @@ namespace ATL.AudioData.IO
                         {
                             structureHelper.AddZone(reader.Position - 8, header.Size + 8, header.ID);
                             structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID);
-
-                            tagExists = true;
                             switch (header.ID)
                             {
                                 case CHUNKTYPE_NAME:
@@ -382,7 +380,6 @@ namespace ATL.AudioData.IO
 
                             if (commentStr.Length > 0) commentStr.Append(Settings.InternalValueSeparator);
                             commentStr.Append(Utils.Latin1Encoding.GetString(reader.ReadBytes(header.Size)));
-                            tagExists = true;
                             break;
                         }
                     case CHUNKTYPE_COMMENTS:
@@ -392,7 +389,6 @@ namespace ATL.AudioData.IO
                             structureHelper.AddZone(reader.Position - 8, header.Size + 8, header.ID + commentIndex);
                             structureHelper.AddSize(containerChunkPos, containerChunkSize, header.ID + commentIndex);
 
-                            tagExists = true;
                             commentsFound = true;
 
                             ushort numComs = StreamUtils.DecodeBEUInt16(reader.ReadBytes(2));
@@ -436,7 +432,8 @@ namespace ATL.AudioData.IO
                 reader.Position = position + header.Size;
             } // Loop through file
 
-            tagData.IntegrateValue(Field.COMMENT, commentStr.ToString().Replace("\0", " ").Trim());
+            var commentVal = commentStr.ToString().Replace("\0", " ").Trim();
+            if (commentVal.Length > 0) tagData.IntegrateValue(Field.COMMENT, commentVal);
 
             if (-1 == HasEmbeddedID3v2)
             {

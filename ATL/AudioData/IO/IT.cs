@@ -436,8 +436,6 @@ namespace ATL.AudioData.IO
                 throw new InvalidDataException(sizeInfo.FileSize + " : Invalid IT file (file signature mismatch)"); // TODO - might be a compressed file -> PK header
             }
 
-            tagExists = true;
-
             // Title = max first 26 chars after file signature; null-terminated
             string title = StreamUtils.ReadNullTerminatedStringFixed(bSource, Utils.Latin1Encoding, 26);
             if (readTagParams.PrepareForWriting)

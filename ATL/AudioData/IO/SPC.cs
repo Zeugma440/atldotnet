@@ -383,7 +383,6 @@ namespace ATL.AudioData.IO
             footer.FormatTag = Utils.Latin1Encoding.GetString(buffer);
             if (XTENDED_TAG == footer.FormatTag)
             {
-                tagExists = true;
                 source.Read(buffer, 0, buffer.Length);
                 footer.Size = StreamUtils.DecodeUInt32(buffer);
 
@@ -480,7 +479,6 @@ namespace ATL.AudioData.IO
             // Reads the header tag
             if (SpcHeader.TAG_IN_HEADER == header.TagInHeader)
             {
-                tagExists = true;
                 source.Seek(REGISTERS_LENGTH, SeekOrigin.Current);
                 readHeaderTags(source, ref header, readTagParams);
             }

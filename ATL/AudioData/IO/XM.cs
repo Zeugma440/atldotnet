@@ -389,8 +389,6 @@ namespace ATL.AudioData.IO
                 throw new InvalidDataException("Invalid XM file (file signature ID mismatch)");
             }
 
-            tagExists = true;
-
             trackerName = StreamUtils.ReadNullTerminatedStringFixed(bSource, Encoding.ASCII, 20).Trim();
 
             bSource.Seek(2, SeekOrigin.Current); // Tracker version (unused)

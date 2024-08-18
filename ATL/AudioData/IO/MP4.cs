@@ -284,7 +284,6 @@ namespace ATL.AudioData.IO
 
         private void readQTChapters(BinaryReader source, IList<MP4Sample> chapterTextTrackSamples, IList<MP4Sample> chapterPictureTrackSamples)
         {
-            tagExists = true;
             if (3 == Settings.MP4_readChaptersFormat) return;
 
             if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); else tagData.Chapters.Clear();
@@ -417,7 +416,6 @@ namespace ATL.AudioData.IO
                 uuid = readUuid(source.BaseStream);
                 if (uuid.isValid())
                 {
-                    tagExists = true;
                     if (XmpTag.UUID_XMP == uuid.key)
                     {
                         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(uuid.value));
@@ -1210,7 +1208,6 @@ namespace ATL.AudioData.IO
             atomSize = navigateToAtom(source, "chpl");
             if (atomSize > 0 && (Settings.MP4_keepExistingChapters || Settings.MP4_createNeroChapters))
             {
-                tagExists = true;
                 structureHelper.AddZone(source.BaseStream.Position - 8, (int)atomSize, Array.Empty<byte>(), ZONE_MP4_CHPL);
 
                 source.BaseStream.Seek(4, SeekOrigin.Current); // Version and flags
@@ -1316,7 +1313,6 @@ namespace ATL.AudioData.IO
 
             // Core minimal size
             if (8 == Size) return;
-            tagExists = true;
 
             StringBuilder atomHeaderBuilder = new StringBuilder();
             // Browse all metadata

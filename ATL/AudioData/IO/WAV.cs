@@ -361,7 +361,6 @@ namespace ATL.AudioData.IO
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, subChunkId);
 
                     foundSample = true;
-                    tagExists = true;
 
                     SampleTag.FromStream(source, this, readTagParams);
                 }
@@ -371,7 +370,6 @@ namespace ATL.AudioData.IO
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, subChunkId);
 
                     foundCue = true;
-                    tagExists = true;
 
                     CueTag.FromStream(source, this, readTagParams);
                 }
@@ -380,7 +378,6 @@ namespace ATL.AudioData.IO
                     long initialPosition = source.Position - 8;
 
                     foundList = true;
-                    tagExists = true;
 
                     string purpose = List.FromStream(source, this, readTagParams, chunkSize);
 
@@ -394,7 +391,6 @@ namespace ATL.AudioData.IO
                     dispIndex++;
 
                     foundDisp = true;
-                    tagExists = true;
 
                     DispTag.FromStream(source, this, readTagParams, chunkSize);
                 }
@@ -404,7 +400,6 @@ namespace ATL.AudioData.IO
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, subChunkId);
 
                     foundBext = true;
-                    tagExists = true;
 
                     BextTag.FromStream(source, this, readTagParams);
                 }
@@ -414,7 +409,6 @@ namespace ATL.AudioData.IO
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, subChunkId);
 
                     foundIXml = true;
-                    tagExists = true;
 
                     IXmlTag.FromStream(source, this, readTagParams, chunkSize);
                 }
@@ -424,7 +418,6 @@ namespace ATL.AudioData.IO
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, subChunkId);
 
                     foundXmp = true;
-                    tagExists = true;
 
                     XmpTag.FromStream(source, this, readTagParams, chunkSize);
                 }
@@ -434,7 +427,6 @@ namespace ATL.AudioData.IO
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, subChunkId);
 
                     foundCart = true;
-                    tagExists = true;
 
                     CartTag.FromStream(source, this, readTagParams, chunkSize);
                 }

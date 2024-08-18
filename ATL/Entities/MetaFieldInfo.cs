@@ -42,7 +42,7 @@ namespace ATL
         };
 
         private static readonly string[] reservedNativePrefix = {
-            "info", "adtl", "ixml", "disp", "cue", "bext", "sample"
+            "info", "adtl", "ixml", "disp", "cue", "bext", "sample", "xmp", "cart"
         };
 
         /// <summary>

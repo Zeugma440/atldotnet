@@ -513,7 +513,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_R_WMA_Rating()
         {
-            assumeRatingInFile("_Ratings/windows7/0.wma", 0, MetaDataIOFactory.TagType.NATIVE);
+            assumeRatingInFile("_Ratings/windows7/0.wma", 0, MetaDataIOFactory.TagType.NATIVE, true);
             assumeRatingInFile("_Ratings/windows7/1.wma", 1.0 / 5, MetaDataIOFactory.TagType.NATIVE);
             assumeRatingInFile("_Ratings/windows7/2.wma", 2.0 / 5, MetaDataIOFactory.TagType.NATIVE);
             assumeRatingInFile("_Ratings/windows7/3.wma", 3.0 / 5, MetaDataIOFactory.TagType.NATIVE);

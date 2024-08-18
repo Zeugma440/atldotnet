@@ -384,8 +384,6 @@ namespace ATL.AudioData.IO
                 throw new InvalidDataException("MOD files compressed with PowerPacker are not supported yet");
             }
 
-            tagExists = true;
-
             // Restart from beginning, else parser might miss empty titles
             reader.Seek(0, SeekOrigin.Begin);
 

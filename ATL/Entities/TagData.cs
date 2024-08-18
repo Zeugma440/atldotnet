@@ -303,6 +303,19 @@ namespace ATL
             IntegrateValues(tagData);
         }
 
+        /// <summary>
+        /// Returns true if there's at least one metadata set; false if nothing is set
+        /// </summary>
+        public bool Exists()
+        {
+            if (Chapters != null && Chapters.Count > 0) return true;
+            if (Lyrics != null && Lyrics.Exists()) return true;
+            if (Pictures != null && Pictures.Count > 0) return true;
+            if (Fields != null && Fields.Count > 0) return true;
+            if (AdditionalFields != null && AdditionalFields.Count > 0) return true;
+            return false;
+        }
+
         private static bool isNumeric(Field f) { return numericFields.Contains(f); }
 
         /// <summary>
@@ -715,8 +728,8 @@ namespace ATL
             if (map.Count != otherMap.Count) return false;
             foreach (var entry in map)
             {
-                if (!otherMap.ContainsKey(entry.Key)) return false;
-                if (otherMap[entry.Key] != entry.Value) return false;
+                if (!otherMap.TryGetValue(entry.Key, out var value)) return false;
+                if (value != entry.Value) return false;
             }
             return true;
         }
