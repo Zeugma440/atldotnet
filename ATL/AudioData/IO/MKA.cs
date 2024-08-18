@@ -16,11 +16,11 @@ namespace ATL.AudioData.IO
     /// Class for Matroska Audio files manipulation (extension : .MKA)
     /// 
     /// Implementation notes
-    ///
-    /// Writing is not available yet as I encouter issues with the SpawnDev.EBML library
+    /// - Chapters : Only 1st level chapters are read (not nested ChapterAtoms)
+    /// - Writing is not available yet as I encouter issues with the SpawnDev.EBML library
     /// 
     /// </summary>
-    class MKA : MetaDataIO, IAudioDataIO
+    partial class MKA : MetaDataIO, IAudioDataIO
     {
         private const uint EBML_MAGIC_NUMBER = 0x1A45DFA3; // EBML header
 
@@ -304,6 +304,33 @@ namespace ATL.AudioData.IO
             }
         }
 
+        private void readChapters(MasterElement editionEntry)
+        {
+            var chapters = editionEntry.GetContainers(MatroskaId.ChapterAtom)
+                .FindAll(c => 1 == c.GetElement<UintElement>(MatroskaId.ChapterFlagEnabled)!.Data)
+                .FindAll(c => 0 == c.GetElement<UintElement>(MatroskaId.ChapterFlagHidden)!.Data);
+
+            tagData.Chapters = new List<ChapterInfo>();
+            foreach (var chp in chapters) tagData.Chapters.Add(readChapter(chp));
+        }
+
+        // Only reads 1st level chapters (not nested ChapterAtoms)
+        private ChapterInfo readChapter(MasterElement chapterAtom)
+        {
+            var timeStart = chapterAtom.GetElement<UintElement>(MatroskaId.ChapterTimeStart)!.Data;
+            var timeEnd = chapterAtom.GetElement<UintElement>(MatroskaId.ChapterTimeEnd)?.Data ?? 0;
+            var result = new ChapterInfo((uint)(timeStart / 1000000.0));
+            if (timeEnd > 0) result.EndTime = (uint)(timeEnd / 1000000.0);
+
+            // Get the first available title
+            var display = chapterAtom.GetContainers(MatroskaId.ChapterDisplay);
+            if (display.Count > 0)
+            {
+                result.Title = display[0].GetElement<UTF8StringElement>(MatroskaId.ChapString)!.Data;
+            }
+            return result;
+        }
+
         private void readAttachedFile(MasterElement file)
         {
             var data = file.GetElement<BinaryElement>(MatroskaId.FileData);
@@ -314,7 +341,7 @@ namespace ATL.AudioData.IO
                 {
                     var description = file.GetElement<UTF8StringElement>(MatroskaId.FileDescription)?.Data ?? "";
                     var name = file.GetElement<UTF8StringElement>(MatroskaId.FileName)?.Data ?? "";
-                    
+
                     var picType = PictureInfo.PIC_TYPE.Generic;
                     if (name.Contains("cover", StringComparison.InvariantCultureIgnoreCase)) picType = PictureInfo.PIC_TYPE.Front;
 
@@ -347,6 +374,12 @@ namespace ATL.AudioData.IO
             foreach (var tag in doc.GetContainers(MatroskaId.Segment, MatroskaId.Tags, MatroskaId.Tag))
                 readTag(tag);
 
+            // Chapters
+            var defaultEdition = doc.GetContainers(MatroskaId.Segment, MatroskaId.Chapters, MatroskaId.EditionEntry)
+                    .FindAll(ee => 1 == ee.GetElement<UintElement>(MatroskaId.EditionFlagDefault)!.Data)
+                    .Find(ee => 0 == ee.GetElement<UintElement>(MatroskaId.EditionFlagHidden)!.Data);
+            if (null != defaultEdition) readChapters(defaultEdition);
+
             // Embedded pictures
             foreach (var attachedFile in doc.GetContainers(MatroskaId.Segment, MatroskaId.Attachments, MatroskaId.AttachedFile))
                 readAttachedFile(attachedFile);
@@ -354,7 +387,6 @@ namespace ATL.AudioData.IO
             return true;
         }
 
-        // WARNING : NOT IMPLEMENTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
         /// <inheritdoc/>
         protected override int write(TagData tag, Stream s, string zone)
         {
