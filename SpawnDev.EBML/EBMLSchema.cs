@@ -1,74 +1,64 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace SpawnDev.EBML
 {
-    /// <summary>
-    /// Provides information to direct the encoding and decoding of EBML documents with the specified DocType
-    /// </summary>
-    public abstract class EBMLSchema
+    public class EBMLSchema
     {
-        /// <summary>
-        /// Schema DocType
-        /// </summary>
-        public abstract string DocType { get; }
-        /// <summary>
-        /// The Enum type that the schema will use to represent ElementIds
-        /// </summary>
-        public abstract Type ElementIdEnumType { get; }
-        /// <summary>
-        /// Used when trying to determine if an element is a child of an element of unknown size
-        /// </summary>
-        /// <param name="elementId"></param>
-        /// <param name="childElementId"></param>
-        /// <returns></returns>
-        public abstract bool ValidChildCheck(Enum[] elementId, Enum childElementId);
-        /// <summary>
-        /// Returns the type to be created to represent this element instance
-        /// </summary>
-        /// <param name="elementId"></param>
-        /// <returns></returns>
-        public abstract Type? GetElementType(Enum elementId);
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <typeparam name="TElementId">The Enum type or ulong type that will be used to represent ElementIds</typeparam>
-    public abstract class EBMLSchema<TElementId> : EBMLSchema where TElementId : struct
-    {
-        /// <summary>
-        /// The Enum type that the schema will use to represent ElementIds
-        /// </summary>
-        public override Type ElementIdEnumType { get; } = typeof(TElementId);
-        /// <summary>
-        /// Used when trying to determine if an element is a child of an element of unknown size
-        /// </summary>
-        /// <param name="parentIdChain"></param>
-        /// <param name="childElementId"></param>
-        /// <returns></returns>
-        public abstract bool ValidChildCheck(TElementId[] parentIdChain, TElementId childElementId);
-        /// <summary>
-        /// Returns the type to be created to represent this element instance
-        /// </summary>
-        /// <param name="elementId"></param>
-        /// <returns></returns>
-        public abstract Type? GetElementType(TElementId elementId);
-        /// <summary>
-        /// Returns the type to be created to represent this element instance
-        /// </summary>
-        /// <param name="elementId"></param>
-        /// <returns></returns>
-        public override Type? GetElementType(Enum elementId) => GetElementType((TElementId)(object)elementId);
-        /// <summary>
-        /// Used when trying to determine if an element is a child of an element of unknown size
-        /// </summary>
-        /// <param name="parentIdChain"></param>
-        /// <param name="childElementId"></param>
-        /// <returns></returns>
-        public override bool ValidChildCheck(Enum[] parentIdChain, Enum childElementId)
+        public string DocType { get; private set; }
+        public string? Version { get; private set; }
+        public Dictionary<ulong, EBMLSchemaElement> Elements { get; } = new Dictionary<ulong, EBMLSchemaElement>();
+        public EBMLSchema(string docType, string? version = null)
         {
-            return ValidChildCheck(parentIdChain.Select(o => o.ToEnum<TElementId>()).ToArray(), childElementId.ToEnum<TElementId>());
+            DocType = docType;
+            Version = version;
+        }
+        public static List<EBMLSchema> FromXML(string xml)
+        {
+            var ret = new List<EBMLSchema>();
+            var xdoc = XDocument.Parse(xml);
+            var nodes = xdoc.Elements().ToList();
+            foreach (var node in nodes)
+            {
+                if (node.Name.LocalName == "EBMLSchema")
+                {
+                    var schema = FromXML(node);
+                    if (schema != null) ret.Add(schema);
+                }
+            }
+            return ret;
+        }
+        public static EBMLSchema FromXML(XElement schemaRoot)
+        {
+            var nodes = schemaRoot.Elements();
+            var docType = schemaRoot.Attribute("docType")!.Value;
+            var version = schemaRoot.Attribute("version")?.Value;
+            var ret = new EBMLSchema(docType, version);
+            var tmp = new Dictionary<ulong, EBMLSchemaElement>();
+            foreach (var node in nodes)
+            {
+                if (node.Name.LocalName == "element")
+                {
+                    var idHex = node.Attribute("id")?.Value;
+                    if (idHex == null) continue;
+                    if (idHex.StartsWith("0x")) idHex = idHex.Substring(2);
+                    var idBytes = HexMate.Convert.FromHexString(idHex).ToList();
+                    idBytes.Reverse();
+                    while (idBytes.Count < 8) idBytes.Add(0);
+                    var id = BitConverter.ToUInt64(idBytes.ToArray());
+                    var el = new EBMLSchemaElement(docType, id, node);
+                    tmp.Add(el.Id, el);
+                }
+            }
+            var list = tmp.ToList();
+            list.Sort((pair1, pair2) => pair1.Value.Name.CompareTo(pair2.Value.Name));
+            foreach (var item in list)
+            {
+                ret.Elements.Add(item.Key, item.Value);
+            }
+            return ret;
         }
     }
 }

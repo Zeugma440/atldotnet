@@ -4,37 +4,43 @@
 		<TargetFrameworks>net6.0;netstandard2.1</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<Version>1.0.3</Version>
+		<Version>2.0.0</Version>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<EmbedAllSources>true</EmbedAllSources>
 		<DebugType>Embedded</DebugType>
 		<Title>SpawnDev.EBML</Title>
 		<Authors>LostBeard</Authors>
-		<Description>
-			An extendable .Net library for reading and writing Extensible Binary Meta Language (aka EBML) documents. Includes schema for Matroska and WebM.
-			Downgraded to .Net Standard 2.1 by Zeugma440 for compatibility with ATL.NET
-		</Description>
+		<Description>An extendable .Net library for reading and writing Extensible Binary Meta Language (aka EBML) document streams. Includes schema for Matroska and WebM.</Description>
 		<PackageProjectUrl>https://github.com/LostBeard/SpawnDev.EBML</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageIcon>icon-128.png</PackageIcon>
 		<RepositoryUrl>https://github.com/LostBeard/SpawnDev.EBML.git</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-		<PackageTags>EBML;WebM;Matroska;DotNet</PackageTags>
+		<PackageTags>EBML;WebM;Matroska</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Images\**" />
-	  <EmbeddedResource Remove="Images\**" />
-	  <None Remove="Images\**" />
+		<None Include=".\README.md" Pack="true" PackagePath="\" />
+		<None Include=".\LICENSE.txt" Pack="true" PackagePath="\" />
+		<None Include=".\icon-128.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include=".\README.md">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
-		<None Include=".\LICENSE.txt" Pack="true" PackagePath="" />
+		<None Remove="Schemas\ebml.xml" />
+		<None Remove="Schemas\ebml_matroska.xml" />
+		<None Remove="Schemas\ebml_webm.xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="Schemas\ebml.xml" />
+		<EmbeddedResource Include="Schemas\ebml_matroska.xml" />
+		<EmbeddedResource Include="Schemas\ebml_webm.xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="HexMate" Version="0.0.3" />
 	</ItemGroup>
 
 </Project>
