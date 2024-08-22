@@ -1,11 +1,10 @@
 ﻿using System;
-using SpawnDev.EBML.Extensions;
-using SpawnDev.EBML.Segments;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using SpawnDev.EBML.Segments;
+using SpawnDev.EBML.Extensions;
 
 namespace SpawnDev.EBML.Elements
 {
@@ -63,7 +62,7 @@ namespace SpawnDev.EBML.Elements
         /// <summary>
         /// Element DocType
         /// </summary>
-        public virtual string? DocType => SchemaElement?.DocType ?? Parent?.DocType ?? EBMLSchemaSet.EBML;
+        public virtual string? DocType => SchemaElement?.DocType ?? Parent?.DocType ?? EBMLParser.EBML;
         /// <summary>
         /// Element parent
         /// </summary>
@@ -154,7 +153,7 @@ namespace SpawnDev.EBML.Elements
         /// <summary>
         /// The schema element info for this element
         /// </summary>
-        public EBMLSchemaElement? SchemaElement { get; set; }
+        public SchemaElement? SchemaElement { get; set; }
         /// <summary>
         /// Returns true if the element has been modified
         /// </summary>
@@ -200,7 +199,7 @@ namespace SpawnDev.EBML.Elements
         /// Returns the EBMLDocument this element belongs to or null
         /// </summary>
         /// <returns></returns>
-        public EBMLDocument? GetDocumentElement() => GetRootLevelElement() as EBMLDocument;
+        public Document? GetDocumentElement() => GetRootLevelElement() as Document;
         /// <summary>
         /// Fired when the stream data has been set
         /// </summary>
@@ -208,7 +207,7 @@ namespace SpawnDev.EBML.Elements
         /// <summary>
         /// Constructor used by MasterElements when reading elements from its SegmentSource
         /// </summary>
-        public BaseElement(ulong id, EBMLSchemaElement? schemaElement, SegmentSource source, ElementHeader? header)
+        public BaseElement(ulong id, SchemaElement? schemaElement, SegmentSource source, ElementHeader? header)
         {
             Id = id;
             SchemaElement = schemaElement;
@@ -221,7 +220,7 @@ namespace SpawnDev.EBML.Elements
         /// </summary>
         /// <param name="id"></param>
         /// <param name="schemaElement"></param>
-        public BaseElement(ulong id, EBMLSchemaElement? schemaElement)
+        public BaseElement(ulong id, SchemaElement? schemaElement)
         {
             SchemaElement = schemaElement;
             Id = id;
@@ -353,7 +352,7 @@ namespace SpawnDev.EBML.Elements
         /// <summary>
         /// Creates new instance with data, and unknown EBMLSchemaElement
         /// </summary>
-        public BaseElement(EBMLSchemaElement schemaElement, T data) : base(schemaElement.Id, schemaElement)
+        public BaseElement(SchemaElement schemaElement, T data) : base(schemaElement.Id, schemaElement)
         {
             Source = ElementDataSource.Data;
             _Data = data;
@@ -371,7 +370,7 @@ namespace SpawnDev.EBML.Elements
         /// <summary>
         /// Creates new instance from SegmentSource
         /// </summary>
-        public BaseElement(EBMLSchemaElement? schemaElement, SegmentSource source, ElementHeader? header) : base(schemaElement?.Id ?? header?.Id ?? 0, schemaElement, source, header)
+        public BaseElement(SchemaElement? schemaElement, SegmentSource source, ElementHeader? header) : base(schemaElement?.Id ?? header?.Id ?? 0, schemaElement, source, header)
         {
             // from SegmentSource
         }

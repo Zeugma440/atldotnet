@@ -28,12 +28,10 @@ namespace SpawnDev.EBML.Elements
         {
             if (element == null) return null;
             return element.Data;
-        }
-
-        
-        public DateElement(EBMLSchemaElement schemaElement, SegmentSource source, ElementHeader? header = null) : base(schemaElement, source, header) { }
-        public DateElement(EBMLSchemaElement schemaElement, DateTime value) : base(schemaElement, value) { }
-        public DateElement(EBMLSchemaElement schemaElement) : base(schemaElement, default) { }
+        } 
+        public DateElement(SchemaElement schemaElement, SegmentSource source, ElementHeader? header = null) : base(schemaElement, source, header) { }
+        public DateElement(SchemaElement schemaElement, DateTime value) : base(schemaElement, value) { }
+        public DateElement(SchemaElement schemaElement) : base(schemaElement, default) { }
         protected override void DataFromSegmentSource(ref DateTime data)
         {
             SegmentSource!.Position = 0;

@@ -5,7 +5,7 @@ namespace SpawnDev.EBML
     /// <summary>
     /// Base class for EBML document engine
     /// </summary>
-    public abstract class EBMLDocumentEngine
+    public abstract class DocumentEngine
     {
         /// <summary>
         /// DocTypes this engine supports
@@ -18,12 +18,12 @@ namespace SpawnDev.EBML
         /// <summary>
         /// The EBML document this engine is attached to
         /// </summary>
-        public EBMLDocument Document { get; private set; }
+        public Document Document { get; private set; }
         /// <summary>
         /// Required EBMLDocumentEngine constructor
         /// </summary>
         /// <param name="document"></param>
-        public EBMLDocumentEngine(EBMLDocument document)
+        public DocumentEngine(Document document)
         {
             Document = document;
         }

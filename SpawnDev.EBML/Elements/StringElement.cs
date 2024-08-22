@@ -12,9 +12,9 @@ namespace SpawnDev.EBML.Elements
             get => Data?.ToString() ?? "";
             set => Data = value ?? "";
         }
-        public StringElement(EBMLSchemaElement schemaElement, SegmentSource source, ElementHeader? header = null) : base(schemaElement, source, header) { }
-        public StringElement(EBMLSchemaElement schemaElement, string value) : base(schemaElement, value) { }
-        public StringElement(EBMLSchemaElement schemaElement) : base(schemaElement, string.Empty) { }
+        public StringElement(SchemaElement schemaElement, SegmentSource source, ElementHeader? header = null) : base(schemaElement, source, header) { }
+        public StringElement(SchemaElement schemaElement, string value) : base(schemaElement, value) { }
+        public StringElement(SchemaElement schemaElement) : base(schemaElement, string.Empty) { }
         protected override void DataFromSegmentSource(ref string data) => data = Encoding.UTF8.GetString(SegmentSource.ReadBytes(0, SegmentSource.Length, true));
         protected override void DataToSegmentSource(ref SegmentSource source) => source = new ByteSegment(Encoding.ASCII.GetBytes(Data));
     }

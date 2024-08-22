@@ -149,7 +149,7 @@ It might help to resynchronize the offset on damaged streams.</documentation>
     <extension type="libmatroska" cppname="ClusterPrevSize"/>
     <extension type="webmproject.org" webm="1"/>
   </element>
-  <element name="SimpleBlock" path="\Segment\Cluster\SimpleBlock" id="0xA3" type="binary" minver="2">
+  <element name="SimpleBlock" path="\Segment\Cluster\SimpleBlock" id="0xA3" type="mkvSimpleBlock" minver="2">
     <documentation lang="en" purpose="definition">Similar to `Block` (see (#block-structure)) but without all the extra information.
 Mostly used to reduce overhead when no extra feature is needed; see (#simpleblock-structure) on `SimpleBlock` Structure.</documentation>
     <extension type="webmproject.org" webm="1"/>
@@ -159,7 +159,7 @@ Mostly used to reduce overhead when no extra feature is needed; see (#simplebloc
     <documentation lang="en" purpose="definition">Basic container of information containing a single `Block` and information specific to that `Block`.</documentation>
     <extension type="webmproject.org" webm="1"/>
   </element>
-  <element name="Block" path="\Segment\Cluster\BlockGroup\Block" id="0xA1" type="binary" minOccurs="1" maxOccurs="1">
+  <element name="Block" path="\Segment\Cluster\BlockGroup\Block" id="0xA1" type="mkvBlock" minOccurs="1" maxOccurs="1">
     <documentation lang="en" purpose="definition">`Block` containing the actual data to be rendered and a timestamp relative to the `Cluster` Timestamp;
 see (#block-structure) on `Block` Structure.</documentation>
     <extension type="webmproject.org" webm="1"/>

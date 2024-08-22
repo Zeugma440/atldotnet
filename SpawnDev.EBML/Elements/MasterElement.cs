@@ -9,28 +9,28 @@ namespace SpawnDev.EBML.Elements
     public class MasterElement : BaseElement<IEnumerable<BaseElement>>
     {
         static Crc32Algorithm CRC = new Crc32Algorithm(false);
-        public EBMLSchemaSet SchemaSet { get; }
+        public EBMLParser SchemaSet { get; }
         public const string TypeName = "master";
         public override string DataString => $"";
         public event Action<MasterElement, BaseElement> OnElementAdded;
         public event Action<MasterElement, BaseElement> OnElementRemoved;
-        public MasterElement(EBMLSchemaSet schemas, EBMLSchemaElement schemaElement, SegmentSource source, ElementHeader? header = null) : base(schemaElement, source, header)
+        public MasterElement(EBMLParser schemas, SchemaElement schemaElement, SegmentSource source, ElementHeader? header = null) : base(schemaElement, source, header)
         {
             SchemaSet = schemas;
         }
-        public MasterElement(EBMLSchemaSet schemas, SegmentSource source, ElementHeader? header = null) : base(null, source, header)
+        public MasterElement(EBMLParser schemas, SegmentSource source, ElementHeader? header = null) : base(null, source, header)
         {
             SchemaSet = schemas;
         }
-        public MasterElement(EBMLSchemaSet schemas, EBMLSchemaElement schemaElement) : base(schemaElement, new List<BaseElement>())
+        public MasterElement(EBMLParser schemas, SchemaElement schemaElement) : base(schemaElement, new List<BaseElement>())
         {
             SchemaSet = schemas;
         }
-        public MasterElement(EBMLSchemaSet schemas, ulong id) : base(id, new List<BaseElement>())
+        public MasterElement(EBMLParser schemas, ulong id) : base(id, new List<BaseElement>())
         {
             SchemaSet = schemas;
         }
-        public MasterElement(EBMLSchemaSet schemas) : base(0, new List<BaseElement>())
+        public MasterElement(EBMLParser schemas) : base(0, new List<BaseElement>())
         {
             SchemaSet = schemas;
         }
@@ -39,9 +39,9 @@ namespace SpawnDev.EBML.Elements
         /// </summary>
         /// <param name="includeMaxCountItems"></param>
         /// <returns></returns>
-        public IEnumerable<EBMLSchemaElement> GetAddableElementSchemas(bool includeMaxCountItems = false)
+        public IEnumerable<SchemaElement> GetAddableElementSchemas(bool includeMaxCountItems = false)
         {
-            var ret = new List<EBMLSchemaElement>();
+            var ret = new List<SchemaElement>();
             var allSchemaElements = SchemaSet.GetElements(DocType);
             foreach (var addable in allSchemaElements.Values)
             {
@@ -70,9 +70,9 @@ namespace SpawnDev.EBML.Elements
         /// Returns a list of EBMLSchemaElement for elements that do not occur in this MasterElement as many times as there EBML minOccurs value states it should
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<EBMLSchemaElement> GetMissingElementSchemas()
+        public IEnumerable<SchemaElement> GetMissingElementSchemas()
         {
-            var ret = new List<EBMLSchemaElement>();
+            var ret = new List<SchemaElement>();
             var allSchemaElements = SchemaSet.GetElements(DocType);
             foreach (var addable in allSchemaElements.Values)
             {
@@ -96,7 +96,7 @@ namespace SpawnDev.EBML.Elements
         }
         public MasterElement? AddContainer(string name)
         {
-            var schemaElement = SchemaSet.GetEBMLSchemaElement(name, DocType);
+            var schemaElement = SchemaSet.GetElement(name, DocType);
             if (schemaElement == null || schemaElement.Type != MasterElement.TypeName) throw new Exception("Invalid element type");
             var masterEl = new MasterElement(SchemaSet, schemaElement);
             AddElement(masterEl);
@@ -104,7 +104,7 @@ namespace SpawnDev.EBML.Elements
         }
         public UTF8Element? AddUTF8(string name, string data)
         {
-            var schemaElement = SchemaSet.GetEBMLSchemaElement(name, DocType);
+            var schemaElement = SchemaSet.GetElement(name, DocType);
             if (schemaElement == null || schemaElement.Type != UTF8Element.TypeName) throw new Exception("Invalid element type");
             var element = new UTF8Element(schemaElement, data);
             AddElement(element);
@@ -112,7 +112,7 @@ namespace SpawnDev.EBML.Elements
         }
         public StringElement? AddString(string name, string data)
         {
-            var schemaElement = SchemaSet.GetEBMLSchemaElement(name, DocType);
+            var schemaElement = SchemaSet.GetElement(name, DocType);
             if (schemaElement == null || schemaElement.Type != StringElement.TypeName) throw new Exception("Invalid element type");
             var element = new StringElement(schemaElement, data);
             AddElement(element);
@@ -120,7 +120,7 @@ namespace SpawnDev.EBML.Elements
         }
         public UintElement? AddUint(string name, ulong data)
         {
-            var schemaElement = SchemaSet.GetEBMLSchemaElement(name, DocType);
+            var schemaElement = SchemaSet.GetElement(name, DocType);
             if (schemaElement == null || schemaElement.Type != UintElement.TypeName) throw new Exception("Invalid element type");
             var element = new UintElement(schemaElement, data);
             AddElement(element);
@@ -128,7 +128,7 @@ namespace SpawnDev.EBML.Elements
         }
         public IntElement? AddInt(string name, long data)
         {
-            var schemaElement = SchemaSet.GetEBMLSchemaElement(name, DocType);
+            var schemaElement = SchemaSet.GetElement(name, DocType);
             if (schemaElement == null || schemaElement.Type != IntElement.TypeName) throw new Exception("Invalid element type");
             var element = new IntElement(schemaElement, data);
             AddElement(element);
@@ -136,7 +136,7 @@ namespace SpawnDev.EBML.Elements
         }
         public FloatElement? AddFloat(string name, double data)
         {
-            var schemaElement = SchemaSet.GetEBMLSchemaElement(name, DocType);
+            var schemaElement = SchemaSet.GetElement(name, DocType);
             if (schemaElement == null || schemaElement.Type != FloatElement.TypeName) throw new Exception("Invalid element type");
             var element = new FloatElement(schemaElement, data);
             AddElement(element);
@@ -144,7 +144,7 @@ namespace SpawnDev.EBML.Elements
         }
         public DateElement? AddDate(string name, DateTime data)
         {
-            var schemaElement = SchemaSet.GetEBMLSchemaElement(name, DocType);
+            var schemaElement = SchemaSet.GetElement(name, DocType);
             if (schemaElement == null || schemaElement.Type != DateElement.TypeName) throw new Exception("Invalid element type");
             var element = new DateElement(schemaElement, data);
             AddElement(element);
@@ -152,19 +152,35 @@ namespace SpawnDev.EBML.Elements
         }
         public BinaryElement? AddBinary(string name, byte[] data)
         {
-            var schemaElement = SchemaSet.GetEBMLSchemaElement(name, DocType);
+            var schemaElement = SchemaSet.GetElement(name, DocType);
             if (schemaElement == null || schemaElement.Type != BinaryElement.TypeName) throw new Exception("Invalid element type");
             var element = new BinaryElement(schemaElement, data);
             AddElement(element);
             return element;
         }
-        public TElement AddElement<TElement>(EBMLSchemaElement elementSchema) where TElement : BaseElement
+        public BlockElement? AddBlock(string name, byte[] data)
+        {
+            var schemaElement = SchemaSet.GetElement(name, DocType);
+            if (schemaElement == null || schemaElement.Type != BlockElement.TypeName) throw new Exception("Invalid element type");
+            var element = new BlockElement(schemaElement, data);
+            AddElement(element);
+            return element;
+        }
+        public BlockElement? AddSimpleBlock(string name, byte[] data)
+        {
+            var schemaElement = SchemaSet.GetElement(name, DocType);
+            if (schemaElement == null || schemaElement.Type != SimpleBlockElement.TypeName) throw new Exception("Invalid element type");
+            var element = new SimpleBlockElement(schemaElement, data);
+            AddElement(element);
+            return element;
+        }
+        public TElement AddElement<TElement>(SchemaElement elementSchema) where TElement : BaseElement
         {
             var element = Create<TElement>(elementSchema);
             if (element == null) return null;
             return AddElement(element);
         }
-        public BaseElement? AddElement(EBMLSchemaElement elementSchema)
+        public BaseElement? AddElement(SchemaElement elementSchema)
         {
             var element = Create(elementSchema);
             if (element == null) return null;
@@ -193,7 +209,7 @@ namespace SpawnDev.EBML.Elements
         }
         public byte[]? CalculateCRC()
         {
-            var crcSchema = SchemaSet.GetEBMLSchemaElement("CRC-32");
+            var crcSchema = SchemaSet.GetElement("CRC-32");
             if (crcSchema == null) return null;
             var dataToCRC = Data.Where(o => o.Id != crcSchema.Id).Select(o => o.ToStream());
             using var stream = new MultiStreamSegment(dataToCRC);
@@ -319,26 +335,6 @@ namespace SpawnDev.EBML.Elements
             if (stringElement is StringElement stringASCII) return stringASCII.Data;
             throw new Exception("Unknown type");
         }
-        //public ulong CalculatedSize
-        //{
-        //    get
-        //    {
-        //        ulong ret = 0;
-        //        var children = Data;
-        //        foreach (var child in children)
-        //        {
-        //            if (child is MasterElement masterElement)
-        //            {
-        //                ret += masterElement.CalculatedSize;
-        //            }
-        //            else
-        //            {
-        //                ret += child.TotalSize;
-        //            }
-        //        }
-        //        return ret;
-        //    }
-        //}
         /// <summary>
         /// Returns all children recursively
         /// </summary>
@@ -394,7 +390,7 @@ namespace SpawnDev.EBML.Elements
             var data = new List<BaseElement>();
             _data = data;
             var isUnknownSize = _ElementHeader != null && _ElementHeader.Size == null;
-            var parsingDocType = DocType ?? EBMLSchemaSet.EBML;
+            var parsingDocType = DocType ?? EBMLParser.EBML;
             while (true)
             {
                 BaseElement? element = null;
@@ -414,7 +410,7 @@ namespace SpawnDev.EBML.Elements
                 }
                 var elementDataOffset = source.Position;
                 var id = elementHeader.Id;
-                var schemaElement = SchemaSet.GetEBMLSchemaElement(id, parsingDocType);
+                var schemaElement = SchemaSet.GetElement(id, parsingDocType);
                 if (schemaElement == null)
                 {
                     var nmttt = true;
@@ -479,7 +475,7 @@ namespace SpawnDev.EBML.Elements
                 }
             }
         }
-        private BaseElement? Create(EBMLSchemaElement? schemaElement, SegmentSource source, ElementHeader? header = null)
+        private BaseElement? Create(SchemaElement? schemaElement, SegmentSource source, ElementHeader? header = null)
         {
             if (schemaElement == null) return null;
             var type = SchemaSet.GetElementType(schemaElement.Type);
@@ -494,11 +490,13 @@ namespace SpawnDev.EBML.Elements
                 UTF8Element.TypeName => new UTF8Element(schemaElement, source, header),
                 BinaryElement.TypeName => new BinaryElement(schemaElement, source, header),
                 DateElement.TypeName => new DateElement(schemaElement, source, header),
+                BlockElement.TypeName => new BlockElement(schemaElement, source, header),
+                SimpleBlockElement.TypeName => new SimpleBlockElement(schemaElement, source, header),
                 _ => null
             };
             return ret;
         }
-        TElement? Create<TElement>(EBMLSchemaElement? schemaElement) where TElement : BaseElement
+        TElement? Create<TElement>(SchemaElement? schemaElement) where TElement : BaseElement
         {
             if (schemaElement == null) return null;
             var type = SchemaSet.GetElementType(schemaElement.Type);
@@ -514,11 +512,13 @@ namespace SpawnDev.EBML.Elements
                 UTF8Element.TypeName => new UTF8Element(schemaElement),
                 BinaryElement.TypeName => new BinaryElement(schemaElement),
                 DateElement.TypeName => new DateElement(schemaElement),
+                BlockElement.TypeName => new BlockElement(schemaElement),
+                SimpleBlockElement.TypeName => new SimpleBlockElement(schemaElement),
                 _ => null
             };
             return (TElement?)ret;
         }
-        BaseElement? Create(EBMLSchemaElement? schemaElement)
+        BaseElement? Create(SchemaElement? schemaElement)
         {
             if (schemaElement == null) return null;
             var type = SchemaSet.GetElementType(schemaElement.Type);
@@ -533,6 +533,8 @@ namespace SpawnDev.EBML.Elements
                 UTF8Element.TypeName => new UTF8Element(schemaElement),
                 BinaryElement.TypeName => new BinaryElement(schemaElement),
                 DateElement.TypeName => new DateElement(schemaElement),
+                BlockElement.TypeName => new BlockElement(schemaElement),
+                SimpleBlockElement.TypeName => new SimpleBlockElement(schemaElement),
                 _ => null
             };
             return ret;
