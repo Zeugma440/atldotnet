@@ -316,6 +316,8 @@ namespace ATL
             return false;
         }
 
+        public bool HasField() => Fields.Any(f => f.Value.Length > 0);
+
         private static bool isNumeric(Field f) { return numericFields.Contains(f); }
 
         /// <summary>

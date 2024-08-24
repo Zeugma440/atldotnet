@@ -382,6 +382,15 @@ namespace ATL.AudioData.IO
             // Nothing here; the point is to override when needed
         }
 
+        /// <summary>
+        /// Overridable function called after writing the file
+        /// </summary>
+        /// <param name="s">Stream to the file</param>
+        protected virtual void postprocessWrite(Stream s)
+        {
+            // Nothing here; the point is to override when needed
+        }
+
         protected string formatBeforeWriting(Field frameType, TagData tag, IDictionary<Field, string> map)
         {
             string total;
@@ -456,6 +465,8 @@ namespace ATL.AudioData.IO
 
             // Update tag information without calling Read
             if (result) tagData.IntegrateValues(dataToWrite);
+
+            postprocessWrite(s);
 
             return result;
         }

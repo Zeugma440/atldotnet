@@ -53,5 +53,18 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Chapter 02", meta.Chapters[1].Title);
             Assert.AreEqual(2000L, meta.Chapters[1].StartTime);
         }
+
+        [TestMethod]
+        public void TagIO_RW_MKA_Empty()
+        {
+            test_RW_Empty(emptyFile, true, true, false, false);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MKA_Existing()
+        {
+            // Hash check NOT POSSIBLE YET mainly due to tag order differences
+            test_RW_Existing(notEmptyFile, 2, true, false, false);
+        }
     }
 }

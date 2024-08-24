@@ -153,6 +153,28 @@ namespace ATL
         }
 
         /// <summary>
+        /// Decode an unsigned Big-Endian 40-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="data">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static ulong DecodeBEUInt40(byte[] data)
+        {
+            if (data.Length < 5) throw new InvalidDataException("Data should be at least 5 bytes long; found " + data.Length + " bytes");
+            return ((ulong)data[0] << 32) | ((ulong)data[1] << 24) | ((ulong)data[2] << 16) | ((ulong)data[3] << 8) | ((ulong)data[4] << 0);
+        }
+
+        /// <summary>
+        /// Decode an unsigned Big-Endian 64-bit integer from the given array of bytes
+        /// </summary>
+        /// <param name="data">Array of bytes to read value from</param>
+        /// <returns>Decoded value</returns>
+        public static ulong DecodeBEUInt64(byte[] data)
+        {
+            if (data.Length < 8) throw new InvalidDataException("Data should be at least 8 bytes long; found " + data.Length + " bytes");
+            return ((ulong)data[0] << 56) | ((ulong)data[1] << 48) | ((ulong)data[2] << 40) | ((ulong)data[3] << 32) | ((ulong)data[4] << 24) | ((ulong)data[5] << 16) | ((ulong)data[6] << 8) | ((ulong)data[7] << 0);
+        }
+
+        /// <summary>
         /// Decode an unsigned Little-Endian 32-bit integer from the given array of bytes
         /// </summary>
         /// <param name="data">Array of bytes to read value from</param>
@@ -160,7 +182,7 @@ namespace ATL
         public static uint DecodeUInt32(byte[] data)
         {
             if (data.Length < 4) throw new InvalidDataException("Data should be at least 4 bytes long; found " + data.Length + " bytes");
-            return (uint)((data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
+            return (uint)(data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
         }
 
         /// <summary>
@@ -225,6 +247,17 @@ namespace ATL
         {
             if (data.Length < 4) throw new InvalidDataException("data should be at least 4 bytes long; found " + data.Length + " bytes");
             return (data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+        }
+
+        /// <summary>
+        /// Encode the given value into an array of bytes as a Big-Endian unsigned 40-bits integer
+        /// </summary>
+        /// <param name="value">Value to be encoded</param>
+        /// <returns>Encoded array of bytes</returns>
+        public static byte[] EncodeBEUInt40(ulong value)
+        {
+            // Output has to be big-endian
+            return new[] { (byte)((value & 0xFF00000000) >> 32), (byte)((value & 0x00FF000000) >> 24), (byte)((value & 0x0000FF0000) >> 16), (byte)((value & 0x000000FF00) >> 8), (byte)(value & 0x00000000FF) };
         }
 
         /// <summary>

@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using ATL.Logging;
 using Commons;
-using SpawnDev.EBML;
-using SpawnDev.EBML.Elements;
-using SpawnDev.EBML.Segments;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
 
@@ -17,12 +15,57 @@ namespace ATL.AudioData.IO
     /// 
     /// Implementation notes
     /// - Chapters : Only 1st level chapters are read (not nested ChapterAtoms)
-    /// - Writing is not available yet as I encouter issues with the SpawnDev.EBML library
+    ///
+    /// cues not supported
+    /// nested Tag
     /// 
     /// </summary>
     partial class MKA : MetaDataIO, IAudioDataIO
     {
         private const uint EBML_MAGIC_NUMBER = 0x1A45DFA3; // EBML header
+
+        // Matroska element IDs
+        private const uint ID_SEGMENT = 0x18538067;
+
+        private const uint ID_INFO = 0x1549A966;
+        private const uint ID_TRACKS = 0x1654AE6B;
+        private const uint ID_CLUSTER = 0x1F43B675;
+        private const uint ID_CUES = 0x1C53BB6B;
+
+        private const uint ID_ATTACHMENTS = 0x1941A469;
+        private const uint ID_ATTACHEDFILE = 0x61A7;
+        private const uint ID_FILEDESCRIPTION = 0x467E;
+        private const uint ID_FILENAME = 0x466E;
+        private const uint ID_FILEMEDIATYPE = 0x4660;
+        private const uint ID_FILEDATA = 0x465C;
+        private const uint ID_FILEUID = 0x46AE;
+
+        private const uint ID_SEEKHEAD = 0x114D9B74;
+        private const uint ID_SEEK = 0x4DBB;
+        private const uint ID_SEEKID = 0x53AB;
+        private const uint ID_SEEKPOSITION = 0x53AC;
+
+
+        private const uint ID_TAGS = 0x1254C367;
+
+        private const uint ID_TAG = 0x7373;
+        private const uint ID_TARGETS = 0x63C0;
+        private const uint ID_TARGETTYPEVALUE = 0x68CA;
+
+        private const uint ID_SIMPLETAG = 0x67C8;
+        private const uint ID_TAGNAME = 0x45A3;
+        private const uint ID_TAGSTRING = 0x4487;
+        private const uint ID_TAGLANGUAGE = 0x447A;
+        private const uint ID_TAGDEFAULT = 0x4484;
+
+        private const uint ID_CHAPTERS = 0x1043A770;
+        private const uint ID_EDITIONENTRY = 0x45B9;
+
+
+        // Codes
+        private const int TYPE_ALBUM = 50;
+        private const int TYPE_TRACK = 30;
+
 
         private const int TRACKTYPE_AUDIO = 2;
 
@@ -63,14 +106,15 @@ namespace ATL.AudioData.IO
         };
 
         // Mapping between MKV tag names and ATL frame codes
-        private static readonly Dictionary<string, Field> frameMapping = new Dictionary<string, Field>() {
+        private static readonly Dictionary<string, Field> frameMapping = new Dictionary<string, Field>()
+        {
             { "track.description", Field.GENERAL_DESCRIPTION },
             { "track.title", Field.TITLE },
             { "track.artist", Field.ARTIST },
             { "album.composer", Field.COMPOSER },
             { "track.composer", Field.COMPOSER },
             { "track.comment", Field.COMMENT },
-            { "track.genre", Field.GENRE},
+            { "track.genre", Field.GENRE },
             { "album.title", Field.ALBUM },
             { "track.part_number", Field.TRACK_NUMBER },
             { "track.total_parts", Field.TRACK_TOTAL },
@@ -95,10 +139,19 @@ namespace ATL.AudioData.IO
             { "album.date_recorded", Field.RECORDING_DATE }
         };
 
+        private const string ZONE_SEGMENT_SIZE = "segmentSize";
+        private const string ZONE_SEEKHEAD = "seekHead";
+        private const string ZONE_TAGS = "tags";
+        private const string ZONE_ATTACHMENTS = "attachments";
+        private const string ZONE_CHAPTERS = "chapters";
+
 
         // Private declarations 
         private Format containerAudioFormat;
         private Format containeeAudioFormat;
+
+        private long segmentOffset;
+        private List<List<Tuple<byte[], ulong>>> seekHeads = new List<List<Tuple<byte[], ulong>>>();
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -113,9 +166,11 @@ namespace ATL.AudioData.IO
                     containerAudioFormat.Name += " / " + containeeAudioFormat.ShortName;
                     containerAudioFormat.ID += containeeAudioFormat.ID;
                 }
+
                 return containerAudioFormat;
             }
         }
+
         public bool IsVBR { get; private set; }
         public int CodecFamily { get; private set; }
         public string FileName { get; }
@@ -125,7 +180,8 @@ namespace ATL.AudioData.IO
         public int SampleRate { get; private set; }
         public ChannelsArrangement ChannelsArrangement { get; private set; }
 
-        public List<MetaDataIOFactory.TagType> GetSupportedMetas() => new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
+        public List<MetaDataIOFactory.TagType> GetSupportedMetas() => new List<MetaDataIOFactory.TagType>
+            { MetaDataIOFactory.TagType.NATIVE };
 
         protected override int getDefaultTagOffset() => TO_BUILTIN;
 
@@ -142,6 +198,8 @@ namespace ATL.AudioData.IO
 
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
+
+        protected override bool isLittleEndian => false;
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -177,19 +235,44 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        private void readPhysicalData(Document doc)
+        private void indexSilentZones(EBMLReader reader)
         {
-            MasterElement audio = null;
-            var tracks = doc.GetContainers(@"Segment\Tracks\TrackEntry")
-                .Where(t => t.GetElement<UintElement>("TrackType")!.Data == TRACKTYPE_AUDIO)
-                .Where(t => (t.GetElement<UintElement>("FlagEnabled")?.Data ?? 1) == 1)
-                .Where(t => (t.GetElement<UintElement>("FlagDefault")?.Data ?? 1) == 1)
-                .ToList();
-            if (tracks.Count > 0)
-            {
-                var track = tracks[0];
+            indexSilentZone(reader, ID_INFO);
+            indexSilentZone(reader, ID_TRACKS);
+            indexSilentZone(reader, ID_CUES);
+            indexSilentZone(reader, ID_CLUSTER);
+        }
 
-                var codecId = track.GetElement<StringElement>("CodecID")!.Data.ToUpper();
+        private void indexSilentZone(EBMLReader reader, long id)
+        {
+            reader.seek(segmentOffset);
+            int index = 0;
+            foreach (var offset in reader.seekElements(id))
+            {
+                structureHelper.AddZone(offset - 4, 0, id + "." + index, false, false);
+                index++;
+            }
+        }
+
+        private bool readPhysicalData(EBMLReader reader)
+        {
+            if (!reader.seekElement(ID_TRACKS)) return false;
+            long audioOffset = -1;
+
+            // Find proper TrackEntry
+            var crits = new HashSet<Tuple<long, int>>
+            {
+                new Tuple<long, int>(0x83, TRACKTYPE_AUDIO), // TrackType
+                new Tuple<long, int>(0xB9, 1), // FlagEnabled
+                new Tuple<long, int>(0x88, 1) // FlagDefault
+            };
+            var res = reader.seekElement(0xAE, crits); // TrackEntry
+            if (res == EBMLReader.SeekResult.FOUND_MATCH)
+            {
+                var trackEntryOffset = reader.Position;
+
+                var codecId = "";
+                if (reader.seekElement(0x86)) codecId = reader.readString().ToUpper(); // CodecID
                 if (codecsMapping.TryGetValue(codecId, out var value))
                 {
                     var formats = AudioDataIOFactory.GetInstance().getFormats();
@@ -197,7 +280,8 @@ namespace ATL.AudioData.IO
                     if (format.Count > 0) containeeAudioFormat = format[0];
                 }
 
-                audio = track.GetContainer("Audio");
+                reader.seek(trackEntryOffset);
+                if (reader.seekElement(0xE1)) audioOffset = reader.Position;
             }
             else
             {
@@ -205,37 +289,57 @@ namespace ATL.AudioData.IO
             }
 
             // Find AudioDataOffset using Clusters' timecodes
-            // Try consuming less memory assuming cluster zero has timecode 0
-            MasterElement startCluster;
-            var clusterZero = doc.GetContainer(@"Segment\Cluster")!;
-            if (0 == clusterZero.GetElement<UintElement>("Timestamp")!.Data) startCluster = clusterZero;
-            else
+            reader.seek(segmentOffset);
+            // Cluster with Timecode 0
+            crits = new HashSet<Tuple<long, int>>
             {
-                // Search through all clusters
-                startCluster = doc.GetContainers(@"Segment\Cluster")
-                    .FirstOrDefault(c => 0 == c.GetElement<UintElement>("Timecode")!.Data);
-            }
+                new Tuple<long, int>(0xE7, 0), // Timestamp
+            };
+            res = reader.seekElement(0x1F43B675, crits); // Cluster
+            long zeroClusterOffset = reader.Position;
 
-            SegmentSource blockStream = null;
-            var firstBlock = startCluster?.GetElements<BlockElement>(@"BlockGroup\Block")
-                .FirstOrDefault(b => 0 == b.Timecode);
-            if (null == firstBlock)
+            long blockSize = -1;
+            while (-1 == AudioDataOffset)
             {
-                firstBlock = startCluster?.GetElements<SimpleBlockElement>("SimpleBlock")
-                    .FirstOrDefault(sb => 0 == sb.Timecode);
-
-                if (firstBlock != null)
+                if (reader.seekElement(0xA0)) // BlockGroup
                 {
-                    // Additional offset to remove MKV metadata (e.g. SimpleBlock header & lacing information)
-                    var streamOffset = 4; // 4 for "No Lacing"; does it vary according to lacing ?
-                    blockStream = firstBlock.SegmentSource.Slice(streamOffset, firstBlock.SegmentSource.Length - streamOffset);
-                }
-            }
-            else blockStream = firstBlock.SegmentSource;
+                    var loopOffset = reader.Position;
+                    if (reader.seekElement(0xA1)) // Block
+                    {
+                        blockSize = reader.readVint(); // size
+                        reader.readVint(); // trackId
+                        if (0 == StreamUtils.DecodeBEUInt16(reader.readBytes(2))) // Timestamp zero
+                        {
+                            AudioDataOffset = reader.Position + 1; // Ignore flags
+                        }
+                    }
 
-            if (blockStream != null)
+                    if (-1 == AudioDataOffset) reader.seek(loopOffset);
+                }
+                else break;
+            }
+
+            reader.seek(zeroClusterOffset);
+            while (-1 == AudioDataOffset)
             {
-                AudioDataOffset = blockStream.Offset;
+                if (reader.seekElement(0xA3)) // SimpleBlock
+                {
+                    var loopOffset = reader.Position;
+                    blockSize = reader.readVint(); // size
+                    reader.readVint(); // trackId
+                    if (0 == StreamUtils.DecodeBEUInt16(reader.readBytes(2))) // Timestamp zero
+                    {
+                        AudioDataOffset = reader.Position + 1; // Ignore flags
+                        // TODO adjust offset according to lacing mode
+                    }
+
+                    if (-1 == AudioDataOffset) reader.seek(loopOffset);
+                }
+                else break;
+            }
+
+            if (AudioDataOffset > -1)
+            {
                 // TODO AudioDataSize preferrably witout scanning all Clusters
 
                 // Physical properties using the actual audio data header
@@ -243,8 +347,15 @@ namespace ATL.AudioData.IO
                 {
                     if (containeeAudioFormat != Factory.UNKNOWN_FORMAT)
                     {
-                        IAudioDataIO audioData = AudioDataIOFactory.GetInstance().GetFromStream(blockStream);
-                        if (audioData.AudioFormat != Factory.UNKNOWN_FORMAT && audioData.Read(blockStream,
+                        // Copy block to MemoryStream
+                        // TODO find a way to optimize memory by clamping the raw stream to the block's limits
+                        reader.seek(AudioDataOffset);
+                        using var memStream = new MemoryStream((int)blockSize);
+                        StreamUtils.CopyStream(reader.BaseStream, memStream, blockSize);
+                        memStream.Seek(0, SeekOrigin.Begin);
+
+                        IAudioDataIO audioData = AudioDataIOFactory.GetInstance().GetFromStream(memStream);
+                        if (audioData.AudioFormat != Factory.UNKNOWN_FORMAT && audioData.Read(memStream,
                                 new AudioDataManager.SizeInfo(), new ReadTagParams()))
                         {
                             LogDelegator.GetLogDelegate()(Log.LV_INFO, "Reading physical attributes from audio data");
@@ -267,50 +378,188 @@ namespace ATL.AudioData.IO
             // Try getting Duration from MKA metadata
             if (Utils.ApproxEquals(Duration, 0))
             {
-                var info = doc.GetContainer(@"Segment\Info");
-                if (info != null)
+                reader.seek(segmentOffset);
+                if (reader.seekElement(ID_INFO))
                 {
-                    var duration = info.GetElement<FloatElement>("Duration")?.Data ?? 0;
-                    var scale = info.GetElement<UintElement>("TimestampScale")?.Data ?? 0;
+                    long infoOffset = reader.Position;
+                    double duration = 0.0;
+                    long scale = 0;
+
+                    if (reader.seekElement(0x4489)) duration = reader.readFloat(); // Duration
+
+                    reader.seek(infoOffset);
+                    if (reader.seekElement(0x2AD7B1)) scale = (long)reader.readUint(); // TimestampScale
+
                     // Convert ns to ms
                     Duration = duration * scale / 1000000.0;
                 }
             }
 
-            if (audio != null && (0 == SampleRate || null == ChannelsArrangement || UNKNOWN == ChannelsArrangement))
+            if (audioOffset > -1 && (0 == SampleRate || null == ChannelsArrangement || UNKNOWN == ChannelsArrangement))
             {
-                if (0 == SampleRate) SampleRate = (int)(audio.GetElement<FloatElement>("SamplingFrequency")?.Data ?? 0);
-                ChannelsArrangement ??= GuessFromChannelNumber((int)(audio.GetElement<UintElement>("Channels")?.Data ?? 0));
+                reader.seek(audioOffset);
+                if (0 == SampleRate && reader.seekElement(0xB5))
+                    SampleRate = (int)reader.readFloat(); // SamplingFrequency
+
+                reader.seek(audioOffset);
+                int nbChannels = 0;
+                if (reader.seekElement(0x9F)) nbChannels = (int)reader.readUint(); // Channels
+
+                ChannelsArrangement ??= GuessFromChannelNumber(nbChannels);
             }
+
+            return true;
         }
 
-        private void readTag(MasterElement tag)
+        private void readSeekHeads(EBMLReader reader)
         {
-            var targets = tag.GetContainer("Targets")!;
-            var targetTypeValue = targets.GetElement<UintElement>("TargetTypeValue")?.Data ?? 0;
-            var simpleTags = tag.GetContainers("SimpleTag");
-
-            switch (targetTypeValue)
+            foreach (long offset in reader.seekElements(ID_SEEKHEAD))
             {
-                case 50:
-                    readSimpleTags("album", simpleTags);
-                    break;
-                case 30:
-                    readSimpleTags("track", simpleTags);
-                    break;
+                reader.seek(offset);
+                var size = reader.readVint(); // Size of the Element minus ID and size descriptor
+                size += reader.Position - offset + 4; // Entire size of the element, header included
+                structureHelper.AddZone(offset - 4, size, ZONE_SEEKHEAD + "." + seekHeads.Count, false);
+
+                reader.seek(offset);
+                seekHeads.Add(readSeekHead(reader));
             }
         }
 
-        private void readSimpleTags(string prefix, IEnumerable<MasterElement> tags)
+        private List<Tuple<byte[], ulong>> readSeekHead(EBMLReader reader)
         {
-            foreach (var tag in tags)
+            List<Tuple<byte[], ulong>> result = new List<Tuple<byte[], ulong>>();
+            foreach (long offset in reader.seekElements(ID_SEEK))
             {
-                var tagName = tag.GetElement<UTF8Element>("TagName")?.Data ?? "";
-                var tagValue = tag.GetElement<UTF8Element>("TagString")?.Data ?? "";
-                SetMetaField(prefix + "." + tagName.ToLower(), tagValue, true);
+                reader.seek(offset);
+                result.Add(readSeek(reader));
+            }
+
+            return result;
+        }
+
+        private Tuple<byte[], ulong> readSeek(EBMLReader reader)
+        {
+            var seekOffset = reader.Position;
+
+            byte[] id = Array.Empty<byte>();
+            if (reader.seekElement(ID_SEEKID)) id = reader.readBinary();
+
+            ulong position = 0;
+            reader.seek(seekOffset);
+            if (reader.seekElement(ID_SEEKPOSITION)) position = reader.readUint();
+
+            return new Tuple<byte[], ulong>(id, position);
+        }
+
+        private bool attachZone(EBMLReader reader, ReadTagParams readTagParams, uint id, string zoneName)
+        {
+            if (!reader.seekElement(id))
+            {
+                // Create empty region to add the given element to an empty file
+                if (readTagParams.PrepareForWriting)
+                {
+                    structureHelper.AddZone(reader.BaseStream.Length, 0, zoneName);
+                }
+
+                return false;
+            }
+
+            if (!readTagParams.PrepareForWriting) return true;
+
+            var eltOffset = reader.Position - 4;
+                var size = reader.readVint(); // Size of the Element minus ID and size descriptor
+                size += reader.Position - eltOffset; // Entire size of the element, header included
+                structureHelper.AddZone(eltOffset, size, zoneName);
+            reader.seek(eltOffset + 4);
+
+            return true;
+        }
+
+        private void readTags(EBMLReader reader, ReadTagParams readTagParams)
+        {
+            if (!attachZone(reader, readTagParams, ID_TAGS, ZONE_TAGS)) return;
+
+            foreach (long offset in reader.seekElements(ID_TAG))
+            {
+                reader.seek(offset);
+                readTag(reader);
             }
         }
 
+        private void readTag(EBMLReader reader)
+        {
+            var tagOffset = reader.Position;
+            if (!reader.seekElement(ID_TARGETS)) return;
+            if (!reader.seekElement(ID_TARGETTYPEVALUE)) return;
+            var targetTypeValue = reader.readUint();
+
+            reader.seek(tagOffset);
+            foreach (long offset in reader.seekElements(ID_SIMPLETAG))
+            {
+                reader.seek(offset);
+                switch (targetTypeValue)
+                {
+                    case TYPE_ALBUM:
+                        readSimpleTags("album", reader);
+                        break;
+                    case TYPE_TRACK:
+                        readSimpleTags("track", reader);
+                        break;
+                }
+            }
+        }
+
+        private void readSimpleTags(string prefix, EBMLReader reader)
+        {
+            var simpleTagOffset = reader.Position;
+
+            string name = "";
+            if (reader.seekElement(ID_TAGNAME)) name = reader.readUtf8String();
+
+            string value = "";
+            reader.seek(simpleTagOffset);
+            if (reader.seekElement(ID_TAGSTRING)) value = reader.readUtf8String();
+
+            SetMetaField(prefix + "." + name.ToLower(), value, true);
+        }
+
+        private void readAttachments(EBMLReader reader, ReadTagParams readTagParams)
+        {
+            if (!attachZone(reader, readTagParams, ID_ATTACHMENTS, ZONE_ATTACHMENTS)) return;
+
+            foreach (long offset in reader.seekElements(ID_ATTACHEDFILE))
+            {
+                reader.seek(offset);
+                readAttachedFile(reader);
+            }
+        }
+
+        private void readAttachedFile(EBMLReader reader)
+        {
+            byte[] data = null;
+            var rootOffset = reader.Position;
+            if (reader.seekElement(ID_FILEDATA)) data = reader.readBinary();
+            if (data == null || 0 == data.Length) return;
+
+            var description = "";
+            reader.seek(rootOffset);
+            if (reader.seekElement(ID_FILEDESCRIPTION)) description = reader.readUtf8String();
+
+            var name = "";
+            reader.seek(rootOffset);
+            if (reader.seekElement(ID_FILENAME)) name = reader.readUtf8String();
+
+            var picType = PictureInfo.PIC_TYPE.Generic;
+            if (name.Contains("cover", StringComparison.InvariantCultureIgnoreCase))
+                picType = PictureInfo.PIC_TYPE.Front;
+
+            var pic = PictureInfo.fromBinaryData(data, picType, MetaDataIOFactory.TagType.NATIVE, 0);
+            pic.NativePicCodeStr = name;
+            pic.Description = description;
+            tagData.Pictures.Add(pic);
+        }
+
+        /*
         private void readChapters(MasterElement editionEntry)
         {
             var chapters = editionEntry.GetContainers("ChapterAtom")
@@ -337,29 +586,7 @@ namespace ATL.AudioData.IO
             }
             return result;
         }
-
-        private void readAttachedFile(MasterElement file)
-        {
-            var data = file.GetElement<BinaryElement>("FileData");
-            if (data != null)
-            {
-                Stream stream = data.SegmentSource;
-                if (stream != null)
-                {
-                    var description = file.GetElement<UTF8Element>("FileDescription")?.Data ?? "";
-                    var name = file.GetElement<UTF8Element>("FileName")?.Data ?? "";
-
-                    var picType = PictureInfo.PIC_TYPE.Generic;
-                    if (name.Contains("cover", StringComparison.InvariantCultureIgnoreCase)) picType = PictureInfo.PIC_TYPE.Front;
-
-                    stream.Position = 0;
-                    var pic = PictureInfo.fromBinaryData(stream, (int)data.DataSize, picType, MetaDataIOFactory.TagType.NATIVE, 0);
-                    pic.NativePicCodeStr = name;
-                    pic.Description = description;
-                    tagData.Pictures.Add(pic);
-                }
-            }
-        }
+        */
 
         /// <inheritdoc/>
         public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
@@ -373,37 +600,347 @@ namespace ATL.AudioData.IO
             ResetData();
             source.Seek(0, SeekOrigin.Begin);
 
-            var schemaSet = new EBMLParser();
-            schemaSet.LoadDefaultSchemas();
-            schemaSet.RegisterDocumentEngine<MatroskaDocumentEngine>();
+            EBMLReader reader = new EBMLReader(source);
 
-            var doc = new Document(schemaSet, source);
+            var ebmlHeader = reader.readElement();
+
+            if (ebmlHeader.Id != EBML_MAGIC_NUMBER)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "File is not a valid EBML file");
+                return false;
+            }
+
+            reader.seek(ebmlHeader.Size, SeekOrigin.Current);
+
+            if (!reader.enterContainer(ID_SEGMENT))
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "File is not a valid Matroska file");
+                return false;
+            }
+
+            segmentOffset = reader.Position;
+            if (readTagParams.PrepareForWriting)
+            {
+                reader.readVint();
+
+                // Add the segment size as a zone on its own
+                structureHelper.AddZone(segmentOffset, reader.Position - segmentOffset, ZONE_SEGMENT_SIZE, false);
+
+                // Add each sub-element as a zone to track their movement and index them inside SeekHead
+                reader.seek(segmentOffset);
+                indexSilentZones(reader);
+            }
 
             // Physical data
-            readPhysicalData(doc);
+            reader.seek(segmentOffset);
+            if (!readPhysicalData(reader)) return false;
 
+            // SeekHead
+            reader.seek(segmentOffset);
+            if (readTagParams.PrepareForWriting) readSeekHeads(reader);
+
+            // TODO fast find using SeekHead
 
             // Tags
-            foreach (var tag in doc.GetContainers(@"Segment\Tags\Tag")) readTag(tag);
+            reader.seek(segmentOffset);
+            readTags(reader, readTagParams);
 
+            /*
             // Chapters
             var defaultEdition = doc
                 .GetContainers(@"Segment\Chapters\EditionEntry")
                 .Where(ee => 1 == ee.GetElement<UintElement>("EditionFlagDefault")!.Data)
                 .FirstOrDefault(ee => 0 == ee.GetElement<UintElement>("EditionFlagHidden")!.Data);
             if (defaultEdition != null) readChapters(defaultEdition);
+            */
 
             // Embedded pictures
-            foreach (var attachedFile in doc.GetContainers(@"Segment\Attachments\AttachedFile"))
-                readAttachedFile(attachedFile);
+            reader.seek(segmentOffset);
+            readAttachments(reader, readTagParams);
 
             return true;
+        }
+
+        protected override void postprocessWrite(Stream s)
+        {
+            // Write Segment header = final size of the file over 8 bytes
+            s.Seek(segmentOffset, SeekOrigin.Begin);
+            s.Write(EBMLHelper.EncodeVint((ulong)(s.Length - 8 - s.Position), false));
         }
 
         /// <inheritdoc/>
         protected override int write(TagData tag, Stream s, string zone)
         {
-            throw new NotImplementedException();
+            int result = 0;
+
+            if (zone.StartsWith(ZONE_SEGMENT_SIZE))
+            {
+                s.Write(StreamUtils.EncodeBEUInt64(0));
+                result = 1;
+            }
+            else if (zone.StartsWith(ZONE_SEEKHEAD))
+            {
+                string[] parts = zone.Split('.');
+                if (parts.Length > 1)
+                {
+                    var index = int.Parse(parts[1]);
+                    writeSeekHead(s, zone, seekHeads[index], tag);
+                }
+                result = 1;
+            }
+            else if (zone.StartsWith(ZONE_TAGS))
+            {
+                result = writeTags(s, tag);
+            }
+            else if (zone.StartsWith(ZONE_ATTACHMENTS))
+            {
+                result = writeAttachments(s, tag);
+            }
+
+            return result;
+        }
+
+        private void writeSeekHead(Stream w, string zoneName, List<Tuple<byte[], ulong>> seekHead, TagData tag)
+        {
+            w.Write(StreamUtils.EncodeBEUInt32(ID_SEEKHEAD));
+            var sizeOffset = w.Position;
+            // Use 8 bytes to represent size (yes, I am lazy)
+            w.Write(StreamUtils.EncodeBEUInt64(0)); // Will be rewritten later
+
+            ISet<string> foundZones = new SortedSet<string>();
+            foreach (var seek in seekHead) writeSeek(w, zoneName, seek.Item1, seek.Item2, foundZones);
+
+            // Add Seek for new elements to the 1st SeekHead
+            if (zoneName.EndsWith('0'))
+            {
+                if (!foundZones.Any(z => z.StartsWith(ZONE_TAGS))) writeShTags(w, zoneName, tag);
+                if (!foundZones.Any(z => z.StartsWith(ZONE_ATTACHMENTS))) writeShAttachments(w, zoneName, tag);
+                if (!foundZones.Any(z => z.StartsWith(ZONE_CHAPTERS))) writeShChapters(w, zoneName, tag);
+            }
+
+            var finalOffset = w.Position;
+            w.Seek(sizeOffset, SeekOrigin.Begin);
+            w.Write(EBMLHelper.EncodeVint((ulong)(finalOffset - sizeOffset - 8), false));
+        }
+
+        private void writeSeek(Stream w, string shZoneName, byte[] id, ulong position, ISet<string> foundZones)
+        {
+            using MemoryStream memStream = new MemoryStream();
+
+            EBMLHelper.WriteElt(memStream, ID_SEEKID, id);
+
+            // Make position dynamic
+            var firstShOffset = Zones.First(z => z.Name.StartsWith(ZONE_SEEKHEAD)).Offset;
+            var zone = Zones.FirstOrDefault(z => z.Offset == (long)position + firstShOffset);
+            if (zone != null)
+            {
+                string dataZoneId = zone.Name;
+                FileStructureHelper.Zone dataZone = structureHelper.GetZone(dataZoneId);
+                foundZones.Add(dataZoneId);
+
+                structureHelper.AddPostProcessingIndex(w.Position + memStream.Position + 6, (uint)dataZone.Offset, true, dataZoneId, shZoneName, "", firstShOffset);
+            }
+            EBMLHelper.WriteElt32(memStream, ID_SEEKPOSITION, position);
+
+            memStream.Position = 0;
+            EBMLHelper.WriteElt(w, ID_SEEK, memStream);
+        }
+
+        private void writeShTags(Stream w, string shZoneName, TagData tag)
+        {
+            if (!tag.HasField() && (null == tag.AdditionalFields || 0 == tag.AdditionalFields.Count)) return;
+            writeNewSeek(w, shZoneName, ID_TAGS, ZONE_TAGS);
+        }
+
+        private void writeShAttachments(Stream w, string shZoneName, TagData tag)
+        {
+            if (null == tag.Pictures || 0 == tag.Pictures.Count) return;
+            writeNewSeek(w, shZoneName, ID_ATTACHMENTS, ZONE_ATTACHMENTS);
+        }
+
+        private void writeShChapters(Stream w, string shZoneName, TagData tag)
+        {
+            if (null == tag.Chapters || 0 == tag.Chapters.Count) return;
+            writeNewSeek(w, shZoneName, ID_CHAPTERS, ZONE_CHAPTERS);
+        }
+
+        private void writeNewSeek(Stream w, string shZoneName, ulong id, string targetZone)
+        {
+            // Make position dynamic
+            var zone = Zones.FirstOrDefault(z => z.Name.StartsWith(targetZone));
+            if (zone == null) return;
+
+            using MemoryStream memStream = new MemoryStream();
+
+            EBMLHelper.WriteElt(memStream, ID_SEEKID, id);
+
+            var firstShOffset = Zones.First(z => z.Name.StartsWith(ZONE_SEEKHEAD)).Offset;
+            structureHelper.AddPostProcessingIndex(w.Position + memStream.Position + 6, (uint)zone.Offset, true, zone.Name, shZoneName, "", firstShOffset);
+            EBMLHelper.WriteElt32(memStream, ID_SEEKPOSITION, (uint)(zone.Offset - firstShOffset));
+
+            memStream.Position = 0;
+            EBMLHelper.WriteElt(w, ID_SEEK, memStream);
+        }
+
+        private int writeTags(Stream w, TagData data)
+        {
+            int result = 0;
+
+            w.Write(StreamUtils.EncodeBEUInt32(ID_TAGS));
+            var sizeOffset = w.Position;
+            // Use 8 bytes to represent size (yes, I am lazy)
+            w.Write(StreamUtils.EncodeBEUInt64(0)); // Will be rewritten later
+
+            IDictionary<Field, string> map = data.ToMap();
+            var writtenFieldCodes = new HashSet<string>();
+
+            // Standard fields
+            ISet<Tuple<string, string>> albumFields = new HashSet<Tuple<string, string>>();
+            ISet<Tuple<string, string>> trackFields = new HashSet<Tuple<string, string>>();
+            foreach (Field frameType in map.Keys)
+            {
+                foreach (string s in frameMapping.Keys)
+                {
+                    var parts = s.Split('.');
+                    if (frameType == frameMapping[s])
+                    {
+                        if (map[frameType].Length > 0) // No frame with empty value
+                        {
+                            var field = new Tuple<string, string>(parts[1].ToUpper(),
+                                FormatBeforeWriting(map[frameType]));
+
+                            if (parts[0] == "album") albumFields.Add(field);
+                            else trackFields.Add(field);
+
+                            writtenFieldCodes.Add(s.ToUpper());
+                            result++;
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            // Other textual fields
+            foreach (MetaFieldInfo fieldInfo in data.AdditionalFields)
+            {
+                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) ||
+                     fieldInfo.TagType.Equals(getImplementedTagType()))
+                    && !fieldInfo.MarkedForDeletion
+                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
+                   )
+                {
+                    var parts = fieldInfo.NativeFieldCode.ToLower().Trim().Split('.');
+                    if (parts.Length < 2) continue;
+
+                    var field = new Tuple<string, string>(parts[1], FormatBeforeWriting(fieldInfo.Value));
+                    if (parts[0] == "album") albumFields.Add(field);
+                    else trackFields.Add(field);
+
+                    result++;
+                }
+            }
+
+            // Actually write values
+            if (albumFields.Count > 0) writeTag(w, TYPE_ALBUM, albumFields);
+            if (trackFields.Count > 0) writeTag(w, TYPE_TRACK, trackFields);
+
+            var finalOffset = w.Position;
+            w.Seek(sizeOffset, SeekOrigin.Begin);
+            w.Write(EBMLHelper.EncodeVint((ulong)(finalOffset - sizeOffset - 8), false));
+
+            return result;
+        }
+
+        private void writeTag(Stream w, int typeCode, ISet<Tuple<string, string>> fields)
+        {
+            using MemoryStream tagStream = new MemoryStream();
+
+            using MemoryStream targetStream = new MemoryStream();
+            EBMLHelper.WriteElt(targetStream, ID_TARGETTYPEVALUE, typeCode); // Mandatory info
+            targetStream.Position = 0;
+            EBMLHelper.WriteElt(tagStream, ID_TARGETS, targetStream);
+            foreach (var field in fields) writeSimpleTag(tagStream, field.Item1, field.Item2);
+
+            tagStream.Position = 0;
+            EBMLHelper.WriteElt(w, ID_TAG, tagStream);
+        }
+
+        private void writeSimpleTag(Stream w, string code, string value)
+        {
+            using MemoryStream memStream = new MemoryStream();
+
+            EBMLHelper.WriteElt(memStream, ID_TAGNAME, Encoding.UTF8.GetBytes(code));
+            EBMLHelper.WriteElt(memStream, ID_TAGSTRING, Encoding.UTF8.GetBytes(value));
+            EBMLHelper.WriteElt(memStream, ID_TAGLANGUAGE,
+                Utils.Latin1Encoding.GetBytes("und")); // "und" for undefined; mandatory info
+            EBMLHelper.WriteElt(memStream, ID_TAGDEFAULT, 1); // Mandatory info
+
+            memStream.Position = 0;
+            EBMLHelper.WriteElt(w, ID_SIMPLETAG, memStream);
+        }
+
+        private int writeAttachments(Stream w, TagData data)
+        {
+            int result = 0;
+
+            w.Write(StreamUtils.EncodeBEUInt32(ID_ATTACHMENTS));
+            var sizeOffset = w.Position;
+            // Use 8 bytes to represent size (yes, I am lazy)
+            w.Write(StreamUtils.EncodeBEUInt64(0)); // Will be rewritten later
+
+            foreach (PictureInfo picInfo in data.Pictures)
+            {
+                // Picture has either to be supported, or to come from the right tag standard
+                var doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
+                if (!doWritePicture) doWritePicture = getImplementedTagType() == picInfo.TagType;
+                // It also has not to be marked for deletion
+                doWritePicture = doWritePicture && !picInfo.MarkedForDeletion;
+
+                if (doWritePicture)
+                {
+                    result += writeAttachedFile(w, picInfo.PictureData, picInfo.MimeType, picInfo.PicType, picInfo.Description);
+                }
+            }
+
+            var finalOffset = w.Position;
+            w.Seek(sizeOffset, SeekOrigin.Begin);
+            w.Write(EBMLHelper.EncodeVint((ulong)(finalOffset - sizeOffset - 8), false));
+
+            return result;
+        }
+
+        private int writeAttachedFile(Stream w, byte[] data, string mimeType, PictureInfo.PIC_TYPE type, string description)
+        {
+            var name = type.Equals(PictureInfo.PIC_TYPE.Front) ? "cover" : "other";
+            switch (ImageUtils.GetImageFormatFromMimeType(mimeType))
+            {
+                case ImageFormat.Jpeg:
+                    name += ".jpg";
+                    break;
+                case ImageFormat.Png:
+                    name += ".png";
+                    break;
+                case ImageFormat.Unsupported:
+                case ImageFormat.Undefined:
+                case ImageFormat.Gif:
+                case ImageFormat.Bmp:
+                case ImageFormat.Tiff:
+                case ImageFormat.Webp:
+                default: return 0; // Any other format is forbidden by specs
+            }
+
+            using MemoryStream memStream = new MemoryStream();
+
+            EBMLHelper.WriteElt(memStream, ID_FILENAME, Encoding.UTF8.GetBytes(name));
+            if (description.Length > 0) EBMLHelper.WriteElt(memStream, ID_FILEDESCRIPTION, Encoding.UTF8.GetBytes(description));
+            EBMLHelper.WriteElt(memStream, ID_FILEMEDIATYPE, Utils.Latin1Encoding.GetBytes(mimeType));
+            EBMLHelper.WriteElt(memStream, ID_FILEUID, Utils.LongRandom(new Random()));
+            EBMLHelper.WriteElt(memStream, ID_FILEDATA, data);
+
+            memStream.Position = 0;
+            EBMLHelper.WriteElt(w, ID_ATTACHEDFILE, memStream);
+            return 1;
         }
     }
 }

@@ -419,17 +419,22 @@ namespace ATL.AudioData.IO
 
         private Tuple<long, long> calcTagBoundaries(Zone zone, Stream writer, bool isBuffered, bool tagExists, long globalCumulativeDelta, long regionCumulativeDelta, long globalOffsetCorrection)
         {
-            long tagBeginOffset, tagEndOffset;
+            long tagBeginOffset;
             if (tagExists && zone.Size > zone.CoreSignature.Length) // An existing tag has been reprocessed
             {
-                tagBeginOffset = zone.Offset + (isBuffered ? regionCumulativeDelta : globalCumulativeDelta) - globalOffsetCorrection;
-                tagEndOffset = tagBeginOffset + zone.Size;
+                tagBeginOffset = zone.Offset + (isBuffered ? regionCumulativeDelta : globalCumulativeDelta);
+                /*
+                if (structureHelper != null)
+                    tagBeginOffset = structureHelper.getCorrectedOffset(zone.Offset);
+                else
+                    tagBeginOffset = zone.Offset + (isBuffered ? regionCumulativeDelta : globalCumulativeDelta);
+                */
             }
             else // A brand new tag has been added to the file
             {
                 if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2)
                 {
-                    tagBeginOffset = embedder.Id3v2Zone.Offset - globalOffsetCorrection;
+                    tagBeginOffset = embedder.Id3v2Zone.Offset;
                 }
                 else
                 {
@@ -437,13 +442,23 @@ namespace ATL.AudioData.IO
                     {
                         case MetaDataIO.TO_EOF: tagBeginOffset = writer.Length; break;
                         case MetaDataIO.TO_BOF: tagBeginOffset = 0; break;
-                        case MetaDataIO.TO_BUILTIN: tagBeginOffset = zone.Offset + (isBuffered ? regionCumulativeDelta : globalCumulativeDelta); break;
+                        case MetaDataIO.TO_BUILTIN:
+                            {
+                                tagBeginOffset = zone.Offset + (isBuffered ? regionCumulativeDelta : globalCumulativeDelta);
+                                /*
+                                if (structureHelper != null)
+                                    tagBeginOffset = structureHelper.getCorrectedOffset(zone.Offset);
+                                else
+                                    tagBeginOffset = zone.Offset + (isBuffered ? regionCumulativeDelta : globalCumulativeDelta);
+                                */
+                                break;
+                            }
                         default: tagBeginOffset = -1; break;
                     }
-                    tagBeginOffset -= globalOffsetCorrection;
                 }
-                tagEndOffset = tagBeginOffset + zone.Size;
             }
+            tagBeginOffset -= globalOffsetCorrection;
+            var tagEndOffset = tagBeginOffset + zone.Size;
             return new Tuple<long, long>(tagBeginOffset, tagEndOffset);
         }
 

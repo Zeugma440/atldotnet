@@ -619,5 +619,21 @@ namespace Commons
         {
             return Math.Abs(f - val) < 0.001;
         }
+
+        /// <summary>
+        /// Generate a long random positive number between the given limits, using the given generator
+        /// </summary>
+        /// <param name="min">Lower limit (included; must be positive) - default : 0</param>
+        /// <param name="max">Higher limit (included; must be positive) - default : long.MaxValue</param>
+        /// <param name="rand"></param>
+        /// <returns></returns>
+        public static ulong LongRandom(Random rand, long min = 0, long max = long.MaxValue)
+        {
+            byte[] buf = new byte[8];
+            rand.NextBytes(buf);
+            long longRand = BitConverter.ToInt64(buf, 0);
+
+            return (ulong)(Math.Abs(longRand % (max - min)) + min);
+        }
     }
 }
