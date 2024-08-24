@@ -133,11 +133,13 @@ namespace ATL.AudioData.IO
             "WM/RATING"
         };
 
-        // Mapping between WMA frame codes and frame classes that aren't class 0 (Unicode string)
+        // Mapping between WMA frame codes and frame classes that aren't class 0 (Unicode string), or force certain types to their rightful class
         // To be further populated while reading
         private static readonly ConcurrentDictionary<string, ushort> frameClasses = new ConcurrentDictionary<string, ushort>
         {
-            ["WM/SharedUserRating"] = 3
+            ["WM/SharedUserRating"] = 3,
+            ["WM/TrackNumber"] = 0,
+            ["WM/PartOfSet"] = 0
         };
 
 
