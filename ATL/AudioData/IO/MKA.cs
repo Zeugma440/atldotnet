@@ -201,6 +201,11 @@ namespace ATL.AudioData.IO
 
         protected override bool isLittleEndian => false;
 
+        public override string EncodeDate(DateTime date)
+        {
+            return TrackUtils.FormatISOTimestamp(date).Replace("T", " ");
+        }
+
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
@@ -806,8 +811,8 @@ namespace ATL.AudioData.IO
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
-                            var field = new Tuple<string, string>(parts[1].ToUpper(),
-                                FormatBeforeWriting(map[frameType]));
+                            string value = formatBeforeWriting(frameType, data, map);
+                            var field = new Tuple<string, string>(parts[1].ToUpper(), value);
 
                             if (parts[0] == "album") albumFields.Add(field);
                             else trackFields.Add(field);
