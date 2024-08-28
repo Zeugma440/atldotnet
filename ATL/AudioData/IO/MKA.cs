@@ -557,6 +557,18 @@ namespace ATL.AudioData.IO
             var picType = PictureInfo.PIC_TYPE.Generic;
             if (name.Contains("cover", StringComparison.InvariantCultureIgnoreCase))
                 picType = PictureInfo.PIC_TYPE.Front;
+            else
+            {
+                foreach(PictureInfo.PIC_TYPE type in Enum.GetValues(typeof(PictureInfo.PIC_TYPE)))
+                {
+                    if (name.StartsWith(type.ToString(), StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        picType = type;
+                        break;
+                    }
+                }
+            }
+                
 
             var pic = PictureInfo.fromBinaryData(data, picType, MetaDataIOFactory.TagType.NATIVE, 0);
             pic.NativePicCodeStr = name;
@@ -917,7 +929,7 @@ namespace ATL.AudioData.IO
 
         private int writeAttachedFile(Stream w, byte[] data, string mimeType, PictureInfo.PIC_TYPE type, string description)
         {
-            var name = type.Equals(PictureInfo.PIC_TYPE.Front) ? "cover" : "other";
+            var name = type.Equals(PictureInfo.PIC_TYPE.Front) ? "cover" : type.ToString().ToLower();
             switch (ImageUtils.GetImageFormatFromMimeType(mimeType))
             {
                 case ImageFormat.Jpeg:
