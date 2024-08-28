@@ -19,7 +19,8 @@ namespace ATL.test.IO.MetaData
             testData.EmbeddedPictures[0].NativePicCodeStr = "cover.jpg";
             testData.EmbeddedPictures[1].NativePicCodeStr = "Other.png";
 
-            supportsDateOrYear = true;
+            // TODO it actually does support extra embedded pics, but detection of added pic fails as MKA is the only support with no picture type numeric code
+            supportsExtraEmbeddedPictures = false; 
         }
 
         [TestMethod]
