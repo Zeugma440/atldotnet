@@ -58,7 +58,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MKA_Empty()
         {
-            test_RW_Empty(emptyFile, true, true, false, false);
+            test_RW_Empty(emptyFile, true, true, true, true);
         }
 
         [TestMethod]

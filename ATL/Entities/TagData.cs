@@ -304,19 +304,22 @@ namespace ATL
         }
 
         /// <summary>
-        /// Returns true if there's at least one metadata set; false if nothing is set
+        /// Returns true if there's at least one metadata (usable or not) set; false if nothing is set
         /// </summary>
         public bool Exists()
         {
             if (Chapters != null && Chapters.Count > 0) return true;
             if (Lyrics != null && Lyrics.Exists()) return true;
-            if (Pictures != null && Pictures.Count > 0) return true;
-            if (Fields != null && Fields.Count > 0) return true;
-            if (AdditionalFields != null && AdditionalFields.Count > 0) return true;
+            if (Pictures.Count > 0) return true;
+            if (Fields.Count > 0) return true;
+            if (AdditionalFields.Count > 0) return true;
             return false;
         }
 
-        public bool HasField() => Fields.Any(f => f.Value.Length > 0);
+        /// <summary>
+        /// Return true if any standard metadata field is set and usable
+        /// </summary>
+        public bool HasUsableField() => Fields.Any(f => f.Value.Length > 0);
 
         private static bool isNumeric(Field f) { return numericFields.Contains(f); }
 

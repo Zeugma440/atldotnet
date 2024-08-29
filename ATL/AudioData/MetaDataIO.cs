@@ -558,6 +558,7 @@ namespace ATL.AudioData.IO
                     if (zone.IsDeletable) cumulativeDelta += zone.Size - zone.CoreSignature.Length;
                 }
             }
+            postprocessWrite(s);
 
             return result;
         }
@@ -581,6 +582,21 @@ namespace ATL.AudioData.IO
                     return structureHelper.RewriteHeaders(s, null, 0, ACTION.Edit, zone.Name);
             }
             return true;
+        }
+
+        protected bool isMetaFieldWritable(MetaFieldInfo fieldInfo)
+        {
+            return (fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) ||
+                    fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion;
+        }
+
+        protected bool isPictureWritable(PictureInfo picInfo)
+        {
+            // Picture has either to be supported, or to come from the right tag standard
+            var result = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
+            if (!result) result = getImplementedTagType() == picInfo.TagType;
+            // It also has not to be marked for deletion
+            return result && !picInfo.MarkedForDeletion;
         }
     }
 }

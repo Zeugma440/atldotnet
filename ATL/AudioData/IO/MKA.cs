@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using ATL.Logging;
 using Commons;
 using static ATL.ChannelsArrangements;
@@ -20,7 +21,7 @@ namespace ATL.AudioData.IO
     /// nested Tag
     /// 
     /// </summary>
-    partial class MKA : MetaDataIO, IAudioDataIO
+    internal partial class MKA : MetaDataIO, IAudioDataIO
     {
         private const uint EBML_MAGIC_NUMBER = 0x1A45DFA3; // EBML header
 
@@ -151,7 +152,7 @@ namespace ATL.AudioData.IO
         private Format containeeAudioFormat;
 
         private long segmentOffset;
-        private List<List<Tuple<byte[], ulong>>> seekHeads = new List<List<Tuple<byte[], ulong>>>();
+        private List<List<Tuple<long, ulong>>> seekHeads = new List<List<Tuple<long, ulong>>>();
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -430,9 +431,9 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private List<Tuple<byte[], ulong>> readSeekHead(EBMLReader reader)
+        private List<Tuple<long, ulong>> readSeekHead(EBMLReader reader)
         {
-            List<Tuple<byte[], ulong>> result = new List<Tuple<byte[], ulong>>();
+            List<Tuple<long, ulong>> result = new List<Tuple<long, ulong>>();
             foreach (long offset in reader.seekElements(ID_SEEK))
             {
                 reader.seek(offset);
@@ -442,18 +443,26 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private Tuple<byte[], ulong> readSeek(EBMLReader reader)
+        private Tuple<long, ulong> readSeek(EBMLReader reader)
         {
             var seekOffset = reader.Position;
 
+            /*
             byte[] id = Array.Empty<byte>();
             if (reader.seekElement(ID_SEEKID)) id = reader.readBinary();
+            */
+            long id = 0;
+            if (reader.seekElement(ID_SEEKID))
+            {
+                reader.readVint(); // Size; unused here
+                id = reader.readVint(true); // EBML ID is a VINT
+            }
 
             ulong position = 0;
             reader.seek(seekOffset);
             if (reader.seekElement(ID_SEEKPOSITION)) position = reader.readUint();
 
-            return new Tuple<byte[], ulong>(id, position);
+            return new Tuple<long, ulong>(id, position);
         }
 
         private bool attachZone(EBMLReader reader, ReadTagParams readTagParams, uint id, string zoneName)
@@ -472,9 +481,9 @@ namespace ATL.AudioData.IO
             if (!readTagParams.PrepareForWriting) return true;
 
             var eltOffset = reader.Position - 4;
-                var size = reader.readVint(); // Size of the Element minus ID and size descriptor
-                size += reader.Position - eltOffset; // Entire size of the element, header included
-                structureHelper.AddZone(eltOffset, size, zoneName);
+            var size = reader.readVint(); // Size of the Element minus ID and size descriptor
+            size += reader.Position - eltOffset; // Entire size of the element, header included
+            structureHelper.AddZone(eltOffset, size, zoneName);
             reader.seek(eltOffset + 4);
 
             return true;
@@ -559,7 +568,7 @@ namespace ATL.AudioData.IO
                 picType = PictureInfo.PIC_TYPE.Front;
             else
             {
-                foreach(PictureInfo.PIC_TYPE type in Enum.GetValues(typeof(PictureInfo.PIC_TYPE)))
+                foreach (PictureInfo.PIC_TYPE type in Enum.GetValues(typeof(PictureInfo.PIC_TYPE)))
                 {
                     if (name.StartsWith(type.ToString(), StringComparison.InvariantCultureIgnoreCase))
                     {
@@ -568,7 +577,7 @@ namespace ATL.AudioData.IO
                     }
                 }
             }
-                
+
 
             var pic = PictureInfo.fromBinaryData(data, picType, MetaDataIOFactory.TagType.NATIVE, 0);
             pic.NativePicCodeStr = name;
@@ -717,7 +726,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void writeSeekHead(Stream w, string zoneName, List<Tuple<byte[], ulong>> seekHead, TagData tag)
+        private void writeSeekHead(Stream w, string zoneName, List<Tuple<long, ulong>> seekHead, TagData tag)
         {
             w.Write(StreamUtils.EncodeBEUInt32(ID_SEEKHEAD));
             var sizeOffset = w.Position;
@@ -725,14 +734,14 @@ namespace ATL.AudioData.IO
             w.Write(StreamUtils.EncodeBEUInt64(0)); // Will be rewritten later
 
             ISet<string> foundZones = new SortedSet<string>();
-            foreach (var seek in seekHead) writeSeek(w, zoneName, seek.Item1, seek.Item2, foundZones);
+            foreach (var seek in seekHead) writeSeek(w, zoneName, seek.Item1, seek.Item2, tag, foundZones);
 
             // Add Seek for new elements to the 1st SeekHead
             if (zoneName.EndsWith('0'))
             {
-                if (!foundZones.Any(z => z.StartsWith(ZONE_TAGS))) writeShTags(w, zoneName, tag);
-                if (!foundZones.Any(z => z.StartsWith(ZONE_ATTACHMENTS))) writeShAttachments(w, zoneName, tag);
-                if (!foundZones.Any(z => z.StartsWith(ZONE_CHAPTERS))) writeShChapters(w, zoneName, tag);
+                if (!foundZones.Any(z => z.StartsWith(ZONE_TAGS))) writeSeekTags(w, zoneName, tag);
+                if (!foundZones.Any(z => z.StartsWith(ZONE_ATTACHMENTS))) writeSeekAttachments(w, zoneName, tag);
+                if (!foundZones.Any(z => z.StartsWith(ZONE_CHAPTERS))) writeSeekChapters(w, zoneName, tag);
             }
 
             var finalOffset = w.Position;
@@ -740,11 +749,17 @@ namespace ATL.AudioData.IO
             w.Write(EBMLHelper.EncodeVint((ulong)(finalOffset - sizeOffset - 8), false));
         }
 
-        private void writeSeek(Stream w, string shZoneName, byte[] id, ulong position, ISet<string> foundZones)
+        private void writeSeek(Stream w, string shZoneName, long id, ulong position, TagData tag, ISet<string> foundZones)
         {
+            // Skip metadata zone if there's nothing to write
+            if (ID_TAGS == id && !hasWritableTags(tag)) return;
+            if (ID_ATTACHMENTS == id && !hasWritablePics(tag)) return;
+            if (ID_CHAPTERS == id && !hasWritableChapters(tag)) return;
+
+
             using MemoryStream memStream = new MemoryStream();
 
-            EBMLHelper.WriteElt(memStream, ID_SEEKID, id);
+            EBMLHelper.WriteElt(memStream, ID_SEEKID, (ulong)id);
 
             // Make position dynamic
             var firstShOffset = Zones.First(z => z.Name.StartsWith(ZONE_SEEKHEAD)).Offset;
@@ -763,22 +778,34 @@ namespace ATL.AudioData.IO
             EBMLHelper.WriteElt(w, ID_SEEK, memStream);
         }
 
-        private void writeShTags(Stream w, string shZoneName, TagData tag)
+        private bool hasWritableTags(TagData tag)
         {
-            if (!tag.HasField() && (null == tag.AdditionalFields || 0 == tag.AdditionalFields.Count)) return;
-            writeNewSeek(w, shZoneName, ID_TAGS, ZONE_TAGS);
+            return tag.HasUsableField() || tag.AdditionalFields.Any(f => f.Value.Length > 0 && isMetaFieldWritable(f));
         }
 
-        private void writeShAttachments(Stream w, string shZoneName, TagData tag)
+        private bool hasWritablePics(TagData tag)
         {
-            if (null == tag.Pictures || 0 == tag.Pictures.Count) return;
-            writeNewSeek(w, shZoneName, ID_ATTACHMENTS, ZONE_ATTACHMENTS);
+            return tag.Pictures.Any(isPictureWritable);
         }
 
-        private void writeShChapters(Stream w, string shZoneName, TagData tag)
+        private bool hasWritableChapters(TagData tag)
         {
-            if (null == tag.Chapters || 0 == tag.Chapters.Count) return;
-            writeNewSeek(w, shZoneName, ID_CHAPTERS, ZONE_CHAPTERS);
+            return tag.Chapters != null && tag.Chapters.Count > 0;
+        }
+
+        private void writeSeekTags(Stream w, string shZoneName, TagData tag)
+        {
+            if (hasWritableTags(tag)) writeNewSeek(w, shZoneName, ID_TAGS, ZONE_TAGS);
+        }
+
+        private void writeSeekAttachments(Stream w, string shZoneName, TagData tag)
+        {
+            if (hasWritablePics(tag)) writeNewSeek(w, shZoneName, ID_ATTACHMENTS, ZONE_ATTACHMENTS);
+        }
+
+        private void writeSeekChapters(Stream w, string shZoneName, TagData tag)
+        {
+            if (hasWritableChapters(tag)) writeNewSeek(w, shZoneName, ID_CHAPTERS, ZONE_CHAPTERS);
         }
 
         private void writeNewSeek(Stream w, string shZoneName, ulong id, string targetZone)
@@ -802,11 +829,6 @@ namespace ATL.AudioData.IO
         private int writeTags(Stream w, TagData data)
         {
             int result = 0;
-
-            w.Write(StreamUtils.EncodeBEUInt32(ID_TAGS));
-            var sizeOffset = w.Position;
-            // Use 8 bytes to represent size (yes, I am lazy)
-            w.Write(StreamUtils.EncodeBEUInt64(0)); // Will be rewritten later
 
             IDictionary<Field, string> map = data.ToMap();
             var writtenFieldCodes = new HashSet<string>();
@@ -841,11 +863,7 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in data.AdditionalFields)
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) ||
-                     fieldInfo.TagType.Equals(getImplementedTagType()))
-                    && !fieldInfo.MarkedForDeletion
-                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
-                   )
+                if (isMetaFieldWritable(fieldInfo) && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper()))
                 {
                     var parts = fieldInfo.NativeFieldCode.ToLower().Trim().Split('.');
                     if (parts.Length < 2) continue;
@@ -857,6 +875,13 @@ namespace ATL.AudioData.IO
                     result++;
                 }
             }
+
+            if (0 == result) return 0;
+
+            w.Write(StreamUtils.EncodeBEUInt32(ID_TAGS));
+            var sizeOffset = w.Position;
+            // Use 8 bytes to represent size (yes, I am lazy)
+            w.Write(StreamUtils.EncodeBEUInt64(0)); // Will be rewritten later
 
             // Actually write values
             if (albumFields.Count > 0) writeTag(w, TYPE_ALBUM, albumFields);
@@ -908,13 +933,7 @@ namespace ATL.AudioData.IO
 
             foreach (PictureInfo picInfo in data.Pictures)
             {
-                // Picture has either to be supported, or to come from the right tag standard
-                var doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture = getImplementedTagType() == picInfo.TagType;
-                // It also has not to be marked for deletion
-                doWritePicture = doWritePicture && !picInfo.MarkedForDeletion;
-
-                if (doWritePicture)
+                if (isPictureWritable(picInfo))
                 {
                     result += writeAttachedFile(w, picInfo.PictureData, picInfo.MimeType, picInfo.PicType, picInfo.Description);
                 }
@@ -958,6 +977,42 @@ namespace ATL.AudioData.IO
             memStream.Position = 0;
             EBMLHelper.WriteElt(w, ID_ATTACHEDFILE, memStream);
             return 1;
+        }
+
+        /// <inheritdoc/>
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public override async Task<bool> RemoveAsync(Stream s)
+        {
+            // Overriding this is mandatory as we need SeekHead to be updated after metadata have been removed
+            TagData tag = prepareRemove();
+            return await WriteAsync(s, tag);
+        }
+
+        // Create an empty tag for integration
+        private TagData prepareRemove()
+        {
+            TagData result = new TagData();
+
+            foreach (Field b in frameMapping.Values)
+            {
+                result.IntegrateValue(b, "");
+            }
+
+            foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
+            {
+                MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
+                emptyFieldInfo.MarkedForDeletion = true;
+                result.AdditionalFields.Add(emptyFieldInfo);
+            }
+
+            foreach (PictureInfo picInfo in EmbeddedPictures)
+            {
+                PictureInfo emptyPicInfo = new PictureInfo(picInfo);
+                emptyPicInfo.MarkedForDeletion = true;
+                result.Pictures.Add(emptyPicInfo);
+            }
+
+            return result;
         }
     }
 }
