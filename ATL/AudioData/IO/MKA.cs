@@ -61,6 +61,15 @@ namespace ATL.AudioData.IO
 
         private const uint ID_CHAPTERS = 0x1043A770;
         private const uint ID_EDITIONENTRY = 0x45B9;
+        private const uint ID_EDITIONFLAGDEFAULT = 0x45DB;
+        private const uint ID_EDITIONFLAGHIDDEN = 0x45BD;
+        private const uint ID_CHAPTERATOM = 0xB6;
+        private const uint ID_CHAPTERFLAGENABLED = 0x4598;
+        private const uint ID_CHAPTERFLAGHIDDEN = 0x98;
+        private const uint ID_CHAPTERTIMESTART = 0x91;
+        private const uint ID_CHAPTERTIMEEND = 0x92;
+        private const uint ID_CHAPTERDISPLAY = 0x80;
+        private const uint ID_CHAPTERSTRING = 0x85;
 
 
         // Codes
@@ -447,10 +456,6 @@ namespace ATL.AudioData.IO
         {
             var seekOffset = reader.Position;
 
-            /*
-            byte[] id = Array.Empty<byte>();
-            if (reader.seekElement(ID_SEEKID)) id = reader.readBinary();
-            */
             long id = 0;
             if (reader.seekElement(ID_SEEKID))
             {
@@ -585,34 +590,62 @@ namespace ATL.AudioData.IO
             tagData.Pictures.Add(pic);
         }
 
-        /*
-        private void readChapters(MasterElement editionEntry)
+        private void readChapters(EBMLReader reader, ReadTagParams readTagParams)
         {
-            var chapters = editionEntry.GetContainers("ChapterAtom")
-                .Where(c => 1 == c.GetElement<UintElement>("ChapterFlagEnabled")!.Data)
-                .Where(c => 0 == c.GetElement<UintElement>("ChapterFlagHidden")!.Data);
+            if (!reader.seekElement(ID_CHAPTERS)) return;
 
-            tagData.Chapters = new List<ChapterInfo>();
-            foreach (var chp in chapters) tagData.Chapters.Add(readChapter(chp));
+            // Find proper EditionEntry
+            var crits = new HashSet<Tuple<long, int>>
+            {
+                new Tuple<long, int>(ID_EDITIONFLAGDEFAULT, 1),
+                new Tuple<long, int>(ID_EDITIONFLAGHIDDEN, 0)
+            };
+            var res = reader.seekElement(ID_EDITIONENTRY, crits);
+            if (res == EBMLReader.SeekResult.FOUND_MATCH) readChapterAtoms(reader);
+        }
+
+        private void readChapterAtoms(EBMLReader reader)
+        {
+            foreach (long offset in reader.seekElements(ID_CHAPTERATOM))
+            {
+                reader.seek(offset);
+                readChapterAtom(reader);
+            }
         }
 
         // Only reads 1st level chapters (not nested ChapterAtoms)
-        private ChapterInfo readChapter(MasterElement chapterAtom)
+        private void readChapterAtom(EBMLReader reader)
         {
-            var timeStart = chapterAtom.GetElement<UintElement>("ChapterTimeStart")!.Data;
-            var timeEnd = chapterAtom.GetElement<UintElement>("ChapterTimeEnd")?.Data ?? 0;
+            long rootOffset = reader.Position;
+
+            ulong data = 0;
+            if (reader.seekElement(ID_CHAPTERFLAGENABLED)) data = reader.readUint();
+            if (0 == data) return;
+
+            data = 0;
+            reader.seek(rootOffset);
+            if (reader.seekElement(ID_CHAPTERFLAGHIDDEN)) data = reader.readUint();
+            if (1 == data) return;
+
+            ulong timeStart = 0;
+            reader.seek(rootOffset);
+            if (reader.seekElement(ID_CHAPTERTIMESTART)) timeStart = reader.readUint();
+
+            ulong timeEnd = 0;
+            reader.seek(rootOffset);
+            if (reader.seekElement(ID_CHAPTERTIMEEND)) timeEnd = reader.readUint();
+
             var result = new ChapterInfo((uint)(timeStart / 1000000.0));
             if (timeEnd > 0) result.EndTime = (uint)(timeEnd / 1000000.0);
 
             // Get the first available title
-            var display = chapterAtom.GetContainers("ChapterDisplay").ToList();
-            if (display.Count > 0)
-            {
-                result.Title = display[0].GetElement<UTF8Element>("ChapString")!.Data;
-            }
-            return result;
+            reader.seek(rootOffset);
+            if (!reader.seekElement(ID_CHAPTERDISPLAY)) return;
+            if (reader.seekElement(ID_CHAPTERSTRING)) result.Title = reader.readUtf8String();
+
+            tagData.Chapters ??= new List<ChapterInfo>();
+            tagData.Chapters.Add(result);
         }
-        */
 
         /// <inheritdoc/>
         public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
@@ -671,14 +704,9 @@ namespace ATL.AudioData.IO
             reader.seek(segmentOffset);
             readTags(reader, readTagParams);
 
-            /*
             // Chapters
-            var defaultEdition = doc
-                .GetContainers(@"Segment\Chapters\EditionEntry")
-                .Where(ee => 1 == ee.GetElement<UintElement>("EditionFlagDefault")!.Data)
-                .FirstOrDefault(ee => 0 == ee.GetElement<UintElement>("EditionFlagHidden")!.Data);
-            if (defaultEdition != null) readChapters(defaultEdition);
-            */
+            reader.seek(segmentOffset);
+            readChapters(reader, readTagParams);
 
             // Embedded pictures
             reader.seek(segmentOffset);
