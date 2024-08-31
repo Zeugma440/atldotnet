@@ -268,10 +268,7 @@ namespace ATL.AudioData.IO
             }
 
             // Determine format
-            if (formatsMapping.ContainsKey(formatId))
-                containeeAudioFormat = formatsMapping[formatId];
-            else
-                containeeAudioFormat = formatsMapping["none"];
+            containeeAudioFormat = formatsMapping.TryGetValue(formatId, out var value) ? value : formatsMapping["none"];
         }
 
         private void readChannelLayoutChunk(BufferedBinaryReader source)
@@ -279,7 +276,7 @@ namespace ATL.AudioData.IO
             uint channelLayout = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             // we don't need anything else
 
-            if (channelsMapping.ContainsKey(channelLayout)) ChannelsArrangement = channelsMapping[channelLayout];
+            if (channelsMapping.TryGetValue(channelLayout, out var value)) ChannelsArrangement = value;
         }
 
         // WARNING : EXPERIMENTAL / UNTESTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
@@ -333,7 +330,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, AudioDataManager.SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
             return read(source, readTagParams);
         }

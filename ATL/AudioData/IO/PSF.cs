@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using System.Text;
@@ -359,9 +360,9 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
-        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
+            this.sizeInfo = sizeNfo;
 
             return read(source, readTagParams);
         }
@@ -432,13 +433,11 @@ namespace ATL.AudioData.IO
             }
 
             // Other textual fields
-            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields.Where(isMetaFieldWritable))
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
-                    && !fieldInfo.MarkedForDeletion 
-                    && !fieldInfo.NativeFieldCode.Equals("utf8") // utf8 already written
+                if (!fieldInfo.NativeFieldCode.Equals("utf8") // utf8 already written
                     && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
-                    ) 
+                    )
                 {
                     writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                     result++;

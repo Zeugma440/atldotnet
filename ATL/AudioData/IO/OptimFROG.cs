@@ -161,14 +161,14 @@ namespace ATL.AudioData.IO
             return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ID3V1 };
         }
 
-        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = false;
-            this.sizeInfo = sizeInfo;
+            this.sizeInfo = sizeNfo;
             resetData();
 
             // Read header data
-            source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            source.Seek(sizeNfo.ID3v2Size, SeekOrigin.Begin);
 
             long initialPos = source.Position;
             byte[] buffer = new byte[4];
@@ -194,7 +194,7 @@ namespace ATL.AudioData.IO
             {
                 result = true;
                 AudioDataOffset = initialPos;
-                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+                AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
 
                 Duration = getDuration();
                 BitRate = getBitrate();

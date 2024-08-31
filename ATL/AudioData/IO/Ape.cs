@@ -195,7 +195,7 @@ namespace ATL.AudioData.IO
             return StreamUtils.ArrBeginsWith(data, FILE_HEADER);
         }
 
-        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
             ApeHeaderOld APE_OLD = new ApeHeaderOld();  // old header   <= 3.97
             ApeHeaderNew APE_NEW = new ApeHeaderNew();  // new header   >= 3.98
@@ -205,7 +205,7 @@ namespace ATL.AudioData.IO
             bool LoadSuccess;
             bool result = false;
 
-            this.sizeInfo = sizeInfo;
+            this.sizeInfo = sizeNfo;
             resetData();
 
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
@@ -216,7 +216,7 @@ namespace ATL.AudioData.IO
             {
                 Version = header.nVersion;
                 AudioDataOffset = reader.Position - 6;
-                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+                AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
 
                 // Load New Monkey's Audio Header for version >= 3.98
                 if (header.nVersion >= 3980)
@@ -349,7 +349,7 @@ namespace ATL.AudioData.IO
                     // length
                     if (SampleRate > 0) Duration = TotalSamples * 1000.0 / SampleRate;
                     // average bitrate
-                    if (Duration > 0) BitRate = 8 * (sizeInfo.FileSize - sizeInfo.TotalTagSize) / Duration;
+                    if (Duration > 0) BitRate = 8 * (sizeNfo.FileSize - sizeNfo.TotalTagSize) / Duration;
                     // some extra sanity checks
                     result = BitDepth > 0 && SampleRate > 0 && TotalSamples > 0 && ChannelsArrangement.NbChannels > 0;
                 }

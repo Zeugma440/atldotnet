@@ -741,9 +741,9 @@ namespace ATL.AudioData.IO
 
         // ---------------------------------------------------------------------------
 
-        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, AudioDataManager.SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
+            this.sizeInfo = sizeNfo;
 
             return Read(source, readTagParams);
         }

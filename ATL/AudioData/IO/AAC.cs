@@ -170,9 +170,7 @@ namespace ATL.AudioData.IO
         // Read ADIF header data
         private void readADIF(Stream Source)
         {
-            int Position;
-
-            Position = (int)(sizeInfo.ID3v2Size * 8 + 32);
+            var Position = (int)(sizeInfo.ID3v2Size * 8 + 32);
             if (0 == StreamUtils.ReadBEBits(Source, Position, 1)) Position += 3;
             else Position += 75;
             if (0 == StreamUtils.ReadBEBits(Source, Position, 1)) bitrateTypeID = AAC_BITRATE_TYPE_CBR;
@@ -205,12 +203,11 @@ namespace ATL.AudioData.IO
         {
             int frames = 0;
             int totalSize = 0;
-            int position;
 
             do
             {
                 frames++;
-                position = (int)(sizeInfo.ID3v2Size + totalSize) * 8;
+                var position = (int)(sizeInfo.ID3v2Size + totalSize) * 8;
 
                 if (StreamUtils.ReadBEBits(source, position, 12) != 0xFFF) break;
 
@@ -240,9 +237,9 @@ namespace ATL.AudioData.IO
 
         // Read data from file
 
-        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, AudioDataManager.SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
+            this.sizeInfo = sizeNfo;
 
             return read(source, readTagParams);
         }

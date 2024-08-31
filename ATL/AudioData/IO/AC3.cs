@@ -80,7 +80,7 @@ namespace ATL.AudioData.IO
             return 30475 == StreamUtils.DecodeUInt16(data);
         }
 
-        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
             resetData();
 
@@ -91,7 +91,7 @@ namespace ATL.AudioData.IO
             if (!IsValidHeader(buffer)) return false;
 
             AudioDataOffset = source.Position - 2;
-            AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+            AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
 
             source.Seek(2, SeekOrigin.Current);
             source.Read(buffer, 0, 1);
@@ -122,7 +122,7 @@ namespace ATL.AudioData.IO
                 _ => UNKNOWN
             };
 
-            Duration = sizeInfo.FileSize * 8.0 / BitRate;
+            Duration = sizeNfo.FileSize * 8.0 / BitRate;
 
             return true;
         }

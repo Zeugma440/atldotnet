@@ -261,18 +261,18 @@ namespace ATL.AudioData.IO
         }
 
 
-        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
             HeaderRecord header = new HeaderRecord();
             bool result;
-            this.sizeInfo = sizeInfo;
+            this.sizeInfo = sizeNfo;
 
             resetData();
 
             // Load header from file to variable
             result = readHeader(source, ref header);
             // Process data if loaded and file valid
-            if (result && (sizeInfo.FileSize > 0) && (header.Version > 0))
+            if (result && (sizeNfo.FileSize > 0) && (header.Version > 0))
             {
                 if (header.Version < 80)
                 {

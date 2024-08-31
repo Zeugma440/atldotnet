@@ -1621,9 +1621,9 @@ namespace ATL.AudioData.IO
 
 
         // Read data from file
-        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, AudioDataManager.SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
+            this.sizeInfo = sizeNfo;
 
             return read(source, readTagParams);
         }
@@ -1850,12 +1850,9 @@ namespace ATL.AudioData.IO
             }
 
             // Other textual fields
-            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields.Where(isMetaFieldWritable))
             {
-                if (
-                    (fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
-                    && !fieldInfo.MarkedForDeletion
-                    && !fieldInfo.NativeFieldCode.StartsWith("uuid.")
+                if (!fieldInfo.NativeFieldCode.StartsWith("uuid.")
                     && !fieldInfo.NativeFieldCode.StartsWith("xmp.")
                     && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
                     )
@@ -1869,16 +1866,8 @@ namespace ATL.AudioData.IO
             bool firstPic = true;
             bool hasPic = false;
             long picHeaderPos = 0;
-            foreach (PictureInfo picInfo in tag.Pictures)
+            foreach (PictureInfo picInfo in tag.Pictures.Where(isPictureWritable))
             {
-                // Picture has either to be supported, or to come from the right tag standard
-                var doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture = getImplementedTagType() == picInfo.TagType;
-                // It also has not to be marked for deletion
-                doWritePicture = doWritePicture && !picInfo.MarkedForDeletion;
-
-                if (!doWritePicture) continue;
-
                 hasPic = true;
                 if (firstPic)
                 {

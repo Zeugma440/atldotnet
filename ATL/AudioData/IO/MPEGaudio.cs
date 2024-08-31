@@ -638,24 +638,24 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
+            this.sizeInfo = sizeNfo;
             resetData();
 
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
 
-            reader.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            HeaderFrame = findFrame(reader, ref vbrData, sizeInfo);
+            reader.Seek(sizeNfo.ID3v2Size, SeekOrigin.Begin);
+            HeaderFrame = findFrame(reader, ref vbrData, sizeNfo);
 
             bool result = HeaderFrame.Found;
             AudioDataOffset = HeaderFrame.Position;
-            AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+            AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
 
             if (!result)
             {
                 resetData();
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Could not detect MPEG Audio header starting @ " + sizeInfo.ID3v2Size);
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Could not detect MPEG Audio header starting @ " + sizeNfo.ID3v2Size);
             }
 
             return result;

@@ -520,11 +520,9 @@ namespace ATL.AudioData.IO
             if (Chapters.Count > 0) writeChapters(w, Chapters);
 
             // Other textual fields
-            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields.Where(isMetaFieldWritable))
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
-                    && !fieldInfo.MarkedForDeletion
-                    && !fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID)
+                if (!fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID)
                     && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
                     )
                 {
@@ -536,19 +534,10 @@ namespace ATL.AudioData.IO
             // Picture fields
             if (writePicturesWithMetadata)
             {
-                foreach (PictureInfo picInfo in tag.Pictures)
+                foreach (PictureInfo picInfo in tag.Pictures.Where(isPictureWritable))
                 {
-                    // Picture has either to be supported, or to come from the right tag standard
-                    var doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                    if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
-                    // It also has not to be marked for deletion
-                    doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
-
-                    if (doWritePicture)
-                    {
-                        writePictureFrame(w, picInfo.PictureData, picInfo.MimeType, picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), picInfo.Description);
-                        nbFrames++;
-                    }
+                    writePictureFrame(w, picInfo.PictureData, picInfo.MimeType, picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), picInfo.Description);
+                    nbFrames++;
                 }
             }
 

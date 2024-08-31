@@ -238,7 +238,7 @@ namespace ATL.AudioData.IO
             return StreamUtils.ArrBeginsWith(data, AIFF_CONTAINER_ID);
         }
 
-        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
             return read(source, readTagParams);
         }

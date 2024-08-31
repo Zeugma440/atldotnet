@@ -186,11 +186,11 @@ namespace ATL.AudioData.IO
             return StreamUtils.ArrBeginsWith(data, WAVPACK_HEADER); // No auto-detection for V3
         }
 
-        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = false;
 
-            this.sizeInfo = sizeInfo;
+            this.sizeInfo = sizeNfo;
             resetData();
 
             BufferedBinaryReader reader = new BufferedBinaryReader(source);

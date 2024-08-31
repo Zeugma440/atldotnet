@@ -101,9 +101,9 @@ namespace ATL.AudioData
         /// NB2 : Stream is _not_ closed after reading; resource deallocation has to be done by the caller
         /// </summary>
         /// <param name="source">Stream to read</param>
-        /// <param name="sizeInfo">Description of the size of the undelying stream and associated metadata</param>
+        /// <param name="sizeNfo">Description of the size of the undelying stream and associated metadata</param>
         /// <param name="readTagParams">Reading parameters and options</param>
         /// <returns>True if the stream has been successfuly read; false if not</returns>
-        bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams);
+        bool Read(Stream source, AudioDataManager.SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams);
     }
 }

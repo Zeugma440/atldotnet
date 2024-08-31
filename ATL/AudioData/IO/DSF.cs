@@ -106,9 +106,9 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
+            this.sizeInfo = sizeNfo;
             bool result = false;
             byte[] buffer = new byte[8];
 
@@ -163,13 +163,13 @@ namespace ATL.AudioData.IO
                     ulong sampleCount = StreamUtils.DecodeUInt64(buffer);
 
                     Duration = sampleCount * 1000.0 / sampleRate;
-                    BitRate = Math.Round(((double)(sizeInfo.FileSize - source.Position)) * 8 / Duration); //time to calculate average bitrate
+                    BitRate = Math.Round(((double)(sizeNfo.FileSize - source.Position)) * 8 / Duration); //time to calculate average bitrate
 
                     AudioDataOffset = source.Position + 8;
                     if (id3v2Offset > 0)
                         AudioDataSize = id3v2Offset - AudioDataOffset;
                     else
-                        AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
+                        AudioDataSize = sizeNfo.FileSize - AudioDataOffset;
 
                     result = true;
                 }

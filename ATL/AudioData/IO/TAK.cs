@@ -76,7 +76,7 @@ namespace ATL.AudioData.IO
             return StreamUtils.ArrBeginsWith(data, TAK_ID);
         }
 
-        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
             bool result = false;
             bool doLoop = true;
@@ -84,14 +84,14 @@ namespace ATL.AudioData.IO
             byte[] buffer = new byte[4];
 
             resetData();
-            source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            source.Seek(sizeNfo.ID3v2Size, SeekOrigin.Begin);
 
             source.Read(buffer, 0, 4);
             if (IsValidHeader(buffer))
             {
                 result = true;
                 AudioDataOffset = source.Position - 4;
-                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+                AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
 
                 do // Loop metadata
                 {
@@ -122,7 +122,7 @@ namespace ATL.AudioData.IO
                         if (sampleCount > 0)
                         {
                             Duration = (double)sampleCount * 1000.0 / sampleRate;
-                            BitRate = Math.Round(((double)(sizeInfo.FileSize - source.Position)) * 8 / Duration); //time to calculate average bitrate
+                            BitRate = Math.Round(((double)(sizeNfo.FileSize - source.Position)) * 8 / Duration); //time to calculate average bitrate
                         }
                     }
                     else if (0x04 == metaType) // Encoder info

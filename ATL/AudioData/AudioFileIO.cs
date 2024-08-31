@@ -247,9 +247,9 @@ namespace ATL.AudioData
             return audioData.GetSupportedMetas();
         }
         /// <inheritdoc/>
-        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, AudioDataManager.SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            return audioData.Read(source, sizeInfo, readTagParams);
+            return audioData.Read(source, sizeNfo, readTagParams);
         }
     }
 

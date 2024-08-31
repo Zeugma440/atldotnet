@@ -417,19 +417,10 @@ namespace ATL.AudioData.IO
             var writtenFieldCodes = new HashSet<string>();
 
             // Picture fields (first before textual fields, since APE tag is located on the footer)
-            foreach (PictureInfo picInfo in tag.Pictures)
+            foreach (PictureInfo picInfo in tag.Pictures.Where(isPictureWritable))
             {
-                // Picture has either to be supported, or to come from the right tag standard
-                var doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture = getImplementedTagType() == picInfo.TagType;
-                // It also has not to be marked for deletion
-                doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
-
-                if (doWritePicture)
-                {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.MimeType, picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCodeStr : encodeAPEPictureType(picInfo.PicType));
-                    nbFrames++;
-                }
+                writePictureFrame(w, picInfo.PictureData, picInfo.MimeType, picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCodeStr : encodeAPEPictureType(picInfo.PicType));
+                nbFrames++;
             }
 
             IDictionary<Field, string> map = tag.ToMap();
@@ -454,12 +445,9 @@ namespace ATL.AudioData.IO
             }
 
             // Other textual fields
-            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields.Where(isMetaFieldWritable))
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
-                    && !fieldInfo.MarkedForDeletion
-                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
-                    )
+                if (!writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper()))
                 {
                     writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
                     nbFrames++;

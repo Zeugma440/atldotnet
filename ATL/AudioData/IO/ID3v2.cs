@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
+using System.Linq;
 using Commons;
 using ATL.Logging;
 using static ATL.TagData;
@@ -1463,12 +1464,9 @@ namespace ATL.AudioData.IO
             }
 
             // Other textual fields
-            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields.Where(isMetaFieldWritable))
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
-                    && !fieldInfo.MarkedForDeletion
-                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
-                    )
+                if (!writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper()))
                 {
                     var fieldCode = fieldInfo.NativeFieldCode;
                     if (fieldCode.Equals(VorbisTag.VENDOR_METADATA_ID)) continue; // Specific mandatory field exclusive to VorbisComment
@@ -1502,19 +1500,10 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            foreach (PictureInfo picInfo in tag.Pictures)
+            foreach (PictureInfo picInfo in tag.Pictures.Where(isPictureWritable))
             {
-                // Picture has either to be supported, or to come from the right tag standard
-                var doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
-                // It also has not to be marked for deletion
-                doWritePicture = doWritePicture && !picInfo.MarkedForDeletion;
-
-                if (doWritePicture)
-                {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.MimeType, picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), picInfo.Description, tagEncoding);
-                    nbFrames++;
-                }
+                writePictureFrame(w, picInfo.PictureData, picInfo.MimeType, picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)picInfo.NativePicCode : EncodeID3v2PictureType(picInfo.PicType), picInfo.Description, tagEncoding);
+                nbFrames++;
             }
 
             if (4 == Settings.ID3v2_tagSubVersion && Settings.ID3v2_useExtendedHeaderRestrictions && nbFrames > tagHeader.TagFramesRestriction)

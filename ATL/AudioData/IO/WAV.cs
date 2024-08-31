@@ -545,9 +545,9 @@ namespace ATL.AudioData.IO
             return Math.Round(bitsPerSample / 1000.0 * sampleRate * ChannelsArrangement.NbChannels);
         }
 
-        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
+            this.sizeInfo = sizeNfo;
 
             return read(source, readTagParams);
         }

@@ -215,7 +215,7 @@ namespace ATL.AudioData.IO
         // Calculate duration time
         private double getDuration()
         {
-            if (Utils.ApproxEquals(BitRate,0)) return 0;
+            if (Utils.ApproxEquals(BitRate, 0)) return 0;
             return AudioDataSize / (BitRate * 1000);
         }
 
@@ -223,7 +223,7 @@ namespace ATL.AudioData.IO
         private bool readHeader(BufferedBinaryReader source)
         {
             byte[] buffer = new byte[8];
-            source.Read(buffer, 0, buffer.Length);
+            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return false;
             if (!IsValidHeader(buffer)) return false;
 
             uint fileSize = StreamUtils.DecodeBEUInt32(buffer);
@@ -335,7 +335,7 @@ namespace ATL.AudioData.IO
         }
 
         // Read data from file
-        public bool Read(Stream source, AudioDataManager.SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, AudioDataManager.SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
             return read(source, readTagParams);
         }
@@ -387,13 +387,10 @@ namespace ATL.AudioData.IO
                 }
 
                 // Other textual fields
-                foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
+                foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields.Where(isMetaFieldWritable))
                 {
-                    if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion)
-                    {
-                        writeTagField(s, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
-                        result++;
-                    }
+                    writeTagField(s, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
+                    result++;
                 }
 
                 s.Seek(nbTagsOffset, SeekOrigin.Begin);
@@ -402,19 +399,10 @@ namespace ATL.AudioData.IO
             if (zone.Equals(ZONE_IMAGE))
             {
                 result = 0;
-                foreach (PictureInfo picInfo in tag.Pictures)
+                foreach (PictureInfo picInfo in tag.Pictures.Where(isPictureWritable))
                 {
-                    // Picture has either to be supported, or to come from the right tag standard
-                    bool doWritePicture = !picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported);
-                    if (!doWritePicture) doWritePicture = (getImplementedTagType() == picInfo.TagType);
-                    // It also has not to be marked for deletion
-                    doWritePicture = doWritePicture && (!picInfo.MarkedForDeletion);
-
-                    if (doWritePicture)
-                    {
-                        writePictureFrame(s, picInfo.PictureData);
-                        return 1; // Stop here; there can only be one picture in an AA file
-                    }
+                    writePictureFrame(s, picInfo.PictureData);
+                    return 1; // Stop here; there can only be one picture in an AA file
                 }
             }
 

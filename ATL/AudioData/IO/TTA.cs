@@ -82,10 +82,10 @@ namespace ATL.AudioData.IO
             return StreamUtils.ArrBeginsWith(data, TTA_SIGNATURE);
         }
 
-        public bool Read(Stream source, SizeInfo sizeInfo, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
             resetData();
-            source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            source.Seek(sizeNfo.ID3v2Size, SeekOrigin.Begin);
 
             bool result = false;
 
@@ -94,7 +94,7 @@ namespace ATL.AudioData.IO
             if (IsValidHeader(buffer))
             {
                 AudioDataOffset = source.Position - 4;
-                AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
+                AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
 
                 source.Seek(2, SeekOrigin.Current); // audio format
                 source.Read(buffer, 0, 2);
@@ -107,7 +107,7 @@ namespace ATL.AudioData.IO
                 samplesSize = StreamUtils.DecodeUInt32(buffer);
                 source.Seek(4, SeekOrigin.Current); // CRC
 
-                BitRate = (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 8.0 / (samplesSize * 1000.0 / sampleRate);
+                BitRate = (sizeNfo.FileSize - sizeNfo.TotalTagSize) * 8.0 / (samplesSize * 1000.0 / sampleRate);
                 Duration = samplesSize * 1000.0 / sampleRate;
 
                 result = true;

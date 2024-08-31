@@ -3,6 +3,7 @@ using System.IO;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
@@ -229,7 +230,7 @@ namespace ATL.AudioData.IO
                     tagStart = source.Position - 8;
                     first = false;
                 }
-//                tagExists = true; // If something else than mandatory info is stored, we can consider metadata is present
+                //                tagExists = true; // If something else than mandatory info is stored, we can consider metadata is present
                 var data = Encoding.UTF8.GetString(source.ReadBytes((int)chunk.Size)).Trim();
 
                 SetMetaField(chunk.ID, data, readTagParams.ReadAllMetaFrames);
@@ -255,9 +256,9 @@ namespace ATL.AudioData.IO
                 Duration < 0.1 || Duration > 10000);
         }
 
-        public bool Read(Stream source, SizeInfo sizeInfo, ReadTagParams readTagParams)
+        public bool Read(Stream source, SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeInfo;
+            this.sizeInfo = sizeNfo;
 
             return read(source, readTagParams);
         }
@@ -338,10 +339,9 @@ namespace ATL.AudioData.IO
             }
 
             // Other textual fields
-            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields.Where(isMetaFieldWritable))
             {
-                if ((fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) || fieldInfo.TagType.Equals(getImplementedTagType()))
-                    && !fieldInfo.MarkedForDeletion && fieldInfo.NativeFieldCode.Length > 0
+                if (fieldInfo.NativeFieldCode.Length > 0
                     && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
                     )
                 {
