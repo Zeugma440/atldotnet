@@ -1,4 +1,5 @@
 ﻿using ATL.AudioData;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO.MetaData
 {
@@ -64,8 +65,78 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_MKA_Existing()
         {
-            // Hash check NOT POSSIBLE YET mainly due to tag order differences
+            // Hash check NOT POSSIBLE YET mainly due to tag order and integer encoding size differences
             test_RW_Existing(notEmptyFile, 2, true, false, false);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_MKA_Chapters()
+        {
+            new ConsoleLogger();
+
+            // Source : empty MP3
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsFalse(theFile.NativeTag.Exists);
+
+            Dictionary<uint, ChapterInfo> expectedChaps = new Dictionary<uint, ChapterInfo>();
+
+            TagHolder theTag = new TagHolder();
+            theTag.ChaptersTableDescription = "Content֍";
+            IList<ChapterInfo> testChapters = new List<ChapterInfo>();
+            ChapterInfo ch = new ChapterInfo();
+            ch.StartTime = 123;
+            ch.EndTime = 789;
+            ch.UniqueID = "";
+            ch.Title = "aaa";
+
+            testChapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 1230;
+            ch.EndTime = 7890;
+            ch.UniqueID = "002";
+            ch.Title = "aaa0";
+
+            testChapters.Add(ch);
+            expectedChaps.Add(ch.StartTime, ch);
+
+            theTag.Chapters = testChapters;
+
+            // Check if they are persisted properly
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.AreEqual("Content֍", theFile.NativeTag.ChaptersTableDescription);
+            Assert.AreEqual(2, theFile.NativeTag.Chapters.Count);
+
+            // Check if values are the same
+            int found = 0;
+            foreach (ChapterInfo chap in theFile.NativeTag.Chapters)
+            {
+                if (expectedChaps.ContainsKey(chap.StartTime))
+                {
+                    found++;
+                    Assert.AreEqual(chap.UniqueID, expectedChaps[chap.StartTime].UniqueID);
+                    Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
+                    Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
+                }
+                else
+                {
+                    System.Console.WriteLine(chap.StartTime);
+                }
+            }
+            Assert.AreEqual(2, found);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
     }
 }

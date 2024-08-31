@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using ATL.Logging;
 using Commons;
 using static ATL.ChannelsArrangements;
@@ -15,7 +16,7 @@ namespace ATL.AudioData.IO
     /// Class for Matroska Audio files manipulation (extension : .MKA)
     /// 
     /// Implementation notes
-    /// - Chapters : Only 1st level chapters are read (not nested ChapterAtoms)
+    /// - Chapters : Only 1st active EditionEntry and 1st level ChapterAtoms are read (not nested ChapterAtoms)
     ///
     /// cues not supported
     /// nested Tag
@@ -60,16 +61,21 @@ namespace ATL.AudioData.IO
         private const uint ID_TAGDEFAULT = 0x4484;
 
         private const uint ID_CHAPTERS = 0x1043A770;
-        private const uint ID_EDITIONENTRY = 0x45B9;
+        private const ushort ID_EDITIONENTRY = 0x45B9;
         private const uint ID_EDITIONFLAGDEFAULT = 0x45DB;
         private const uint ID_EDITIONFLAGHIDDEN = 0x45BD;
+        private const uint ID_EDITIONDISPLAY = 0x4520;
+        private const uint ID_EDITIONSTRING = 0x4521;
         private const uint ID_CHAPTERATOM = 0xB6;
+        private const uint ID_CHAPTERUID = 0x73C4;
+        private const uint ID_CHAPTERSTRINGUID = 0x5654;
         private const uint ID_CHAPTERFLAGENABLED = 0x4598;
         private const uint ID_CHAPTERFLAGHIDDEN = 0x98;
         private const uint ID_CHAPTERTIMESTART = 0x91;
         private const uint ID_CHAPTERTIMEEND = 0x92;
         private const uint ID_CHAPTERDISPLAY = 0x80;
         private const uint ID_CHAPTERSTRING = 0x85;
+        private const uint ID_CHAPTERLANGUAGE = 0x437C;
 
 
         // Codes
@@ -592,7 +598,7 @@ namespace ATL.AudioData.IO
 
         private void readChapters(EBMLReader reader, ReadTagParams readTagParams)
         {
-            if (!reader.seekElement(ID_CHAPTERS)) return;
+            if (!attachZone(reader, readTagParams, ID_CHAPTERS, ZONE_CHAPTERS)) return;
 
             // Find proper EditionEntry
             var crits = new HashSet<Tuple<long, int>>
@@ -606,6 +612,12 @@ namespace ATL.AudioData.IO
 
         private void readChapterAtoms(EBMLReader reader)
         {
+            long rootOffset = reader.Position;
+
+            if (reader.seekElement(ID_EDITIONDISPLAY) && reader.seekElement(ID_EDITIONSTRING))
+                tagData.IntegrateValue(Field.CHAPTERS_TOC_DESCRIPTION, reader.readUtf8String());
+
+            reader.seek(rootOffset);
             foreach (long offset in reader.seekElements(ID_CHAPTERATOM))
             {
                 reader.seek(offset);
@@ -637,6 +649,9 @@ namespace ATL.AudioData.IO
 
             var result = new ChapterInfo((uint)(timeStart / 1000000.0));
             if (timeEnd > 0) result.EndTime = (uint)(timeEnd / 1000000.0);
+
+            reader.seek(rootOffset);
+            if (reader.seekElement(ID_CHAPTERSTRINGUID)) result.UniqueID = reader.readUtf8String();
 
             // Get the first available title
             reader.seek(rootOffset);
@@ -749,6 +764,10 @@ namespace ATL.AudioData.IO
             else if (zone.StartsWith(ZONE_ATTACHMENTS))
             {
                 result = writeAttachments(s, tag);
+            }
+            else if (zone.StartsWith(ZONE_CHAPTERS))
+            {
+                result = writeChapters(s, tag);
             }
 
             return result;
@@ -1006,6 +1025,79 @@ namespace ATL.AudioData.IO
             EBMLHelper.WriteElt(w, ID_ATTACHEDFILE, memStream);
             return 1;
         }
+
+        private int writeChapters(Stream w, TagData data)
+        {
+            if (!hasWritableChapters(data)) return 0;
+
+            w.Write(StreamUtils.EncodeBEUInt32(ID_CHAPTERS));
+            var sizeOffset = w.Position;
+            // Use 8 bytes to represent size (yes, I am lazy)
+            w.Write(StreamUtils.EncodeBEUInt64(0)); // Will be rewritten later
+
+            writeEditionEntry(w, data);
+
+            var finalOffset = w.Position;
+            w.Seek(sizeOffset, SeekOrigin.Begin);
+            w.Write(EBMLHelper.EncodeVint((ulong)(finalOffset - sizeOffset - 8), false));
+
+            return 1;
+        }
+
+        private void writeEditionEntry(Stream w, TagData data)
+        {
+            w.Write(StreamUtils.EncodeBEUInt16(ID_EDITIONENTRY));
+            var sizeOffset = w.Position;
+            // Use 8 bytes to represent size (yes, I am lazy)
+            w.Write(StreamUtils.EncodeBEUInt64(0)); // Will be rewritten later
+
+            EBMLHelper.WriteElt(w, ID_EDITIONFLAGHIDDEN, 0);
+            EBMLHelper.WriteElt(w, ID_EDITIONFLAGDEFAULT, 1);
+            // TODO other attributes
+
+            // Edition display (optional)
+            if (data.hasKey(Field.CHAPTERS_TOC_DESCRIPTION))
+            {
+                using MemoryStream memStream = new MemoryStream();
+                EBMLHelper.WriteElt(memStream, ID_EDITIONSTRING, Encoding.UTF8.GetBytes(data[Field.CHAPTERS_TOC_DESCRIPTION]));
+                memStream.Position = 0;
+                EBMLHelper.WriteElt(w, ID_EDITIONDISPLAY, memStream);
+            }
+
+            foreach (ChapterInfo info in data.Chapters) writeChapterAtom(w, info);
+
+            var finalOffset = w.Position;
+            w.Seek(sizeOffset, SeekOrigin.Begin);
+            w.Write(EBMLHelper.EncodeVint((ulong)(finalOffset - sizeOffset - 8), false));
+            w.Seek(finalOffset, SeekOrigin.Begin);
+        }
+
+        private void writeChapterAtom(Stream w, ChapterInfo data)
+        {
+            using MemoryStream memStream = new MemoryStream();
+
+            EBMLHelper.WriteElt(memStream, ID_CHAPTERSTRINGUID, Encoding.UTF8.GetBytes(data.UniqueID));
+            EBMLHelper.WriteElt(memStream, ID_CHAPTERFLAGHIDDEN, 0);
+            EBMLHelper.WriteElt(memStream, ID_CHAPTERFLAGENABLED, 1);
+            EBMLHelper.WriteElt(memStream, ID_CHAPTERTIMESTART, data.StartTime * 1000000);
+            if (data.EndTime > 0) EBMLHelper.WriteElt(memStream, ID_CHAPTERTIMEEND, data.EndTime * 1000000);
+            writeChapterDisplay(memStream, data.Title);
+
+            memStream.Position = 0;
+            EBMLHelper.WriteElt(w, ID_CHAPTERATOM, memStream);
+        }
+
+        private void writeChapterDisplay(Stream w, string data)
+        {
+            using MemoryStream memStream = new MemoryStream();
+
+            EBMLHelper.WriteElt(memStream, ID_CHAPTERSTRING, Encoding.UTF8.GetBytes(data));
+            EBMLHelper.WriteElt(memStream, ID_CHAPTERLANGUAGE, Utils.Latin1Encoding.GetBytes("und"));
+
+            memStream.Position = 0;
+            EBMLHelper.WriteElt(w, ID_CHAPTERDISPLAY, memStream);
+        }
+
 
         /// <inheritdoc/>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]

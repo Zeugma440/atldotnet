@@ -100,6 +100,7 @@
         /// Unique ID
         /// ID3v2 : Unique ID
         /// Vorbis : Chapter index (0,1,2...)
+        /// MKV : ChapterStringUID
         /// </summary>
         public string UniqueID { get; set; }
         /// <summary>

@@ -223,6 +223,11 @@ namespace ATL
             Field.RECORDING_YEAR, Field.RECORDING_DATE, Field.RECORDING_DAYMONTH, Field.RECORDING_TIME, Field.TRACK_NUMBER, Field.DISC_NUMBER, Field.RATING, Field.TRACK_TOTAL, Field.TRACK_NUMBER_TOTAL, Field.DISC_TOTAL, Field.DISC_NUMBER_TOTAL, Field.PUBLISHING_DATE, Field.BPM, Field.ORIG_RELEASE_DATE, Field.ORIG_RELEASE_YEAR
         };
 
+        private static readonly ICollection<Field> nonTagFields = new HashSet<Field>
+        {
+            Field.CHAPTERS_TOC_DESCRIPTION
+        };
+
         /// <summary>
         /// Chapters 
         /// NB : The whole chapter list is processed as a whole
@@ -319,7 +324,7 @@ namespace ATL
         /// <summary>
         /// Return true if any standard metadata field is set and usable
         /// </summary>
-        public bool HasUsableField() => Fields.Any(f => f.Value.Length > 0);
+        public bool HasUsableField() => Fields.Any(f => f.Value.Length > 0 && !nonTagFields.Contains(f.Key));
 
         private static bool isNumeric(Field f) { return numericFields.Contains(f); }
 
