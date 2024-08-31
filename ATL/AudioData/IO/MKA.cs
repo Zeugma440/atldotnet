@@ -175,6 +175,7 @@ namespace ATL.AudioData.IO
         private Format containerAudioFormat;
         private Format containeeAudioFormat;
 
+        private string docType = "";
         private long segmentOffset;
         private List<List<Tuple<long, ulong>>> seekHeads = new List<List<Tuple<long, ulong>>>();
 
@@ -283,30 +284,29 @@ namespace ATL.AudioData.IO
 
         private bool readEbmlHeader(EBMLReader reader, ReadTagParams readTagParams)
         {
-            var ebmlHeader = reader.readElement();
-            long dataOffset = reader.Position;
-
-            if (ebmlHeader.Id != EBML_MAGIC_NUMBER)
+            if (!reader.enterContainer(EBML_MAGIC_NUMBER))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "File is not a valid EBML file");
                 return false;
             }
+            long rootOffset = reader.Position;
+            long headerSize = reader.readVint();
+            long dataOffset = reader.Position;
+            reader.seek(rootOffset);
 
-            /*
             if (readTagParams.PrepareForWriting)
-                structureHelper.AddZone(0, ebmlHeader.Size, ZONE_EBML_HEADER, false);
-            */
+                structureHelper.AddZone(0, dataOffset + headerSize, ZONE_EBML_HEADER, false);
 
             if (reader.seekElement(EBML_DOCTYPE))
             {
-                var docType = reader.readString();
+                docType = reader.readString();
                 if (!docType.Equals("matroska") && !docType.Equals("webm"))
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "File is not a valid Matroska nor webm file");
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "File is not a valid Matroska nor WebM file");
                     return false;
                 }
             }
-            reader.seek(dataOffset + ebmlHeader.Size, SeekOrigin.Begin);
+            reader.seek(dataOffset + headerSize);
             return true;
         }
 
@@ -769,7 +769,12 @@ namespace ATL.AudioData.IO
         {
             int result = 0;
 
-            if (zone.StartsWith(ZONE_SEGMENT_SIZE))
+            if (zone.StartsWith(ZONE_EBML_HEADER))
+            {
+                writeEbmlHeader(s);
+                result = 1;
+            }
+            else if (zone.StartsWith(ZONE_SEGMENT_SIZE))
             {
                 s.Write(StreamUtils.EncodeBEUInt64(0));
                 result = 1;
@@ -798,6 +803,26 @@ namespace ATL.AudioData.IO
             }
 
             return result;
+        }
+
+        private void writeEbmlHeader(Stream w)
+        {
+            w.Write(StreamUtils.EncodeBEUInt32(EBML_MAGIC_NUMBER));
+            var sizeOffset = w.Position;
+            // Use 8 bytes to represent size (yes, I am lazy)
+            w.Write(StreamUtils.EncodeBEUInt64(0)); // Will be rewritten later
+
+            EBMLHelper.WriteElt(w, EBML_VERSION, 1);
+            EBMLHelper.WriteElt(w, EBML_READVERSION, 1);
+            EBMLHelper.WriteElt(w, EBML_MAXIDLENGTH, 4);
+            EBMLHelper.WriteElt(w, EBML_MAXSIZELENGTH, 8);
+            EBMLHelper.WriteElt(w, EBML_DOCTYPE, Utils.Latin1Encoding.GetBytes(docType));
+            EBMLHelper.WriteElt(w, EBML_DOCTYPEVERSION, 4);
+            EBMLHelper.WriteElt(w, EBML_DOCTYPEREADVERSION, 2);
+
+            var finalOffset = w.Position;
+            w.Seek(sizeOffset, SeekOrigin.Begin);
+            w.Write(EBMLHelper.EncodeVint((ulong)(finalOffset - sizeOffset - 8), false));
         }
 
         private void writeSeekHead(Stream w, string zoneName, List<Tuple<long, ulong>> seekHead, TagData tag)

@@ -95,11 +95,6 @@ namespace ATL.AudioData
             return s.Seek(size, origin);
         }
 
-        public EBMLElement readElement()
-        {
-            return new EBMLElement((int)readVint(true), readVint());
-        }
-
         public bool enterContainer(long id)
         {
             return id == readVint(true);
