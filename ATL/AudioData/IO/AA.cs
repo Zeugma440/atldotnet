@@ -398,12 +398,12 @@ namespace ATL.AudioData.IO
             }
             if (zone.Equals(ZONE_IMAGE))
             {
-                result = 0;
-                foreach (PictureInfo picInfo in tag.Pictures.Where(isPictureWritable))
-                {
-                    writePictureFrame(s, picInfo.PictureData);
-                    return 1; // Stop here; there can only be one picture in an AA file
-                }
+                // There can only be one picture in an AA file
+                var writablePic = tag.Pictures.FirstOrDefault(isPictureWritable);
+                if (null == writablePic) return 0;
+
+                writePictureFrame(s, writablePic.PictureData);
+                result = 1;
             }
 
             return result;
