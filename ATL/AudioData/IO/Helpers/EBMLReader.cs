@@ -27,7 +27,7 @@ namespace ATL.AudioData
 
         internal long readVint(bool raw = false)
         {
-            BaseStream.Read(buffer, 0, 1);
+            if (BaseStream.Read(buffer, 0, 1) < 1) return 0;
             int nbBytes = 0;
             for (int i = 0; i < EBMLHelper.SizeMasks.Length; i++)
             {
@@ -42,7 +42,10 @@ namespace ATL.AudioData
             if (!raw) buffer[0] = (byte)(buffer[0] & EBMLHelper.DataMasks[nbBytes - 1]);
 
             // Get extra bytes if needed
-            if (nbBytes > 1) BaseStream.Read(buffer, 1, nbBytes - 1);
+            if (nbBytes > 1)
+            {
+                if (BaseStream.Read(buffer, 1, nbBytes - 1) < nbBytes - 1) return 0;
+            }
 
             // Unknown size (vint data are all 1's)
             if ((byte)(buffer[0] & EBMLHelper.DataMasks[nbBytes - 1]) == EBMLHelper.DataMasks[nbBytes - 1])
@@ -175,7 +178,7 @@ namespace ATL.AudioData
             var nbBytes = readVint();
             if (0 == nbBytes) return 0;
 
-            BaseStream.Read(buffer, 0, (int)nbBytes);
+            if (BaseStream.Read(buffer, 0, (int)nbBytes) < nbBytes) return 0;
             // Decode buffer
             switch (nbBytes)
             {
@@ -199,7 +202,7 @@ namespace ATL.AudioData
             var nbBytes = readVint();
             if (0 == nbBytes) return 0;
 
-            BaseStream.Read(buffer, 0, (int)nbBytes);
+            if (BaseStream.Read(buffer, 0, (int)nbBytes) < nbBytes) return 0;
             // Decode buffer
             switch (nbBytes)
             {
@@ -229,8 +232,7 @@ namespace ATL.AudioData
             if (0 == nbBytes) return "";
 
             byte[] strBuf = new byte[nbBytes];
-            BaseStream.Read(strBuf);
-            return Utils.Latin1Encoding.GetString(strBuf);
+            return BaseStream.Read(strBuf) < nbBytes ? "" : Utils.Latin1Encoding.GetString(strBuf);
         }
 
         // Given stream must be positioned before the container's size descriptor
@@ -240,8 +242,7 @@ namespace ATL.AudioData
             if (0 == nbBytes) return "";
 
             byte[] strBuf = new byte[nbBytes];
-            BaseStream.Read(strBuf);
-            return Encoding.UTF8.GetString(strBuf);
+            return BaseStream.Read(strBuf) < nbBytes ? "" : Encoding.UTF8.GetString(strBuf);
         }
 
         // TODO gain memory by providing a "clamped" Stream using s instead of copying everything to a byte[]
@@ -251,15 +252,13 @@ namespace ATL.AudioData
             if (0 == nbBytes) return Array.Empty<byte>();
 
             byte[] result = new byte[nbBytes];
-            BaseStream.Read(result, 0, (int)nbBytes);
-            return result;
+            return BaseStream.Read(result, 0, (int)nbBytes) < nbBytes ? Array.Empty<byte>() : result;
         }
 
         public byte[] readBytes(int nb)
         {
             byte[] result = new byte[nb];
-            BaseStream.Read(result, 0, nb);
-            return result;
+            return BaseStream.Read(result, 0, nb) < nb ? Array.Empty<byte>() : result;
         }
     }
 }
