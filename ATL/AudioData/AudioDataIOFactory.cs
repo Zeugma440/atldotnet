@@ -340,6 +340,7 @@ namespace ATL.AudioData
 
                     tempFmt = new Format(CID_MKA, "Matroska", "MKA");
                     tempFmt.AddMimeType("audio/x-matroska");
+                    tempFmt.AddMimeType("audio/webm");
                     tempFmt.AddExtension(".mka");
                     tempFmt.AddExtension(".weba"); // Does that even work out of the box?
                     tempFmt.CheckHeader = MKA.IsValidHeader;
