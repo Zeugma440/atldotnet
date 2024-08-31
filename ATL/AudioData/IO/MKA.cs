@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using ATL.Logging;
@@ -995,23 +996,28 @@ namespace ATL.AudioData.IO
             }
 
             // Other textual fields
-            foreach (MetaFieldInfo fieldInfo in data.AdditionalFields)
+            foreach (MetaFieldInfo fieldInfo in data.AdditionalFields.Where(isMetaFieldWritable))
             {
-                if (isMetaFieldWritable(fieldInfo) && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper()))
+                var fieldCode = fieldInfo.NativeFieldCode.ToLower().Trim();
+                var parts = fieldCode.Split('.');
+
+                int metaType = TYPE_TRACK; // Default to track if no TargetTypeValue is explicitely set
+                if (parts.Length > 1)
                 {
-                    var parts = fieldInfo.NativeFieldCode.ToLower().Trim().Split('.');
-                    if (parts.Length < 2) continue;
-
-                    var field = new Tuple<string, string>(parts[1], FormatBeforeWriting(fieldInfo.Value));
-
-                    var metaType = targetTypeInverted[parts[0]];
-                    if (!tagFields.ContainsKey(metaType)) tagFields.Add(metaType, new HashSet<Tuple<string, string>>());
-
-                    var metaSet = tagFields[metaType];
-                    metaSet.Add(field);
-
-                    result++;
+                    metaType = targetTypeInverted[parts[0]];
+                    fieldCode = parts[1];
                 }
+
+                var reforgedFieldCode = targetTypePrefixesMapping[metaType] + "." + fieldCode;
+                if (writtenFieldCodes.Contains(reforgedFieldCode.ToUpper())) continue; // Setting a supported value trough AdditionalFields is illegal
+
+                if (!tagFields.ContainsKey(metaType))
+                    tagFields.Add(metaType, new HashSet<Tuple<string, string>>());
+
+                var metaSet = tagFields[metaType];
+                metaSet.Add(new Tuple<string, string>(fieldCode, FormatBeforeWriting(fieldInfo.Value)));
+
+                result++;
             }
 
             if (0 == result) return 0;
