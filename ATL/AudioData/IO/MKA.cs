@@ -89,9 +89,28 @@ namespace ATL.AudioData.IO
         private const uint ID_CHAPTERLANGUAGE = 0x437C;
 
 
-        // Codes
-        private const int TYPE_ALBUM = 50;
+        /// == Tags
+
+        // TargetTypeValue Codes
+        private const int TYPE_SHOT = 10;
+        private const int TYPE_SCENE = 20;
         private const int TYPE_TRACK = 30;
+        private const int TYPE_SESSION = 40;
+        private const int TYPE_ALBUM = 50;
+        private const int TYPE_VOLUME = 60;
+        private const int TYPE_COLLECTION = 70;
+
+        // TargetTypeValue Codes => prefixes mapping
+        private static readonly Dictionary<int, string> targetTypePrefixesMapping = new Dictionary<int, string>
+        {
+            { TYPE_SHOT, "shot"},
+            { TYPE_SCENE, "scene"},
+            { TYPE_TRACK, "track"},
+            { TYPE_SESSION, "session"},
+            { TYPE_ALBUM, "album"},
+            { TYPE_VOLUME, "volume"},
+            { TYPE_COLLECTION, "collection"},
+        };
 
 
         private const int TRACKTYPE_AUDIO = 2;
@@ -565,21 +584,13 @@ namespace ATL.AudioData.IO
             var tagOffset = reader.Position;
             if (!reader.seekElement(ID_TARGETS)) return;
             if (!reader.seekElement(ID_TARGETTYPEVALUE)) return;
-            var targetTypeValue = reader.readUint();
+            int targetTypeValue = (int)reader.readUint();
 
             reader.seek(tagOffset);
             foreach (long offset in reader.seekElements(ID_SIMPLETAG))
             {
                 reader.seek(offset);
-                switch (targetTypeValue)
-                {
-                    case TYPE_ALBUM:
-                        readSimpleTags("album", reader);
-                        break;
-                    case TYPE_TRACK:
-                        readSimpleTags("track", reader);
-                        break;
-                }
+                readSimpleTags(targetTypePrefixesMapping[targetTypeValue], reader);
             }
         }
 
@@ -952,9 +963,11 @@ namespace ATL.AudioData.IO
             IDictionary<Field, string> map = data.ToMap();
             var writtenFieldCodes = new HashSet<string>();
 
-            // Standard fields
-            ISet<Tuple<string, string>> albumFields = new HashSet<Tuple<string, string>>();
-            ISet<Tuple<string, string>> trackFields = new HashSet<Tuple<string, string>>();
+            IDictionary<string, int> targetTypeInverted = new Dictionary<string, int>();
+            foreach (var metaType in targetTypePrefixesMapping) targetTypeInverted[metaType.Value] = metaType.Key;
+
+            IDictionary<int, ISet<Tuple<string, string>>>
+                tagFields = new Dictionary<int, ISet<Tuple<string, string>>>();
             foreach (Field frameType in map.Keys)
             {
                 foreach (string s in frameMapping.Keys)
@@ -967,13 +980,15 @@ namespace ATL.AudioData.IO
                             string value = formatBeforeWriting(frameType, data, map);
                             var field = new Tuple<string, string>(parts[1].ToUpper(), value);
 
-                            if (parts[0] == "album") albumFields.Add(field);
-                            else trackFields.Add(field);
+                            var metaType = targetTypeInverted[parts[0]];
+                            if (!tagFields.ContainsKey(metaType)) tagFields.Add(metaType, new HashSet<Tuple<string, string>>());
+
+                            var metaSet = tagFields[metaType];
+                            metaSet.Add(field);
 
                             writtenFieldCodes.Add(s.ToUpper());
                             result++;
                         }
-
                         break;
                     }
                 }
@@ -988,8 +1003,12 @@ namespace ATL.AudioData.IO
                     if (parts.Length < 2) continue;
 
                     var field = new Tuple<string, string>(parts[1], FormatBeforeWriting(fieldInfo.Value));
-                    if (parts[0] == "album") albumFields.Add(field);
-                    else trackFields.Add(field);
+
+                    var metaType = targetTypeInverted[parts[0]];
+                    if (!tagFields.ContainsKey(metaType)) tagFields.Add(metaType, new HashSet<Tuple<string, string>>());
+
+                    var metaSet = tagFields[metaType];
+                    metaSet.Add(field);
 
                     result++;
                 }
@@ -1003,8 +1022,10 @@ namespace ATL.AudioData.IO
             w.Write(StreamUtils.EncodeBEUInt64(0)); // Will be rewritten later
 
             // Actually write values
-            if (albumFields.Count > 0) writeTag(w, TYPE_ALBUM, albumFields);
-            if (trackFields.Count > 0) writeTag(w, TYPE_TRACK, trackFields);
+            foreach (var tagSet in tagFields)
+            {
+                if (tagSet.Value.Count > 0) writeTag(w, tagSet.Key, tagSet.Value);
+            }
 
             var finalOffset = w.Position;
             w.Seek(sizeOffset, SeekOrigin.Begin);
