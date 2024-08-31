@@ -97,10 +97,6 @@ namespace ATL.AudioData
             /// </summary>
             public readonly bool IsLittleEndian;
             /// <summary>
-            /// True if header value is stored using EBML VINT (variable-size integer) convention; false for classic representation
-            /// </summary>
-            public readonly bool IsEbmlVint;
-            /// <summary>
             /// Zone where the header is located physically
             /// </summary>
             public readonly string ParentZone;
@@ -116,10 +112,10 @@ namespace ATL.AudioData
             /// <summary>
             /// Constructs a new frame header using the given field values
             /// </summary>
-            public FrameHeader(TYPE type, long position, object value, bool isLittleEndian = true, bool isEbmlVint = false, string parentZone = "", string valueZone = "", long relativityOffset = 0)
+            public FrameHeader(TYPE type, long position, object value, bool isLittleEndian = true, string parentZone = "", string valueZone = "", long relativityOffset = 0)
             {
                 Type = type; Position = position; Value = value; IsLittleEndian = isLittleEndian;
-                IsEbmlVint = isEbmlVint; ParentZone = parentZone; ValueZone = valueZone;
+                ParentZone = parentZone; ValueZone = valueZone;
                 RelativityOffset = relativityOffset;
             }
         }
@@ -361,7 +357,7 @@ namespace ATL.AudioData
         /// </summary>
         public void AddCounter(long position, object value, string zone = DEFAULT_ZONE_NAME, string parentZone = "")
         {
-            addZoneHeader(zone, FrameHeader.TYPE.Counter, position, value, isLittleEndian, false, parentZone);
+            addZoneHeader(zone, FrameHeader.TYPE.Counter, position, value, isLittleEndian, parentZone);
         }
 
         /// <summary>
@@ -369,16 +365,7 @@ namespace ATL.AudioData
         /// </summary>
         public void AddSize(long position, object value, string zone = DEFAULT_ZONE_NAME, string parentZone = "")
         {
-            addZoneHeader(zone, FrameHeader.TYPE.Size, position, value, isLittleEndian, false, parentZone);
-        }
-
-        /// <summary>
-        /// Record a new Size-type header using the given fields and attach it to the zone of given name
-        /// Representation of the header's value will use EBML VINT
-        /// </summary>
-        public void AddVintSize(long position, object value, string zone = DEFAULT_ZONE_NAME, string parentZone = "")
-        {
-            addZoneHeader(zone, FrameHeader.TYPE.Size, position, value, false, true, parentZone);
+            addZoneHeader(zone, FrameHeader.TYPE.Size, position, value, isLittleEndian, parentZone);
         }
 
         /// <summary>
@@ -386,7 +373,7 @@ namespace ATL.AudioData
         /// </summary>
         public void AddIndex(long position, object value, bool relative = false, string zone = DEFAULT_ZONE_NAME, string parentZone = "")
         {
-            addZoneHeader(zone, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, position, value, isLittleEndian, false, parentZone);
+            addZoneHeader(zone, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, position, value, isLittleEndian, parentZone);
         }
 
         /// <summary>
@@ -398,7 +385,7 @@ namespace ATL.AudioData
 
             string zoneName = POST_PROCESSING_ZONE_NAME + "." + ++postProcessingIndex;
             AddZone(finalPosition, 0, zoneName);
-            addZoneHeader(zoneName, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, finalPosition, value, isLittleEndian, false, parentZone, valueZone, relativityOffset);
+            addZoneHeader(zoneName, relative ? FrameHeader.TYPE.RelativeIndex : FrameHeader.TYPE.Index, finalPosition, value, isLittleEndian, parentZone, valueZone, relativityOffset);
         }
 
         /// <summary>
@@ -413,10 +400,10 @@ namespace ATL.AudioData
         /// <summary>
         /// Record a new header using the given fields and attach it to the zone of given name
         /// </summary>
-        private void addZoneHeader(string zone, FrameHeader.TYPE type, long position, object value, bool iisLittleEndian, bool isEbmlVint = false, string parentZone = "", string valueZone = "", long relativityOffset = 0)
+        private void addZoneHeader(string zone, FrameHeader.TYPE type, long position, object value, bool iisLittleEndian, string parentZone = "", string valueZone = "", long relativityOffset = 0)
         {
             if (!zones.ContainsKey(zone)) DeclareZone(zone);
-            zones[zone].Headers.Add(new FrameHeader(type, position, value, iisLittleEndian, isEbmlVint, parentZone, valueZone, relativityOffset));
+            zones[zone].Headers.Add(new FrameHeader(type, position, value, iisLittleEndian, parentZone, valueZone, relativityOffset));
         }
 
         /// <summary>
@@ -447,9 +434,8 @@ namespace ATL.AudioData
         /// <param name="value">Reference value</param>
         /// <param name="delta">Value to add</param>
         /// <param name="updatedValue">Updated value (out parameter; will be returned as same type as reference value)</param>
-        /// <param name="isEbmlVint">True if the result has to be encoded using the EBML VINT convention</param>
         /// <returns>Resulting value after the addition, encoded into an array of bytes, as the same type of the reference value</returns>
-        private static byte[] addToValue(object value, long delta, out object updatedValue, bool isEbmlVint)
+        private static byte[] addToValue(object value, long delta, out object updatedValue)
         {
             switch (value)
             {
@@ -470,7 +456,6 @@ namespace ATL.AudioData
                     return BitConverter.GetBytes((uint)updatedValue);
                 case long l:
                     updatedValue = l + delta;
-                    if (isEbmlVint) return EBMLHelper.EncodeVint((ulong)(long)updatedValue, false); // Yes, that _is_ a successive double cast
                     return BitConverter.GetBytes((long)updatedValue);
                 // Need to tweak because ulong + int is illegal according to the compiler
                 case ulong value1:
@@ -483,8 +468,6 @@ namespace ATL.AudioData
                         {
                             updatedValue = value1 - (ulong)-delta;
                         }
-
-                        if (isEbmlVint) return EBMLHelper.EncodeVint((ulong)updatedValue, false);
                         return BitConverter.GetBytes((ulong)updatedValue);
                     }
                 default:
@@ -655,14 +638,14 @@ namespace ATL.AudioData
 
                     s.Seek(header.Position + offsetPositionCorrection, SeekOrigin.Begin);
 
-                    value = addToValue(header.Value, delta, out updatedValue, header.IsEbmlVint);
+                    value = addToValue(header.Value, delta, out updatedValue);
 
                     if (null == value) throw new NotSupportedException("Value type not supported for " + zoneName + "@" + header.Position + " : " + header.Value.GetType());
 
                     // The very same frame header is referenced from another frame and must be updated to its new value
                     updateAllHeadersAtPosition(header.Position, header.Type, updatedValue);
 
-                    if (!header.IsLittleEndian && !header.IsEbmlVint) Array.Reverse(value);
+                    if (!header.IsLittleEndian) Array.Reverse(value);
 
                     s.Write(value, 0, value.Length);
                 }

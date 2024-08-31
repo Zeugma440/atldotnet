@@ -584,12 +584,22 @@ namespace ATL.AudioData.IO
             return true;
         }
 
+        /// <summary>
+        /// Indicate whether the given field can be written to the current file, according to their properties
+        /// </summary>
+        /// <param name="fieldInfo">Field to test</param>
+        /// <returns>True if the given field can be written; false if not</returns>
         protected bool isMetaFieldWritable(MetaFieldInfo fieldInfo)
         {
             return (fieldInfo.TagType.Equals(MetaDataIOFactory.TagType.ANY) ||
                     fieldInfo.TagType.Equals(getImplementedTagType())) && !fieldInfo.MarkedForDeletion;
         }
 
+        /// <summary>
+        /// Indicate whether the given picture can be written to the current file, according to their properties
+        /// </summary>
+        /// <param name="picInfo">Picture to test</param>
+        /// <returns>True if the given picture can be written; false if not</returns>
         protected bool isPictureWritable(PictureInfo picInfo)
         {
             // Picture has either to be supported, or to come from the right tag standard

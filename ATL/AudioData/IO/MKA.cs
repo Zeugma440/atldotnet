@@ -532,7 +532,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private Tuple<long, ulong> readSeek(EBMLReader reader)
+        private static Tuple<long, ulong> readSeek(EBMLReader reader)
         {
             var seekOffset = reader.Position;
 
@@ -924,7 +924,7 @@ namespace ATL.AudioData.IO
             return tag.Pictures.Any(isPictureWritable);
         }
 
-        private bool hasWritableChapters(TagData tag)
+        private static bool hasWritableChapters(TagData tag)
         {
             return tag.Chapters != null && tag.Chapters.Count > 0;
         }
@@ -1045,7 +1045,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void writeTag(Stream w, int typeCode, ISet<Tuple<string, string>> fields)
+        private static void writeTag(Stream w, int typeCode, ISet<Tuple<string, string>> fields)
         {
             using MemoryStream tagStream = new MemoryStream();
 
@@ -1059,7 +1059,7 @@ namespace ATL.AudioData.IO
             EBMLHelper.WriteElt(w, ID_TAG, tagStream);
         }
 
-        private void writeSimpleTag(Stream w, string code, string value)
+        private static void writeSimpleTag(Stream w, string code, string value)
         {
             using MemoryStream memStream = new MemoryStream();
 
@@ -1089,7 +1089,7 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private int writeAttachedFile(Stream w, byte[] data, string mimeType, PictureInfo.PIC_TYPE type, string description)
+        private static int writeAttachedFile(Stream w, byte[] data, string mimeType, PictureInfo.PIC_TYPE type, string description)
         {
             var name = type.Equals(PictureInfo.PIC_TYPE.Front) ? "cover" : type.ToString().ToLower();
             switch (ImageUtils.GetImageFormatFromMimeType(mimeType))
@@ -1174,7 +1174,7 @@ namespace ATL.AudioData.IO
             w.Seek(finalOffset, SeekOrigin.Begin);
         }
 
-        private void writeChapterAtom(Stream w, ChapterInfo data)
+        private static void writeChapterAtom(Stream w, ChapterInfo data)
         {
             using MemoryStream memStream = new MemoryStream();
 
@@ -1197,7 +1197,7 @@ namespace ATL.AudioData.IO
             EBMLHelper.WriteElt(w, ID_CHAPTERATOM, memStream);
         }
 
-        private void writeChapterDisplay(Stream w, string data)
+        private static void writeChapterDisplay(Stream w, string data)
         {
             using MemoryStream memStream = new MemoryStream();
 
