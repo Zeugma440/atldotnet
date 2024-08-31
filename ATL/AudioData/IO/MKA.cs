@@ -1137,7 +1137,7 @@ namespace ATL.AudioData.IO
             using MemoryStream memStream = new MemoryStream();
 
             EBMLHelper.WriteElt(memStream, ID_CHAPTERSTRING, Encoding.UTF8.GetBytes(data));
-            EBMLHelper.WriteElt(memStream, ID_CHAPTERLANGUAGE, Utils.Latin1Encoding.GetBytes("und"));
+            EBMLHelper.WriteElt(memStream, ID_CHAPTERLANGUAGE, Utils.Latin1Encoding.GetBytes("eng"));
 
             memStream.Position = 0;
             EBMLHelper.WriteElt(w, ID_CHAPTERDISPLAY, memStream);
