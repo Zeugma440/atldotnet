@@ -17,7 +17,8 @@ namespace ATL.AudioData.IO
     /// Implementation notes
     /// - EBML Headers with unknown length are not supported
     /// - Padding Elements are not supported
-    /// - Chapters : Only 1st active EditionEntry and 1st level ChapterAtoms are read (not nested ChapterAtoms)
+    /// - Chapters : Multiple EditionEntries are not supported; only 1st default, non-hidden is used
+    /// - Chapters : Nested ChapterAtoms are not supported; only 1st level enabled, non-hidden are used
     /// - Cues : CuePoints are not part of readable not writable metadata
     /// - Tags : Nested tags are not supported
     /// 
