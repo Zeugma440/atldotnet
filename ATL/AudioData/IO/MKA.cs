@@ -72,6 +72,7 @@ namespace ATL.AudioData.IO
 
         private const uint ID_CHAPTERS = 0x1043A770;
         private const ushort ID_EDITIONENTRY = 0x45B9;
+        private const uint ID_EDITIONUID = 0x45BC;
         private const uint ID_EDITIONFLAGDEFAULT = 0x45DB;
         private const uint ID_EDITIONFLAGHIDDEN = 0x45BD;
         private const uint ID_EDITIONDISPLAY = 0x4520;
@@ -173,12 +174,17 @@ namespace ATL.AudioData.IO
         private const string ZONE_CHAPTERS = "chapters";
 
 
-        // Private declarations 
+        // == Private declarations 
+
+        // Metadata
         private Format containerAudioFormat;
         private Format containeeAudioFormat;
 
-        private string docType = "";
-        private long segmentOffset;
+        private string docType; // EBML docType
+        private ulong editionEntryUid;
+
+        // Parsing
+        private long segmentOffset; // Segment offset
         private readonly List<List<Tuple<long, ulong>>> seekHeads = new List<List<Tuple<long, ulong>>>();
 
 
@@ -248,6 +254,12 @@ namespace ATL.AudioData.IO
             ChannelsArrangement = null;
             AudioDataOffset = -1;
             AudioDataSize = 0;
+
+            docType = "";
+            editionEntryUid = 0;
+
+            segmentOffset = 0;
+            seekHeads.Clear();
         }
 
         /// <summary>
@@ -651,6 +663,9 @@ namespace ATL.AudioData.IO
         {
             long rootOffset = reader.Position;
 
+            if (reader.seekElement(ID_EDITIONUID)) editionEntryUid = reader.readUint();
+
+            reader.seek(rootOffset);
             if (reader.seekElement(ID_EDITIONDISPLAY) && reader.seekElement(ID_EDITIONSTRING))
                 tagData.IntegrateValue(Field.CHAPTERS_TOC_DESCRIPTION, reader.readUtf8String());
 
@@ -686,6 +701,9 @@ namespace ATL.AudioData.IO
 
             var result = new ChapterInfo((uint)(timeStart / 1000000.0));
             if (timeEnd > 0) result.EndTime = (uint)(timeEnd / 1000000.0);
+
+            reader.seek(rootOffset);
+            if (reader.seekElement(ID_CHAPTERUID)) result.UniqueNumericID = (uint)reader.readUint();
 
             reader.seek(rootOffset);
             if (reader.seekElement(ID_CHAPTERSTRINGUID)) result.UniqueID = reader.readUtf8String();
@@ -1097,9 +1115,15 @@ namespace ATL.AudioData.IO
             // Use 8 bytes to represent size (yes, I am lazy)
             w.Write(StreamUtils.EncodeBEUInt64(0)); // Will be rewritten later
 
+            // Generate a new ID if non-existent
+            if (0 == editionEntryUid)
+            {
+                Random randomGenerator = new Random();
+                editionEntryUid = Utils.LongRandom(randomGenerator);
+            }
+            EBMLHelper.WriteElt(w, ID_EDITIONUID, editionEntryUid);
             EBMLHelper.WriteElt(w, ID_EDITIONFLAGHIDDEN, 0);
             EBMLHelper.WriteElt(w, ID_EDITIONFLAGDEFAULT, 1);
-            // TODO other attributes
 
             // Edition display (optional)
             if (data.hasKey(Field.CHAPTERS_TOC_DESCRIPTION))
@@ -1122,7 +1146,15 @@ namespace ATL.AudioData.IO
         {
             using MemoryStream memStream = new MemoryStream();
 
-            EBMLHelper.WriteElt(memStream, ID_CHAPTERSTRINGUID, Encoding.UTF8.GetBytes(data.UniqueID));
+            // Generate a new ID if non-existent
+            if (0 == data.UniqueNumericID)
+            {
+                Random randomGenerator = new Random();
+                data.UniqueNumericID = (uint)Utils.LongRandom(randomGenerator, 0, uint.MaxValue);
+            }
+            EBMLHelper.WriteElt(w, ID_CHAPTERUID, data.UniqueNumericID);
+            if (data.UniqueID.Length > 0)
+                EBMLHelper.WriteElt(memStream, ID_CHAPTERSTRINGUID, Encoding.UTF8.GetBytes(data.UniqueID));
             EBMLHelper.WriteElt(memStream, ID_CHAPTERFLAGHIDDEN, 0);
             EBMLHelper.WriteElt(memStream, ID_CHAPTERFLAGENABLED, 1);
             EBMLHelper.WriteElt(memStream, ID_CHAPTERTIMESTART, data.StartTime * 1000000);

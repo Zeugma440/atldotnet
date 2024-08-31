@@ -97,12 +97,18 @@
         public string Title { get; set; }
 
         /// <summary>
-        /// Unique ID
+        /// Unique ID, alphanumeric
         /// ID3v2 : Unique ID
-        /// Vorbis : Chapter index (0,1,2...)
+        /// Vorbis : Chapter index (0,1,2...) [deprecated]
         /// MKV : ChapterStringUID
         /// </summary>
         public string UniqueID { get; set; }
+        /// <summary>
+        /// Unique ID, numeric
+        /// Vorbis : Chapter index (0,1,2...)
+        /// MKV : ChapterStringUID
+        /// </summary>
+        public uint UniqueNumericID { get; set; }
         /// <summary>
         /// Subtitle
         /// NB : Only supported by ID3v2
@@ -134,6 +140,7 @@
             UseOffset = false;
             Title = title;
 
+            UniqueNumericID = 0;
             UniqueID = "";
             Subtitle = "";
             Picture = null;
@@ -145,7 +152,7 @@
         /// <param name="chapter">Structure to copy information from</param>
         public ChapterInfo(ChapterInfo chapter)
         {
-            StartTime = chapter.StartTime; EndTime = chapter.EndTime; StartOffset = chapter.StartOffset; EndOffset = chapter.EndOffset; Title = chapter.Title; Subtitle = chapter.Subtitle; Url = chapter.Url; UniqueID = chapter.UniqueID;
+            StartTime = chapter.StartTime; EndTime = chapter.EndTime; StartOffset = chapter.StartOffset; EndOffset = chapter.EndOffset; Title = chapter.Title; Subtitle = chapter.Subtitle; Url = chapter.Url; UniqueID = chapter.UniqueID; UniqueNumericID = chapter.UniqueNumericID;
 
             if (chapter.Url != null) Url = new UrlInfo(chapter.Url);
             if (chapter.Picture != null) Picture = new PictureInfo(chapter.Picture);

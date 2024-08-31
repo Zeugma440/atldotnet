@@ -181,13 +181,14 @@ namespace ATL.AudioData.IO
             // NB : Handled this way to retrieve badly formatted chapter indexes (e.g. CHAPTER2, CHAPTER02NAME...)
             int i = 7;
             while (i < fieldName.Length && char.IsDigit(fieldName[i])) i++;
-            int chapterId = int.Parse(fieldName.Substring(7, i - 7));
+            uint chapterId = uint.Parse(fieldName.Substring(7, i - 7));
 
-            ChapterInfo info = tagData.Chapters.FirstOrDefault(c => int.Parse(c.UniqueID) == chapterId);
+            ChapterInfo info = tagData.Chapters.FirstOrDefault(c => c.UniqueNumericID == chapterId);
             if (null == info)
             {
                 info = new ChapterInfo();
                 info.UniqueID = chapterId.ToString();
+                info.UniqueNumericID = chapterId;
                 tagData.Chapters.Add(info);
             }
 
@@ -204,7 +205,7 @@ namespace ATL.AudioData.IO
                 int result = Utils.DecodeTimecodeToMs(fieldValue);
                 if (-1 == result)
                 {
-                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_WARNING, "Invalid timecode for chapter " + info.UniqueID + " : " + fieldValue);
+                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_WARNING, "Invalid timecode for chapter " + info.UniqueNumericID + " : " + fieldValue);
                 }
                 else
                 {
@@ -556,13 +557,15 @@ namespace ATL.AudioData.IO
 
         private static void writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters)
         {
-            int chapterIndex = 0;
+            int masterChapterIndex = 0;
             foreach (ChapterInfo chapterInfo in chapters)
             {
                 // Take the valued index if existing; take the current numerical index if not
-                if (chapterInfo.UniqueID.Length > 0) chapterIndex = int.Parse(chapterInfo.UniqueID);
+                var chapterIndex = 0 == chapterInfo.UniqueNumericID
+                    ? masterChapterIndex++
+                    : (int)chapterInfo.UniqueNumericID;
                 // Specs says chapter index if formatted over 3 chars
-                var formattedIndex = Utils.BuildStrictLengthString(chapterIndex++, 3, '0', false);
+                var formattedIndex = Utils.BuildStrictLengthString(chapterIndex, 3, '0', false);
                 writeTextFrame(writer, "CHAPTER" + formattedIndex, Utils.EncodeTimecode_ms(chapterInfo.StartTime));
                 if (chapterInfo.Title.Length > 0) writeTextFrame(writer, "CHAPTER" + formattedIndex + "NAME", chapterInfo.Title);
                 if (chapterInfo.Url != null && chapterInfo.Url.Url.Length > 0)
