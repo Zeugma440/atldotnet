@@ -1082,7 +1082,7 @@ namespace ATL.AudioData.IO
             EBMLHelper.WriteElt(memStream, ID_FILENAME, Encoding.UTF8.GetBytes(name));
             if (description.Length > 0) EBMLHelper.WriteElt(memStream, ID_FILEDESCRIPTION, Encoding.UTF8.GetBytes(description));
             EBMLHelper.WriteElt(memStream, ID_FILEMEDIATYPE, Utils.Latin1Encoding.GetBytes(mimeType));
-            EBMLHelper.WriteElt(memStream, ID_FILEUID, Utils.LongRandom(new Random()));
+            EBMLHelper.WriteElt(memStream, ID_FILEUID, Utils.LongRandom(new Random())); // Spec does say "as random as possible" <.<
             EBMLHelper.WriteElt(memStream, ID_FILEDATA, data);
 
             memStream.Position = 0;
@@ -1170,7 +1170,7 @@ namespace ATL.AudioData.IO
             using MemoryStream memStream = new MemoryStream();
 
             EBMLHelper.WriteElt(memStream, ID_CHAPTERSTRING, Encoding.UTF8.GetBytes(data));
-            EBMLHelper.WriteElt(memStream, ID_CHAPTERLANGUAGE, Utils.Latin1Encoding.GetBytes("eng"));
+            EBMLHelper.WriteElt(memStream, ID_CHAPTERLANGUAGE, Utils.Latin1Encoding.GetBytes("eng")); // Mandatory; "eng" is the default according to specs
 
             memStream.Position = 0;
             EBMLHelper.WriteElt(w, ID_CHAPTERDISPLAY, memStream);

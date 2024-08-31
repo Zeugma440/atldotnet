@@ -175,7 +175,7 @@ namespace ATL
         public static PictureInfo fromBinaryData(byte[] data, PIC_TYPE picType = PIC_TYPE.Generic, TagType tagType = TagType.ANY, object nativePicCode = null, int position = 1)
         {
             if (null == data) throw new ArgumentException("Data should not be null");
-            if (null == nativePicCode) nativePicCode = 0; // Can't default with 0 in params declaration
+            nativePicCode ??= 0; // Can't default with 0 in params declaration
 
             return new PictureInfo(picType, tagType, nativePicCode, position, data);
         }
