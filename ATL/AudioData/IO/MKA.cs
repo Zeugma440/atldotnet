@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using ATL.Logging;
 using Commons;
 using static ATL.ChannelsArrangements;
@@ -25,6 +24,15 @@ namespace ATL.AudioData.IO
     internal partial class MKA : MetaDataIO, IAudioDataIO
     {
         private const uint EBML_MAGIC_NUMBER = 0x1A45DFA3; // EBML header
+        private const uint EBML_VERSION = 0x4286;
+        private const uint EBML_READVERSION = 0x42F7;
+        private const uint EBML_MAXIDLENGTH = 0x42F2;
+        private const uint EBML_MAXSIZELENGTH = 0x42F3;
+        private const uint EBML_DOCTYPE = 0x4282;
+        private const uint EBML_DOCTYPEVERSION = 0x4287;
+        private const uint EBML_DOCTYPEREADVERSION = 0x4285;
+
+        private const uint EBML_PADDING = 0xEC;
 
         // Matroska element IDs
         private const uint ID_SEGMENT = 0x18538067;
@@ -155,6 +163,7 @@ namespace ATL.AudioData.IO
             { "album.date_recorded", Field.RECORDING_DATE }
         };
 
+        private const string ZONE_EBML_HEADER = "ebmlHeader";
         private const string ZONE_SEGMENT_SIZE = "segmentSize";
         private const string ZONE_SEEKHEAD = "seekHead";
         private const string ZONE_TAGS = "tags";
@@ -248,10 +257,7 @@ namespace ATL.AudioData.IO
             resetData();
         }
 
-        public static bool IsValidHeader(byte[] data)
-        {
-            return EBML_MAGIC_NUMBER == StreamUtils.DecodeBEUInt32(data);
-        }
+        public static bool IsValidHeader(byte[] data) => EBML_MAGIC_NUMBER == StreamUtils.DecodeBEUInt32(data);
 
 
         // ---------- SUPPORT METHODS
@@ -273,6 +279,35 @@ namespace ATL.AudioData.IO
                 structureHelper.AddZone(offset - 4, 0, id + "." + index, false, false);
                 index++;
             }
+        }
+
+        private bool readEbmlHeader(EBMLReader reader, ReadTagParams readTagParams)
+        {
+            var ebmlHeader = reader.readElement();
+            long dataOffset = reader.Position;
+
+            if (ebmlHeader.Id != EBML_MAGIC_NUMBER)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "File is not a valid EBML file");
+                return false;
+            }
+
+            /*
+            if (readTagParams.PrepareForWriting)
+                structureHelper.AddZone(0, ebmlHeader.Size, ZONE_EBML_HEADER, false);
+            */
+
+            if (reader.seekElement(EBML_DOCTYPE))
+            {
+                var docType = reader.readString();
+                if (!docType.Equals("matroska") && !docType.Equals("webm"))
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "File is not a valid Matroska nor webm file");
+                    return false;
+                }
+            }
+            reader.seek(dataOffset + ebmlHeader.Size, SeekOrigin.Begin);
+            return true;
         }
 
         private bool readPhysicalData(EBMLReader reader)
@@ -676,15 +711,7 @@ namespace ATL.AudioData.IO
 
             EBMLReader reader = new EBMLReader(source);
 
-            var ebmlHeader = reader.readElement();
-
-            if (ebmlHeader.Id != EBML_MAGIC_NUMBER)
-            {
-                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "File is not a valid EBML file");
-                return false;
-            }
-
-            reader.seek(ebmlHeader.Size, SeekOrigin.Current);
+            if (!readEbmlHeader(reader, readTagParams)) return false;
 
             if (!reader.enterContainer(ID_SEGMENT))
             {
