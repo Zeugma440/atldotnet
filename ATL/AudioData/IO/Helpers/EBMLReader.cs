@@ -7,8 +7,7 @@ using Commons;
 
 namespace ATL.AudioData
 {
-    // TODO support for unknown length headers (all 1's)
-    internal partial class EBMLReader
+    internal class EBMLReader
     {
         public enum SeekResult
         {

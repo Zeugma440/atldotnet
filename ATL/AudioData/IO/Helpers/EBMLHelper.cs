@@ -50,28 +50,6 @@ namespace ATL.AudioData
             return 8;
         }
 
-        internal static object optimizeInt(ulong value, bool allowByte = true)
-        {
-            var nbBytes = getNbBytesForInt(value);
-            if (nbBytes < 2 && allowByte)
-            {
-                byte data = (byte)value;
-                return data;
-            }
-            if (nbBytes < 3)
-            {
-                ushort data = (ushort)value;
-                return data;
-            }
-            if (nbBytes < 5)
-            {
-                uint data = (uint)value;
-                return data;
-            }
-
-            return value;
-        }
-
         internal static byte[] EncodeVint(ulong value, bool optimize = true)
         {
             // Determine number of bytes to use

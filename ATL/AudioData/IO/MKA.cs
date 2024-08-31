@@ -15,10 +15,11 @@ namespace ATL.AudioData.IO
     /// Class for Matroska Audio files manipulation (extension : .MKA)
     /// 
     /// Implementation notes
+    /// - EBML Headers with unknown length are not supported
+    /// - Padding Elements are not supported
     /// - Chapters : Only 1st active EditionEntry and 1st level ChapterAtoms are read (not nested ChapterAtoms)
-    ///
-    /// cues not supported
-    /// nested Tag
+    /// - Cues : CuePoints are not part of readable not writable metadata
+    /// - Tags : Nested tags are not supported
     /// 
     /// </summary>
     internal partial class MKA : MetaDataIO, IAudioDataIO
@@ -177,7 +178,7 @@ namespace ATL.AudioData.IO
 
         private string docType = "";
         private long segmentOffset;
-        private List<List<Tuple<long, ulong>>> seekHeads = new List<List<Tuple<long, ulong>>>();
+        private readonly List<List<Tuple<long, ulong>>> seekHeads = new List<List<Tuple<long, ulong>>>();
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -1023,20 +1024,12 @@ namespace ATL.AudioData.IO
 
         private int writeAttachments(Stream w, TagData data)
         {
-            int result = 0;
-
             w.Write(StreamUtils.EncodeBEUInt32(ID_ATTACHMENTS));
             var sizeOffset = w.Position;
             // Use 8 bytes to represent size (yes, I am lazy)
             w.Write(StreamUtils.EncodeBEUInt64(0)); // Will be rewritten later
 
-            foreach (PictureInfo picInfo in data.Pictures)
-            {
-                if (isPictureWritable(picInfo))
-                {
-                    result += writeAttachedFile(w, picInfo.PictureData, picInfo.MimeType, picInfo.PicType, picInfo.Description);
-                }
-            }
+            int result = data.Pictures.Where(isPictureWritable).Sum(picInfo => writeAttachedFile(w, picInfo.PictureData, picInfo.MimeType, picInfo.PicType, picInfo.Description));
 
             var finalOffset = w.Position;
             w.Seek(sizeOffset, SeekOrigin.Begin);
@@ -1172,15 +1165,19 @@ namespace ATL.AudioData.IO
 
             foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
-                MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
-                emptyFieldInfo.MarkedForDeletion = true;
+                MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo)
+                {
+                    MarkedForDeletion = true
+                };
                 result.AdditionalFields.Add(emptyFieldInfo);
             }
 
             foreach (PictureInfo picInfo in EmbeddedPictures)
             {
-                PictureInfo emptyPicInfo = new PictureInfo(picInfo);
-                emptyPicInfo.MarkedForDeletion = true;
+                PictureInfo emptyPicInfo = new PictureInfo(picInfo)
+                {
+                    MarkedForDeletion = true
+                };
                 result.Pictures.Add(emptyPicInfo);
             }
 
