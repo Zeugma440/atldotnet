@@ -16,29 +16,18 @@ namespace ATL.AudioData
             FOUND_NO_MATCH = 2
         }
 
-        internal class EBMLElement
-        {
-            public EBMLElement(int id, long size)
-            {
-                Id = id;
-                Size = size;
-            }
-            public int Id { get; internal set; } // may be ulong but use cases for these values are theoretical
-            public long Size { get; internal set; }
-        }
-
         private readonly byte[] buffer = new byte[8];
-        private readonly Stream s;
 
-        internal EBMLReader(Stream s) { this.s = s; }
+        internal EBMLReader(Stream s) { this.BaseStream = s; }
 
-        public long Position => s.Position;
+        public long Position => BaseStream.Position;
 
-        public Stream BaseStream => s;
+        public Stream BaseStream { get; }
+
 
         internal long readVint(bool raw = false)
         {
-            s.Read(buffer, 0, 1);
+            BaseStream.Read(buffer, 0, 1);
             int nbBytes = 0;
             for (int i = 0; i < EBMLHelper.SizeMasks.Length; i++)
             {
@@ -53,7 +42,7 @@ namespace ATL.AudioData
             if (!raw) buffer[0] = (byte)(buffer[0] & EBMLHelper.DataMasks[nbBytes - 1]);
 
             // Get extra bytes if needed
-            if (nbBytes > 1) s.Read(buffer, 1, nbBytes - 1);
+            if (nbBytes > 1) BaseStream.Read(buffer, 1, nbBytes - 1);
 
             // Unknown size (vint data are all 1's)
             if ((byte)(buffer[0] & EBMLHelper.DataMasks[nbBytes - 1]) == EBMLHelper.DataMasks[nbBytes - 1])
@@ -91,7 +80,7 @@ namespace ATL.AudioData
 
         public long seek(long size, SeekOrigin origin = SeekOrigin.Begin)
         {
-            return s.Seek(size, origin);
+            return BaseStream.Seek(size, origin);
         }
 
         public bool enterContainer(long id)
@@ -105,14 +94,14 @@ namespace ATL.AudioData
         public List<long> seekElements(long id)
         {
             List<long> results = new List<long>();
-            var seekTo = Math.Min(s.Position + readVint(), s.Length);
-            while (s.Position < seekTo)
+            var seekTo = Math.Min(BaseStream.Position + readVint(), BaseStream.Length);
+            while (BaseStream.Position < seekTo)
             {
                 var eltId = readVint(true);
-                if (eltId == id) results.Add(s.Position);
+                if (eltId == id) results.Add(BaseStream.Position);
 
                 var size = readVint();
-                s.Seek(size, SeekOrigin.Current);
+                BaseStream.Seek(size, SeekOrigin.Current);
             }
             return results;
         }
@@ -130,8 +119,8 @@ namespace ATL.AudioData
             SeekResult result = SeekResult.NOT_FOUND;
             long resultOffset = -1;
 
-            var seekTo = Math.Min(s.Position + readVint(), s.Length);
-            while (result != SeekResult.FOUND_MATCH && s.Position < seekTo)
+            var seekTo = Math.Min(BaseStream.Position + readVint(), BaseStream.Length);
+            while (result != SeekResult.FOUND_MATCH && BaseStream.Position < seekTo)
             {
                 var eltId = readVint(true);
                 if (eltId == id)
@@ -152,19 +141,19 @@ namespace ATL.AudioData
                             {
                                 result = SeekResult.FOUND_MATCH;
                             }
-                            resultOffset = s.Position;
+                            resultOffset = BaseStream.Position;
                         }
                         else
                         {
                             // Criteria are for children elements
-                            long loopOffset = s.Position;
+                            long loopOffset = BaseStream.Position;
                             int nbFound = 0;
                             foreach (var c in criteria)
                             {
                                 var crits = new HashSet<Tuple<long, int>> { new Tuple<long, int>(c.Item1, c.Item2) };
                                 var res = seekElement(c.Item1, crits);
                                 if (res != SeekResult.FOUND_NO_MATCH) nbFound++;
-                                s.Position = loopOffset;
+                                BaseStream.Position = loopOffset;
                             }
                             if (nbFound == criteria.Count) result = SeekResult.FOUND_MATCH;
                         }
@@ -173,10 +162,10 @@ namespace ATL.AudioData
                 else
                 {
                     var size = readVint();
-                    s.Seek(size, SeekOrigin.Current);
+                    BaseStream.Seek(size, SeekOrigin.Current);
                 }
             }
-            if (resultOffset > -1) s.Seek(resultOffset, SeekOrigin.Begin);
+            if (resultOffset > -1) BaseStream.Seek(resultOffset, SeekOrigin.Begin);
             return result;
         }
 
@@ -186,7 +175,7 @@ namespace ATL.AudioData
             var nbBytes = readVint();
             if (0 == nbBytes) return 0;
 
-            s.Read(buffer, 0, (int)nbBytes);
+            BaseStream.Read(buffer, 0, (int)nbBytes);
             // Decode buffer
             switch (nbBytes)
             {
@@ -210,7 +199,7 @@ namespace ATL.AudioData
             var nbBytes = readVint();
             if (0 == nbBytes) return 0;
 
-            s.Read(buffer, 0, (int)nbBytes);
+            BaseStream.Read(buffer, 0, (int)nbBytes);
             // Decode buffer
             switch (nbBytes)
             {
@@ -240,7 +229,7 @@ namespace ATL.AudioData
             if (0 == nbBytes) return "";
 
             byte[] strBuf = new byte[nbBytes];
-            s.Read(strBuf);
+            BaseStream.Read(strBuf);
             return Utils.Latin1Encoding.GetString(strBuf);
         }
 
@@ -251,7 +240,7 @@ namespace ATL.AudioData
             if (0 == nbBytes) return "";
 
             byte[] strBuf = new byte[nbBytes];
-            s.Read(strBuf);
+            BaseStream.Read(strBuf);
             return Encoding.UTF8.GetString(strBuf);
         }
 
@@ -262,14 +251,14 @@ namespace ATL.AudioData
             if (0 == nbBytes) return Array.Empty<byte>();
 
             byte[] result = new byte[nbBytes];
-            s.Read(result, 0, (int)nbBytes);
+            BaseStream.Read(result, 0, (int)nbBytes);
             return result;
         }
 
         public byte[] readBytes(int nb)
         {
             byte[] result = new byte[nb];
-            s.Read(result, 0, nb);
+            BaseStream.Read(result, 0, nb);
             return result;
         }
     }

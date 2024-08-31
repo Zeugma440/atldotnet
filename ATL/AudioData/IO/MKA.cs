@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using ATL.Logging;
@@ -16,7 +15,8 @@ namespace ATL.AudioData.IO
     /// Class for Matroska Audio files manipulation (extension : .MKA)
     /// 
     /// Implementation notes
-    /// - EBML Headers with unknown length are not supported
+    /// - EBML Elements with unknown length are not supported
+    /// - AudioDataSize is not processed yet
     /// - Padding Elements are not supported
     /// - Chapters : Multiple EditionEntries are not supported; only 1st default, non-hidden is used
     /// - Chapters : Nested ChapterAtoms are not supported; only 1st level enabled, non-hidden are used
@@ -386,6 +386,11 @@ namespace ATL.AudioData.IO
                 new Tuple<long, int>(0xE7, 0), // Timestamp
             };
             res = reader.seekElement(0x1F43B675, crits); // Cluster
+            if (res != EBMLReader.SeekResult.FOUND_MATCH)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Couldn't locate Cluster for timestamp 0");
+                return false;
+            }
             long zeroClusterOffset = reader.Position;
 
             long blockSize = -1;
