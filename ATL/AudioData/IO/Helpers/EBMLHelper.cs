@@ -30,9 +30,9 @@ namespace ATL.AudioData
             }
         }
 
-        private static byte[] encodeIntOptimized(ulong value, int nbBytes, bool allowByte = true)
+        private static byte[] encodeIntOptimized(ulong value, int nbBytes)
         {
-            if (nbBytes < 2 && allowByte) return new byte[] { (byte)(value & 0x00000000000000FF) };
+            if (nbBytes < 2) return new byte[] { (byte)(value & 0x00000000000000FF) };
             if (nbBytes < 3) return StreamUtils.EncodeBEUInt16((ushort)value);
             if (3 == nbBytes) return StreamUtils.EncodeBEUInt24((uint)value);
             if (4 == nbBytes) return StreamUtils.EncodeBEUInt32((uint)value);
@@ -85,14 +85,14 @@ namespace ATL.AudioData
             s.Write(data, 0, data.Length);
         }
 
-        internal static void WriteElt(Stream s, ulong id, int data, bool allowByte = true)
+        internal static void WriteElt(Stream s, ulong id, int data)
         {
-            WriteElt(s, id, encodeIntOptimized((ulong)data, getNbBytesForInt((ulong)data), allowByte));
+            WriteElt(s, id, encodeIntOptimized((ulong)data, getNbBytesForInt((ulong)data)));
         }
 
-        internal static void WriteElt(Stream s, ulong id, ulong data, bool allowByte = true)
+        internal static void WriteElt(Stream s, ulong id, ulong data)
         {
-            WriteElt(s, id, encodeIntOptimized(data, getNbBytesForInt(data), allowByte));
+            WriteElt(s, id, encodeIntOptimized(data, getNbBytesForInt(data)));
         }
 
         internal static void WriteElt32(Stream s, ulong id, ulong data)
