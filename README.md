@@ -74,7 +74,7 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 ## How to use it ?  Which platforms and .NET/Mono versions does ATL run on ?
 
-The ATL library runs on .NET Core 3.1+ / .NET Standard 2.1+ / .NET 6+
+The ATL library runs on .NET Standard 2.1+ / .NET 6+
 
 ATL unit tests run on .NET 6+
 
