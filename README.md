@@ -74,7 +74,7 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 ## How to use it ?  Which platforms and .NET/Mono versions does ATL run on ?
 
-The ATL library runs on .NET Core 3.1+ / .NET Standard 2.1+ / .NET 6+
+The ATL library runs on .NET Standard 2.1+ / .NET 6+
 
 ATL unit tests run on .NET 6+
 
@@ -107,7 +107,7 @@ Extended Module | .XM |  |  |  | R/W (2)
 Free Lossless Audio Codec | .FLAC |  | R/W |  | R/W
 Genesis YM2612 | .GYM |  |  |  | R/W
 Impulse Tracker | .IT |  |  |  | R/W (2)
-Matroska Audio | .MKA |  |  |  | R (6)
+Matroska Audio, WebM Audio | .MKA, .WEBM |  |  |  | R/W
 Musical Instruments Digital Interface | .MID, .MIDI |  |  |  | R/W (3)
 Monkey's Audio | .APE | R/W | R/W | R/W | 
 MPEG Audio Layer | .MP1, .MP2, .MP3 | R/W | R/W | R/W | |
@@ -136,8 +136,6 @@ Windows Media Audio/Advanced Systems Format|.WMA, .ASF| | | |R/W|
 (4) : Support for LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops), DISP (displayable objects), BEXT, CART, XMP and iXML metadata chunks
 
 (5) : Reads audio properties only, due to the rarity of sample CAF files tagged with actual metadata
-
-(6) : Read-only support so far
 
 
 ### DETECTED FIELDS
@@ -212,8 +210,6 @@ ATL.NET is based on :
 * Audio Tools Library 2.3  by Jurgen Faul, Mattias Dahlberg, Gambit, MaDah and Erik Stenborg (code ported from Pascal to C# and refactored)
 
 * MIDI class 1.5 by Valentin Schmidt & Michael Mlivoncic (code ported from PHP to C# and refactored)
-
-* [SpawnDev.EBML](https://github.com/LostBeard/SpawnDev.EBML) by LostBeard (adjusted to ensure .NET Standard 2.1 compatibility)
 
 
 ## Special thanks for their contributions to...
