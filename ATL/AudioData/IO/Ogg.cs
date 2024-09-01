@@ -647,27 +647,26 @@ namespace ATL.AudioData.IO
             bool isValidTagHeader = false;
             if (contentType.Equals(CONTENTS_VORBIS))
             {
-                source.Read(buffer, 0, 7);
+                if (source.Read(buffer, 0, 7) < 7) return;
                 isValidTagHeader = StreamUtils.ArrBeginsWith(buffer, VORBIS_COMMENT_ID);
             }
             else if (contentType.Equals(CONTENTS_OPUS))
             {
-                source.Read(buffer, 0, 8);
+                if (source.Read(buffer, 0, 8) < 8) return;
                 isValidTagHeader = StreamUtils.ArrBeginsWith(buffer, OPUS_TAG_ID);
             }
             else if (contentType.Equals(CONTENTS_FLAC))
             {
-                source.Read(buffer, 0, 4);
+                if (source.Read(buffer, 0, 4) < 4) return;
                 //uint blockLength = StreamUtils.DecodeBEUInt24(buffer, 1);
                 byte blockType = (byte)(buffer[0] & 0x7F); // decode metablock type
                 isValidTagHeader = blockType < 7;
             }
 
-            if (isValidTagHeader)
-            {
-                tag.Clear();
-                tag.Read(source, readTagParams);
-            }
+            if (!isValidTagHeader) return;
+
+            tag.Clear();
+            tag.Read(source, readTagParams);
         }
 
         // Calculate duration time
