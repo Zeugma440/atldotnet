@@ -6,7 +6,6 @@ using static ATL.AudioData.IO.MetaDataIO;
 using static ATL.AudioData.IO.FileSurgeon;
 using static ATL.ChannelsArrangements;
 using static ATL.AudioData.FlacHelper;
-using System.Text;
 using System.Threading.Tasks;
 using Commons;
 
@@ -321,20 +320,14 @@ namespace ATL.AudioData.IO
 
         private WriteResult write(Stream s, TagData tag, Zone zone)
         {
-            using BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true);
-            return write(tag, w, zone);
-        }
-
-        private WriteResult write(TagData tag, BinaryWriter w, Zone zone)
-        {
             WriteResult result;
 
-            if (zone.Name.StartsWith(META_VORBIS_COMMENT + ".")) result = writeVorbisCommentBlock(w.BaseStream, tag, vorbisTag);
-            else if (zone.Name.Equals(PADDING_ZONE_NAME)) result = writePaddingBlock(w, tag.DataSizeDelta);
-            else if (zone.Name.StartsWith(META_PICTURE + ".")) result = processPictureBlock(w, initialPictures, tag.Pictures, ref existingPictureIndex, ref targetPictureIndex);
+            if (zone.Name.StartsWith(META_VORBIS_COMMENT + ".")) result = writeVorbisCommentBlock(s, tag, vorbisTag);
+            else if (zone.Name.Equals(PADDING_ZONE_NAME)) result = writePaddingBlock(s, tag.DataSizeDelta);
+            else if (zone.Name.StartsWith(META_PICTURE + ".")) result = processPictureBlock(s, initialPictures, tag.Pictures, ref existingPictureIndex, ref targetPictureIndex);
             else // Unhandled field - write raw header without 'isLast' bit and let the rest as it is
             {
-                w.Write(zone.Flag);
+                s.WriteByte(zone.Flag);
                 result = new WriteResult(WriteMode.OVERWRITE, 1);
             }
 
@@ -395,16 +388,16 @@ namespace ATL.AudioData.IO
             return new WriteResult(WriteMode.REPLACE, writtenFields);
         }
 
-        private WriteResult writePaddingBlock(BinaryWriter w, long cumulativeDelta, bool isLastMetaBlock = false)
+        private WriteResult writePaddingBlock(Stream w, long cumulativeDelta, bool isLastMetaBlock = false)
         {
             long paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, -cumulativeDelta);
             if (paddingSizeToWrite > 0)
             {
                 byte toWrite = META_PADDING;
                 if (isLastMetaBlock) toWrite |= FLAG_LAST_METADATA_BLOCK;
-                w.Write(toWrite);
+                w.WriteByte(toWrite);
                 w.Write(StreamUtils.EncodeBEUInt24((uint)paddingSizeToWrite));
-                for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
+                for (int i = 0; i < paddingSizeToWrite; i++) w.WriteByte(0);
                 return new WriteResult(WriteMode.REPLACE, 1);
             }
             return new WriteResult(WriteMode.REPLACE, 0);
@@ -423,7 +416,7 @@ namespace ATL.AudioData.IO
         /// <param name="existingPictureIndex">Current index of existing pictures in use in the main write loop</param>
         /// <param name="targetPictureIndex">Current index of target pictures in use in the main write loop</param>
         /// <returns></returns>
-        private static WriteResult processPictureBlock(BinaryWriter w, IList<PictureInfo> existingPictures, IList<PictureInfo> picturesToWrite, ref int existingPictureIndex, ref int targetPictureIndex)
+        private static WriteResult processPictureBlock(Stream w, IList<PictureInfo> existingPictures, IList<PictureInfo> picturesToWrite, ref int existingPictureIndex, ref int targetPictureIndex)
         {
             bool doWritePicture = false;
             PictureInfo pictureToWrite = null;
@@ -451,29 +444,29 @@ namespace ATL.AudioData.IO
                 else
                 {
                     // Keep existing picture block as is
-                    w.Write(META_PICTURE);
+                    w.WriteByte(META_PICTURE);
                     return new WriteResult(WriteMode.OVERWRITE, 1);
                 }
             }
             else return new WriteResult(WriteMode.REPLACE, 0); // Nothing else to write; existing picture blocks are erased
         }
 
-        private static int writePictureBlock(BinaryWriter w, PictureInfo picture, bool isLastMetaBlock = false)
+        private static int writePictureBlock(Stream w, PictureInfo picture, bool isLastMetaBlock = false)
         {
             byte toWrite = META_PICTURE;
             if (isLastMetaBlock) toWrite |= FLAG_LAST_METADATA_BLOCK;
-            w.Write(toWrite);
+            w.WriteByte(toWrite);
 
-            var sizePos = w.BaseStream.Position;
+            var sizePos = w.Position;
             w.Write(new byte[] { 0, 0, 0 }); // Placeholder for 24-bit integer that will be rewritten at the end of the method
 
-            var dataPos = w.BaseStream.Position;
+            var dataPos = w.Position;
             VorbisTag.WritePicture(w, picture.PictureData, picture.MimeType, picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picture.NativePicCode : ID3v2.EncodeID3v2PictureType(picture.PicType), picture.Description);
 
-            var finalPos = w.BaseStream.Position;
-            w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
+            var finalPos = w.Position;
+            w.Seek(sizePos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEUInt24((uint)(finalPos - dataPos)));
-            w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
+            w.Seek(finalPos, SeekOrigin.Begin);
 
             return 1;
         }

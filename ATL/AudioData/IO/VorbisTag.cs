@@ -6,6 +6,7 @@ using System.Text;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
 using static ATL.TagData;
+using System.Threading.Tasks;
 
 namespace ATL.AudioData.IO
 {
@@ -15,7 +16,7 @@ namespace ATL.AudioData.IO
     /// TODO - Rewrite as "pure" helper, with Ogg and FLAC inheriting MetaDataIO
     /// 
     /// </summary>
-    class VorbisTag : MetaDataIO
+    partial class VorbisTag : MetaDataIO
     {
         private const string PICTURE_METADATA_ID_NEW = "METADATA_BLOCK_PICTURE";
         private const string PICTURE_METADATA_ID_OLD = "COVERART";
@@ -107,15 +108,9 @@ namespace ATL.AudioData.IO
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        protected override int getDefaultTagOffset()
-        {
-            return TO_BUILTIN;
-        }
+        protected override int getDefaultTagOffset() => TO_BUILTIN;
 
-        protected override MetaDataIOFactory.TagType getImplementedTagType()
-        {
-            return MetaDataIOFactory.TagType.NATIVE;
-        }
+        protected override MetaDataIOFactory.TagType getImplementedTagType() => MetaDataIOFactory.TagType.NATIVE;
 
         protected override byte ratingConvention => RC_APE;
 
@@ -221,7 +216,7 @@ namespace ATL.AudioData.IO
             {
                 size = size - 1 - PICTURE_METADATA_ID_NEW.Length;
                 // Make sure total size is a multiple of 4
-                size = size - (size % 4);
+                size = size - size % 4;
 
                 // Read the whole base64-encoded picture header _and_ binary data
                 byte[] encodedData = new byte[size];
@@ -244,7 +239,7 @@ namespace ATL.AudioData.IO
                 {
                     size = size - 1 - PICTURE_METADATA_ID_OLD.Length;
                     // Make sure total size is a multiple of 4
-                    size = size - (size % 4);
+                    size = size - size % 4;
 
                     byte[] encodedData = new byte[size];
                     source.Read(encodedData, 0, size);
@@ -415,51 +410,51 @@ namespace ATL.AudioData.IO
             return true;
         }
 
-        // TODO DOC
-        public int Write(Stream s, TagData tag)
+        /// <summary>
+        /// Add the specified information to current tag information (async variant)
+        ///   - Any existing field is overwritten
+        ///   - Any non-specified field is kept as is
+        /// NB : That method needs to have that signature to prevent Ogg.WriteAsync from calling MetaDataIO.WriteAsync instead
+        /// </summary>
+        /// <param name="s">Stream for the resource to edit</param>
+        /// <param name="tag">Tag information to be added</param>
+        /// <param name="writeProgress">Progress to be updated during write operations</param>
+        /// <returns>true if the operation suceeded; false if not</returns>
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public new Task<int> WriteAsync(Stream s, TagData tag, ProgressToken<float> writeProgress = null)
         {
             TagData dataToWrite = tagData;
             dataToWrite.IntegrateValues(tag, writePicturesWithMetadata); // Write existing information + new tag information
             dataToWrite.Cleanup();
 
             // Write new tag to a MemoryStream
-            using BinaryWriter msw = new BinaryWriter(s, Encoding.UTF8, true);
-            var result = write(dataToWrite, msw);
+            var result = write(s, dataToWrite);
             if (result > -1) tagData.IntegrateValues(dataToWrite); // TODO - Isn't that a bit too soon ?
-            return result;
+            return Task.FromResult(result);
         }
 
         protected override int write(TagData tag, Stream s, string zone)
         {
-            using BinaryWriter w = new BinaryWriter(s);
-            return write(tag, w);
+            return write(s, tag);
         }
 
-        private int write(TagData tag, BinaryWriter w)
+        private int write(Stream w, TagData tag)
         {
-            long initialWriteOffset = w.BaseStream.Position;
-            string vendor;
+            long initialWriteOffset = w.Position;
 
-            if (AdditionalFields.ContainsKey(VENDOR_METADATA_ID))
-            {
-                vendor = AdditionalFields[VENDOR_METADATA_ID];
-            }
-            else
-            {
-                // Even when no existing field, vendor field is mandatory in OGG structure
-                // => a file with no vendor is a FLAC file
-                vendor = "";
-            }
+            // Even when no existing field, vendor field is mandatory in OGG structure
+            // => a file with no vendor is a FLAC file
+            string vendor = AdditionalFields.ContainsKey(VENDOR_METADATA_ID) ? AdditionalFields[VENDOR_METADATA_ID] : "";
 
-            w.Write((uint)vendor.Length);
+            w.Write(StreamUtils.EncodeUInt32((uint)vendor.Length));
             w.Write(Encoding.UTF8.GetBytes(vendor));
 
-            var counterPos = w.BaseStream.Position;
-            w.Write((uint)0); // Tag counter placeholder to be rewritten in a few lines
+            var counterPos = w.Position;
+            w.Write(StreamUtils.EncodeUInt32(0)); // Tag counter placeholder to be rewritten in a few lines
 
-            var counter = writeFrames(tag, w);
+            var counter = writeFrames(w, tag);
 
-            if (writeMetadataFramingBit) w.Write((byte)1); // Framing bit (mandatory for OGG container)
+            if (writeMetadataFramingBit) w.WriteByte(1); // Framing bit (mandatory for OGG container)
 
             // PADDING MANAGEMENT
             // Write the remaining padding bytes, if any detected during initial reading
@@ -467,20 +462,20 @@ namespace ATL.AudioData.IO
             {
                 long paddingSizeToWrite;
                 if (tag.PaddingSize > -1) paddingSizeToWrite = tag.PaddingSize;
-                else paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, initialPaddingOffset - initialTagOffset, w.BaseStream.Position - initialWriteOffset);
+                else paddingSizeToWrite = TrackUtils.ComputePaddingSize(initialPaddingOffset, initialPaddingSize, initialPaddingOffset - initialTagOffset, w.Position - initialWriteOffset);
                 if (paddingSizeToWrite > 0)
-                    for (int i = 0; i < paddingSizeToWrite; i++) w.Write((byte)0);
+                    for (int i = 0; i < paddingSizeToWrite; i++) w.WriteByte(0);
             }
 
-            long finalPos = w.BaseStream.Position;
-            w.BaseStream.Seek(counterPos, SeekOrigin.Begin);
-            w.Write(counter);
-            w.BaseStream.Seek(finalPos, SeekOrigin.Begin);
+            long finalPos = w.Position;
+            w.Seek(counterPos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeUInt32(counter));
+            w.Seek(finalPos, SeekOrigin.Begin);
 
             return (int)counter;
         }
 
-        private uint writeFrames(TagData tag, BinaryWriter w)
+        private uint writeFrames(Stream w, TagData tag)
         {
             uint nbFrames = 0;
 
@@ -544,7 +539,7 @@ namespace ATL.AudioData.IO
             return nbFrames;
         }
 
-        private static void writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters)
+        private static void writeChapters(Stream w, IList<ChapterInfo> chapters)
         {
             int masterChapterIndex = 0;
             foreach (ChapterInfo chapterInfo in chapters)
@@ -555,74 +550,73 @@ namespace ATL.AudioData.IO
                     : (int)chapterInfo.UniqueNumericID;
                 // Specs says chapter index if formatted over 3 chars
                 var formattedIndex = Utils.BuildStrictLengthString(chapterIndex, 3, '0', false);
-                writeTextFrame(writer, "CHAPTER" + formattedIndex, Utils.EncodeTimecode_ms(chapterInfo.StartTime));
-                if (chapterInfo.Title.Length > 0) writeTextFrame(writer, "CHAPTER" + formattedIndex + "NAME", chapterInfo.Title);
+                writeTextFrame(w, "CHAPTER" + formattedIndex, Utils.EncodeTimecode_ms(chapterInfo.StartTime));
+                if (chapterInfo.Title.Length > 0) writeTextFrame(w, "CHAPTER" + formattedIndex + "NAME", chapterInfo.Title);
                 if (chapterInfo.Url != null && chapterInfo.Url.Url.Length > 0)
-                    writeTextFrame(writer, "CHAPTER" + formattedIndex + "URL", chapterInfo.Url.Url);
+                    writeTextFrame(w, "CHAPTER" + formattedIndex + "URL", chapterInfo.Url.Url);
             }
         }
 
-        private static void writeTextFrame(BinaryWriter writer, string frameCode, string text)
+        private static void writeTextFrame(Stream w, string frameCode, string text)
         {
-            var frameSizePos = writer.BaseStream.Position;
-            writer.Write((uint)0); // Frame size placeholder to be rewritten in a few lines
+            var frameSizePos = w.Position;
+            w.Write(StreamUtils.EncodeUInt32(0)); // Frame size placeholder to be rewritten in a few lines
 
             // TODO : handle multi-line comments : comment[0], comment[1]...
-            writer.Write(Utils.Latin1Encoding.GetBytes(frameCode + "="));
-            writer.Write(Encoding.UTF8.GetBytes(text));
+            w.Write(Utils.Latin1Encoding.GetBytes(frameCode + "="));
+            w.Write(Encoding.UTF8.GetBytes(text));
 
             // Go back to frame size location to write its actual size 
-            var finalFramePos = writer.BaseStream.Position;
-            writer.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-            writer.Write((uint)(finalFramePos - frameSizePos - 4));
-            writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            var finalFramePos = w.Position;
+            w.Seek(frameSizePos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeUInt32((uint)(finalFramePos - frameSizePos - 4)));
+            w.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        private static void writePictureFrame(BinaryWriter writer, byte[] pictureData, string mimeType, int pictureTypeCode, string picDescription)
+        private static void writePictureFrame(Stream w, byte[] pictureData, string mimeType, int pictureTypeCode, string picDescription)
         {
-            var frameSizePos = writer.BaseStream.Position;
-            writer.Write((uint)0); // Frame size placeholder to be rewritten in a few lines
+            var frameSizePos = w.Position;
+            w.Write(StreamUtils.EncodeInt32(0)); // Frame size placeholder to be rewritten in a few lines
 
-            writer.Write(Utils.Latin1Encoding.GetBytes(PICTURE_METADATA_ID_NEW + "="));
+            w.Write(Utils.Latin1Encoding.GetBytes(PICTURE_METADATA_ID_NEW + "="));
 
             using (MemoryStream picStream = new MemoryStream(pictureData.Length + 60))
-            using (BinaryWriter picW = new BinaryWriter(picStream))
             {
-                WritePicture(picW, pictureData, mimeType, pictureTypeCode, picDescription);
-                writer.Write(Utils.EncodeTo64(picStream.ToArray()));
+                WritePicture(picStream, pictureData, mimeType, pictureTypeCode, picDescription);
+                w.Write(Utils.EncodeTo64(picStream.ToArray()));
             }
 
             // Go back to frame size location to write its actual size 
-            var finalFramePos = writer.BaseStream.Position;
-            writer.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
-            writer.Write((uint)(finalFramePos - frameSizePos - 4));
-            writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+            var finalFramePos = w.Position;
+            w.Seek(frameSizePos, SeekOrigin.Begin);
+            w.Write(StreamUtils.EncodeUInt32((uint)(finalFramePos - frameSizePos - 4)));
+            w.Seek(finalFramePos, SeekOrigin.Begin);
         }
 
-        public static void WritePicture(BinaryWriter picW, byte[] pictureData, string mimeType, int pictureTypeCode, string picDescription)
+        public static void WritePicture(Stream w, byte[] pictureData, string mimeType, int pictureTypeCode, string picDescription)
         {
-            picW.Write(StreamUtils.EncodeBEInt32(pictureTypeCode));
-            picW.Write(StreamUtils.EncodeBEInt32(mimeType.Length));
-            picW.Write(Utils.Latin1Encoding.GetBytes(mimeType));
-            picW.Write(StreamUtils.EncodeBEInt32(picDescription.Length));
-            picW.Write(Encoding.UTF8.GetBytes(picDescription));
+            w.Write(StreamUtils.EncodeBEInt32(pictureTypeCode));
+            w.Write(StreamUtils.EncodeBEInt32(mimeType.Length));
+            w.Write(Utils.Latin1Encoding.GetBytes(mimeType));
+            w.Write(StreamUtils.EncodeBEInt32(picDescription.Length));
+            w.Write(Encoding.UTF8.GetBytes(picDescription));
 
             ImageProperties props = ImageUtils.GetImageProperties(pictureData);
 
-            picW.Write(StreamUtils.EncodeBEInt32(props.Width));
-            picW.Write(StreamUtils.EncodeBEInt32(props.Height));
-            picW.Write(StreamUtils.EncodeBEInt32(props.ColorDepth));
+            w.Write(StreamUtils.EncodeBEInt32(props.Width));
+            w.Write(StreamUtils.EncodeBEInt32(props.Height));
+            w.Write(StreamUtils.EncodeBEInt32(props.ColorDepth));
             if (props.Format.Equals(ImageFormat.Gif))
             {
-                picW.Write(StreamUtils.EncodeBEInt32(props.NumColorsInPalette));    // Color num
+                w.Write(StreamUtils.EncodeBEInt32(props.NumColorsInPalette));    // Color num
             }
             else
             {
-                picW.Write(0);
+                w.Write(StreamUtils.EncodeBEInt32(0));
             }
 
-            picW.Write(StreamUtils.EncodeBEInt32(pictureData.Length));
-            picW.Write(pictureData);
+            w.Write(StreamUtils.EncodeBEInt32(pictureData.Length));
+            w.Write(pictureData);
         }
 
         public TagData GetDeletionTagData()

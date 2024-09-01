@@ -553,11 +553,10 @@ namespace ATL.AudioData.IO
                 info.Samples = getSamples(source);
 
                 // Read metadata from Comment pages that span over multiple segments
-                foreach (var kvp in bitstreams)
+                foreach (var stream in bitstreams.Values)
                 {
-                    using BufferedBinaryReader reader = new BufferedBinaryReader(kvp.Value);
-                    reader.Position = 0;
-                    readCommentPacket(reader, contents, vorbisTag, readTagParams);
+                    stream.Position = 0;
+                    readCommentPacket(stream, contents, vorbisTag, readTagParams);
                 }
             }
             finally
@@ -642,25 +641,25 @@ namespace ATL.AudioData.IO
             return isSupportedHeader;
         }
 
-        private static void readCommentPacket(BufferedBinaryReader source, int contentType, VorbisTag tag, ReadTagParams readTagParams)
+        private static void readCommentPacket(Stream source, int contentType, VorbisTag tag, ReadTagParams readTagParams)
         {
-            byte[] tagId;
+            byte[] buffer = new byte[8];
             bool isValidTagHeader = false;
             if (contentType.Equals(CONTENTS_VORBIS))
             {
-                tagId = source.ReadBytes(7);
-                isValidTagHeader = StreamUtils.ArrBeginsWith(tagId, VORBIS_COMMENT_ID);
+                source.Read(buffer, 0, 7);
+                isValidTagHeader = StreamUtils.ArrBeginsWith(buffer, VORBIS_COMMENT_ID);
             }
             else if (contentType.Equals(CONTENTS_OPUS))
             {
-                tagId = source.ReadBytes(8);
-                isValidTagHeader = StreamUtils.ArrBeginsWith(tagId, OPUS_TAG_ID);
+                source.Read(buffer, 0, 8);
+                isValidTagHeader = StreamUtils.ArrBeginsWith(buffer, OPUS_TAG_ID);
             }
             else if (contentType.Equals(CONTENTS_FLAC))
             {
-                byte[] aMetaDataBlockHeader = source.ReadBytes(4);
-                uint blockLength = StreamUtils.DecodeBEUInt24(aMetaDataBlockHeader, 1);
-                byte blockType = (byte)(aMetaDataBlockHeader[0] & 0x7F); // decode metablock type
+                source.Read(buffer, 0, 4);
+                //uint blockLength = StreamUtils.DecodeBEUInt24(buffer, 1);
+                byte blockType = (byte)(buffer[0] & 0x7F); // decode metablock type
                 isValidTagHeader = blockType < 7;
             }
 
@@ -787,8 +786,8 @@ namespace ATL.AudioData.IO
         public async Task<bool> WriteAsync(Stream s, TagData tag, ProgressToken<float> writeProgress = null)
         {
             bool result = true;
-            int writtenPages = 0;
-            long nextPageOffset = 0;
+            int writtenPages;
+            long nextPageOffset;
 
             // Read all the fields in the existing tag (including unsupported fields)
             var readTagParams = new ReadTagParams(true, true);
@@ -802,13 +801,13 @@ namespace ATL.AudioData.IO
                 {
                     await memStream.WriteAsync(VORBIS_COMMENT_ID, 0, VORBIS_COMMENT_ID.Length);
                     vorbisTag.switchOggBehaviour();
-                    vorbisTag.Write(memStream, tag);
+                    await vorbisTag.WriteAsync(memStream, tag);
                 }
                 else if (CONTENTS_OPUS == contents)
                 {
                     await memStream.WriteAsync(OPUS_TAG_ID, 0, OPUS_TAG_ID.Length);
                     vorbisTag.switchOggBehaviour();
-                    vorbisTag.Write(memStream, tag);
+                    await vorbisTag.WriteAsync(memStream, tag);
                 }
                 else if (CONTENTS_FLAC == contents)
                 {
