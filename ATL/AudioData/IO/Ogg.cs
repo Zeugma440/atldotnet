@@ -96,13 +96,13 @@ namespace ATL.AudioData.IO
         // Ogg page header
         private sealed class OggPageHeader
         {
-            public byte[] ID;                                               // Always "OggS"
-            public byte StreamVersion;                           // Stream structure version
+            private byte[] ID;                                              // Always "OggS"
+            private byte StreamVersion;                          // Stream structure version
             public byte TypeFlag;                                        // Header type flag
             public ulong AbsolutePosition;                      // Absolute granule position
             public int StreamId;                                     // Stream serial number
             public int PageNumber;                                   // Page sequence number
-            public uint Checksum;                                              // Page CRC32
+            private uint Checksum;                                             // Page CRC32
             public byte Segments;                                 // Number of page segments
             public byte[] LacingValues;                     // Lacing values - segment sizes
             public long Offset;                                             // Header offset
@@ -146,16 +146,18 @@ namespace ATL.AudioData.IO
 
             public static OggPageHeader ReadFromStream(BufferedBinaryReader r)
             {
-                OggPageHeader result = new OggPageHeader();
-                result.Offset = r.Position;
-                result.ID = r.ReadBytes(4);
-                result.StreamVersion = r.ReadByte();
-                result.TypeFlag = r.ReadByte();
-                result.AbsolutePosition = r.ReadUInt64();
-                result.StreamId = r.ReadInt32();
-                result.PageNumber = r.ReadInt32();
-                result.Checksum = r.ReadUInt32();
-                result.Segments = r.ReadByte();
+                OggPageHeader result = new OggPageHeader
+                {
+                    Offset = r.Position,
+                    ID = r.ReadBytes(4),
+                    StreamVersion = r.ReadByte(),
+                    TypeFlag = r.ReadByte(),
+                    AbsolutePosition = r.ReadUInt64(),
+                    StreamId = r.ReadInt32(),
+                    PageNumber = r.ReadInt32(),
+                    Checksum = r.ReadUInt32(),
+                    Segments = r.ReadByte()
+                };
                 result.LacingValues = r.ReadBytes(result.Segments);
                 return result;
             }
@@ -184,20 +186,11 @@ namespace ATL.AudioData.IO
                 return result;
             }
 
-            public int GetHeaderSize()
-            {
-                return 27 + LacingValues.Length;
-            }
+            public int HeaderSize => 27 + LacingValues.Length;
 
-            public bool IsValid()
-            {
-                return ID != null && ID.SequenceEqual(OGG_PAGE_ID);
-            }
+            public bool IsValid => ID != null && ID.SequenceEqual(OGG_PAGE_ID);
 
-            public bool IsFirstPage()
-            {
-                return 0 == (TypeFlag & 1);
-            }
+            public bool IsFirstPage => 0 == (TypeFlag & 1);
         }
 
 #pragma warning disable S4487 // Unread "private" fields should be removed
@@ -234,9 +227,9 @@ namespace ATL.AudioData.IO
             public byte[] ID;
             public byte Version;
             public byte OutputChannelCount;
-            public UInt16 PreSkip;
-            public UInt32 InputSampleRate;
-            public Int16 OutputGain;
+            public ushort PreSkip;
+            public uint InputSampleRate;
+            public short OutputGain;
             public byte ChannelMappingFamily;
 
             public byte StreamCount;
@@ -317,7 +310,7 @@ namespace ATL.AudioData.IO
 
         public Ogg(string filePath, Format format) : base(true, true, true, true)
         {
-            this.FileName = filePath;
+            FileName = filePath;
             audioFormat = format;
             resetData();
         }
@@ -457,17 +450,17 @@ namespace ATL.AudioData.IO
                     pageOffsets.Add(source.Position);
 
                     pageHeader = OggPageHeader.ReadFromStream(source);
-                    if (!pageHeader.IsValid()) return false;
+                    if (!pageHeader.IsValid) return false;
                     int pageSize = pageHeader.GetPageSize();
 
                     if (!pageCount.TryAdd(pageHeader.StreamId, 1))
                     {
-                        if (pageHeader.IsFirstPage())
+                        if (pageHeader.IsFirstPage)
                         {
                             int newPageCount = pageCount[pageHeader.StreamId] + 1;
                             pageCount[pageHeader.StreamId] = newPageCount;
-                            if (2 == newPageCount) info.CommentHeaderStart = source.Position - pageHeader.GetHeaderSize();
-                            else if (3 == newPageCount) info.SetupHeaderEnd = source.Position - pageHeader.GetHeaderSize();
+                            if (2 == newPageCount) info.CommentHeaderStart = source.Position - pageHeader.HeaderSize;
+                            else if (3 == newPageCount) info.SetupHeaderEnd = source.Position - pageHeader.HeaderSize;
                         }
                         if (isSupported[pageHeader.StreamId] && 2 == pageCount[pageHeader.StreamId]) // Comment packet
                         {
@@ -497,7 +490,7 @@ namespace ATL.AudioData.IO
                             isValidHeader = true;
                         }
                     }
-                    source.Seek(pageHeader.Offset + pageHeader.GetHeaderSize() + pageSize, SeekOrigin.Begin);
+                    source.Seek(pageHeader.Offset + pageHeader.HeaderSize + pageSize, SeekOrigin.Begin);
                 } while (pageCount[pageHeader.StreamId] < 3); // Stop when the two first pages (containing ID, Comment and Setup packets) have been scanned
 
                 AudioDataOffset = info.SetupHeaderEnd; // Not exactly true as audio is useless without the setup header
@@ -508,7 +501,7 @@ namespace ATL.AudioData.IO
                     if (CONTENTS_VORBIS == contents || CONTENTS_FLAC == contents)
                     {
                         // Determine the boundaries of 3rd header (Setup header) by searching from the last-but-one page
-                        if (pageOffsets.Count > 1) source.Position = pageOffsets[pageOffsets.Count - 2]; else source.Position = pageOffsets[0];
+                        source.Position = pageOffsets.Count > 1 ? pageOffsets[^2] : pageOffsets[0];
                         source.Position += OGG_PAGE_ID.Length;
                         if (StreamUtils.FindSequence(source, VORBIS_SETUP_ID))
                         {
@@ -954,10 +947,10 @@ namespace ATL.AudioData.IO
                 position = memStream.Position;
                 // Push current data to write header
                 // NB : We're manipulating the MemoryStream here; calling an async variant won't have any relevant effect on performance
-                StreamUtils.CopySameStream(memStream, memStream.Position, memStream.Position + header.GetHeaderSize(), bytesLeftToPage);
+                StreamUtils.CopySameStream(memStream, memStream.Position, memStream.Position + header.HeaderSize, bytesLeftToPage);
                 memStream.Seek(position, SeekOrigin.Begin);
 
-                pageHeaderOffsets.Add(new KeyValuePair<long, int>(position, header.GetPageSize() + header.GetHeaderSize()));
+                pageHeaderOffsets.Add(new KeyValuePair<long, int>(position, header.GetPageSize() + header.HeaderSize));
 
                 header.WriteToStream(memStream);
                 memStream.Seek(header.GetPageSize(), SeekOrigin.Current);
@@ -1000,7 +993,7 @@ namespace ATL.AudioData.IO
                 s.Seek(nextPageOffset, SeekOrigin.Begin);
                 header.ReadFromStream(s);
 
-                if (header.IsValid())
+                if (header.IsValid)
                 {
                     // Rewrite page number
                     writtenPages++;
@@ -1009,7 +1002,7 @@ namespace ATL.AudioData.IO
 
                     // Rewrite CRC
                     s.Seek(nextPageOffset, SeekOrigin.Begin);
-                    int dataSize = header.GetHeaderSize() + header.GetPageSize();
+                    int dataSize = header.HeaderSize + header.GetPageSize();
                     if (data.Length < dataSize) data = new byte[dataSize]; // Only realloc when size is insufficient
                     s.Read(data, 0, dataSize);
 
