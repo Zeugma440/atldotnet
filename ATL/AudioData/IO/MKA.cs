@@ -94,7 +94,7 @@ namespace ATL.AudioData.IO
 
         // TargetTypeValue Codes
         private const int TYPE_SHOT = 10;
-        private const int TYPE_SCENE = 20;
+        private const int TYPE_MOVEMENT = 20;
         private const int TYPE_TRACK = 30;
         private const int TYPE_SESSION = 40;
         private const int TYPE_ALBUM = 50;
@@ -105,7 +105,7 @@ namespace ATL.AudioData.IO
         private static readonly Dictionary<int, string> targetTypePrefixesMapping = new Dictionary<int, string>
         {
             { TYPE_SHOT, "shot"},
-            { TYPE_SCENE, "scene"},
+            { TYPE_MOVEMENT, "movement"},
             { TYPE_TRACK, "track"},
             { TYPE_SESSION, "session"},
             { TYPE_ALBUM, "album"},
