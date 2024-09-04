@@ -15,7 +15,6 @@ namespace ATL.AudioData.IO
     /// Class for Matroska Audio files manipulation (extension : .MKA)
     /// 
     /// Implementation notes
-    /// - EBML Elements with unknown length are not supported
     /// - AudioDataSize is not processed yet
     /// - Padding Elements are not supported
     /// - Chapters : Multiple EditionEntries are not supported; only 1st default, non-hidden is used
@@ -133,7 +132,7 @@ namespace ATL.AudioData.IO
             { "A_DTS", AudioDataIOFactory.CID_DTS },
             { "A_DTS/EXPRESS", AudioDataIOFactory.CID_DTS },
             { "A_DTS/LOSSLESS", AudioDataIOFactory.CID_DTS },
-            { "A_VORBIS", AudioDataIOFactory.CID_OGG },
+            { "A_VORBIS", AudioDataIOFactory.CID_OGG }, // TODO display Vorbis instead of Ogg
             { "A_FLAC", AudioDataIOFactory.CID_FLAC },
             // No support for RealMedia
             // No support for MS ACM
@@ -148,8 +147,9 @@ namespace ATL.AudioData.IO
             { "A_AAC/MPEG4/LTP", AudioDataIOFactory.CID_AAC },
             // No support for QuickTime audio (though MP4 might be close)
             { "A_TTA1", AudioDataIOFactory.CID_TTA },
-            { "A_WAVPACK4", AudioDataIOFactory.CID_WAVPACK }
+            { "A_WAVPACK4", AudioDataIOFactory.CID_WAVPACK },
             // No support for ATRAC1
+            { "A_OPUS", AudioDataIOFactory.CID_OGG } // TODO display Opus instead of Ogg
         };
 
         // Mapping between MKV tag names and ATL frame codes
