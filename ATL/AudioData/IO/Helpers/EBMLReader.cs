@@ -209,7 +209,9 @@ namespace ATL.AudioData
             switch (nbBytes)
             {
                 case 4:
-                    return ToSingle(buffer);
+                    byte[] tmpBuf = new byte[4];
+                    Array.Copy(buffer, tmpBuf, 4);
+                    return ToSingle(tmpBuf);
                 case 8:
                     return ToDouble(buffer);
                 default: return buffer[0];
