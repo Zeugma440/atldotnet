@@ -122,7 +122,9 @@ namespace ATL.AudioData
             SeekResult result = SeekResult.NOT_FOUND;
             long resultOffset = -1;
 
-            var seekTo = Math.Min(BaseStream.Position + readVint(), BaseStream.Length);
+            var eltSize = readVint();
+            if (eltSize < 0) eltSize = BaseStream.Length; // Unknown size => file's the limit
+            var seekTo = Math.Min(BaseStream.Position + eltSize, BaseStream.Length);
             while (result != SeekResult.FOUND_MATCH && BaseStream.Position < seekTo)
             {
                 var eltId = readVint(true);
