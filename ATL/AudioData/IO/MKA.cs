@@ -371,7 +371,7 @@ namespace ATL.AudioData.IO
                 }
 
                 reader.seek(trackEntryOffset);
-                if (reader.seekElement(0xE1)) audioOffset = reader.Position;
+                if (reader.seekElement(0xE1)) audioOffset = reader.Position; // Audio
             }
             else
             {
@@ -493,8 +493,8 @@ namespace ATL.AudioData.IO
             if (audioOffset > -1 && (0 == SampleRate || null == ChannelsArrangement || UNKNOWN == ChannelsArrangement))
             {
                 reader.seek(audioOffset);
-                if (0 == SampleRate && reader.seekElement(0xB5))
-                    SampleRate = (int)reader.readFloat(); // SamplingFrequency
+                if (0 == SampleRate && reader.seekElement(0xB5)) // SamplingFrequency
+                    SampleRate = (int)reader.readFloat(); 
 
                 reader.seek(audioOffset);
                 int nbChannels = 0;

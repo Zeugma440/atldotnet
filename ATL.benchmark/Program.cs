@@ -27,7 +27,7 @@ namespace ATL.benchmark
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            writeAt(@"D:\temp\flac\aaa.flac");
+            info(@"D:\temp\mka\recording.webm");
 
             //info(@"D:\temp\wav\74\empty_tagged_audacity.wav");
 
