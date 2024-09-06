@@ -408,6 +408,8 @@ namespace ATL.AudioData.IO
             }
             while (trakSize > 0);
 
+            if (Utils.ApproxEquals(calculatedDurationMs, 0)) readMoof(source.BaseStream);
+
             // Look for uuid atoms
             source.BaseStream.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
             Uuid uuid;
@@ -589,6 +591,62 @@ namespace ATL.AudioData.IO
             return true;
         }
 
+        // Try getting duration from the moof atom, if it exists
+        private void readMoof(Stream s)
+        {
+            s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
+            if (0 == navigateToAtom(s, "moof")) return;
+            if (0 == navigateToAtom(s, "traf")) return;
+            long trafOffset = s.Position;
+            if (0 == navigateToAtom(s, "tfhd")) return;
+            s.Seek(1, SeekOrigin.Current); // Version
+
+            byte[] data = new byte[4];
+            if (s.Read(data, 0, 3) < 3) return;
+            int flags = StreamUtils.DecodeBEInt24(data);
+            if (0 == (flags & 0x00000008)) return;
+
+            if (s.Read(data, 0, 4) < 4) return; // Track ID
+            if ((flags & 0x00000001) > 0) s.Seek(8, SeekOrigin.Current); // base_data_offset
+            if ((flags & 0x00000002) > 0) s.Seek(4, SeekOrigin.Current); // sample_description_index
+            if (s.Read(data, 0, 4) < 4) return;
+            int defaultSampleDuration = StreamUtils.DecodeBEInt32(data);
+
+            s.Seek(trafOffset, SeekOrigin.Begin);
+            uint atomSize = navigateToAtom(s, "trun");
+            long durationAll = 0;
+            while (atomSize > 0)
+            {
+                var trunOffset = s.Position;
+                s.Seek(1, SeekOrigin.Current); // Version
+                if (s.Read(data, 0, 3) < 3) return;
+                flags = StreamUtils.DecodeBEInt24(data);
+                if (s.Read(data, 0, 4) < 4) return;
+                int sampleCount = StreamUtils.DecodeBEInt32(data);
+
+                for (int i = 0; i < sampleCount; i++)
+                {
+                    if ((flags & 0x00000100) > 0) // Sample has its own duration
+                    {
+                        if ((flags & 0x00000001) > 0) s.Seek(4, SeekOrigin.Current); // data_offset
+                        if ((flags & 0x00000004) > 0) s.Seek(4, SeekOrigin.Current); // first_sample_flags
+                        if (s.Read(data, 0, 4) < 4) return;
+                        durationAll += StreamUtils.DecodeBEInt32(data);
+                    }
+                    else durationAll += defaultSampleDuration;
+                }
+
+                // Seek next trun atom
+                s.Seek(trunOffset + atomSize - 8, SeekOrigin.Begin);
+                if (s.Read(data, 0, 4) < 4) return;
+                atomSize = StreamUtils.DecodeBEUInt32(data);
+                if (s.Read(data, 0, 4) < 4) return;
+                if (!Utils.Latin1Encoding.GetString(data).Equals("trun")) break;
+            }
+
+            calculatedDurationMs = durationAll * 1000.0 / SampleRate;
+        }
+
         private long readTrack(
             BinaryReader source,
             ReadTagParams readTagParams,
@@ -710,7 +768,7 @@ namespace ATL.AudioData.IO
             else if ("soun".Equals(mediaType) || "vide".Equals(mediaType))
             {
                 mediaTrackOffsets.Add(trakPosition);
-                isCurrentTrackFirstAudioTrack = (1 == mediaTrackOffsets.Count);
+                isCurrentTrackFirstAudioTrack = 1 == mediaTrackOffsets.Count;
             }
 
             if (readTagParams.PrepareForWriting && isCurrentTrackOtherChapterTrack && !isCurrentTrackFirstChapterTextTrack)
@@ -719,7 +777,7 @@ namespace ATL.AudioData.IO
                 trackZoneName = ZONE_MP4_QT_CHAP_TXT_TRAK + "." + trackId;
                 structureHelper.AddZone(trakPosition, (int)trakSize, trackZoneName);
                 structureHelper.AddSize(moovPosition - 8, moovSize, trackZoneName);
-                structureHelper.AddCounter(trackCounterOffset, (1 == trackId) ? 2 : 1, trackZoneName);
+                structureHelper.AddCounter(trackCounterOffset, (1 != trackId) ? 1 : 2, trackZoneName);
             }
 
             source.BaseStream.Seek(mdiaPosition, SeekOrigin.Begin);
