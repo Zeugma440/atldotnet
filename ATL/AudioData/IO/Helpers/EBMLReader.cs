@@ -37,6 +37,7 @@ namespace ATL.AudioData
                     break;
                 }
             }
+            if (0 == nbBytes) return 0;
 
             // Neutralize Vint marker
             if (!raw) buffer[0] = (byte)(buffer[0] & EBMLHelper.DataMasks[nbBytes - 1]);
