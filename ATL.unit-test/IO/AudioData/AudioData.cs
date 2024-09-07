@@ -1,10 +1,6 @@
 ﻿using ATL.AudioData;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using static ATL.ChannelsArrangements;
 using static ATL.AudioData.AudioDataIOFactory;
-using System.IO;
-using System.Data.SqlTypes;
 
 namespace ATL.test.IO
 {
@@ -76,9 +72,9 @@ namespace ATL.test.IO
             Assert.AreEqual(isVbr, theReader.IsVBR);
             Assert.AreEqual(codecFamily, theReader.CodecFamily);
             Assert.AreEqual(channelsArrangement, theReader.ChannelsArrangement);
+            Assert.AreEqual(formatName, theReader.AudioFormat.Name);
             Assert.AreEqual(audioDataOffset, theReader.AudioDataOffset);
             Assert.AreEqual(audioDataSize, theReader.AudioDataSize);
-            Assert.AreEqual(formatName, theReader.AudioFormat.Name);
         }
 
 #pragma warning disable S2699 // Tests should include assertions
@@ -327,7 +323,8 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_MKA()
         {
-            testGenericAudio("MKA/mka.mka", 3422, 128, -1, 44100, false, CF_LOSSY, STEREO, "Matroska / MPEG", 459, 0 /* TODO */);
+            testGenericAudio("MKA/mka.mka", 3422, 128, -1, 44100, false, CF_LOSSY, STEREO, "Matroska / MPEG", 459, 69016);
+            testGenericAudio("MKA/no_info_duration.webm", 7159, 16, 0, 48000, false, CF_LOSSY, MONO, "Matroska / OGG", 167, 112605);
         }
 #pragma warning restore S2699 // Tests should include assertions
     }

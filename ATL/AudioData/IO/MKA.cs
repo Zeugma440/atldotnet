@@ -15,7 +15,6 @@ namespace ATL.AudioData.IO
     /// Class for Matroska Audio files manipulation (extension : .MKA)
     /// 
     /// Implementation notes
-    /// - AudioDataSize is not processed yet
     /// - Padding Elements are not supported
     /// - Chapters : Multiple EditionEntries are not supported; only 1st default, non-hidden is used
     /// - Chapters : Nested ChapterAtoms are not supported; only 1st level enabled, non-hidden are used
@@ -439,7 +438,7 @@ namespace ATL.AudioData.IO
 
             if (AudioDataOffset > -1)
             {
-                // TODO AudioDataSize preferrably witout scanning all Clusters
+                AudioDataSize = reader.BaseStream.Length - AudioDataOffset; // Approximate
 
                 // Try getting physical properties using the actual audio data header
                 try
@@ -483,7 +482,6 @@ namespace ATL.AudioData.IO
                 {
                     long infoOffset = reader.Position;
                     double duration = 0.0;
-                    long scale = 0;
 
                     if (reader.seekElement(0x4489)) duration = reader.readFloat(); // Duration
 
@@ -491,7 +489,7 @@ namespace ATL.AudioData.IO
                     if (reader.seekElement(0x2AD7B1)) trackScale = (long)reader.readUint(); // TimestampScale
 
                     // Convert ns to ms
-                    Duration = duration * scale / 1000000.0;
+                    Duration = duration * trackScale / 1000000.0;
                 }
             }
 
@@ -546,6 +544,9 @@ namespace ATL.AudioData.IO
                     Duration = StreamUtils.DecodeBEUInt16(reader.readBytes(2)) * trackScale / 1000000.0;
                 }
             }
+
+            // Approximate bitrate
+            if (Utils.ApproxEquals(BitRate, 0)) BitRate = AudioDataSize / Duration;
 
             if (audioOffset > -1 && (0 == SampleRate || null == ChannelsArrangement || UNKNOWN == ChannelsArrangement))
             {

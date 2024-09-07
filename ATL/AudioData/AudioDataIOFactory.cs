@@ -342,8 +342,8 @@ namespace ATL.AudioData
                     tempFmt.AddMimeType("audio/x-matroska");
                     tempFmt.AddMimeType("audio/webm");
                     tempFmt.AddExtension(".mka");
-                    tempFmt.AddExtension(".weba"); // Does that even work out of the box?
-                    tempFmt.AddExtension(".webm"); // Does that even work out of the box?
+                    tempFmt.AddExtension(".weba");
+                    tempFmt.AddExtension(".webm");
                     tempFmt.CheckHeader = MKA.IsValidHeader;
                     theFactory.addFormat(tempFmt);
                 }
