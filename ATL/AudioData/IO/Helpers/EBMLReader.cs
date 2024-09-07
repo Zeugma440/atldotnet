@@ -43,10 +43,7 @@ namespace ATL.AudioData
             if (!raw) buffer[0] = (byte)(buffer[0] & EBMLHelper.DataMasks[nbBytes - 1]);
 
             // Get extra bytes if needed
-            if (nbBytes > 1)
-            {
-                if (BaseStream.Read(buffer, 1, nbBytes - 1) < nbBytes - 1) return 0;
-            }
+            if (nbBytes > 1 && BaseStream.Read(buffer, 1, nbBytes - 1) < nbBytes - 1) return 0;
 
             // Unknown size (vint data are all 1's)
             if ((byte)(buffer[0] & EBMLHelper.DataMasks[nbBytes - 1]) == EBMLHelper.DataMasks[nbBytes - 1])

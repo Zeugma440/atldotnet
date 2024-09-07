@@ -578,7 +578,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private List<Tuple<long, ulong>> readSeekHead(EBMLReader reader)
+        private static List<Tuple<long, ulong>> readSeekHead(EBMLReader reader)
         {
             List<Tuple<long, ulong>> result = new List<Tuple<long, ulong>>();
             foreach (long offset in reader.seekElements(ID_SEEK))
