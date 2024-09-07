@@ -42,6 +42,10 @@ namespace ATL.AudioData.IO
         private const uint ID_INFO = 0x1549A966;
         private const uint ID_TRACKS = 0x1654AE6B;
         private const uint ID_CLUSTER = 0x1F43B675;
+        private const uint ID_TIMESTAMP = 0xE7;
+        private const uint ID_SIMPLEBLOCK = 0xA3;
+        private const uint ID_BLOCKGROUP = 0xA0;
+        private const uint ID_BLOCK = 0xA1;
         private const uint ID_CUES = 0x1C53BB6B;
 
         private const uint ID_ATTACHMENTS = 0x1941A469;
@@ -383,9 +387,9 @@ namespace ATL.AudioData.IO
             // Cluster with Timecode 0
             crits = new HashSet<Tuple<long, int>>
             {
-                new Tuple<long, int>(0xE7, 0), // Timestamp
+                new Tuple<long, int>(ID_TIMESTAMP, 0), // Timestamp
             };
-            res = reader.seekElement(0x1F43B675, crits); // Cluster
+            res = reader.seekElement(ID_CLUSTER, crits); // Cluster
             if (res != EBMLReader.SeekResult.FOUND_MATCH)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Couldn't locate Cluster for timestamp 0");
@@ -396,10 +400,10 @@ namespace ATL.AudioData.IO
             long blockSize = -1;
             while (-1 == AudioDataOffset)
             {
-                if (reader.seekElement(0xA0)) // BlockGroup
+                if (reader.seekElement(ID_BLOCKGROUP)) // BlockGroup
                 {
                     var loopOffset = reader.Position;
-                    if (reader.seekElement(0xA1)) // Block
+                    if (reader.seekElement(ID_BLOCK)) // Block
                     {
                         blockSize = reader.readVint(); // size
                         reader.readVint(); // trackId
@@ -417,7 +421,7 @@ namespace ATL.AudioData.IO
             reader.seek(zeroClusterOffset);
             while (-1 == AudioDataOffset)
             {
-                if (reader.seekElement(0xA3)) // SimpleBlock
+                if (reader.seekElement(ID_SIMPLEBLOCK)) // SimpleBlock
                 {
                     var loopOffset = reader.Position;
                     blockSize = reader.readVint(); // size
@@ -437,7 +441,7 @@ namespace ATL.AudioData.IO
             {
                 // TODO AudioDataSize preferrably witout scanning all Clusters
 
-                // Physical properties using the actual audio data header
+                // Try getting physical properties using the actual audio data header
                 try
                 {
                     if (containeeAudioFormat != Factory.UNKNOWN_FORMAT)
@@ -457,7 +461,7 @@ namespace ATL.AudioData.IO
                             CodecFamily = audioData.CodecFamily;
                             IsVBR = audioData.IsVBR;
                             BitRate = audioData.BitRate;
-                            Duration = audioData.Duration;
+                            if (!Utils.ApproxEquals(audioData.Duration, 0)) Duration = audioData.Duration;
                             SampleRate = audioData.SampleRate;
                             ChannelsArrangement = audioData.ChannelsArrangement;
                             BitDepth = audioData.BitDepth;
@@ -471,6 +475,7 @@ namespace ATL.AudioData.IO
             }
 
             // Try getting Duration from MKA metadata
+            long trackScale = 0;
             if (Utils.ApproxEquals(Duration, 0))
             {
                 reader.seek(segmentOffset);
@@ -483,10 +488,62 @@ namespace ATL.AudioData.IO
                     if (reader.seekElement(0x4489)) duration = reader.readFloat(); // Duration
 
                     reader.seek(infoOffset);
-                    if (reader.seekElement(0x2AD7B1)) scale = (long)reader.readUint(); // TimestampScale
+                    if (reader.seekElement(0x2AD7B1)) trackScale = (long)reader.readUint(); // TimestampScale
 
                     // Convert ns to ms
                     Duration = duration * scale / 1000000.0;
+                }
+            }
+
+            // Try getting Duration by reading Cluster and Block timecodes
+            long farthestClusterOffset = -1;
+            if (Utils.ApproxEquals(Duration, 0))
+            {
+                // Seek the Cluster with the highest timestamp
+                reader.seek(segmentOffset);
+                var clusterOffsets = reader.seekElements(ID_CLUSTER);
+                ulong highestTimestamp = 0;
+                foreach (var clusterOffset in clusterOffsets)
+                {
+                    reader.seek(clusterOffset);
+                    if (!reader.seekElement(ID_TIMESTAMP)) continue;
+                    var timestamp = reader.readUint();
+                    if (timestamp < highestTimestamp) continue;
+                    highestTimestamp = timestamp;
+                    farthestClusterOffset = clusterOffset;
+                }
+
+                // Within that cluster, seek the Block with the highest timestamp
+                reader.seek(farthestClusterOffset);
+                var blockGroups = reader.seekElements(ID_BLOCKGROUP);
+                // Assume the last BlockGroup is the one marking the last bit of audio data
+                var lastBgOffset = blockGroups.LastOrDefault();
+                if (lastBgOffset != 0)
+                {
+                    reader.seek(lastBgOffset);
+                    if (reader.seekElement(ID_BLOCK)) // Block
+                    {
+                        reader.readVint(); // size
+                        reader.readVint(); // trackId
+                        Duration = StreamUtils.DecodeBEUInt16(reader.readBytes(2)) * trackScale / 1000000.0;
+                    }
+                }
+            }
+
+            // Try getting Duration by reading Cluster and SimpleBlocks timecodes
+            if (Utils.ApproxEquals(Duration, 0))
+            {
+                // Within the farthest cluster, seek the Simple with the highest timestamp
+                reader.seek(farthestClusterOffset);
+                var simpleBlocks = reader.seekElements(ID_SIMPLEBLOCK);
+                // Assume the last BlockGroup is the one marking the last bit of audio data
+                var lastSbOffset = simpleBlocks.LastOrDefault();
+                if (lastSbOffset != 0)
+                {
+                    reader.seek(lastSbOffset);
+                    reader.readVint(); // size
+                    reader.readVint(); // trackId
+                    Duration = StreamUtils.DecodeBEUInt16(reader.readBytes(2)) * trackScale / 1000000.0;
                 }
             }
 
@@ -494,7 +551,7 @@ namespace ATL.AudioData.IO
             {
                 reader.seek(audioOffset);
                 if (0 == SampleRate && reader.seekElement(0xB5)) // SamplingFrequency
-                    SampleRate = (int)reader.readFloat(); 
+                    SampleRate = (int)reader.readFloat();
 
                 reader.seek(audioOffset);
                 int nbChannels = 0;

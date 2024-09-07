@@ -97,7 +97,9 @@ namespace ATL.AudioData
         public List<long> seekElements(long id)
         {
             List<long> results = new List<long>();
-            var seekTo = Math.Min(BaseStream.Position + readVint(), BaseStream.Length);
+            var eltSize = readVint();
+            if (eltSize < 0) eltSize = BaseStream.Length; // Unknown size => file's the limit
+            var seekTo = Math.Min(BaseStream.Position + eltSize, BaseStream.Length);
             while (BaseStream.Position < seekTo)
             {
                 var eltId = readVint(true);
