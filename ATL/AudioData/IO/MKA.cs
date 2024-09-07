@@ -119,7 +119,7 @@ namespace ATL.AudioData.IO
         private const int TRACKTYPE_AUDIO = 2;
 
         // Mapping between MKV format ID and ATL format IDs
-        private static readonly Dictionary<string, int> codecsMapping = new Dictionary<string, int>
+        private static readonly Dictionary<string, int> codecsMappingCodes = new Dictionary<string, int>
         {
             { "A_MPEG/L3", AudioDataIOFactory.CID_MP3 },
             { "A_MPEG/L2", AudioDataIOFactory.CID_MP3 },
@@ -135,7 +135,7 @@ namespace ATL.AudioData.IO
             { "A_DTS", AudioDataIOFactory.CID_DTS },
             { "A_DTS/EXPRESS", AudioDataIOFactory.CID_DTS },
             { "A_DTS/LOSSLESS", AudioDataIOFactory.CID_DTS },
-            { "A_VORBIS", AudioDataIOFactory.CID_OGG }, // TODO display Vorbis instead of Ogg
+            { "A_VORBIS", AudioDataIOFactory.CID_OGG },
             { "A_FLAC", AudioDataIOFactory.CID_FLAC },
             // No support for RealMedia
             // No support for MS ACM
@@ -152,8 +152,11 @@ namespace ATL.AudioData.IO
             { "A_TTA1", AudioDataIOFactory.CID_TTA },
             { "A_WAVPACK4", AudioDataIOFactory.CID_WAVPACK },
             // No support for ATRAC1
-            { "A_OPUS", AudioDataIOFactory.CID_OGG } // TODO display Opus instead of Ogg
+            { "A_OPUS", AudioDataIOFactory.CID_OGG }
         };
+
+        // Mapping between MKV format ID and ATL formats
+        private static readonly Dictionary<string, Format> codecsMapping = new Dictionary<string, Format>();
 
         // Mapping between MKV tag names and ATL frame codes
         private static readonly Dictionary<string, Field> frameMapping = new Dictionary<string, Field>()
@@ -266,6 +269,36 @@ namespace ATL.AudioData.IO
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
+        static MKA()
+        {
+            var formats = AudioDataIOFactory.GetInstance().getFormats();
+            foreach (var cmc in codecsMappingCodes)
+            {
+                var format = formats.Where(f => f.ID == cmc.Value).ToList();
+                if (format.Count > 0)
+                {
+                    var formatFinal = format[0];
+                    formatFinal = cmc.Key switch
+                    {
+                        "A_OPUS" => new Format(formatFinal) { Name = "Opus", ShortName = "Opus" },
+                        "A_VORBIS" => new Format(formatFinal) { Name = "Vorbis", ShortName = "Vorbis" },
+                        _ => formatFinal
+                    };
+                    codecsMapping.Add(cmc.Key, formatFinal);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public MKA(string filePath, Format format)
+        {
+            FileName = filePath;
+            containerAudioFormat = format;
+            resetData();
+        }
+
         protected void resetData()
         {
             SampleRate = 0;
@@ -283,16 +316,6 @@ namespace ATL.AudioData.IO
 
             segmentOffset = 0;
             seekHeads.Clear();
-        }
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public MKA(string filePath, Format format)
-        {
-            FileName = filePath;
-            containerAudioFormat = format;
-            resetData();
         }
 
         public static bool IsValidHeader(byte[] data) => EBML_MAGIC_NUMBER == StreamUtils.DecodeBEUInt32(data);
@@ -366,12 +389,7 @@ namespace ATL.AudioData.IO
 
                 var codecId = "";
                 if (reader.seekElement(0x86)) codecId = reader.readString().ToUpper(); // CodecID
-                if (codecsMapping.TryGetValue(codecId, out var value))
-                {
-                    var formats = AudioDataIOFactory.GetInstance().getFormats();
-                    var format = formats.Where(f => f.ID == value).ToList();
-                    if (format.Count > 0) containeeAudioFormat = format[0];
-                }
+                if (codecsMapping.TryGetValue(codecId, out var value)) containeeAudioFormat = value;
 
                 reader.seek(trackEntryOffset);
                 if (reader.seekElement(0xE1)) audioOffset = reader.Position; // Audio

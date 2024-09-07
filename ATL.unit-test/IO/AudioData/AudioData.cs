@@ -324,7 +324,7 @@ namespace ATL.test.IO
         public void Audio_MKA()
         {
             testGenericAudio("MKA/mka.mka", 3422, 128, -1, 44100, false, CF_LOSSY, STEREO, "Matroska / MPEG", 459, 69016);
-            testGenericAudio("MKA/no_info_duration.webm", 7159, 16, 0, 48000, false, CF_LOSSY, MONO, "Matroska / OGG", 167, 112605);
+            testGenericAudio("MKA/no_info_duration.webm", 7159, 16, 0, 48000, false, CF_LOSSY, MONO, "Matroska / Opus", 167, 112605);
         }
 #pragma warning restore S2699 // Tests should include assertions
     }
