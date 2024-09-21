@@ -849,7 +849,7 @@ namespace ATL.AudioData.IO
 
 
             // == READ ACTUAL FRAME DATA
-            var dataPosition = source.Position;
+            var dataOffset = source.Position;
 
             if (dataSize >= 0 && dataSize < source.Length)
             {
@@ -887,13 +887,13 @@ namespace ATL.AudioData.IO
                         int entryCount = source.ReadByte();
                         for (int i = 0; i < entryCount; i++) StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Skip chapter element IDs
                                                                                                                                  // There's an optional header here
-                        if (source.Position - dataPosition < Frame.Size && "TIT2".Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4)), StringComparison.OrdinalIgnoreCase))
+                        if (source.Position - dataOffset < Frame.Size && "TIT2".Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4)), StringComparison.OrdinalIgnoreCase))
                         {
                             source.Seek(6, SeekOrigin.Current); // Skip size and flags
                             encodingCode = source.ReadByte();
                             Encoding encoding = decodeID3v2CharEncoding(encodingCode);
                             if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode || 2 == encodingCode)) readBOM(source);
-                            strData = StreamUtils.ReadNullTerminatedStringFixed(source, encoding, (int)(dataPosition + Frame.Size - source.Position));
+                            strData = StreamUtils.ReadNullTerminatedStringFixed(source, encoding, (int)(dataOffset + Frame.Size - source.Position));
                         }
                         else
                         {
@@ -938,11 +938,30 @@ namespace ATL.AudioData.IO
                     }
                     else if (Frame.ID.StartsWith("WXX")) // Custom URL
                     {
-                        // Description encoded with current encoding
-                        strData = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
-                        strData += Settings.InternalValueSeparator;
-                        // URL encoded in ISO-8859-1
-                        strData += Utils.Latin1Encoding.GetString(source.ReadBytes((int)(dataSize - (source.Position - dataPosition))));
+                        var terminator = getNullTerminatorFromEncoding(frameEncoding);
+                        // Find the separator
+                        if (StreamUtils.FindSequence(source, terminator, dataSize))
+                        {
+                            var secondPartOffset = source.Position;
+                            var firstPartSize = (int)(secondPartOffset - terminator.Length - dataOffset);
+                            source.Seek(dataOffset, SeekOrigin.Begin);
+                            byte[] bData = source.ReadBytes(firstPartSize);
+                            // Description encoded with current encoding
+                            strData = frameEncoding.GetString(bData) + Settings.InternalValueSeparator;
+                            var secondPartSize = dataSize - firstPartSize - terminator.Length;
+                            if (secondPartSize > 0)
+                            {
+                                source.Seek(secondPartOffset, SeekOrigin.Begin);
+                                bData = source.ReadBytes(secondPartSize);
+                                // URL encoded in ISO-8859-1
+                                strData += Utils.Latin1Encoding.GetString(bData);
+                            }
+                        }
+                        else
+                        { // No separator (bad formatting) : take one single string with current encoding
+                            byte[] bData = source.ReadBytes(dataSize);
+                            strData = frameEncoding.GetString(bData) + Settings.InternalValueSeparator;
+                        }
                     }
                     else
                     {
@@ -1023,7 +1042,7 @@ namespace ATL.AudioData.IO
                         }
                     }
 
-                    if (TAG_VERSION_2_2 == m_tagVersion) source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
+                    if (TAG_VERSION_2_2 == m_tagVersion) source.Seek(dataOffset + dataSize, SeekOrigin.Begin);
                 }
                 else // Picture frame
                 {
@@ -1091,7 +1110,7 @@ namespace ATL.AudioData.IO
                         }
                     }
                 } // Picture frame
-                source.Seek(dataPosition + dataSize, SeekOrigin.Begin);
+                source.Seek(dataOffset + dataSize, SeekOrigin.Begin);
             }
             else // Data size <= 0 or larger than file
             {
