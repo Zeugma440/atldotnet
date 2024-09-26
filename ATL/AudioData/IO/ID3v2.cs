@@ -991,7 +991,8 @@ namespace ATL.AudioData.IO
                             {
                                 parts = strData.Trim().Split(new char[] { VALUE_SEPARATOR_24 }, StringSplitOptions.RemoveEmptyEntries);
                             }
-                            else if (multipleValuev23Fields.Contains(Frame.ID)) // Only specific text information frames may contain multiple values on ID3v2.2-3
+                            // Only specific text information frames may contain multiple values on ID3v2.2-3
+                            else if (multipleValuev23Fields.Contains(Frame.ID) && Settings.ID3v2_separatev2v3Values)
                             {
                                 parts = strData.Trim().Split(new char[] { VALUE_SEPARATOR_22 }, StringSplitOptions.RemoveEmptyEntries);
                             }

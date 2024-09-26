@@ -184,6 +184,12 @@ namespace ATL
         public static bool ID3v2_writePictureDataLengthIndicator = true;
 
         /// <summary>
+        /// ID3v2.2, ID3v2.3 : Set to false to keep raw data in fields that have multiple values (e.g. TP1, TCM, TCOM...)
+        /// Default : true
+        /// </summary>
+        public static bool ID3v2_separatev2v3Values = true;
+
+        /// <summary>
         /// MP4 : Set to true to always create chapters in Nero format (chpl)
         /// Default : true
         /// </summary>
