@@ -591,57 +591,73 @@ namespace ATL.AudioData.IO
             return true;
         }
 
-        // Try getting duration from the moof atom, if it exists
+        // Try getting duration from moof atoms (fragmented MP4), if they exist
         private void readMoof(Stream s)
         {
-            s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            if (0 == navigateToAtom(s, "moof")) return;
-            if (0 == navigateToAtom(s, "traf")) return;
-            long trafOffset = s.Position;
-            if (0 == navigateToAtom(s, "tfhd")) return;
-            s.Seek(1, SeekOrigin.Current); // Version
-
-            byte[] data = new byte[4];
-            if (s.Read(data, 0, 3) < 3) return;
-            int flags = StreamUtils.DecodeBEInt24(data);
-            if (0 == (flags & 0x00000008)) return;
-
-            if (s.Read(data, 0, 4) < 4) return; // Track ID
-            if ((flags & 0x00000001) > 0) s.Seek(8, SeekOrigin.Current); // base_data_offset
-            if ((flags & 0x00000002) > 0) s.Seek(4, SeekOrigin.Current); // sample_description_index
-            if (s.Read(data, 0, 4) < 4) return;
-            int defaultSampleDuration = StreamUtils.DecodeBEInt32(data);
-
-            s.Seek(trafOffset, SeekOrigin.Begin);
-            uint atomSize = navigateToAtom(s, "trun");
             long durationAll = 0;
-            while (atomSize > 0)
-            {
-                var trunOffset = s.Position;
-                s.Seek(1, SeekOrigin.Current); // Version
-                if (s.Read(data, 0, 3) < 3) return;
-                flags = StreamUtils.DecodeBEInt24(data);
-                if (s.Read(data, 0, 4) < 4) return;
-                int sampleCount = StreamUtils.DecodeBEInt32(data);
+            s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-                for (int i = 0; i < sampleCount; i++)
+            uint moofSize = navigateToAtom(s, "moof");
+            while (moofSize > 0)
+            {
+                var moofOffset = s.Position;
+                if (0 == navigateToAtom(s, "traf")) break;
+                long trafOffset = s.Position;
+                if (0 == navigateToAtom(s, "tfhd")) break;
+                s.Seek(1, SeekOrigin.Current); // Version
+
+                byte[] data = new byte[4];
+                if (s.Read(data, 0, 3) < 3) break;
+                int flags = StreamUtils.DecodeBEInt24(data);
+                if (0 == (flags & 0x00000008)) break;
+
+                if (s.Read(data, 0, 4) < 4) break; // Track ID
+                if ((flags & 0x00000001) > 0) s.Seek(8, SeekOrigin.Current); // base_data_offset
+                if ((flags & 0x00000002) > 0) s.Seek(4, SeekOrigin.Current); // sample_description_index
+                if (s.Read(data, 0, 4) < 4) break;
+                int defaultSampleDuration = StreamUtils.DecodeBEInt32(data);
+
+                s.Seek(trafOffset, SeekOrigin.Begin);
+                uint trunSize = navigateToAtom(s, "trun");
+                while (trunSize > 0)
                 {
-                    if ((flags & 0x00000100) > 0) // Sample has its own duration
+                    var trunOffset = s.Position;
+                    s.Seek(1, SeekOrigin.Current); // Version
+                    if (s.Read(data, 0, 3) < 3) break;
+                    flags = StreamUtils.DecodeBEInt24(data);
+                    if (s.Read(data, 0, 4) < 4) break;
+                    int sampleCount = StreamUtils.DecodeBEInt32(data);
+
+                    for (int i = 0; i < sampleCount; i++)
                     {
-                        if ((flags & 0x00000001) > 0) s.Seek(4, SeekOrigin.Current); // data_offset
-                        if ((flags & 0x00000004) > 0) s.Seek(4, SeekOrigin.Current); // first_sample_flags
-                        if (s.Read(data, 0, 4) < 4) return;
-                        durationAll += StreamUtils.DecodeBEInt32(data);
+                        if ((flags & 0x00000100) > 0) // Sample has its own duration
+                        {
+                            if ((flags & 0x00000001) > 0) s.Seek(4, SeekOrigin.Current); // data_offset
+                            if ((flags & 0x00000004) > 0) s.Seek(4, SeekOrigin.Current); // first_sample_flags
+                            if (s.Read(data, 0, 4) < 4) break;
+                            durationAll += StreamUtils.DecodeBEInt32(data);
+                        }
+                        else durationAll += defaultSampleDuration;
                     }
-                    else durationAll += defaultSampleDuration;
+
+                    // Seek next trun atom
+                    s.Seek(trunOffset + trunSize - 8, SeekOrigin.Begin);
+                    if (s.Read(data, 0, 4) < 4) break;
+                    trunSize = StreamUtils.DecodeBEUInt32(data);
+                    if (s.Read(data, 0, 4) < 4) break;
+                    if (!Utils.Latin1Encoding.GetString(data).Equals("trun")) break;
                 }
 
-                // Seek next trun atom
-                s.Seek(trunOffset + atomSize - 8, SeekOrigin.Begin);
-                if (s.Read(data, 0, 4) < 4) return;
-                atomSize = StreamUtils.DecodeBEUInt32(data);
-                if (s.Read(data, 0, 4) < 4) return;
-                if (!Utils.Latin1Encoding.GetString(data).Equals("trun")) break;
+                // Seek next moof atom, skipping the mdat atom
+                s.Seek(moofOffset + moofSize - 8, SeekOrigin.Begin);
+                if (s.Read(data, 0, 4) < 4) break;
+                var mdatSize = StreamUtils.DecodeBEUInt32(data);
+                s.Seek(mdatSize - 4, SeekOrigin.Current);
+                if (s.Read(data, 0, 4) < 4) break;
+                moofSize = StreamUtils.DecodeBEUInt32(data);
+                if (s.Read(data, 0, 4) < 4) break;
+                var atomName = Utils.Latin1Encoding.GetString(data);
+                if (!atomName.Equals("moof")) break;
             }
 
             calculatedDurationMs = durationAll * 1000.0 / SampleRate;

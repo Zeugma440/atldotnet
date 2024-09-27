@@ -103,7 +103,7 @@ namespace ATL.test.IO
         public void Audio_MP4()
         {
             testGenericAudio("MP4/mp4.m4a", 14053, 75, -1, 48000, true, CF_LOSSY, ISO_3_4_1, "MPEG-4 Part 14", 25746, 131708);
-            testGenericAudio("MP4/no_duration_in_moov.mp4", 87211, 0, -1, 48000, false, CF_LOSSY, STEREO, "MPEG-4 Part 14", 18820, 2252); // Bitrate is 0 as the MDAT has been manually truncated
+            testGenericAudio("MP4/fragmented.mp4", 87211, 0, -1, 48000, false, CF_LOSSY, STEREO, "MPEG-4 Part 14", 18820, 2252); // Bitrate is 0 as the MDAT has been manually truncated
         }
 
         [TestMethod]
