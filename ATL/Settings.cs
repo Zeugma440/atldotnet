@@ -240,6 +240,12 @@ namespace ATL
         public static int GYM_VGM_playbackRate = 0;
 
         /// <summary>
+        /// MP3 : Set to true to calculate the exact duration of the track (parsing the file will be longer)
+        /// Default : false (fast parsing)
+        /// </summary>
+        public static bool MP3_parseExactDuration = false;
+
+        /// <summary>
         /// M3U : Use extended format to write the playlist
         /// Default : true
         /// </summary>
