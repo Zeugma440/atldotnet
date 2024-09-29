@@ -175,7 +175,7 @@ namespace ATL.AudioData.IO
             private bool OriginalBit;                        // True if original media
             private byte EmphasisID;                                    // Emphasis ID
 
-            private int m_size;                                 // Frame size (bytes)
+            private int m_size;                                  // Frame size (bytes)
 
             public void Reset()
             {
@@ -221,43 +221,44 @@ namespace ATL.AudioData.IO
             public string Layer => MPEG_LAYER[LayerID];
             public ushort BitRate => MPEG_BIT_RATE[VersionID, LayerID, BitRateID];
             public ushort SampleRate => MPEG_SAMPLE_RATE[VersionID, SampleRateID];
+            public int Padding => PaddingBit ? 1 : 0;
 
 
-            // This formula only works for Layers II and III
             public int Size
             {
                 get
                 {
-                    if (m_size < 1) m_size = (int)Math.Floor(Coefficient * BitRate * 1000.0 / SampleRate) + Padding;
+                    if (m_size < 1)
+                    {
+                        if (MPEG_LAYER_I == LayerID)
+                        {
+                            m_size = (int)Math.Floor((Coefficient * BitRate * 1000.0 / SampleRate) + Padding) * 4;
+                        }
+                        else // Layers II and III
+                        {
+                            m_size = (int)Math.Floor(Coefficient * BitRate * 1000.0 / SampleRate) + Padding;
+                        }
+                    }
+
                     return m_size;
                 }
             }
 
             /// <summary>
             /// Get frame size coefficient
+            /// https://stackoverflow.com/a/62539671
             /// </summary>
             public byte Coefficient
             {
                 get
                 {
                     if (MPEG_VERSION_1 == VersionID)
-                        if (MPEG_LAYER_I == LayerID) return 48;
+                        if (MPEG_LAYER_I == LayerID) return 12;
                         else return 144;
                     else
-                        if (MPEG_LAYER_I == LayerID) return 24;
+                        if (MPEG_LAYER_I == LayerID) return 12;
                     else if (MPEG_LAYER_II == LayerID) return 144;
                     else return 72;
-                }
-            }
-
-            public byte Padding
-            {
-                get
-                {
-                    if (PaddingBit)
-                        if (MPEG_LAYER_I == LayerID) return 4;
-                        else return 1;
-                    else return 0;
                 }
             }
 
@@ -289,18 +290,11 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            public double Duration
-            {
-                get
-                {
-                    return Coefficient * 1000.0 / SampleRate * 8.0;
-                }
-            }
+            public double Duration => Size * 1.0 / BitRate * 8.0;
         }
 
         private VBRData vbrData = new VBRData();
         private FrameHeader FirstFrame = new FrameHeader();
-        private double exactDuration = -1;
         private readonly Format audioFormat;
 
 
@@ -474,7 +468,6 @@ namespace ATL.AudioData.IO
 
         private double getDuration()
         {
-            if (exactDuration > -1) return exactDuration;
             if (FirstFrame.Found)
                 if (vbrData.Found && (vbrData.Frames > 0))
                     return vbrData.Frames * FirstFrame.Coefficient * 8.0 * 1000.0 / FirstFrame.SampleRate;
@@ -641,18 +634,16 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private void parseExactDuration(BufferedBinaryReader reader)
+        private long parseExactAudioDataSize(BufferedBinaryReader reader)
         {
             byte[] buffer = new byte[4];
-            double totalDuration = FirstFrame.Duration;
             reader.Seek(FirstFrame.Offset, SeekOrigin.Begin);
             FrameHeader nextFrame = findNextFrame(reader, FirstFrame, buffer);
             while (nextFrame.Found)
             {
-                totalDuration += nextFrame.Duration;
                 nextFrame = findNextFrame(reader, nextFrame, buffer);
             }
-            exactDuration = totalDuration;
+            return reader.Position - FirstFrame.Offset;
         }
 
         public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
@@ -672,8 +663,8 @@ namespace ATL.AudioData.IO
             }
 
             AudioDataOffset = FirstFrame.Offset;
-            AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
-            if (Settings.MP3_parseExactDuration) parseExactDuration(reader);
+            if (Settings.MP3_parseExactDuration) AudioDataSize = parseExactAudioDataSize(reader);
+            else AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
 
             return true;
         }
