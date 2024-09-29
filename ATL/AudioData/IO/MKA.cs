@@ -664,9 +664,11 @@ namespace ATL.AudioData.IO
         private void readTag(EBMLReader reader)
         {
             var tagOffset = reader.Position;
-            if (!reader.seekElement(ID_TARGETS)) return;
-            if (!reader.seekElement(ID_TARGETTYPEVALUE)) return;
-            int targetTypeValue = (int)reader.readUint();
+            int targetTypeValue = TYPE_TRACK; // Default when no data
+            if (reader.seekElement(ID_TARGETS) && reader.seekElement(ID_TARGETTYPEVALUE))
+            {
+                targetTypeValue = (int)reader.readUint();
+            }
 
             reader.seek(tagOffset);
             foreach (long offset in reader.seekElements(ID_SIMPLETAG))
