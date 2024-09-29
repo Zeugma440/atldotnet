@@ -191,9 +191,10 @@ namespace ATL
                 var bytesRead = 0;
                 while (bytesRead != count - availableBytes)
                 {
-                    var read = stream.Read(buffer, offset + availableBytes + bytesRead, count - availableBytes - bytesRead);
+                    var toRead = count - availableBytes - bytesRead;
+                    var read = stream.Read(buffer, offset + availableBytes + bytesRead, toRead);
                     bytesRead += read;
-                    if (0 == read && stream.Length == stream.Position) break;
+                    if (read < toRead || (0 == read && stream.Length == stream.Position)) break;
                 }
 
                 streamPosition += bytesRead;
