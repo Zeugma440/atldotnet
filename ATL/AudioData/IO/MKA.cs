@@ -875,7 +875,7 @@ namespace ATL.AudioData.IO
         protected override void postprocessWrite(Stream s)
         {
             // Write Segment header = final size of the file over 8 bytes
-            s.Seek(segmentOffset, SeekOrigin.Begin);
+            s.Seek(structureHelper.getCorrectedOffset(segmentOffset), SeekOrigin.Begin);
             s.Write(EBMLHelper.EncodeVint((ulong)(s.Length - 8 - s.Position), false));
         }
 
