@@ -414,7 +414,7 @@ namespace ATL.AudioData.IO
             }
             long zeroClusterOffset = reader.Position;
 
-            long blockSize = -1;
+            long blockAudioSize = -1;
             while (-1 == AudioDataOffset)
             {
                 if (reader.seekElement(ID_BLOCKGROUP)) // BlockGroup
@@ -422,11 +422,13 @@ namespace ATL.AudioData.IO
                     var loopOffset = reader.Position;
                     if (reader.seekElement(ID_BLOCK)) // Block
                     {
-                        blockSize = reader.readVint(); // size
+                        var blockSize = reader.readVint(); // size
+                        var blockOffset = reader.Position;
                         reader.readVint(); // trackId
                         if (0 == StreamUtils.DecodeBEUInt16(reader.readBytes(2))) // Timestamp zero
                         {
                             AudioDataOffset = reader.Position + 1; // Ignore flags
+                            blockAudioSize = blockSize - AudioDataOffset + blockOffset;
                         }
                     }
 
@@ -441,12 +443,14 @@ namespace ATL.AudioData.IO
                 if (reader.seekElement(ID_SIMPLEBLOCK)) // SimpleBlock
                 {
                     var loopOffset = reader.Position;
-                    blockSize = reader.readVint(); // size
+                    var blockSize = reader.readVint(); // size
+                    var blockOffset = reader.Position;
                     reader.readVint(); // trackId
                     if (0 == StreamUtils.DecodeBEUInt16(reader.readBytes(2))) // Timestamp zero
                     {
                         AudioDataOffset = reader.Position + 1; // Ignore flags
                         // TODO adjust offset according to lacing mode
+                        blockAudioSize = blockSize - AudioDataOffset + blockOffset;
                     }
 
                     if (-1 == AudioDataOffset) reader.seek(loopOffset);
@@ -466,8 +470,8 @@ namespace ATL.AudioData.IO
                         // Copy block to MemoryStream
                         // TODO find a way to optimize memory by clamping the raw stream to the block's limits
                         reader.seek(AudioDataOffset);
-                        using var memStream = new MemoryStream((int)blockSize);
-                        StreamUtils.CopyStream(reader.BaseStream, memStream, blockSize);
+                        using var memStream = new MemoryStream((int)blockAudioSize);
+                        StreamUtils.CopyStream(reader.BaseStream, memStream, blockAudioSize);
                         memStream.Seek(0, SeekOrigin.Begin);
 
                         IAudioDataIO audioData = AudioDataIOFactory.GetInstance().GetFromStream(memStream);
