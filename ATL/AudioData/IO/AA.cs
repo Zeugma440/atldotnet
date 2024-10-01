@@ -314,7 +314,7 @@ namespace ATL.AudioData.IO
             if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>(); else tagData.Chapters.Clear();
             double cumulatedDuration = 0;
             int idx = 1;
-            while (source.Position < offset + size)
+            while (source.Position < offset + size && source.Position < source.Length)
             {
                 uint chapterSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
                 uint chapterOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
