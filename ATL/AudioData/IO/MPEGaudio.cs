@@ -232,7 +232,7 @@ namespace ATL.AudioData.IO
                     {
                         if (MPEG_LAYER_I == LayerID)
                         {
-                            m_size = (int)Math.Floor((Coefficient * BitRate * 1000.0 / SampleRate) + Padding) * 4;
+                            m_size = (int)((Math.Floor(Coefficient * BitRate * 1000.0 / SampleRate) + Padding) * 4);
                         }
                         else // Layers II and III
                         {
@@ -521,74 +521,70 @@ namespace ATL.AudioData.IO
              * The most solid way to deal with all of them is to "scan" the file until proper MP3 header is found.
              * This method may not the be fastest, but ensures audio data is actually detected, whatever garbage lies before
              */
-
-            if (!result.Found)
+            if (!result.Found && (buffer[0] == buffer[1]) && (buffer[1] == buffer[2]) && (buffer[2] == buffer[3]))
             {
                 // "Quick win" for files starting with padding bytes
                 // 4 identical bytes => file starts with padding bytes => Skip padding
-                if ((buffer[0] == buffer[1]) && (buffer[1] == buffer[2]) && (buffer[2] == buffer[3]))
+                long paddingEndOffset = StreamUtils.TraversePadding(source);
+                source.Seek(paddingEndOffset, SeekOrigin.Begin);
+
+                // If padding uses 0xFF bytes, take one step back in case header lies there
+                if (0xFF == buffer[0]) source.Seek(-1, SeekOrigin.Current);
+
+                if (source.Read(buffer, 0, 4) < 4) return result;
+                result.Found = IsValidFrameHeader(buffer);
+            }
+
+            long id3v2Size = (null == sizeInfo) ? 0 : sizeInfo.ID3v2Size;
+            long limit = id3v2Size + (long)Math.Round((source.Length - id3v2Size) * 0.3);
+            int iterations = 0;
+            while (source.Position < limit)
+            {
+                // If above method fails, blindly look for the first frame header
+                // Look for the beginning of the header (2nd byte is variable, so it cannot be searched using a static value)
+                while (!result.Found && source.Position < limit)
                 {
-                    long paddingEndOffset = StreamUtils.TraversePadding(source);
-                    source.Seek(paddingEndOffset, SeekOrigin.Begin);
+                    while (0xFF != source.ReadByte() && source.Position < limit) { /* just advance the stream */ }
 
-                    // If padding uses 0xFF bytes, take one step back in case header lies there
-                    if (0xFF == buffer[0]) source.Seek(-1, SeekOrigin.Current);
-
-                    if (source.Read(buffer, 0, 4) < 4) return result;
+                    source.Seek(-1, SeekOrigin.Current);
+                    if (source.Read(buffer, 0, 4) < 4) break;
                     result.Found = IsValidFrameHeader(buffer);
                 }
 
-                // Blindly look for the first frame header
-                if (!result.Found)
+                // Valid header candidate found
+                // => let's see if it is a legit MP3 header by using its Size descriptor to find the next header
+                // which in turn should at least share the same version ID and layer
+                if (result.Found)
                 {
-                    source.Seek(-4, SeekOrigin.Current);
-                    long id3v2Size = (null == sizeInfo) ? 0 : sizeInfo.ID3v2Size;
-                    long limit = id3v2Size + (long)Math.Round((source.Length - id3v2Size) * 0.3);
+                    result.LoadFromByteArray(buffer);
+                    result.Offset = source.Position - 4;
 
-                    // Look for the beginning of the header (2nd byte is variable, so it cannot be searched using a static value)
-                    while (!result.Found && source.Position < limit)
+                    // One single frame to analyze
+                    if (0 == iterations && source.Length <= result.Offset + result.Size) break;
+
+                    FrameHeader nextFrame = findNextFrame(source, result, buffer);
+                    result.Found = nextFrame.Found;
+
+                    if (result.Found && result.LayerID == nextFrame.LayerID && result.VersionID == nextFrame.VersionID)
                     {
-                        while (0xFF != source.ReadByte() && source.Position < limit) { /* just advance the stream */ }
-
-                        source.Seek(-1, SeekOrigin.Current);
-                        if (source.Read(buffer, 0, 4) < 4) break;
-                        result.Found = IsValidFrameHeader(buffer);
-
-                        // Valid header candidate found
-                        // => let's see if it is a legit MP3 header by using its Size descriptor to find the next header
-                        // which in turn should at least share the same version ID and layer
-                        if (result.Found)
-                        {
-                            result.LoadFromByteArray(buffer);
-                            result.Offset = source.Position - 4;
-
-                            FrameHeader nextFrame = findNextFrame(source, result, buffer);
-                            result.Found = nextFrame.Found;
-
-                            if (result.Found && result.LayerID == nextFrame.LayerID && result.VersionID == nextFrame.VersionID)
-                            {
-                                source.Seek(result.Offset + 4, SeekOrigin.Begin); // Success ! Go back to header candidate position
-                                break;
-                            }
-
-                            // Restart looking for a candidate
-                            source.Seek(result.Offset + 1, SeekOrigin.Begin);
-                            result.Found = false;
-                        }
-                        else
-                        {
-                            if (source.Position < limit) source.Seek(-3, SeekOrigin.Current);
-                            result.Found = false;
-                        }
+                        source.Seek(result.Offset + 4, SeekOrigin.Begin); // Success ! Go back to header candidate position
+                        break;
                     }
+
+                    // Restart looking for a candidate
+                    source.Seek(result.Offset + 1, SeekOrigin.Begin);
+                    result.Found = false;
                 }
+                else
+                {
+                    if (source.Position < limit) source.Seek(-3, SeekOrigin.Current);
+                    result.Found = false;
+                }
+                iterations++;
             }
 
             if (result.Found && oVBR != null)
             {
-                result.LoadFromByteArray(buffer);
-                result.Offset = source.Position - 4;
-
                 // Look for VBR signature
                 oVBR = findVBR(source, result.Offset + result.VBRDeviation);
 

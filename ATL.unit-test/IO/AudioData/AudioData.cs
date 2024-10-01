@@ -101,6 +101,8 @@ namespace ATL.test.IO
                 testGenericAudio("MP3/headerPatternIsNotHeader.mp3", 139, 192, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 1252, 3340);
                 // Malpositioned header 2
                 testGenericAudio("MP3/truncated_frame.mp3", 498, 320, -1, 48000, false, CF_LOSSY, STEREO, "MPEG Audio (Layer III)", 954, 19908);
+                // Fake header + garbage before actual header
+                testGenericAudio("MP3/garbage_before_header.mp3", 6142, 64, -1, 24000, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 141, 49139);
                 // Contradictory frames
                 testGenericAudio("MP3/different_bitrates_modes.mp3", 6439, 128, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 45, 103025);
 
@@ -118,9 +120,11 @@ namespace ATL.test.IO
                 // VBR
                 testGenericAudio("MP3/01 - Title Screen.mp3", 3866, 129, -1, 44100, true, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 2048, 62346);
                 // Malpositioned header
-                testGenericAudio("MP3/headerPatternIsNotHeader.mp3", 156, 192, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 1252, 3756);
+                testGenericAudio("MP3/headerPatternIsNotHeader.mp3", 139, 192, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 1252, 3340);
                 // Malpositioned header 2
-                testGenericAudio("MP3/truncated_frame.mp3", 504, 320, -1, 48000, false, CF_LOSSY, STEREO, "MPEG Audio (Layer III)", 954, 20160);
+                testGenericAudio("MP3/truncated_frame.mp3", 498, 320, -1, 48000, false, CF_LOSSY, STEREO, "MPEG Audio (Layer III)", 954, 19908);
+                // Fake header + garbage before actual header
+                testGenericAudio("MP3/garbage_before_header.mp3", 6142, 64, -1, 24000, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 141, 49139);
                 // Contradictory frames
                 testGenericAudio("MP3/different_bitrates_modes.mp3", 6439, 128, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 45, 103025);
             }

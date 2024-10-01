@@ -156,7 +156,7 @@ namespace ATL
             }
             else // Jump outside buffer: move the whole buffer at the beginning of the zone to read
             {
-                streamPosition = bufferOffset + cursorPosition + delta;
+                streamPosition = Math.Min(bufferOffset + cursorPosition + delta, streamSize);
                 stream.Position = streamPosition;
                 fillBuffer();
             }
