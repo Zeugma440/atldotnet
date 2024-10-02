@@ -103,6 +103,8 @@ namespace ATL.test.IO
                 testGenericAudio("MP3/truncated_frame.mp3", 498, 320, -1, 48000, false, CF_LOSSY, STEREO, "MPEG Audio (Layer III)", 954, 19908);
                 // Fake header + garbage before actual header
                 testGenericAudio("MP3/garbage_before_header.mp3", 6142, 64, -1, 24000, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 141, 49139);
+                // Ghost data after the last frame
+                testGenericAudio("MP3/ghost_data_after_last_frame.mp3", 1258, 112, -1, 44100, false, CF_LOSSY, MONO, "MPEG Audio (Layer III)", 0, 17607);
                 // Contradictory frames
                 testGenericAudio("MP3/different_bitrates_modes.mp3", 6439, 128, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 45, 103025);
 
@@ -125,6 +127,8 @@ namespace ATL.test.IO
                 testGenericAudio("MP3/truncated_frame.mp3", 498, 320, -1, 48000, false, CF_LOSSY, STEREO, "MPEG Audio (Layer III)", 954, 19908);
                 // Fake header + garbage before actual header
                 testGenericAudio("MP3/garbage_before_header.mp3", 6142, 64, -1, 24000, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 141, 49139);
+                // Ghost data after the last frame
+                testGenericAudio("MP3/ghost_data_after_last_frame.mp3", 209, 112, -1, 44100, false, CF_LOSSY, MONO, "MPEG Audio (Layer III)", 0, 2929);
                 // Contradictory frames
                 testGenericAudio("MP3/different_bitrates_modes.mp3", 6439, 128, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 45, 103025);
             }
