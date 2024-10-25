@@ -970,7 +970,7 @@ namespace ATL.AudioData.IO
                         strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
 
                         // Parse GENRE frame
-                        if (Frame.ID.StartsWith("TCO")) strData = extractGenreFromID3v2Code(strData);
+                        if (isGenreField(Frame.ID, m_tagVersion)) strData = extractGenreFromID3v2Code(strData);
                         // Parse Involved People frame for ID3v2.2-2.3 (IPL/IPLS) where value separator is a \0
                         else if (Frame.ID.StartsWith("IPL"))
                         {
@@ -1933,7 +1933,7 @@ namespace ATL.AudioData.IO
             }
             else if (value.Contains(Settings.DisplayValueSeparator + ""))
             {
-                if (frameCode.StartsWith("TCO")) // Genre
+                if (isGenreField(frameCode, Settings.ID3v2_tagSubVersion)) // Genre
                 {
                     // Separating values with \0 is actually specific to ID3v2.4 but seems to have become the de facto standard
                     // If something ever goes wrong with multiples values in ID3v2.3, remember their spec separates values with ()'s
@@ -2427,6 +2427,12 @@ namespace ATL.AudioData.IO
                 if (char.IsLetter(c) && !char.IsUpper(c)) return false;
             }
             return true;
+        }
+
+        private static bool isGenreField(string field, int tagVersion)
+        {
+            if (2 == tagVersion) return field.Equals("TCO", StringComparison.OrdinalIgnoreCase);
+            else return field.Equals("TCON", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
