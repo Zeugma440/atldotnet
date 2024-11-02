@@ -88,7 +88,7 @@ namespace ATL
             ID = combineIds((short)Math.Min(short.MaxValue, ContainerId), (short)Math.Min(short.MaxValue, DataFormat.ID));
         }
 
-        private int combineIds(int id1, int id2)
+        private static int combineIds(int id1, int id2)
         {
             return (id1 << 16) + id2;
         }
