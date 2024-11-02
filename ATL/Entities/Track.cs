@@ -325,9 +325,14 @@ namespace ATL
         private bool isORYearExplicit;
 
         /// <summary>
-        /// Format of the tagging systems
+        /// Format of the tagging systems present on the file
         /// </summary>
         public IList<Format> MetadataFormats { get; internal set; }
+
+        /// <summary>
+        /// Format of the supported tagging systems supported by the file
+        /// </summary>
+        public IList<Format> SupportedMetadataFormats { get; internal set; }
 
 
         //=== PHYSICAL PROPERTIES
@@ -417,6 +422,7 @@ namespace ATL
 
             IMetaDataIO metadata = fileIO.Metadata;
             MetadataFormats = new List<Format>(metadata.MetadataFormats);
+            SupportedMetadataFormats = new List<Format>(fileIO.GetSupportedMetas().Select(f => MetaDataIOFactory.GetInstance().getFormat((int)f)));
 
             mimeType = fileIO.AudioFormat.MimeList.FirstOrDefault();
 
