@@ -121,9 +121,9 @@ namespace ATL.AudioData.IO
         // Mapping between MKV format ID and ATL format IDs
         private static readonly Dictionary<string, int> codecsMappingCodes = new Dictionary<string, int>
         {
-            { "A_MPEG/L3", AudioDataIOFactory.CID_MP3 },
-            { "A_MPEG/L2", AudioDataIOFactory.CID_MP3 },
-            { "A_MPEG/L1", AudioDataIOFactory.CID_MP3 },
+            { "A_MPEG/L3", AudioDataIOFactory.CID_MPEG },
+            { "A_MPEG/L2", AudioDataIOFactory.CID_MPEG },
+            { "A_MPEG/L1", AudioDataIOFactory.CID_MPEG },
             { "A_PCM/INT/BIG", AudioDataIOFactory.CID_WAV },
             { "A_PCM/INT/LIT", AudioDataIOFactory.CID_WAV },
             { "A_PCM/FLOAT/IEEE", AudioDataIOFactory.CID_WAV },
@@ -203,8 +203,7 @@ namespace ATL.AudioData.IO
         // == Private declarations 
 
         // Metadata
-        private Format containerAudioFormat;
-        private Format containeeAudioFormat;
+        private AudioFormat audioFormat;
 
         private string docType; // EBML docType
         private ulong editionEntryUid;
@@ -216,18 +215,20 @@ namespace ATL.AudioData.IO
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public Format AudioFormat
+        public AudioFormat AudioFormat
         {
             get
             {
-                if (!containerAudioFormat.Name.Contains('/'))
+                if (!audioFormat.Name.Contains('/'))
                 {
-                    containerAudioFormat = new Format(containerAudioFormat);
-                    containerAudioFormat.Name += " / " + containeeAudioFormat.ShortName;
-                    containerAudioFormat.ID += containeeAudioFormat.ID;
+                    audioFormat = new AudioFormat(audioFormat);
+                    var containerFormat = AudioDataIOFactory.GetInstance().getFormat(audioFormat.ContainerId);
+                    if (null == containerFormat) audioFormat.Name = audioFormat.DataFormat.ShortName;
+                    else audioFormat.Name = containerFormat.Name + " / " + audioFormat.DataFormat.ShortName;
+                    audioFormat.ComputeId();
                 }
 
-                return containerAudioFormat;
+                return audioFormat;
             }
         }
 
@@ -280,8 +281,8 @@ namespace ATL.AudioData.IO
                     var formatFinal = format[0];
                     formatFinal = cmc.Key switch
                     {
-                        "A_OPUS" => new Format(formatFinal) { Name = "Opus", ShortName = "Opus" },
-                        "A_VORBIS" => new Format(formatFinal) { Name = "Vorbis", ShortName = "Vorbis" },
+                        "A_OPUS" => new AudioFormat(formatFinal) { Name = "Opus", ShortName = "Opus" },
+                        "A_VORBIS" => new AudioFormat(formatFinal) { Name = "Vorbis", ShortName = "Vorbis" },
                         _ => formatFinal
                     };
                     codecsMapping.Add(cmc.Key, formatFinal);
@@ -292,10 +293,10 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Constructor
         /// </summary>
-        public MKA(string filePath, Format format)
+        public MKA(string filePath, AudioFormat format)
         {
             FileName = filePath;
-            containerAudioFormat = format;
+            this.audioFormat = format;
             resetData();
         }
 
@@ -389,14 +390,14 @@ namespace ATL.AudioData.IO
 
                 var codecId = "";
                 if (reader.seekElement(0x86)) codecId = reader.readString().ToUpper(); // CodecID
-                if (codecsMapping.TryGetValue(codecId, out var value)) containeeAudioFormat = value;
+                if (codecsMapping.TryGetValue(codecId, out var value)) audioFormat.DataFormat = new Format(value);
 
                 reader.seek(trackEntryOffset);
                 if (reader.seekElement(0xE1)) audioOffset = reader.Position; // Audio
             }
             else
             {
-                containeeAudioFormat = Factory.UNKNOWN_FORMAT;
+                audioFormat.DataFormat = Format.UNKNOWN_FORMAT;
             }
 
             // Find AudioDataOffset using Clusters' timecodes
@@ -465,7 +466,7 @@ namespace ATL.AudioData.IO
                 // Try getting physical properties using the actual audio data header
                 try
                 {
-                    if (containeeAudioFormat != Factory.UNKNOWN_FORMAT)
+                    if (audioFormat.DataFormat.ID != Format.UNKNOWN_FORMAT.ID)
                     {
                         // Copy block to MemoryStream
                         // TODO find a way to optimize memory by clamping the raw stream to the block's limits
@@ -475,7 +476,7 @@ namespace ATL.AudioData.IO
                         memStream.Seek(0, SeekOrigin.Begin);
 
                         IAudioDataIO audioData = AudioDataIOFactory.GetInstance().GetFromStream(memStream);
-                        if (audioData.AudioFormat != Factory.UNKNOWN_FORMAT && audioData.Read(memStream,
+                        if (audioData.AudioFormat.ID != Format.UNKNOWN_FORMAT.ID && audioData.Read(memStream,
                                 new AudioDataManager.SizeInfo(), new ReadTagParams()))
                         {
                             LogDelegator.GetLogDelegate()(Log.LV_INFO, "Reading physical attributes from audio data");

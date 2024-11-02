@@ -95,7 +95,7 @@ namespace ATL.AudioData.IO
         private byte nbChannels;
 
         private SizeInfo sizeInfo;
-        private readonly Format audioFormat;
+        private readonly AudioFormat audioFormat;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -106,11 +106,11 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public bool IsVBR => false;
         /// <inheritdoc/>
-        public Format AudioFormat
+        public AudioFormat AudioFormat
         {
             get
             {
-                Format f = new Format(audioFormat);
+                AudioFormat f = new AudioFormat(audioFormat);
                 if (modFormats.TryGetValue(formatTag, out var format))
                     f.Name = f.Name + " (" + format.Name + ")";
                 else
@@ -212,7 +212,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public MOD(string filePath, Format format)
+        public MOD(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             this.audioFormat = format;

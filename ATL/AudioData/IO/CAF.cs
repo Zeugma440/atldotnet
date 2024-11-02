@@ -86,21 +86,21 @@ namespace ATL.AudioData.IO
             { (146 << 16) | 21, TMH_10_2_FULL }
         };
 
-        // Mapping between CAF format ID and format names
+        // Mapping between CAF format ID, ATL format ID and custom format names
         private static readonly Dictionary<string, KeyValuePair<int, string>> formatsMapping = new Dictionary<string, KeyValuePair<int, string>>()
         {
-            { "none", new KeyValuePair<int, string>(0,"") },
-            { "lpcm", new KeyValuePair<int, string>(1,"Linear PCM") },
-            { "ima4", new KeyValuePair<int, string>(2,"Apple IMA 4:1 ADPCM") },
-            { "aac ", new KeyValuePair<int, string>(3,"MPEG-4 AAC") },
-            { "MAC3", new KeyValuePair<int, string>(4,"MACE 3:1") },
-            { "MAC6", new KeyValuePair<int, string>(5,"MACE 6:1") },
-            { "ulaw", new KeyValuePair<int, string>(6,"μLaw 2:1") },
-            { "alaw", new KeyValuePair<int, string>(7,"aLaw 2:1") },
-            { ".mp1", new KeyValuePair<int, string>(8,"MPEG-1 or 2, Layer 1") },
-            { ".mp2", new KeyValuePair<int, string>(9,"MPEG-1 or 2, Layer 2") },
-            { ".mp3", new KeyValuePair<int, string>(10,"MPEG-1 or 2, Layer 3") },
-            { "alac", new KeyValuePair<int, string>(11,"Apple Lossless") }
+            { "none", new KeyValuePair<int, string>(Format.UNKNOWN_FORMAT.ID,"") },
+            { "lpcm", new KeyValuePair<int, string>(AudioDataIOFactory.CID_WAV,"Linear PCM") },
+            { "ima4", new KeyValuePair<int, string>(AudioDataIOFactory.CID_WAV,"Apple IMA 4:1 ADPCM") },
+            { "aac ", new KeyValuePair<int, string>(AudioDataIOFactory.CID_AAC, "MPEG-4 AAC") },
+            { "MAC3", new KeyValuePair<int, string>(Format.UNKNOWN_FORMAT.ID,"MACE 3:1") }, // Macintosh Audio Compression
+            { "MAC6", new KeyValuePair<int, string>(Format.UNKNOWN_FORMAT.ID, "MACE 6:1") },
+            { "ulaw", new KeyValuePair<int, string>(AudioDataIOFactory.CID_WAV,"μLaw 2:1") },
+            { "alaw", new KeyValuePair<int, string>(AudioDataIOFactory.CID_WAV,"aLaw 2:1") },
+            { ".mp1", new KeyValuePair<int, string>(AudioDataIOFactory.CID_MPEG,"MPEG-1 or 2, Layer 1") },
+            { ".mp2", new KeyValuePair<int, string>(AudioDataIOFactory.CID_MPEG,"MPEG-1 or 2, Layer 2") },
+            { ".mp3", new KeyValuePair<int, string>(AudioDataIOFactory.CID_MPEG,"MPEG-1 or 2, Layer 3") },
+            { "alac", new KeyValuePair<int, string>(AudioDataIOFactory.CID_MP4,"Apple Lossless") }
         };
 
         // Mapping between CAF information keys and ATL frame codes
@@ -119,8 +119,7 @@ namespace ATL.AudioData.IO
 
 
         // Private declarations 
-        private Format containerAudioFormat;
-        private KeyValuePair<int, string> containeeAudioFormat;
+        private AudioFormat audioFormat;
 
         private uint sampleRate;
         private bool isVbr;
@@ -134,16 +133,8 @@ namespace ATL.AudioData.IO
 
         public bool IsVBR => isVbr;
 
-        public Format AudioFormat
-        {
-            get
-            {
-                containerAudioFormat = new Format(containerAudioFormat);
-                containerAudioFormat.Name += " / " + containeeAudioFormat.Value;
-                containerAudioFormat.ID += containeeAudioFormat.Key;
-                return containerAudioFormat;
-            }
-        }
+        public AudioFormat AudioFormat => audioFormat;
+
         public int CodecFamily { get; private set; }
 
         public string FileName { get; }
@@ -206,10 +197,10 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Constructor
         /// </summary>
-        public CAF(string filePath, Format format)
+        public CAF(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
-            containerAudioFormat = format;
+            audioFormat = format;
             resetData();
         }
 
@@ -267,8 +258,17 @@ namespace ATL.AudioData.IO
                     break;
             }
 
-            // Determine format
-            containeeAudioFormat = formatsMapping.TryGetValue(formatId, out var value) ? value : formatsMapping["none"];
+            // Set audio data format
+            var format = formatsMapping.TryGetValue(formatId, out var value) ? value : formatsMapping["none"];
+            var audioDataFormat = new Format(format.Key, format.Value, format.Value, false);
+            audioFormat = new AudioFormat(audioFormat);
+            audioFormat.DataFormat = audioDataFormat;
+
+            var containerFormat = AudioDataIOFactory.GetInstance().getFormat(audioFormat.ContainerId);
+            if (null == containerFormat) audioFormat.Name = audioFormat.DataFormat.ShortName;
+            else audioFormat.Name = containerFormat.Name + " / " + audioFormat.DataFormat.ShortName;
+
+            audioFormat.ComputeId();
         }
 
         private void readChannelLayoutChunk(BufferedBinaryReader source)

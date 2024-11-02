@@ -162,10 +162,7 @@ namespace ATL.AudioData.IO
         public bool IsVBR { get; private set; }
 
         /// <inheritdoc/>
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
 
         /// <inheritdoc/>
         public int CodecFamily => isLossless ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY;
@@ -254,7 +251,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Constructor
         /// </summary>
-        public WMA(string filePath, Format format)
+        public WMA(string filePath, AudioFormat format)
         {
             FileName = filePath;
             AudioFormat = format;

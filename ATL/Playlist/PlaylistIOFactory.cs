@@ -7,41 +7,41 @@ namespace ATL.Playlist
     /// <summary>
     /// Factory for playlist I/O classes
     /// </summary>
-    public class PlaylistIOFactory : Factory
+    public class PlaylistIOFactory : Factory<Format>
     {
         // Supported playilst formats
         /// <summary>
         /// M3U format
         /// </summary>
-        public const int PL_M3U = 0;
+        public const int PL_M3U = 1;
         /// <summary>
         /// PLS format
         /// </summary>
-        public const int PL_PLS = 1;
+        public const int PL_PLS = 2;
         /// <summary>
         /// FPL format
         /// </summary>
-        public const int PL_FPL = 2;
+        public const int PL_FPL = 3;
         /// <summary>
         /// XSPF format
         /// </summary>
-        public const int PL_XSPF = 3;
+        public const int PL_XSPF = 4;
         /// <summary>
         /// SMIL format
         /// </summary>
-        public const int PL_SMIL = 4;
+        public const int PL_SMIL = 5;
         /// <summary>
         /// ASX format
         /// </summary>
-        public const int PL_ASX = 5;
+        public const int PL_ASX = 6;
         /// <summary>
         /// B4S format
         /// </summary>
-        public const int PL_B4S = 6;
+        public const int PL_B4S = 7;
         /// <summary>
         /// Daum Playlist (PotPlayer)
         /// </summary>
-        public const int PL_DPL = 7;
+        public const int PL_DPL = 8;
 
         // The instance of this factory
         private static PlaylistIOFactory theFactory;
@@ -146,12 +146,12 @@ namespace ATL.Playlist
             }
             else
             {
-                format = UNKNOWN_FORMAT;
+                format = Format.UNKNOWN_FORMAT;
             }
             var result = GetPlaylistIO(format.ID, path);
 
             // Default settings inherited from format
-            if (!format.Equals(UNKNOWN_FORMAT))
+            if (!format.Equals(Format.UNKNOWN_FORMAT))
             {
                 result.LocationFormatting = locationFormatting == PlaylistFormat.LocationFormatting.Undefined ? ((PlaylistFormat)format).LocationFormat : locationFormatting;
                 result.Encoding = fileEncoding == PlaylistFormat.FileEncoding.Undefined ? ((PlaylistFormat)format).Encoding : fileEncoding;

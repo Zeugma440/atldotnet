@@ -23,10 +23,7 @@ namespace ATL.AudioData.IO
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
         public bool IsVBR => false;
         public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
         public int SampleRate => (int)sampleRate;
@@ -63,7 +60,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Constructor
         /// </summary>
-        public DTS(string filePath, Format format)
+        public DTS(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             AudioFormat = format;

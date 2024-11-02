@@ -63,7 +63,7 @@ namespace ATL.AudioData.IO
         private static readonly byte[] FLAC_HEADER_ID = { 0x7F, 0x46, 0x4C, 0x41, 0x43 }; // 0x7f + "FLAC"
 
 
-        private readonly Format audioFormat;
+        private readonly AudioFormat audioFormat;
 
         private readonly FileInfo info = new FileInfo();
 
@@ -308,7 +308,7 @@ namespace ATL.AudioData.IO
             info.Reset();
         }
 
-        public Ogg(string filePath, Format format) : base(true, true, true, true)
+        public Ogg(string filePath, AudioFormat format) : base(true, true, true, true)
         {
             FileName = filePath;
             audioFormat = format;
@@ -318,17 +318,22 @@ namespace ATL.AudioData.IO
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public Format AudioFormat
+        public AudioFormat AudioFormat
         {
             get
             {
-                Format f = new Format(audioFormat);
+                AudioFormat f = new AudioFormat(audioFormat);
                 string subformat;
                 if (contents == CONTENTS_VORBIS) subformat = "Vorbis";
                 else if (contents == CONTENTS_OPUS) subformat = "Opus";
-                else if (contents == CONTENTS_FLAC) subformat = "FLAC";
+                else if (contents == CONTENTS_FLAC)
+                {
+                    subformat = "FLAC";
+                    f.DataFormat = AudioDataIOFactory.GetInstance().getFormat(AudioDataIOFactory.CID_FLAC);
+                }
                 else subformat = "Unsupported";
                 f.Name = f.Name + " (" + subformat + ")";
+                f.ComputeId();
                 return f;
             }
         }

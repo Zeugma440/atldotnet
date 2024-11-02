@@ -70,10 +70,7 @@ namespace ATL.AudioData.IO
         public bool IsVBR => false;
 
         /// <inheritdoc/>
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
 
         /// <inheritdoc/>
         public int CodecFamily => AudioDataIOFactory.CF_LOSSLESS;
@@ -112,7 +109,7 @@ namespace ATL.AudioData.IO
             header.Reset();
         }
 
-        public OptimFrog(string filePath, Format format)
+        public OptimFrog(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             AudioFormat = format;

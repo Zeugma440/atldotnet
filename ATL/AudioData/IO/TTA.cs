@@ -28,10 +28,7 @@ namespace ATL.AudioData.IO
 
         public int SampleRate => (int)sampleRate;
         public bool IsVBR => false;
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
         public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
         public string FileName { get; }
 
@@ -67,7 +64,7 @@ namespace ATL.AudioData.IO
             AudioDataSize = 0;
         }
 
-        public TTA(string filePath, Format format)
+        public TTA(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             AudioFormat = format;

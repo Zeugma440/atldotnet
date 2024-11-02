@@ -146,10 +146,8 @@ namespace ATL.AudioData.IO
 
         public bool IsVBR => false;
 
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
+
         public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
 
         public string FileName { get; }
@@ -232,7 +230,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public SPC(string filePath, Format format)
+        public SPC(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             AudioFormat = format;

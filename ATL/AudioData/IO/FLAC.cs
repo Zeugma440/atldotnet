@@ -96,10 +96,8 @@ namespace ATL.AudioData.IO
         public ChannelsArrangement ChannelsArrangement { get; private set; }
 
         /// <inheritdoc/>
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
+
         /// <inheritdoc/>
         public int CodecFamily => AudioDataIOFactory.CF_LOSSLESS;
 
@@ -129,7 +127,7 @@ namespace ATL.AudioData.IO
             AudioDataSize = 0;
         }
 
-        public FLAC(string path, Format format) : base(false, false, false, false)
+        public FLAC(string path, AudioFormat format) : base(false, false, false, false)
         {
             FileName = path;
             AudioFormat = format;

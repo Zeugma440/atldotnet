@@ -360,7 +360,7 @@ namespace ATL
         /// <summary>
         /// Format of the audio data
         /// </summary>
-        public Format AudioFormat { get; internal set; }
+        public AudioFormat AudioFormat { get; internal set; }
         /// <summary>
         /// Duration (seconds)
         /// </summary>

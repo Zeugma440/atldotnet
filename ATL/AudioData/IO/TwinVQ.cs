@@ -86,10 +86,8 @@ namespace ATL.AudioData.IO
 
         public bool IsVBR => false;
 
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
+
         public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
 
         public string FileName { get; }
@@ -139,7 +137,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public TwinVQ(string filePath, Format format)
+        public TwinVQ(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             AudioFormat = format;

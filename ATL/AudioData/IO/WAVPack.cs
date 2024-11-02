@@ -127,10 +127,8 @@ namespace ATL.AudioData.IO
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
+
         public int SampleRate { get; private set; }
 
         public bool IsVBR => false;
@@ -171,7 +169,7 @@ namespace ATL.AudioData.IO
             AudioDataSize = 0;
         }
 
-        public WAVPack(string filePath, Format format)
+        public WAVPack(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             AudioFormat = format;

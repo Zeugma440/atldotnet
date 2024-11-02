@@ -5,13 +5,13 @@ namespace ATL.CatalogDataReaders
     /// <summary>
     /// Factory for Catalog data readers
     /// </summary>
-    public class CatalogDataReaderFactory : Factory
+    public class CatalogDataReaderFactory : Factory<Format>
     {
         // Defines the supported formats
         /// <summary>
         ///  Cuesheet
         /// </summary>
-        public const int CR_CUE = 0;
+        public const int CR_CUE = 1;
 
         // The instance of this factory
         private static CatalogDataReaderFactory theFactory;
@@ -56,7 +56,7 @@ namespace ATL.CatalogDataReaders
             }
             else
             {
-                result = GetCatalogDataReader(UNKNOWN_FORMAT.ID);
+                result = GetCatalogDataReader(Format.UNKNOWN_FORMAT.ID);
             }
 
             result.Path = path;

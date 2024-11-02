@@ -47,14 +47,9 @@ namespace ATL.AudioData.IO
 
         public bool IsVBR => false;
 
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
         public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
-
         public string FileName { get; }
-
         public double BitRate { get; private set; }
 
         public int BitDepth => -1; // Irrelevant for that format
@@ -111,7 +106,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public VGM(string filePath, Format format)
+        public VGM(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             AudioFormat = format;

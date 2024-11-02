@@ -36,7 +36,7 @@ namespace ATL.AudioData.IO
         public bool IsVBR => false;
 
         /// <inheritdoc/>
-        public Format AudioFormat => Factory.UNKNOWN_FORMAT;
+        public AudioFormat AudioFormat => new AudioFormat(Format.UNKNOWN_FORMAT);
 
         /// <inheritdoc/>
         public int CodecFamily => AudioDataIOFactory.CF_LOSSY;

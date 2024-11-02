@@ -1,15 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using Commons;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Commons;
 
 namespace ATL.benchmark
 {
     public class FileFinder
     {
-        static ICollection<Format> supportedFormats;
+        static ICollection<AudioFormat> supportedFormats;
 
         static FileFinder()
         {

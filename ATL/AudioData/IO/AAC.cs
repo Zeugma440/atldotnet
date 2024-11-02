@@ -70,7 +70,7 @@ namespace ATL.AudioData.IO
         public bool IsVBR => AAC_BITRATE_TYPE_VBR == bitrateTypeID;
 
         /// <inheritdoc/>
-        public Format AudioFormat
+        public AudioFormat AudioFormat
         {
             get;
         }
@@ -115,7 +115,7 @@ namespace ATL.AudioData.IO
             AudioDataSize = 0;
         }
 
-        public AAC(string fileName, Format format)
+        public AAC(string fileName, AudioFormat format)
         {
             this.FileName = fileName;
             AudioFormat = format;

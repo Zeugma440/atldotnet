@@ -27,7 +27,7 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public override IList<Format> MetadataFormats
         {
-            get { return new List<Format>(new[] { Factory.UNKNOWN_FORMAT }); }
+            get { return new List<Format>(new[] { Format.UNKNOWN_FORMAT }); }
         }
 
         /// <inheritdoc/>

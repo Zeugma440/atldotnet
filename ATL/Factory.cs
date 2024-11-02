@@ -5,24 +5,19 @@ namespace ATL
     /// <summary>
     /// Abstract factory for data readers, containing shared methods and members
     /// </summary>
-    public abstract class Factory
+    public abstract class Factory<T> where T : Format
     {
-        /// <summary>
-        /// Represents an unknown generic format
-        /// </summary>
-        public static readonly Format UNKNOWN_FORMAT = new Format(-1, "Unknown");
-
         /// <summary>
         /// List of all formats supported by this kind of data reader
         /// They are indexed by file extension to speed up matching
         /// </summary>
-        protected IDictionary<string, IList<Format>> formatListByExt;
+        protected IDictionary<string, IList<T>> formatListByExt;
 
         /// <summary>
         /// List of all formats supported by this kind of data reader 
         /// They are indexed by MIME-type to speed up matching
         /// </summary>
-        protected IDictionary<string, IList<Format>> formatListByMime;
+        protected IDictionary<string, IList<T>> formatListByMime;
 
 
 
@@ -30,15 +25,15 @@ namespace ATL
         /// Adds a format to the supported formats
         /// </summary>
         /// <param name="f">Format to be added</param>
-        protected void addFormat(Format f)
+        protected void addFormat(T f)
         {
-            IList<Format> matchingFormats;
+            IList<T> matchingFormats;
 
             foreach (string ext in f)
             {
                 if (!formatListByExt.ContainsKey(ext))
                 {
-                    matchingFormats = new List<Format> { f };
+                    matchingFormats = new List<T> { f };
                     formatListByExt.Add(ext, matchingFormats);
                 }
                 else
@@ -52,7 +47,7 @@ namespace ATL
             {
                 if (!formatListByMime.ContainsKey(mimeType))
                 {
-                    matchingFormats = new List<Format> { f };
+                    matchingFormats = new List<T> { f };
                     formatListByMime.Add(mimeType, matchingFormats);
                 }
                 else
@@ -69,9 +64,9 @@ namespace ATL
         /// <param name="path">Path of the file which format to recognize</param>
         /// <returns>List of the valid formats matching the extension of the given file, 
         /// or null if none recognized or the file does not exist</returns>
-        public IList<Format> getFormatsFromPath(string path)
+        public IList<T> getFormatsFromPath(string path)
         {
-            IList<Format> result = null;
+            IList<T> result = null;
             string extension = path.Contains('.') ? path.Substring(path.LastIndexOf('.'), path.Length - path.LastIndexOf('.')).ToLower() : path;
 
             if (formatListByExt.TryGetValue(extension, out var formats) && formats != null && formats.Count > 0)
@@ -88,9 +83,9 @@ namespace ATL
         /// <param name="mimeType">MIME-type to recognize</param>
         /// <returns>List of the valid formats matching the MIME-type of the given file, 
         /// or null if none recognized</returns>
-        public IList<Format> getFormatsFromMimeType(string mimeType)
+        public IList<T> getFormatsFromMimeType(string mimeType)
         {
-            IList<Format> result = null;
+            IList<T> result = null;
             string mime = mimeType.ToLower();
 
             if (formatListByMime.TryGetValue(mime, out var formats) && formats != null && formats.Count > 0)
@@ -105,18 +100,34 @@ namespace ATL
         /// Gets a list of all supported formats
         /// </summary>
         /// <returns>List of all supported formats</returns>
-        public ICollection<Format> getFormats()
+        public ICollection<T> getFormats()
         {
-            Dictionary<int, Format> result = new Dictionary<int, Format>();
-            foreach (IList<Format> formats in formatListByExt.Values)
+            Dictionary<int, T> result = new Dictionary<int, T>();
+            foreach (IList<T> formats in formatListByExt.Values)
             {
-                foreach (Format f in formats)
+                foreach (T f in formats)
                 {
                     // Filter duplicates "caused by" indexing formats by extension
                     result.TryAdd(f.ID, f);
                 }
             }
             return result.Values;
+        }
+
+        /// <summary>
+        /// Gets the format matching the given ID
+        /// </summary>
+        /// <returns>Format matching the given ID; null if not found</returns>
+        public T getFormat(int ID)
+        {
+            foreach (IList<T> formats in formatListByExt.Values)
+            {
+                foreach (T f in formats)
+                {
+                    if (f.ID == ID) return f;
+                }
+            }
+            return null;
         }
     }
 }

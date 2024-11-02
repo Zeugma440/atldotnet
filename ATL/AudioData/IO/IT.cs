@@ -49,10 +49,7 @@ namespace ATL.AudioData.IO
         public bool IsVBR => false;
 
         /// <inheritdoc/>
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
         /// <inheritdoc/>
         public int CodecFamily => AudioDataIOFactory.CF_SEQ_WAV;
         /// <inheritdoc/>
@@ -111,7 +108,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public IT(string filePath, Format format)
+        public IT(string filePath, AudioFormat format)
         {
             FileName = filePath;
             AudioFormat = format;

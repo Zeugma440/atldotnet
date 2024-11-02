@@ -39,10 +39,7 @@ namespace ATL.AudioData.IO
 
         public int SampleRate => (int)sampleRate;
         public bool IsVBR => false;
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
         public int CodecFamily => AudioDataIOFactory.CF_LOSSLESS;
         public string FileName { get; }
 
@@ -83,7 +80,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Constructor
         /// </summary>
-        public DSF(string filePath, Format format)
+        public DSF(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             AudioFormat = format;

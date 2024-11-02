@@ -56,7 +56,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Format of the audio data
         /// </summary>
-        Format AudioFormat
+        AudioFormat AudioFormat
         {
             get;
         }

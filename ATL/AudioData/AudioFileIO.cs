@@ -222,7 +222,7 @@ namespace ATL.AudioData
         /// </summary>
         public int IntBitRate => (int)Math.Round(audioData.BitRate);
         /// <inheritdoc/>
-        public Format AudioFormat => audioData.AudioFormat;
+        public AudioFormat AudioFormat => audioData.AudioFormat;
         /// <inheritdoc/>
         public int CodecFamily => audioData.CodecFamily;
         /// <inheritdoc/>

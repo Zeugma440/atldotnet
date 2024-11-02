@@ -6,7 +6,7 @@ namespace ATL.AudioData
     /// <summary>
     /// Factory for metadata (tag) I/O classes
     /// </summary>
-    public class MetaDataIOFactory : Factory
+    public class MetaDataIOFactory : Factory<Format>
     {
         /// <summary>
         /// Metadata type

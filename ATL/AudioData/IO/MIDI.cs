@@ -295,10 +295,7 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public bool IsVBR => false;
         /// <inheritdoc/>
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
         /// <inheritdoc/>
         public int CodecFamily => AudioDataIOFactory.CF_SEQ;
         /// <inheritdoc/>
@@ -358,7 +355,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="filePath">File path</param>
         /// <param name="format">Audio format</param>
-        public Midi(string filePath, Format format)
+        public Midi(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             AudioFormat = format;

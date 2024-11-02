@@ -295,7 +295,7 @@ namespace ATL.AudioData.IO
 
         private VBRData vbrData = new VBRData();
         private FrameHeader FirstFrame = new FrameHeader();
-        private readonly Format audioFormat;
+        private readonly AudioFormat audioFormat;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -316,11 +316,11 @@ namespace ATL.AudioData.IO
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
-        public Format AudioFormat
+        public AudioFormat AudioFormat
         {
             get
             {
-                Format f = new Format(audioFormat);
+                AudioFormat f = new AudioFormat(audioFormat);
                 f.Name = f.Name + " (" + FirstFrame.Layer + ")";
                 return f;
             }
@@ -344,7 +344,7 @@ namespace ATL.AudioData.IO
             AudioDataSize = 0;
         }
 
-        public MPEGaudio(string filePath, Format format)
+        public MPEGaudio(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             audioFormat = format;

@@ -58,7 +58,7 @@ namespace ATL.AudioData.IO
         private long tocOffset;
         private long tocSize;
 
-        private readonly Format audioFormat;
+        private readonly AudioFormat audioFormat;
 
         private IDictionary<int, TocEntry> toc;
 
@@ -89,11 +89,11 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public bool IsVBR => false;
         /// <inheritdoc/>
-        public Format AudioFormat
+        public AudioFormat AudioFormat
         {
             get
             {
-                Format f = new Format(audioFormat);
+                AudioFormat f = new AudioFormat(audioFormat);
                 if (codec.Length > 0)
                     f.Name = f.Name + " (" + codec + ")";
                 else
@@ -194,7 +194,7 @@ namespace ATL.AudioData.IO
             AudioDataSize = 0;
         }
 
-        public AA(string fileName, Format format)
+        public AA(string fileName, AudioFormat format)
         {
             this.FileName = fileName;
             audioFormat = format;

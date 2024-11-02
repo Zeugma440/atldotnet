@@ -25,10 +25,7 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public bool IsVBR => false;
         /// <inheritdoc/>
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
         /// <inheritdoc/>
         public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
         /// <inheritdoc/>
@@ -65,7 +62,7 @@ namespace ATL.AudioData.IO
             AudioDataSize = 0;
         }
 
-        public AC3(string filePath, Format format)
+        public AC3(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             AudioFormat = format;

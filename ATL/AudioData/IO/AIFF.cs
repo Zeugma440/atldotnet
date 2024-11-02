@@ -90,7 +90,7 @@ namespace ATL.AudioData.IO
         // IAudioDataIO
         public bool IsVBR => false;
 
-        public Format AudioFormat
+        public AudioFormat AudioFormat
         {
             get;
         }
@@ -169,7 +169,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public AIFF(string filePath, Format format)
+        public AIFF(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             AudioFormat = format;

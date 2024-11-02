@@ -64,7 +64,7 @@ namespace ATL.AudioData.IO
         private long headerSize;
 
         private SizeInfo sizeInfo;
-        private readonly Format audioFormat;
+        private readonly AudioFormat audioFormat;
 
         private bool _isLittleEndian;
 
@@ -97,11 +97,11 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO
-        public Format AudioFormat
+        public AudioFormat AudioFormat
         {
             get
             {
-                Format f = new Format(audioFormat);
+                AudioFormat f = new AudioFormat(audioFormat);
                 f.Name = f.Name + " (" + getFormat() + ")";
                 return f;
             }
@@ -191,7 +191,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public WAV(string filePath, Format format)
+        public WAV(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             audioFormat = format;

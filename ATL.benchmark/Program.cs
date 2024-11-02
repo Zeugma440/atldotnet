@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics.Metrics;
 using System.IO;
 using ATL.Playlist;
+using ATL.AudioData;
 
 namespace ATL.benchmark
 {
@@ -27,7 +28,7 @@ namespace ATL.benchmark
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            info(@"D:\temp\mka\recording.webm");
+            info(@"D:\temp\caf\sound.caf");
 
             //info(@"D:\temp\wav\74\empty_tagged_audacity.wav");
 
@@ -130,12 +131,19 @@ namespace ATL.benchmark
             new Reduce().reduce(filePath);
         }
 
+        enum MetadataSpecification
+        {
+            Mp4, Aiff, Vorbis, Id3V1, Id3V23, Id3V24, Ape, Wma, Undefined
+        }
+
         static private void info(string filePath)
         {
             new ConsoleLogger();
             Console.WriteLine(">>> INFO : BEGIN @ " + filePath);
 
             Track t = new Track(filePath);
+
+            Console.WriteLine(t.AudioFormat.ID);
 
             Console.WriteLine(t.Path + "......." + t.AudioFormat.Name + " | " + Utils.EncodeTimecode_s(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")" + " " + t.ChannelsArrangement));
             Console.WriteLine(Utils.BuildStrictLengthString("", t.Path.Length, '.') + ".......disc " + t.DiscNumber + " | track " + t.TrackNumber + " | title " + t.Title + " | artist " + t.Artist + " | album " + t.Album + " | year " + t.Year);

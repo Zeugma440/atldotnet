@@ -43,7 +43,7 @@ namespace ATL.AudioData.IO
         private byte version;
 
         private SizeInfo sizeInfo;
-        private readonly Format audioFormat;
+        private readonly AudioFormat audioFormat;
 
         // Mapping between PSF frame codes and ATL frame codes
         private static readonly IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
@@ -75,11 +75,11 @@ namespace ATL.AudioData.IO
         public int SampleRate { get; private set; }
 
         public bool IsVBR => false;
-        public Format AudioFormat
+        public AudioFormat AudioFormat
         {
             get
             {
-                Format f = new Format(audioFormat);
+                AudioFormat f = new AudioFormat(audioFormat);
                 f.Name = f.Name + " (" + subformat() + ")";
                 return f;
             }
@@ -160,7 +160,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public PSF(string filePath, Format format)
+        public PSF(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             this.audioFormat = format;

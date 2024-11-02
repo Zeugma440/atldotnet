@@ -164,10 +164,7 @@ namespace ATL.AudioData.IO
         // IAudioDataIO
         public bool IsVBR => MP4_BITRATE_TYPE_VBR == bitrateTypeID;
 
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
         public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
 
         public double BitRate => bitrate / 1000.0;
@@ -247,7 +244,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public MP4(string fileName, Format format)
+        public MP4(string fileName, AudioFormat format)
         {
             this.FileName = fileName;
             AudioFormat = format;

@@ -47,18 +47,18 @@ namespace ATL.AudioData.IO
         private string trackerName;
 
         private SizeInfo sizeInfo;
-        private readonly Format audioFormat;
+        private readonly AudioFormat audioFormat;
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         // IAudioDataIO
         public int SampleRate => 0;
         public bool IsVBR => false;
-        public Format AudioFormat
+        public AudioFormat AudioFormat
         {
             get
             {
-                Format f = new Format(audioFormat);
+                AudioFormat f = new AudioFormat(audioFormat);
                 f.Name = f.Name + " (" + trackerName + ")";
                 return f;
             }
@@ -127,7 +127,7 @@ namespace ATL.AudioData.IO
             ResetData();
         }
 
-        public XM(string filePath, Format format)
+        public XM(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             audioFormat = format;

@@ -64,10 +64,7 @@ namespace ATL.AudioData.IO
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
 
         public bool IsVBR => true;
-        public Format AudioFormat
-        {
-            get;
-        }
+        public AudioFormat AudioFormat { get; }
         public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
         public string FileName { get; }
 
@@ -104,7 +101,7 @@ namespace ATL.AudioData.IO
             AudioDataSize = 0;
         }
 
-        public MPEGplus(string filePath, Format format)
+        public MPEGplus(string filePath, AudioFormat format)
         {
             this.FileName = filePath;
             AudioFormat = format;

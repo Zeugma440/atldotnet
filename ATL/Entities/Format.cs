@@ -10,6 +10,11 @@ namespace ATL
     public class Format : IEnumerable
     {
         /// <summary>
+        /// Represents an unknown generic format
+        /// </summary>
+        public static readonly Format UNKNOWN_FORMAT = new Format(0, "Unknown");
+
+        /// <summary>
         /// Check if the given byte array matches the Format's signature (aka "magic number")
         /// NB : This operation has to be fast
         /// </summary>
@@ -47,7 +52,7 @@ namespace ATL
         }
 
         /// <summary>
-        /// Construct a format by copying data from the given Format object
+        /// Construct a Format by copying data from the given Format object
         /// </summary>
         /// <param name="f">Format to copy data from</param>
         public Format(Format f)
