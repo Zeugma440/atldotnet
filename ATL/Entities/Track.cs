@@ -331,7 +331,8 @@ namespace ATL
         public IList<Format> MetadataFormats { get; internal set; }
 
         /// <summary>
-        /// Format of the supported tagging systems supported by the file
+        /// Format of tagging systems supported by the file
+        /// NB : their IDs match `MetaDataIOFactory.TagType` enum values
         /// </summary>
         public IList<Format> SupportedMetadataFormats { get; internal set; }
 
