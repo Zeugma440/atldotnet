@@ -311,9 +311,7 @@ namespace ATL.AudioData.IO
 
         private void postWrite(Stream w)
         {
-            // Set the 'isLast' bit on the actual last block
-            w.Seek(latestBlockOffset, SeekOrigin.Begin);
-            w.WriteByte((byte)(latestBlockType | FLAG_LAST_METADATA_BLOCK));
+            setIsLast(w);
         }
 
         private WriteResult write(Stream s, TagData tag, Zone zone)
@@ -474,8 +472,8 @@ namespace ATL.AudioData.IO
         {
             long cumulativeDelta = 0;
 
-            // Handling of the 'isLast' bit
-            latestBlockOffset = -1;
+            // Handling of the 'isLast' flag for METADATA_BLOCK_HEADER
+            latestBlockOffset = header.Offset + 4;
             latestBlockType = 0;
 
             foreach (var zone in zones)
@@ -504,14 +502,11 @@ namespace ATL.AudioData.IO
             return true;
         }
 
-        // Set the 'isLast' bit on the actual last block
+        // Set the 'isLast' flag on the header of the actual last metadata block
         private void setIsLast(Stream s)
         {
-            if (latestBlockOffset > -1)
-            {
-                s.Seek(latestBlockOffset, SeekOrigin.Begin);
-                s.WriteByte((byte)(latestBlockType | FLAG_LAST_METADATA_BLOCK));
-            }
+            s.Seek(latestBlockOffset, SeekOrigin.Begin);
+            s.WriteByte((byte)(latestBlockType | FLAG_LAST_METADATA_BLOCK));
         }
 
         public void SetEmbedder(IMetaDataEmbedder embedder)

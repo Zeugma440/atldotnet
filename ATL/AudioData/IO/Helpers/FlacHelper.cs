@@ -35,6 +35,7 @@ namespace ATL.AudioData
             /// </summary>
             public void Reset()
             {
+                Offset = -1;
                 StreamMarker = new byte[4];
                 Array.Clear(MetaDataBlockHeader, 0, 4);
                 Array.Clear(Info, 0, 18);
@@ -46,11 +47,17 @@ namespace ATL.AudioData
             /// <param name="source">Stream to read data from</param>
             public void fromStream(Stream source)
             {
+                Offset = source.Position;
                 source.Read(StreamMarker, 0, 4);
                 source.Read(MetaDataBlockHeader, 0, 4);
                 source.Read(Info, 0, 18); // METADATA_BLOCK_STREAMINFO
                 source.Seek(16, SeekOrigin.Current); // MD5 sum for audio data
             }
+
+            /// <summary>
+            /// Offset of the header
+            /// </summary>
+            public long Offset { get; private set; }
 
             /// <summary>
             /// True if the header has valid data; false if it doesn't
@@ -87,6 +94,8 @@ namespace ATL.AudioData
 
             /// <summary>
             /// Returns true if the metadata block exists; false if it doesn't
+            /// NB : We're testing if the very first metadata block we're into (STREAMINFO) is the last one
+            /// If it isn't, it means there are other metadata blocks.
             /// </summary>
             public bool MetadataExists => 0 == (MetaDataBlockHeader[1] & FLAG_LAST_METADATA_BLOCK);
 
