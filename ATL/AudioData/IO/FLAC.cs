@@ -25,6 +25,7 @@ namespace ATL.AudioData.IO
         private const byte META_VORBIS_COMMENT = 4;
         private const byte META_CUESHEET = 5;
         private const byte META_PICTURE = 6;
+        private const byte META_INVALID = 127;
 #pragma warning restore IDE0051 // Remove unused private members
 #pragma warning restore S1144 // Unused private types or members should be removed
 
@@ -227,7 +228,7 @@ namespace ATL.AudioData.IO
                             if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "." + zones.Count, position - 4, (int)blockLength + 4, Array.Empty<byte>(), true, blockType));
                             vorbisTag.ReadPicture(source, readTagParams);
                         }
-                        else // Unhandled block; needs to be zoned anyway to be able to manage the 'isLast' flag at write-time
+                        else if (blockType != META_INVALID) // Unhandled block; needs to be zoned anyway to be able to manage the 'isLast' flag at write-time
                         {
                             if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "." + zones.Count, position - 4, (int)blockLength + 4, Array.Empty<byte>(), true, blockType));
                         }
