@@ -312,6 +312,14 @@ namespace ATL.AudioData.IO
 
         private void postWrite(Stream w)
         {
+            // Remove the isLast flag from the header
+            if (latestBlockOffset > header.Offset + 4)
+            {
+                w.Seek(header.Offset + 4, SeekOrigin.Begin);
+                byte b = (byte)w.ReadByte();
+                w.Seek(-1, SeekOrigin.Current);
+                w.WriteByte((byte)(b & ~FLAG_LAST_METADATA_BLOCK));
+            }
             setIsLast(w);
         }
 
