@@ -28,8 +28,6 @@ namespace ATL.benchmark
 
             //browseFor(@"E:\Music\", "*.mp3");
 
-            info(@"D:\temp\caf\sound.caf");
-
             //info(@"D:\temp\wav\74\empty_tagged_audacity.wav");
 
             //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
@@ -128,12 +126,9 @@ namespace ATL.benchmark
 
         static private void reduce(string filePath)
         {
+            new ConsoleLogger();
             new Reduce().reduce(filePath);
-        }
-
-        enum MetadataSpecification
-        {
-            Mp4, Aiff, Vorbis, Id3V1, Id3V23, Id3V24, Ape, Wma, Undefined
+            Console.ReadLine();
         }
 
         static private void info(string filePath)
