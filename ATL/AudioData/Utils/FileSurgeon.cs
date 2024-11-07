@@ -324,6 +324,7 @@ namespace ATL.AudioData.IO
                                 result &= structureHelper.RewriteHeaders(fullScopeWriter, isBuffered ? writer : null, delta, action, zone.Name, globalOffsetCorrection, isBuffered ? region.Id : -1);
                             }
 
+                            if (action == ACTION.Delete) zone.IsDeleted = true;
                             zone.Size = (int)newTagSize;
                         } // MemoryStream used to process current zone
 

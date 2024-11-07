@@ -144,8 +144,12 @@ namespace ATL.AudioData.IO
         // Inner technical information to remember for writing purposes
         private uint globalTimeScale;
         private readonly IDictionary<int, int> trackTimescales = new Dictionary<int, int>();
+
+        private long trackCounterPosition;
         private int qtChapterTextTrackId;
         private int qtChapterPictureTrackId;
+        private int maxTrackId;
+
         private long initialPaddingOffset;
         private uint initialPaddingSize;
         private byte[] chapterTextTrackEdits;
@@ -188,14 +192,8 @@ namespace ATL.AudioData.IO
 
 
         // IMetaDataIO
-        protected override int getDefaultTagOffset()
-        {
-            return TO_BUILTIN;
-        }
-        protected override MetaDataIOFactory.TagType getImplementedTagType()
-        {
-            return MetaDataIOFactory.TagType.NATIVE;
-        }
+        protected override int getDefaultTagOffset() => TO_BUILTIN;
+        protected override MetaDataIOFactory.TagType getImplementedTagType() => MetaDataIOFactory.TagType.NATIVE;
         public override byte FieldCodeFixedLength => 4;
 
         protected override bool isLittleEndian => false;
@@ -212,10 +210,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override bool canHandleNonStandardField(string code, string value)
-        {
-            return true;
-        }
+        protected override bool canHandleNonStandardField(string code, string value) => true;
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
@@ -226,8 +221,10 @@ namespace ATL.AudioData.IO
 
             globalTimeScale = 0;
             trackTimescales.Clear();
+            trackCounterPosition = 0;
             qtChapterTextTrackId = 0;
             qtChapterPictureTrackId = 0;
+            maxTrackId = 0;
             initialPaddingSize = 0;
             initialPaddingOffset = -1;
             AudioDataOffset = -1;
@@ -384,8 +381,7 @@ namespace ATL.AudioData.IO
             if (1 == version) timeLengthPerSec = StreamUtils.DecodeBEInt64(source.ReadBytes(8));
             else timeLengthPerSec = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
             calculatedDurationMs = timeLengthPerSec * 1000.0 / globalTimeScale;
-
-            long trackCounterPosition = source.BaseStream.Position + 76;
+            trackCounterPosition = source.BaseStream.Position + 76;
 
             source.BaseStream.Seek(moovPosition, SeekOrigin.Begin);
             byte currentTrakIndex = 0;
@@ -394,7 +390,7 @@ namespace ATL.AudioData.IO
             // Loop through tracks
             do
             {
-                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, chapterTextTrackSamples, chapterPictureTrackSamples, chapterTrackIndexes, audioTrackOffsets, trackCounterPosition, moovPosition, moovSize);
+                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, chapterTextTrackSamples, chapterPictureTrackSamples, chapterTrackIndexes, audioTrackOffsets, moovPosition, moovSize);
                 if (-1 == trakSize)
                 {
                     // TODO do better than that
@@ -668,7 +664,6 @@ namespace ATL.AudioData.IO
             IList<MP4Sample> chapterPictureTrackSamples,
             IDictionary<int, IList<int>> chapterTrackIndexes,
             IList<long> mediaTrackOffsets,
-            long trackCounterOffset,
             long moovPosition,
             long moovSize
         )
@@ -706,12 +701,6 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(intLength * 2, SeekOrigin.Current); // Creation & Modification Dates
 
             int trackId = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-            if (readTagParams.PrepareForWriting)
-            {
-                trackZoneName = "track." + trackId;
-                structureHelper.AddZone(trakPosition, 0, trackZoneName, false);
-                structureHelper.AddCounter(trackCounterOffset, 1 == trackId ? 2 : 1, trackZoneName);
-            }
 
             // Detect the track type
             source.BaseStream.Seek(trakPosition + 8, SeekOrigin.Begin);
@@ -786,11 +775,9 @@ namespace ATL.AudioData.IO
 
             if (readTagParams.PrepareForWriting && isCurrentTrackOtherChapterTrack && !isCurrentTrackFirstChapterTextTrack)
             {
-                structureHelper.RemoveZone(trackZoneName);
                 trackZoneName = ZONE_MP4_QT_CHAP_TXT_TRAK + "." + trackId;
                 structureHelper.AddZone(trakPosition, (int)trakSize, trackZoneName);
                 structureHelper.AddSize(moovPosition - 8, moovSize, trackZoneName);
-                structureHelper.AddCounter(trackCounterOffset, (1 != trackId) ? 1 : 2, trackZoneName);
             }
 
             source.BaseStream.Seek(mdiaPosition, SeekOrigin.Begin);
@@ -907,14 +894,14 @@ namespace ATL.AudioData.IO
             // Read chapters textual data
             if (isCurrentTrackFirstChapterTextTrack)
             {
-                uint result = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, trackCounterOffset, chapterTextTrackSamples, mediaTimeScale, true);
+                uint result = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, chapterTextTrackSamples, mediaTimeScale, true);
                 if (result > 0) return int32Data; // An error has occured
             }
 
             // Read chapters picture data
             if (isCurrentTrackFirstChapterPicturesTrack)
             {
-                uint result = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, trackCounterOffset, chapterPictureTrackSamples, mediaTimeScale, false);
+                uint result = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, chapterPictureTrackSamples, mediaTimeScale, false);
                 if (result > 0) return int32Data; // An error has occured
             }
 
@@ -1001,6 +988,9 @@ namespace ATL.AudioData.IO
                     cumulatedChunkOffset += pt.Size;
                 }
             }
+
+            if (!isCurrentTrackFirstChapterPicturesTrack && !isCurrentTrackFirstChapterTextTrack)
+                maxTrackId = Math.Max(maxTrackId, trackId);
 
             /*
             * "Physical" audio chunks are referenced by position (offset) in moov.trak.mdia.minf.stbl.stco / co64
@@ -1089,7 +1079,6 @@ namespace ATL.AudioData.IO
             long trakPosition,
             uint trakSize,
             int currentTrakIndex,
-            long trackCounterOffset,
             IList<MP4Sample> chapterTrackSamples,
             int mediaTimeScale,
             bool isText)
@@ -1117,8 +1106,6 @@ namespace ATL.AudioData.IO
                 {
                     var zoneName = isText ? ZONE_MP4_QT_CHAP_TXT_TRAK : ZONE_MP4_QT_CHAP_PIC_TRAK;
                     structureHelper.AddZone(trakPosition, (int)trakSize, zoneName);
-                    structureHelper.AddCounter(trackCounterOffset, (1 == currentTrakIndex) ? 2 : 1, zoneName);
-                    structureHelper.RemoveZone("track." + currentTrakIndex); // Remove previously recorded generic track zone
                     structureHelper.RemoveZonesStartingWith(ZONE_MP4_PHYSICAL_CHUNK + "." + currentTrakIndex); // Remove chunks associated with previously recorded generic track zone
                 }
 
@@ -1745,6 +1732,20 @@ namespace ATL.AudioData.IO
             }
         }
 
+        /// <inheritdoc/>
+        protected override void postprocessWrite(Stream s)
+        {
+            int maxTrack = maxTrackId;
+            if (Chapters.Count > 0)
+            {
+                var zones = structureHelper.Zones;
+                if (zones.Any(z => z.Name == ZONE_MP4_QT_CHAP_PIC_TRAK)) maxTrack = Math.Max(maxTrack, qtChapterPictureTrackId);
+                if (zones.Any(z => z.Name == ZONE_MP4_QT_CHAP_TXT_TRAK)) maxTrack = Math.Max(maxTrack, qtChapterTextTrackId);
+            }
+            s.Seek(structureHelper.getCorrectedOffset(trackCounterPosition), SeekOrigin.Begin);
+            s.Write(StreamUtils.EncodeBEUInt32((uint)maxTrack + 1));
+        }
+
         protected override int write(TagData tag, Stream s, string zone)
         {
             using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
@@ -1821,7 +1822,7 @@ namespace ATL.AudioData.IO
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_TXT_TRAK)) // Quicktime chapter text track
             {
-                if (zone.Equals(ZONE_MP4_QT_CHAP_TXT_TRAK)) // Text track ATL suppors
+                if (zone.Equals(ZONE_MP4_QT_CHAP_TXT_TRAK)) // Text track ATL supports -> can be edited
                     result = writeQTChaptersTrack(w, qtChapterTextTrackId, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs), true);
                 else return 1; // Other text track ATL doesn't support; needs to appear active
             }
@@ -2247,8 +2248,6 @@ namespace ATL.AudioData.IO
 
         private int writeQTChaptersTrack(BinaryWriter w, int trackNum, IList<ChapterInfo> chapters, uint globalTimeScale, uint trackDurationMs, bool isText)
         {
-            long trackTimescale = trackTimescales[trackNum];
-
             if (null == chapters || 0 == chapters.Count) return 0;
             IList<ChapterInfo> workingChapters = chapters;
             if (0 == workingChapters.Count) return 0;
@@ -2327,6 +2326,7 @@ namespace ATL.AudioData.IO
             w.Write(StreamUtils.EncodeBEUInt32(getMacDateNow())); // Creation date
             w.Write(StreamUtils.EncodeBEUInt32(getMacDateNow())); // Modification date
 
+            long trackTimescale = trackTimescales[trackNum];
             w.Write(StreamUtils.EncodeBEUInt32((uint)trackTimescale)); // Track timescale
 
             w.Write(StreamUtils.EncodeBEUInt32((uint)(trackDurationMs / 1000 * trackTimescale))); // Duration (sec)

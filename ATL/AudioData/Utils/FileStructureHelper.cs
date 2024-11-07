@@ -158,6 +158,10 @@ namespace ATL.AudioData
             /// </summary>
             public bool IsResizable { get; set; }
             /// <summary>
+            /// True if the zone has been deleted
+            /// </summary>
+            public bool IsDeleted { get; set; }
+            /// <summary>
             /// True if the zone can't be edited in any way
             /// </summary>
             public bool IsReadonly => 0 == Size && !IsResizable && !IsDeletable;
@@ -168,6 +172,7 @@ namespace ATL.AudioData
             public Zone(string name, long offset, long size, byte[] coreSignature, bool isDeletable = true, byte flag = 0, bool resizable = true)
             {
                 Name = name; Offset = offset; Size = size; CoreSignature = coreSignature; IsDeletable = isDeletable; Flag = flag; IsResizable = resizable;
+                IsDeleted = false;
                 Headers = new List<FrameHeader>();
             }
 
@@ -244,8 +249,9 @@ namespace ATL.AudioData
             get
             {
                 // 1. Ignore zones declared but not added
-                // 2. Sort by offset
-                return zones.Values.Where(zone => zone.Offset > -1).OrderBy(zone => zone.Offset).ThenBy(zone => zone.Name).ToList();
+                // 2. Ignore deleted zones
+                // 3. Sort by offset
+                return zones.Values.Where(zone => zone.Offset > -1 && !zone.IsDeleted).OrderBy(zone => zone.Offset).ThenBy(zone => zone.Name).ToList();
             }
         }
 
