@@ -1,9 +1,12 @@
+using ATL.AudioData.IO;
 using ATL.Logging;
 using Commons;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace ATL
 {
@@ -283,6 +286,7 @@ namespace ATL
         /// </summary>
         public double DurationMs { get; set; }
 
+
 #pragma warning restore S1104 // Fields should not have public accessibility
 
         /// <summary>
@@ -304,6 +308,8 @@ namespace ATL
             Fields = new Dictionary<Field, string>();
             AdditionalFields = new List<MetaFieldInfo>();
             Pictures = new List<PictureInfo>();
+            TrackDigitsForLeadingZeroes = tagData.TrackDigitsForLeadingZeroes;
+            DiscDigitsForLeadingZeroes = tagData.DiscDigitsForLeadingZeroes;
 
             IntegrateValues(tagData);
         }
