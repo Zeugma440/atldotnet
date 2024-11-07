@@ -20,7 +20,7 @@ namespace ATL.AudioData.IO
         /// <param name="meta">Metadata I/O to test with</param>
         /// <param name="prefix">Prefix to test with</param>
         /// <returns>True if the given Metadata I/O contains data relevant to the given prefix; false if it doesn't</returns>
-        public static bool IsDataEligible(MetaDataIO meta, string prefix)
+        public static bool IsDataEligible(MetaDataHolder meta, string prefix)
         {
             return meta.AdditionalFields.Keys.Any(key => key.StartsWith(prefix));
         }

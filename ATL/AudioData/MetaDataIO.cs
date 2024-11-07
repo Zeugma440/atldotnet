@@ -520,7 +520,7 @@ namespace ATL.AudioData.IO
                 structureHelper.AddZone(0, 0);
             }
 
-            var dataToWrite = tagData;
+            var dataToWrite = new TagData(tagData);
             dataToWrite.IntegrateValues(tag); // Merge existing information + new tag information
             dataToWrite.Cleanup();
 
@@ -555,7 +555,11 @@ namespace ATL.AudioData.IO
 
                     result = result && rewriteHeaders(s, zone);
 
-                    if (zone.IsDeletable) cumulativeDelta += zone.Size - zone.CoreSignature.Length;
+                    if (zone.IsDeletable)
+                    {
+                        cumulativeDelta += zone.Size - zone.CoreSignature.Length;
+                        zone.IsDeleted = true;
+                    }
                 }
             }
             postprocessWrite(s);

@@ -81,12 +81,12 @@ namespace ATL.AudioData.IO
             xmlArray.FromStream(source, meta, readTagParams, chunkSize);
         }
 
-        public static bool IsDataEligible(MetaDataIO meta)
+        public static bool IsDataEligible(MetaDataHolder meta)
         {
             return WavHelper.IsDataEligible(meta, "xmp.");
         }
 
-        public static int ToStream(BinaryWriter w, MetaDataIO meta, bool isLittleEndian = false, bool wavEmbed = false)
+        public static int ToStream(BinaryWriter w, MetaDataHolder meta, bool isLittleEndian = false, bool wavEmbed = false)
         {
             if (wavEmbed) w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_XMP));
 

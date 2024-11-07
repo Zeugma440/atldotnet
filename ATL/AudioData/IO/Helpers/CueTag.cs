@@ -56,7 +56,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="meta">Metadata I/O to test with</param>
         /// <returns>True if the given Metadata I/O contains data relevant to the Cue-points format; false if it doesn't</returns>
-        public static bool IsDataEligible(MetaDataIO meta)
+        public static bool IsDataEligible(MetaDataHolder meta)
         {
             return WavHelper.IsDataEligible(meta, "cue.");
         }
@@ -68,7 +68,7 @@ namespace ATL.AudioData.IO
         /// <param name="isLittleEndian">Endianness to write the size headers with</param>
         /// <param name="meta">Metadata to write</param>
         /// <returns>The number of written fields</returns>
-        public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
+        public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataHolder meta)
         {
             IDictionary<string, string> additionalFields = meta.AdditionalFields;
             w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_CUE));

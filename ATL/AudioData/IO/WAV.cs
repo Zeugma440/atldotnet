@@ -568,33 +568,33 @@ namespace ATL.AudioData.IO
         protected override int write(TagData tag, Stream s, string zone)
         {
             using BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true);
-            return write(w, zone);
+            return write(w, new TagHolder(tag), zone);
         }
 
-        private int write(BinaryWriter w, string zone)
+        private int write(BinaryWriter w, MetaDataHolder tag, string zone)
         {
             int result = 0;
 
             switch (zone)
             {
-                case CHUNK_SAMPLE when SampleTag.IsDataEligible(this):
-                    result += SampleTag.ToStream(w, isLittleEndian, this);
+                case CHUNK_SAMPLE when SampleTag.IsDataEligible(tag):
+                    result += SampleTag.ToStream(w, isLittleEndian, tag);
                     break;
-                case CHUNK_CUE when CueTag.IsDataEligible(this):
-                    result += CueTag.ToStream(w, isLittleEndian, this);
+                case CHUNK_CUE when CueTag.IsDataEligible(tag):
+                    result += CueTag.ToStream(w, isLittleEndian, tag);
                     break;
                 default:
                     {
-                        if (zone.StartsWith(CHUNK_LIST) && List.IsDataEligible(this))
+                        if (zone.StartsWith(CHUNK_LIST) && List.IsDataEligible(tag))
                         {
                             string[] zoneParts = zone.Split('.');
-                            if (zoneParts.Length > 1) result += List.ToStream(w, isLittleEndian, zoneParts[1], this);
+                            if (zoneParts.Length > 1) result += List.ToStream(w, isLittleEndian, zoneParts[1], tag, this);
                         }
-                        else if (zone.Equals(CHUNK_DISP + ".0") && DispTag.IsDataEligible(this)) result += DispTag.ToStream(w, isLittleEndian, this); // Process the 1st position as a whole
-                        else if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(this)) result += BextTag.ToStream(w, isLittleEndian, this);
-                        else if (zone.Equals(CHUNK_IXML) && IXmlTag.IsDataEligible(this)) result += IXmlTag.ToStream(w, isLittleEndian, this);
-                        else if (zone.Equals(CHUNK_XMP) && XmpTag.IsDataEligible(this)) result += XmpTag.ToStream(w, this, isLittleEndian, true);
-                        else if (zone.Equals(CHUNK_CART) && CartTag.IsDataEligible(this)) result += CartTag.ToStream(w, isLittleEndian, this);
+                        else if (zone.Equals(CHUNK_DISP + ".0") && DispTag.IsDataEligible(tag)) result += DispTag.ToStream(w, isLittleEndian, tag); // Process the 1st position as a whole
+                        else if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(tag)) result += BextTag.ToStream(w, isLittleEndian, tag);
+                        else if (zone.Equals(CHUNK_IXML) && IXmlTag.IsDataEligible(tag)) result += IXmlTag.ToStream(w, isLittleEndian, tag);
+                        else if (zone.Equals(CHUNK_XMP) && XmpTag.IsDataEligible(tag)) result += XmpTag.ToStream(w, tag, isLittleEndian, true);
+                        else if (zone.Equals(CHUNK_CART) && CartTag.IsDataEligible(tag)) result += CartTag.ToStream(w, isLittleEndian, tag);
 
                         break;
                     }

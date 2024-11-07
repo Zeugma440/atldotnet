@@ -150,7 +150,7 @@ namespace ATL.AudioData
             }
         }
 
-        public int ToStream(BinaryWriter w, MetaDataIO meta)
+        public int ToStream(BinaryWriter w, MetaDataHolder meta)
         {
             // Filter eligible additionalData
             IDictionary<string, string> additionalFields = meta.AdditionalFields

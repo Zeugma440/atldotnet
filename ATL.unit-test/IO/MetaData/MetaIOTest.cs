@@ -897,14 +897,15 @@ namespace ATL.test.IO.MetaData
                 byte nbFound = 0;
                 foreach (PictureInfo pic in meta.EmbeddedPictures)
                 {
+                    pic.ComputePicHash();
                     foreach (PictureInfo testPicInfo in testData.EmbeddedPictures)
                     {
+                        testPicInfo.ComputePicHash();
                         if ((pic.NativePicCode > -1 && pic.NativePicCode.Equals(testPicInfo.NativePicCode))
                             || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(testPicInfo.NativePicCodeStr, StringComparison.OrdinalIgnoreCase))
                            )
                         {
                             nbFound++;
-                            pic.ComputePicHash();
                             Assert.AreEqual(testPicInfo.PictureHash, pic.PictureHash);
                             break;
                         }

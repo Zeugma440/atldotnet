@@ -2,6 +2,7 @@ using ATL.AudioData.IO;
 using ATL.Logging;
 using Commons;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -405,68 +406,7 @@ namespace ATL
 
             // Pictures
             // TODO merge with Track.toTagData ?
-            if (integratePictures && targetData.Pictures != null)
-            {
-                IList<PictureInfo> resultPictures = new List<PictureInfo>();
-
-                foreach (PictureInfo newPicInfo in targetData.Pictures)
-                {
-                    newPicInfo.ComputePicHash();
-                    int candidatePosition = 0;
-                    bool added = false;
-                    foreach (PictureInfo picInfo in Pictures)
-                    {
-                        picInfo.ComputePicHash();
-                        // New PictureInfo picture type already exists in current TagData
-                        if (!picInfo.EqualsProper(newPicInfo)) continue;
-
-                        // New PictureInfo is a demand for deletion
-                        if (newPicInfo.MarkedForDeletion)
-                        {
-                            picInfo.MarkedForDeletion = true;
-                            added = true;
-                            resultPictures.Add(picInfo);
-                        }
-                        else
-                        {
-                            candidatePosition = Math.Max(candidatePosition, picInfo.Position);
-                            // New picture is an existing picture -> keep the existing one
-                            if (picInfo.PictureHash <= 0 || picInfo.PictureHash != newPicInfo.PictureHash) continue;
-
-                            added = true;
-                            PictureInfo targetPicture = picInfo;
-                            if (newPicInfo.Description != picInfo.Description)
-                            {
-                                targetPicture = new PictureInfo(picInfo, false);
-                                targetPicture.Description = newPicInfo.Description;
-                            }
-                            resultPictures.Add(targetPicture);
-                            break;
-                        }
-                    }
-                    // New PictureInfo is a X-th picture of the same type
-                    if (added) continue;
-
-                    newPicInfo.Position = candidatePosition + 1;
-                    resultPictures.Add(newPicInfo);
-                }
-
-                // Eventually add all existing pictures that are completely absent from target pictures
-                // in the _beginning_, as they were there initially
-                for (int i = Pictures.Count - 1; i >= 0; i--)
-                {
-                    bool found = false;
-                    foreach (PictureInfo picInfo in targetData.Pictures)
-                    {
-                        if (!picInfo.EqualsProper(Pictures[i])) continue;
-
-                        found = true;
-                        break;
-                    }
-                    if (!found) resultPictures.Insert(0, Pictures[i]);
-                }
-                Pictures = resultPictures;
-            }
+            if (integratePictures && targetData.Pictures != null) Pictures = integratePics3(targetData.Pictures);
 
             // Additional textual fields
             if (mergeAdditionalData)
@@ -528,6 +468,144 @@ namespace ATL
             }
 
             DurationMs = targetData.DurationMs;
+        }
+
+        private IList<PictureInfo> integratePics3(IList<PictureInfo> targetPics)
+        {
+            IList<PictureInfo> resultPictures = new List<PictureInfo>();
+            IList<PictureInfo> targetPictures = new List<PictureInfo>(targetPics.Where(p => !p.MarkedForDeletion));
+            IList<KeyValuePair<string, int>> picturePositions = new List<KeyValuePair<string, int>>();
+
+            // Remove contradictory target pictures (same ID with both keep and delete flags)
+            var deleteOrders = targetPics.Where(p => p.MarkedForDeletion).ToHashSet();
+            /*
+            foreach (PictureInfo pic in targetPics)
+            {
+                var found = false;
+                foreach (PictureInfo del in deleteOrders)
+                {
+                    if (!pic.EqualsProper(del)) continue;
+                    found = true;
+                    break;
+                }
+                if (!found) targetPictures.Add(pic);
+            }
+            */
+            foreach (PictureInfo del in deleteOrders)
+            {
+                foreach (PictureInfo pic in targetPictures.ToHashSet())
+                {
+                    //if (!pic.EqualsProper(del)) continue;
+                    if (!pic.Equals(del)) continue;
+                    targetPictures.Remove(pic);
+                    break;
+                }
+            }
+
+            // Index existing pictures and process remove orders
+            foreach (PictureInfo existingPic in Pictures)
+            {
+                var addExisting = false;
+                var deleteFound = false;
+
+                foreach (PictureInfo del in deleteOrders.ToHashSet())
+                {
+                    if (!existingPic.EqualsProper(del)) continue;
+                    deleteOrders.Remove(del); // Can only be used once
+                    deleteFound = true;
+                    break;
+                }
+
+                if (!deleteFound)
+                {
+                    registerPosition(existingPic, picturePositions);
+                    existingPic.ComputePicHash();
+                    addExisting = true;
+                }
+
+                // Keep existing one and update description if needed
+                PictureInfo newPic = null;
+                foreach (PictureInfo tgt in targetPictures)
+                {
+                    if (!existingPic.EqualsProper(tgt)) continue;
+                    newPic = tgt;
+                    break;
+                }
+
+                if (newPic != null)
+                {
+                    newPic.ComputePicHash();
+                    if (existingPic.PictureHash > 0 && existingPic.PictureHash == newPic.PictureHash)
+                    {
+                        PictureInfo addPic = existingPic;
+                        if (newPic.Description != existingPic.Description)
+                        {
+                            addPic = new PictureInfo(existingPic, false);
+                            addPic.Description = newPic.Description;
+                        }
+                        resultPictures.Add(addPic);
+                        // Target picture has been "consumed"
+                        targetPictures.Remove(newPic);
+                        addExisting = false; // Don't add existing as it has been already processed
+                    }
+                }
+                if (addExisting) resultPictures.Add(new PictureInfo(existingPic, false));
+            }
+
+            // Add remaining target pictures
+            foreach (PictureInfo target in targetPictures)
+            {
+                var targetPic = new PictureInfo(target, false);
+                targetPic.Position = 0;
+                targetPic.Position = nextPosition(targetPic, picturePositions);
+                resultPictures.Add(targetPic);
+            }
+
+            // Order according to input list
+            IList<PictureInfo> orderedResultPictures = new List<PictureInfo>();
+            foreach (PictureInfo target in targetPics)
+            {
+                foreach (PictureInfo tgt in resultPictures.ToHashSet())
+                {
+                    if (!tgt.EqualsProper(target)) continue;
+                    orderedResultPictures.Add(tgt);
+                    resultPictures.Remove(tgt);
+                    break;
+                }
+            }
+            foreach (PictureInfo target in resultPictures) orderedResultPictures.Add(target);
+
+            return orderedResultPictures;
+        }
+
+        private void registerPosition(PictureInfo picInfo, IList<KeyValuePair<string, int>> positions)
+        {
+            positions.Add(new KeyValuePair<string, int>(picInfo.ToString(), picInfo.Position));
+        }
+
+        private int nextPosition(PictureInfo picInfo, IList<KeyValuePair<string, int>> positions)
+        {
+            string picId = picInfo.ToString();
+            bool found = false;
+            int picPosition = 1;
+
+            for (int i = 0; i < positions.Count; i++)
+            {
+                if (positions[i].Key.Equals(picId))
+                {
+                    picPosition = positions[i].Value + 1;
+                    positions[i] = new KeyValuePair<string, int>(picId, picPosition);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                positions.Add(new KeyValuePair<string, int>(picId, 1));
+            }
+
+            return picPosition;
         }
 
         /// <summary>

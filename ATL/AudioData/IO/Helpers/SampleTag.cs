@@ -67,12 +67,12 @@ namespace ATL.AudioData.IO
             }
         }
 
-        public static bool IsDataEligible(MetaDataIO meta)
+        public static bool IsDataEligible(MetaDataHolder meta)
         {
             return WavHelper.IsDataEligible(meta, "sample.");
         }
 
-        public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
+        public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataHolder meta)
         {
             IDictionary<string, string> additionalFields = meta.AdditionalFields;
             w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_SAMPLE));

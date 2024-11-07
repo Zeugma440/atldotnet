@@ -289,7 +289,8 @@ namespace ATL.AudioData.IO
         private int write(TagData tag, BinaryWriter w)
         {
             byte[] endString = new byte[] { 0, 0 };
-            int result = 11; // 11 field to write
+            int result = 11; // 11 fields to write
+            var holder = new TagHolder(tag);
             Encoding unicodeEncoder = Encoding.Unicode;
 
             w.Write(GD3_SIGNATURE);
@@ -298,14 +299,14 @@ namespace ATL.AudioData.IO
             var sizePos = w.BaseStream.Position;
             w.Write(0);
 
-            w.Write(unicodeEncoder.GetBytes(tag[Field.TITLE]));
+            w.Write(unicodeEncoder.GetBytes(holder.Title));
             w.Write(endString); // Strings must be null-terminated
             var str = "";
             if (AdditionalFields.ContainsKey("TITLE_J")) str = AdditionalFields["TITLE_J"];
             w.Write(unicodeEncoder.GetBytes(str));
             w.Write(endString);
 
-            w.Write(unicodeEncoder.GetBytes(tag[Field.ALBUM]));
+            w.Write(unicodeEncoder.GetBytes(holder.Album));
             w.Write(endString);
             str = "";
             if (AdditionalFields.ContainsKey("GAME_J")) str = AdditionalFields["GAME_J"];
@@ -321,14 +322,14 @@ namespace ATL.AudioData.IO
             w.Write(unicodeEncoder.GetBytes(str));
             w.Write(endString);
 
-            w.Write(unicodeEncoder.GetBytes(tag[Field.ARTIST]));
+            w.Write(unicodeEncoder.GetBytes(holder.Artist));
             w.Write(endString);
             str = "";
             if (AdditionalFields.ContainsKey("AUTHOR_J")) str = AdditionalFields["AUTHOR_J"];
             w.Write(unicodeEncoder.GetBytes(str));
             w.Write(endString);
 
-            w.Write(unicodeEncoder.GetBytes(EncodeDate(Date)));
+            w.Write(unicodeEncoder.GetBytes(EncodeDate(holder.Date)));
             w.Write(endString);
 
             str = "";
@@ -336,7 +337,7 @@ namespace ATL.AudioData.IO
             w.Write(unicodeEncoder.GetBytes(str));
             w.Write(endString);
 
-            w.Write(unicodeEncoder.GetBytes(tag[Field.COMMENT]));
+            w.Write(unicodeEncoder.GetBytes(holder.Comment));
             w.Write(endString);
 
             w.Write(endString); // Is supposed to be there, according to sample files

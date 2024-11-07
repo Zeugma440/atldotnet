@@ -153,7 +153,7 @@ namespace ATL
         /// <summary>
         /// Freeform transient value to be used by other parts of the library
         /// </summary>
-        public int TransientFlag { get; set; }
+        internal int TransientFlag { get; set; }
 
         /// <summary>
         /// Get the MIME-type associated with the picture
@@ -276,6 +276,7 @@ namespace ATL
         {
             PicType = picType;
             NativeFormat = ImageFormat.Undefined;
+            TagType = TagType.ANY;
             Position = position;
             MarkedForDeletion = false;
             Description = "";
@@ -327,7 +328,10 @@ namespace ATL
             return PictureHash;
         }
 
-        // TODO doc
+        /// <summary>
+        /// Test the equality of two PictureInfo regardless of how they're represented internally
+        /// (native codes or generic enum)
+        /// </summary>
         public bool EqualsProper(PictureInfo picInfo)
         {
             return Position == picInfo.Position && (equalsNative(picInfo) || equalsGeneric(picInfo));
@@ -358,9 +362,9 @@ namespace ATL
 
         private string valueToString()
         {
-            if (NativePicCode > 0 && TagType > 0)
+            if (NativePicCode > 0 && TagType != TagType.ANY)
                 return 10000000 * (int)TagType + "N" + NativePicCode;
-            else if (!string.IsNullOrEmpty(NativePicCodeStr) && TagType > 0)
+            else if (!string.IsNullOrEmpty(NativePicCodeStr) && TagType != TagType.ANY)
                 return 10000000 * (int)TagType + "N" + NativePicCodeStr;
             else if (PicType != PIC_TYPE.Unsupported)
                 return "T" + Utils.BuildStrictLengthString(((int)PicType).ToString(), 2, '0', false); // TagType doesn't matter if we're working with generic picture codes

@@ -1472,9 +1472,9 @@ namespace ATL.AudioData.IO
             }
 
             // Chapters
-            if (Chapters.Count > 0)
+            if (tag.Chapters != null && tag.Chapters.Count > 0)
             {
-                nbFrames += writeChapters(w, Chapters, tagEncoding);
+                nbFrames += writeChapters(w, tag, tagEncoding);
             }
 
             // Lyrics
@@ -1545,7 +1545,7 @@ namespace ATL.AudioData.IO
             w.Write(StreamUtils.EncodeBEInt16(flags));
         }
 
-        private int writeChapters(BinaryWriter writer, IList<ChapterInfo> chapters, Encoding tagEncoding)
+        private int writeChapters(BinaryWriter writer, TagData tag, Encoding tagEncoding)
         {
             int result;
 
@@ -1553,22 +1553,23 @@ namespace ATL.AudioData.IO
             {
                 MemoryStream s = new MemoryStream((int)Size);
                 using BinaryWriter w = new BinaryWriter(s, tagEncoding);
-                result = writeChaptersInternal(writer, w, chapters, tagEncoding, writer.BaseStream.Position);
+                result = writeChaptersInternal(writer, w, tag, tagEncoding, writer.BaseStream.Position);
                 s.Seek(0, SeekOrigin.Begin);
                 encodeUnsynchronizedStreamTo(s, writer);
             }
             else
             {
-                result = writeChaptersInternal(writer, writer, chapters, tagEncoding, 0);
+                result = writeChaptersInternal(writer, writer, tag, tagEncoding, 0);
             }
 
             return result;
         }
 
-        private int writeChaptersInternal(BinaryWriter fileWriter, BinaryWriter frameWriter, IList<ChapterInfo> chapters, Encoding tagEncoding, long frameOffset)
+        private int writeChaptersInternal(BinaryWriter fileWriter, BinaryWriter frameWriter, TagData tag, Encoding tagEncoding, long frameOffset)
         {
             Random randomGenerator = null;
             long frameSizePos, frameDataPos, finalFramePos;
+            IList<ChapterInfo> chapters = tag.Chapters;
             int result = 0;
 
             // Write a "flat" table of contents, if any CTOC is present in tag
@@ -1603,8 +1604,8 @@ namespace ATL.AudioData.IO
                 }
 
                 // CTOC description
-                if (Utils.ProtectValue(ChaptersTableDescription).Length > 0)
-                    writeTextFrame(frameWriter, "TIT2", ChaptersTableDescription, tagEncoding, "", "", true);
+                if (Utils.ProtectValue(tag[Field.CHAPTERS_TOC_DESCRIPTION]).Length > 0)
+                    writeTextFrame(frameWriter, "TIT2", tag[Field.CHAPTERS_TOC_DESCRIPTION], tagEncoding, "", "", true);
 
                 // Go back to frame size location to write its actual size 
                 finalFramePos = frameWriter.BaseStream.Position;

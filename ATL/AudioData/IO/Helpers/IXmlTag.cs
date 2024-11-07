@@ -29,12 +29,12 @@ namespace ATL.AudioData.IO
             xmlArray.FromStream(source, meta, readTagParams, chunkSize);
         }
 
-        public static bool IsDataEligible(MetaDataIO meta)
+        public static bool IsDataEligible(MetaDataHolder meta)
         {
             return WavHelper.IsDataEligible(meta, "ixml.");
         }
 
-        public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataIO meta)
+        public static int ToStream(BinaryWriter w, bool isLittleEndian, MetaDataHolder meta)
         {
             w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_IXML));
 

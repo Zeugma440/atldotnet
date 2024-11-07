@@ -1791,7 +1791,7 @@ namespace ATL.AudioData.IO
             }
             else if (zone.StartsWith(ZONE_MP4_CHPL)) // Nero chapters
             {
-                result = writeNeroChapters(w, Chapters);
+                result = writeNeroChapters(w, tag.Chapters);
             }
             else if (zone.StartsWith(ZONE_MP4_XTRA)) // Extra WMA-like fields written by Windows
             {
@@ -1814,25 +1814,25 @@ namespace ATL.AudioData.IO
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_NOTREF)) // Write a new tref atom for quicktime chapters
             {
-                result = writeQTChaptersTref(w, qtChapterTextTrackId, qtChapterPictureTrackId, Chapters);
+                result = writeQTChaptersTref(w, qtChapterTextTrackId, qtChapterPictureTrackId, tag.Chapters);
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_CHAP)) // Reference to Quicktime chapter track from an audio/video track
             {
-                result = writeQTChaptersChap(w, qtChapterTextTrackId, qtChapterPictureTrackId, Chapters);
+                result = writeQTChaptersChap(w, qtChapterTextTrackId, qtChapterPictureTrackId, tag.Chapters);
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_TXT_TRAK)) // Quicktime chapter text track
             {
                 if (zone.Equals(ZONE_MP4_QT_CHAP_TXT_TRAK)) // Text track ATL supports -> can be edited
-                    result = writeQTChaptersTrack(w, qtChapterTextTrackId, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs), true);
+                    result = writeQTChaptersTrack(w, qtChapterTextTrackId, tag.Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs), true);
                 else return 1; // Other text track ATL doesn't support; needs to appear active
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_PIC_TRAK)) // Quicktime chapter picture track
             {
-                result = writeQTChaptersTrack(w, qtChapterPictureTrackId, Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs), false);
+                result = writeQTChaptersTrack(w, qtChapterPictureTrackId, tag.Chapters, globalTimeScale, Convert.ToUInt32(calculatedDurationMs), false);
             }
             else if (zone.StartsWith(ZONE_MP4_QT_CHAP_MDAT)) // Quicktime chapter data (text and picture data)
             {
-                result = writeQTChaptersData(w, Chapters);
+                result = writeQTChaptersData(w, tag.Chapters);
             }
             else if (zone.StartsWith("uuid.")) // Existing UUID atoms
             {
@@ -2617,7 +2617,7 @@ namespace ATL.AudioData.IO
             {
                 using var mem = new MemoryStream();
                 using var memW = new BinaryWriter(mem);
-                XmpTag.ToStream(memW, this);
+                XmpTag.ToStream(memW, new TagHolder(tag));
                 data = mem.ToArray();
             }
             else
