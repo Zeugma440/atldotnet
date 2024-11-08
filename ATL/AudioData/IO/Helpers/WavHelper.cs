@@ -76,6 +76,43 @@ namespace ATL.AudioData.IO
             meta.SetMetaField(fieldName, value.ToString(), readAllMetaFrames);
         }
 
+        public static void Latin1FromStream(
+            Stream source,
+            int size,
+            MetaDataIO meta,
+            string field,
+            byte[] buffer,
+            bool readAllFrames)
+        {
+            StringFromStream(source, size, Utils.Latin1Encoding, meta, field, buffer, readAllFrames);
+        }
+
+        public static void Utf8FromStream(
+            Stream source,
+            int size,
+            MetaDataIO meta,
+            string field,
+            byte[] buffer,
+            bool readAllFrames)
+        {
+            StringFromStream(source, size, Encoding.UTF8, meta, field, buffer, readAllFrames);
+        }
+
+        public static void StringFromStream(
+            Stream source,
+            int size,
+            Encoding encoding,
+            MetaDataIO meta,
+            string field,
+            byte[] buffer,
+            bool readAllFrames)
+        {
+            if (source.Read(buffer, 0, size) < size) return;
+            var str = Utils.StripEndingZeroChars(encoding.GetString(buffer, 0, size).Trim());
+            if (str.Length > 0) meta.SetMetaField(field, str, readAllFrames);
+        }
+
+
         /// <summary>
         /// Write a fixed-length text value from the given Map to the given writer
         /// NB : Used encoding is Latin-1

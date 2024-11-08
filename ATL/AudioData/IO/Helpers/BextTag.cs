@@ -5,7 +5,6 @@ using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
 using System;
 using System.Text;
-using System.Globalization;
 
 namespace ATL.AudioData.IO
 {
@@ -31,19 +30,19 @@ namespace ATL.AudioData.IO
             byte[] data = new byte[256];
 
             // Description
-            utf8FromStream(source, 256, data, meta, "bext.description", readTagParams.ReadAllMetaFrames);
+            WavHelper.Utf8FromStream(source, 256, meta, "bext.description", data, readTagParams.ReadAllMetaFrames);
 
             // Originator
-            utf8FromStream(source, 32, data, meta, "bext.originator", readTagParams.ReadAllMetaFrames);
+            WavHelper.Utf8FromStream(source, 32, meta, "bext.originator", data, readTagParams.ReadAllMetaFrames);
 
             // OriginatorReference
-            utf8FromStream(source, 32, data, meta, "bext.originatorReference", readTagParams.ReadAllMetaFrames);
+            WavHelper.Utf8FromStream(source, 32, meta, "bext.originatorReference", data, readTagParams.ReadAllMetaFrames);
 
             // OriginationDate
-            utf8FromStream(source, 10, data, meta, "bext.originationDate", readTagParams.ReadAllMetaFrames);
+            WavHelper.Utf8FromStream(source, 10, meta, "bext.originationDate", data, readTagParams.ReadAllMetaFrames);
 
             // OriginationTime
-            utf8FromStream(source, 8, data, meta, "bext.originationTime", readTagParams.ReadAllMetaFrames);
+            WavHelper.Utf8FromStream(source, 8, meta, "bext.originationTime", data, readTagParams.ReadAllMetaFrames);
 
             // TimeReference
             if (source.Read(data, 0, 8) < 8) return;
@@ -96,19 +95,6 @@ namespace ATL.AudioData.IO
                 string str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, (int)(endPos - initialPos)).Trim());
                 if (str.Length > 0) meta.SetMetaField("bext.codingHistory", str, readTagParams.ReadAllMetaFrames);
             }
-        }
-
-        private static void utf8FromStream(
-            Stream source,
-            int size,
-            byte[] buffer,
-            MetaDataIO meta,
-            string field,
-            bool readAllFrames)
-        {
-            if (source.Read(buffer, 0, size) < size) return;
-            var str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(buffer, 0, size).Trim());
-            if (str.Length > 0) meta.SetMetaField(field, str, readAllFrames);
         }
 
         private static void percent16FromStream(

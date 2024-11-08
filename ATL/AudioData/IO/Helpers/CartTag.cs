@@ -34,96 +34,69 @@ namespace ATL.AudioData.IO
             long initialPosition = source.Position;
 
             // Version
-            source.Read(data, 0, 4);
+            if (source.Read(data, 0, 4) < 4) return;
             var majorVersion = Utils.Latin1Encoding.GetString(data, 0, 2);
             if (majorVersion.StartsWith('0')) majorVersion = majorVersion[1..];
             var minorVersion = Utils.Latin1Encoding.GetString(data, 2, 2);
             meta.SetMetaField("cart.version", majorVersion + "." + minorVersion, readTagParams.ReadAllMetaFrames);
 
             // Title
-            source.Read(data, 0, 64);
-            var str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.title", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 64, meta, "cart.title", data, readTagParams.ReadAllMetaFrames);
 
             // Artist
-            source.Read(data, 0, 64);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.artist", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 64, meta, "cart.artist", data, readTagParams.ReadAllMetaFrames);
 
             // Cut number
-            source.Read(data, 0, 64);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.cutNumber", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 64, meta, "cart.cutNumber", data, readTagParams.ReadAllMetaFrames);
 
             // Client ID
-            source.Read(data, 0, 64);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.clientId", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 64, meta, "cart.clientId", data, readTagParams.ReadAllMetaFrames);
 
             // Category
-            source.Read(data, 0, 64);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.category", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 64, meta, "cart.category", data, readTagParams.ReadAllMetaFrames);
 
             // Classification
-            source.Read(data, 0, 64);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.classification", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 64, meta, "cart.classification", data, readTagParams.ReadAllMetaFrames);
 
             // Out cue text
-            source.Read(data, 0, 64);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.outCue", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 64, meta, "cart.outCue", data, readTagParams.ReadAllMetaFrames);
 
             // Start date (YYYY-MM-DD)
-            source.Read(data, 0, 10);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 10).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.startDate", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 10, meta, "cart.startDate", data, readTagParams.ReadAllMetaFrames);
 
             // Start time (hh:mm:ss)
-            source.Read(data, 0, 8);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 8).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.startTime", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 8, meta, "cart.startTime", data, readTagParams.ReadAllMetaFrames);
 
             // End date (YYYY-MM-DD)
-            source.Read(data, 0, 10);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 10).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.endDate", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 10, meta, "cart.endDate", data, readTagParams.ReadAllMetaFrames);
 
             // End time (hh:mm:ss)
-            source.Read(data, 0, 8);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 8).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.endTime", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 8, meta, "cart.endTime", data, readTagParams.ReadAllMetaFrames);
 
             // Producer app ID
-            source.Read(data, 0, 64);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.producerAppId", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 64, meta, "cart.producerAppId", data, readTagParams.ReadAllMetaFrames);
 
             // Producer app version
-            source.Read(data, 0, 64);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.producerAppVersion", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 64, meta, "cart.producerAppVersion", data, readTagParams.ReadAllMetaFrames);
 
             // User-defined
-            source.Read(data, 0, 64);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
-            if (str.Length > 0) meta.SetMetaField("cart.userDef", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 64, meta, "cart.userDef", data, readTagParams.ReadAllMetaFrames);
 
             // Sample value for 0 dB reference
-            source.Read(data, 0, 4);
+            if (source.Read(data, 0, 4) < 4) return;
             var value = StreamUtils.DecodeInt32(data);
             meta.SetMetaField("cart.dwLevelReference", value.ToString(), readTagParams.ReadAllMetaFrames);
 
             // Timer usage ID
+            string str;
             for (int i = 0; i < 8; i++)
             {
-                source.Read(data, 0, 4);
+                if (source.Read(data, 0, 4) < 4) return;
                 str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 4).Trim());
                 meta.SetMetaField("cart.postTimerUsageId[" + (i + 1) + "]", str, readTagParams.ReadAllMetaFrames);
 
                 // Timer value in samples from head
-                source.Read(data, 0, 4);
+                if (source.Read(data, 0, 4) < 4) return;
                 var uValue = StreamUtils.DecodeUInt32(data);
                 meta.SetMetaField("cart.postTimerValue[" + (i + 1) + "]", uValue.ToString(), readTagParams.ReadAllMetaFrames);
             }
@@ -132,16 +105,14 @@ namespace ATL.AudioData.IO
             source.Seek(276, SeekOrigin.Current);
 
             // URL
-            source.Read(data, 0, 1024);
-            str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, 1024).Trim());
-            meta.SetMetaField("cart.url", str, readTagParams.ReadAllMetaFrames);
+            WavHelper.Latin1FromStream(source, 1024, meta, "cart.url", data, readTagParams.ReadAllMetaFrames);
 
             // Free form text for scripts or tags
             int leftBytes = (int)Math.Min(int.MaxValue, chunkSize - (source.Position - initialPosition));
             if (leftBytes <= 0) return;
             if (leftBytes > 1024) data = new byte[leftBytes];
 
-            source.Read(data, 0, leftBytes);
+            if (source.Read(data, 0, leftBytes) < leftBytes) return;
             str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data).Trim());
             // Strip ending CR LF
             foreach (var c in Utils.CR_LF.Reverse()) if (str.EndsWith((char)c)) str = str[..^2];
