@@ -18,8 +18,6 @@ namespace ATL
     /// </summary>
     public class Track
     {
-        private const string InMemoryPath = "In-memory";
-
         /// <summary>
         /// Basic constructor; does nothing else than instanciating the Track object
         /// </summary>
@@ -47,7 +45,7 @@ namespace ATL
         {
             this.stream = stream;
             this.mimeType = mimeType;
-            Path = InMemoryPath;
+            Path = AudioDataIOFactory.IN_MEMORY;
             Update();
         }
 
@@ -451,7 +449,7 @@ namespace ATL
             initialEmbeddedPictures.Clear();
 
             Title = processString(metadata.Title);
-            if (Settings.UseFileNameWhenNoTitle && string.IsNullOrEmpty(Title) && Path != InMemoryPath)
+            if (Settings.UseFileNameWhenNoTitle && string.IsNullOrEmpty(Title) && Path != AudioDataIOFactory.IN_MEMORY)
             {
                 Title = System.IO.Path.GetFileNameWithoutExtension(Path);
             }
@@ -752,7 +750,7 @@ namespace ATL
             if (result)
             {
                 this.stream = target;
-                this.Path = InMemoryPath;
+                this.Path = AudioDataIOFactory.IN_MEMORY;
                 Update();
             }
 
@@ -835,7 +833,7 @@ namespace ATL
             if (result)
             {
                 this.stream = target;
-                this.Path = InMemoryPath;
+                this.Path = AudioDataIOFactory.IN_MEMORY;
                 Update();
             }
 

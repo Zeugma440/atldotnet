@@ -74,7 +74,7 @@ namespace ATL.AudioData
             bool found = false;
             while (!found && alternate < AudioDataIOFactory.MAX_ALTERNATES)
             {
-                audioData = mimeType.Length > 0 ? AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, "In-memory", alternate) : AudioDataIOFactory.GetInstance().GetFromStream(stream);
+                audioData = mimeType.Length > 0 ? AudioDataIOFactory.GetInstance().GetFromMimeType(mimeType, AudioDataIOFactory.IN_MEMORY, alternate) : AudioDataIOFactory.GetInstance().GetFromStream(stream);
                 audioManager = new AudioDataManager(audioData, stream);
                 found = audioManager.ReadFromFile(readEmbeddedPictures, readAllMetaFrames);
                 alternate++;

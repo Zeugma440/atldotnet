@@ -39,6 +39,8 @@ namespace ATL.AudioData
         /// </summary>
         public const int MAX_ALTERNATES = 2;
 
+        internal const string IN_MEMORY = "in-memory";
+
         // The instance of this factory
         private static AudioDataIOFactory theFactory = null;
 
@@ -412,7 +414,7 @@ namespace ATL.AudioData
             s.Seek(0, SeekOrigin.Begin);
             byte[] data = new byte[32];
             long offset = 0;
-            if (s.Read(data, 0, 32) < 32) return getFromFormat("in-memory", new AudioFormat(Format.UNKNOWN_FORMAT));
+            if (s.Read(data, 0, 32) < 32) return getFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));
             // Hardcoded case of ID3v2 as it is the sole standard metadata system to appear at the beginning of file
             if (ID3v2.IsValidHeader(data))
             {
@@ -421,22 +423,22 @@ namespace ATL.AudioData
                 int id3v2Size = StreamUtils.DecodeSynchSafeInt32(data2) + 10;  // 10 being the size of the header
                 s.Seek(id3v2Size, SeekOrigin.Begin);
                 offset = s.Position;
-                if (s.Read(data, 0, 32) < 32) return getFromFormat("in-memory", new AudioFormat(Format.UNKNOWN_FORMAT));
+                if (s.Read(data, 0, 32) < 32) return getFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));
             }
             try
             {
                 List<AudioFormat> expensiveFormats = new List<AudioFormat>();
                 foreach (AudioFormat f in getFormats())
                 {
-                    if (f.CheckHeader != null && f.CheckHeader(data)) return getFromFormat("in-memory", f);
+                    if (f.CheckHeader != null && f.CheckHeader(data)) return getFromFormat(IN_MEMORY, f);
                     if (f.SearchHeader != null) expensiveFormats.Add(f);
                 }
                 foreach (AudioFormat f in expensiveFormats)
                 {
                     s.Seek(offset, SeekOrigin.Begin);
-                    if (f.SearchHeader(s)) return getFromFormat("in-memory", f);
+                    if (f.SearchHeader(s)) return getFromFormat(IN_MEMORY, f);
                 }
-                return getFromFormat("in-memory", new AudioFormat(Format.UNKNOWN_FORMAT));
+                return getFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));
             }
             finally
             {

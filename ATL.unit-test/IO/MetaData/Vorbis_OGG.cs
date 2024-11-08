@@ -83,7 +83,7 @@ namespace ATL.test.IO.MetaData
             }
             else
             {
-                theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromMimeType("audio/ogg", "In-memory"), stream);
+                theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromMimeType("audio/ogg", AudioDataIOFactory.IN_MEMORY), stream);
             }
 
             readExistingTagsOnFile(theFile);
@@ -256,7 +256,7 @@ namespace ATL.test.IO.MetaData
                 testFileLocation = "";
                 streamCopy = new MemoryStream();
                 stream.CopyTo(streamCopy);
-                theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromMimeType(".ogg", "In-memory"), stream);
+                theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromMimeType(".ogg", AudioDataIOFactory.IN_MEMORY), stream);
             }
 
 
