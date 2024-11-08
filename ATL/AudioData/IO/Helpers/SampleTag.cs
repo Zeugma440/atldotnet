@@ -33,7 +33,7 @@ namespace ATL.AudioData.IO
             WavHelper.ReadInt32(source, meta, "sample.SMPTEFormat", data, readTagParams.ReadAllMetaFrames);
 
             // SMPTE offsets
-            source.Read(data, 0, 4);
+            if (source.Read(data, 0, 4) < 4) return;
             meta.SetMetaField("sample.SMPTEOffset.Hours", ((sbyte)data[0]).ToString(), readTagParams.ReadAllMetaFrames);
             meta.SetMetaField("sample.SMPTEOffset.Minutes", data[1].ToString(), readTagParams.ReadAllMetaFrames);
             meta.SetMetaField("sample.SMPTEOffset.Seconds", data[2].ToString(), readTagParams.ReadAllMetaFrames);

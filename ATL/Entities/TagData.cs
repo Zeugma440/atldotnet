@@ -406,7 +406,7 @@ namespace ATL
 
             // Pictures
             // TODO merge with Track.toTagData ?
-            if (integratePictures && targetData.Pictures != null) Pictures = integratePics3(targetData.Pictures);
+            if (integratePictures && targetData.Pictures != null) Pictures = integratePics(targetData.Pictures);
 
             // Additional textual fields
             if (mergeAdditionalData)
@@ -470,7 +470,7 @@ namespace ATL
             DurationMs = targetData.DurationMs;
         }
 
-        private IList<PictureInfo> integratePics3(IList<PictureInfo> targetPics)
+        private IList<PictureInfo> integratePics(IList<PictureInfo> targetPics)
         {
             IList<PictureInfo> resultPictures = new List<PictureInfo>();
             IList<PictureInfo> targetPictures = new List<PictureInfo>(targetPics.Where(p => !p.MarkedForDeletion));
@@ -478,24 +478,10 @@ namespace ATL
 
             // Remove contradictory target pictures (same ID with both keep and delete flags)
             var deleteOrders = targetPics.Where(p => p.MarkedForDeletion).ToHashSet();
-            /*
-            foreach (PictureInfo pic in targetPics)
-            {
-                var found = false;
-                foreach (PictureInfo del in deleteOrders)
-                {
-                    if (!pic.EqualsProper(del)) continue;
-                    found = true;
-                    break;
-                }
-                if (!found) targetPictures.Add(pic);
-            }
-            */
             foreach (PictureInfo del in deleteOrders)
             {
                 foreach (PictureInfo pic in targetPictures.ToHashSet())
                 {
-                    //if (!pic.EqualsProper(del)) continue;
                     if (!pic.Equals(del)) continue;
                     targetPictures.Remove(pic);
                     break;
@@ -578,12 +564,12 @@ namespace ATL
             return orderedResultPictures;
         }
 
-        private void registerPosition(PictureInfo picInfo, IList<KeyValuePair<string, int>> positions)
+        private static void registerPosition(PictureInfo picInfo, IList<KeyValuePair<string, int>> positions)
         {
             positions.Add(new KeyValuePair<string, int>(picInfo.ToString(), picInfo.Position));
         }
 
-        private int nextPosition(PictureInfo picInfo, IList<KeyValuePair<string, int>> positions)
+        private static int nextPosition(PictureInfo picInfo, IList<KeyValuePair<string, int>> positions)
         {
             string picId = picInfo.ToString();
             bool found = false;

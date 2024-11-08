@@ -201,7 +201,7 @@ namespace ATL.AudioData.IO
                     bool isLast;
                     do // Read all metadata blocks
                     {
-                        source.Read(metaDataBlockHeader, 0, 4);
+                        if (source.Read(metaDataBlockHeader, 0, 4) < 4) return false;
                         isLast = (metaDataBlockHeader[0] & FLAG_LAST_METADATA_BLOCK) > 0; // last flag ( first bit == 1 )
 
                         blockIndex++;

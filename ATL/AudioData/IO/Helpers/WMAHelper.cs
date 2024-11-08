@@ -28,29 +28,29 @@ namespace ATL.AudioData
             long pos = initialPos;
             while (pos < initialPos + atomDataSize)
             {
-                source.Read(buffer, 0, 4);
+                if (source.Read(buffer, 0, 4) < 4) return result;
                 int fieldSize = StreamUtils.DecodeBEInt32(buffer);
-                source.Read(buffer, 0, 4);
+                if (source.Read(buffer, 0, 4) < 4) return result;
                 int stringDataSize = StreamUtils.DecodeBEInt32(buffer);
                 byte[] data = new byte[stringDataSize];
-                source.Read(data, 0, stringDataSize);
+                if (source.Read(data, 0, stringDataSize) < stringDataSize) return result;
                 string fieldName = Utils.Latin1Encoding.GetString(data);
                 source.Seek(4, SeekOrigin.Current);
-                source.Read(buffer, 0, 4);
+                if (source.Read(buffer, 0, 4) < 4) return result;
                 stringDataSize = StreamUtils.DecodeBEInt32(buffer);
 
                 string fieldValue;
-                source.Read(buffer, 0, 2);
+                if (source.Read(buffer, 0, 2) < 2) return result;
                 int fieldType = StreamUtils.DecodeBEInt16(buffer);
                 if (19 == fieldType) // Numeric
                 {
-                    source.Read(buffer, 0, 8);
+                    if (source.Read(buffer, 0, 8) < 8) return result;
                     fieldValue = StreamUtils.DecodeInt64(buffer) + "";
                 }
                 else
                 {
                     data = new byte[stringDataSize - 6];
-                    source.Read(data, 0, stringDataSize - 6);
+                    if (source.Read(data, 0, stringDataSize - 6) < stringDataSize - 6) return result;
                     fieldValue = Utils.StripEndingZeroChars(Encoding.Unicode.GetString(data, 0, stringDataSize - 6));
                 }
 

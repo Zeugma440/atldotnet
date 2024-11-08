@@ -412,7 +412,7 @@ namespace ATL.AudioData
             s.Seek(0, SeekOrigin.Begin);
             byte[] data = new byte[32];
             long offset = 0;
-            s.Read(data, 0, 32);
+            if (s.Read(data, 0, 32) < 32) return getFromFormat("in-memory", new AudioFormat(Format.UNKNOWN_FORMAT));
             // Hardcoded case of ID3v2 as it is the sole standard metadata system to appear at the beginning of file
             if (ID3v2.IsValidHeader(data))
             {
@@ -421,7 +421,7 @@ namespace ATL.AudioData
                 int id3v2Size = StreamUtils.DecodeSynchSafeInt32(data2) + 10;  // 10 being the size of the header
                 s.Seek(id3v2Size, SeekOrigin.Begin);
                 offset = s.Position;
-                s.Read(data, 0, 32);
+                if (s.Read(data, 0, 32) < 32) return getFromFormat("in-memory", new AudioFormat(Format.UNKNOWN_FORMAT));
             }
             try
             {

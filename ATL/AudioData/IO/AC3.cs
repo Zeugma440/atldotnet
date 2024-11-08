@@ -83,7 +83,7 @@ namespace ATL.AudioData.IO
 
             byte[] buffer = new byte[2];
             source.Seek(0, SeekOrigin.Begin);
-            source.Read(buffer, 0, 2);
+            if (source.Read(buffer, 0, 2) < 2) return false;
 
             if (!IsValidHeader(buffer)) return false;
 
@@ -91,7 +91,7 @@ namespace ATL.AudioData.IO
             AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
 
             source.Seek(2, SeekOrigin.Current);
-            source.Read(buffer, 0, 1);
+            if (source.Read(buffer, 0, 1) < 1) return false;
 
             sampleRate = (buffer[0] & 0xC0) switch
             {
@@ -104,7 +104,7 @@ namespace ATL.AudioData.IO
             BitRate = BITRATES[(buffer[0] & 0x3F) >> 1];
 
             source.Seek(1, SeekOrigin.Current);
-            source.Read(buffer, 0, 1);
+            if (source.Read(buffer, 0, 1) < 1) return false;
 
             channelsArrangement = (buffer[0] & 0xE0) switch
             {

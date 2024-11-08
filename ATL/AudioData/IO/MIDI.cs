@@ -439,7 +439,7 @@ namespace ATL.AudioData.IO
             FindValidHeader(source);
 
             // Ready to read header data...
-            source.Read(buffer, 0, buffer.Length);
+            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return false;
             if (buffer[0] != 0 ||
                 buffer[1] != 0 ||
                 buffer[2] != 0 ||
@@ -473,7 +473,7 @@ namespace ATL.AudioData.IO
             // Ready to read track data...
             while (source.Position < sizeInfo.FileSize - 4)
             {
-                source.Read(buffer, 0, 4);
+                if (source.Read(buffer, 0, 4) < 4) return false;
                 trigger = Utils.Latin1Encoding.GetString(buffer, 0, 4);
 
                 if (trigger != MIDI_TRACK_HEADER)
@@ -483,11 +483,11 @@ namespace ATL.AudioData.IO
                 }
 
                 // trackSize is stored in big endian -> needs inverting
-                source.Read(buffer, 0, 4);
+                if (source.Read(buffer, 0, 4) < 4) return false;
                 var trackSize = StreamUtils.DecodeBEInt32(buffer);
 
                 byte[] trackData = new byte[trackSize];
-                source.Read(trackData, 0, trackSize);
+                if (source.Read(trackData, 0, trackSize) < trackSize) return false;
                 m_tracks.Add(parseTrack(trackData, nbTrack));
                 nbTrack++;
             }

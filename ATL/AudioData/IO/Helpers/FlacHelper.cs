@@ -48,10 +48,12 @@ namespace ATL.AudioData
             public void fromStream(Stream source)
             {
                 Offset = source.Position;
-                source.Read(StreamMarker, 0, 4);
-                source.Read(MetaDataBlockHeader, 0, 4);
-                source.Read(Info, 0, 18); // METADATA_BLOCK_STREAMINFO
-                source.Seek(16, SeekOrigin.Current); // MD5 sum for audio data
+                if (source.Read(StreamMarker, 0, 4) < 4) return;
+                if (source.Read(MetaDataBlockHeader, 0, 4) < 4) return;
+                // METADATA_BLOCK_STREAMINFO
+                if (source.Read(Info, 0, 18) < 18) return;
+                // MD5 sum for audio data
+                source.Seek(16, SeekOrigin.Current);
             }
 
             /// <summary>

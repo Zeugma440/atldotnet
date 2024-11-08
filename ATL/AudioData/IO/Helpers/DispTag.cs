@@ -52,12 +52,12 @@ namespace ATL.AudioData.IO
             int index = keys.Count;
 
             // Type
-            source.Read(data, 0, 4);
+            if (source.Read(data, 0, 4) < 4) return;
             int type = StreamUtils.DecodeInt32(data);
             meta.SetMetaField("disp.entry[" + index + "].type", getCfLabel(type), readTagParams.ReadAllMetaFrames);
 
             // Data
-            source.Read(data, 0, (int)chunkSize - 4);
+            if (source.Read(data, 0, (int)chunkSize - 4) < chunkSize - 4) return;
             var dataStr = Utils.Latin1Encoding.GetString(CF_TEXT == type ? data : Utils.EncodeTo64(data));
             meta.SetMetaField("disp.entry[" + index + "].value", dataStr, readTagParams.ReadAllMetaFrames);
         }

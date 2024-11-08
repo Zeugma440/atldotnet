@@ -192,13 +192,13 @@ namespace ATL.AudioData.IO
             byte[] aByte = new byte[1];
             int previousChunkSizeCorrection = 0;
 
-            source.Read(aByte, 0, 1);
+            if (source.Read(aByte, 0, 1) < 1) return header;
 
             // In case previous chunk has a padding byte, seek a suitable first character for an ID
             if (aByte[0] != 40 && !char.IsLetter((char)aByte[0]) && source.Position <= limit)
             {
                 previousChunkSizeCorrection++;
-                if (source.Position < limit) source.Read(aByte, 0, 1);
+                if (source.Position < limit && source.Read(aByte, 0, 1) < 1) return header;
             }
 
             // Update zone size (remove and replace zone with updated size)

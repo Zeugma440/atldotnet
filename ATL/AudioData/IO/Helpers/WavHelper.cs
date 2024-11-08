@@ -54,7 +54,7 @@ namespace ATL.AudioData.IO
         /// <returns>Read value</returns>
         public static int ReadInt32(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
         {
-            source.Read(buffer, 0, 4);
+            if (source.Read(buffer, 0, 4) < 4) return 0;
             int value = StreamUtils.DecodeInt32(buffer);
             meta.SetMetaField(fieldName, value.ToString(), readAllMetaFrames);
             return value;
@@ -71,7 +71,7 @@ namespace ATL.AudioData.IO
         /// <returns>Read value</returns>
         public static void ReadInt16(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
         {
-            source.Read(buffer, 0, 2);
+            if (source.Read(buffer, 0, 2) < 2) return;
             int value = StreamUtils.DecodeInt16(buffer);
             meta.SetMetaField(fieldName, value.ToString(), readAllMetaFrames);
         }

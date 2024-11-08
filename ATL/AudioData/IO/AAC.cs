@@ -156,7 +156,7 @@ namespace ATL.AudioData.IO
             byte[] header = new byte[4];
 
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            source.Read(header, 0, header.Length);
+            if (source.Read(header, 0, header.Length) < header.Length) return AAC_HEADER_TYPE_UNKNOWN;
 
             byte result = recognizeHeaderType(header);
             if (result != AAC_BITRATE_TYPE_UNKNOWN)

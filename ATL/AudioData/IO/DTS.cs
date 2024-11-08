@@ -106,7 +106,7 @@ namespace ATL.AudioData.IO
 
             resetData();
 
-            source.Read(buffer, 0, 4);
+            if (source.Read(buffer, 0, 4) < 4) return false;
             if (!IsValidHeader(buffer)) return false;
 
             AudioDataOffset = source.Position - 4;

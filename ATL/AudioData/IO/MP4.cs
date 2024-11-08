@@ -2598,7 +2598,7 @@ namespace ATL.AudioData.IO
 
             return 1;
         }
-        private int writeUuidFrame(TagData tag, string key, BinaryWriter w)
+        private static int writeUuidFrame(TagData tag, string key, BinaryWriter w)
         {
             var keyNominal = key.Replace(" ", "");
             if (keyNominal.Length < 32)

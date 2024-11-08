@@ -37,7 +37,7 @@ namespace ATL.AudioData.IO
                 WavHelper.ReadInt32(source, meta, "cue.CuePoints[" + i + "].Position", data, readTagParams.ReadAllMetaFrames);
 
                 // RIFF ID of corresponding data chunk
-                source.Read(data, 0, 4);
+                if (source.Read(data, 0, 4) < 4) return;
                 meta.SetMetaField("cue.CuePoints[" + i + "].DataChunkId", Utils.Latin1Encoding.GetString(data, 0, 4), readTagParams.ReadAllMetaFrames);
 
                 // Byte Offset of Data Chunk

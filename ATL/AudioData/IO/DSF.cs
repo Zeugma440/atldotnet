@@ -112,19 +112,19 @@ namespace ATL.AudioData.IO
             resetData();
 
             source.Seek(0, SeekOrigin.Begin);
-            source.Read(buffer, 0, 4);
+            if (source.Read(buffer, 0, 4) < 4) return false;
             if (StreamUtils.ArrBeginsWith(buffer, DSD_ID))
             {
                 source.Seek(16, SeekOrigin.Current); // Chunk size and file size
-                source.Read(buffer, 0, 8);
+                if (source.Read(buffer, 0, 8) < 8) return false;
                 id3v2Offset = StreamUtils.DecodeInt64(buffer);
 
-                source.Read(buffer, 0, 4);
+                if (source.Read(buffer, 0, 4) < 4) return false;
                 if (StreamUtils.ArrBeginsWith(buffer, FMT_ID))
                 {
                     source.Seek(8, SeekOrigin.Current); // Chunk size
 
-                    source.Read(buffer, 0, 4);
+                    if (source.Read(buffer, 0, 4) < 4) return false;
                     int formatVersion = StreamUtils.DecodeInt32(buffer);
 
                     if (formatVersion > 1)
@@ -137,7 +137,7 @@ namespace ATL.AudioData.IO
 
                     source.Seek(8, SeekOrigin.Current); // Format ID (4), Channel type (4)
 
-                    source.Read(buffer, 0, 4);
+                    if (source.Read(buffer, 0, 4) < 4) return false;
                     uint channels = StreamUtils.DecodeUInt32(buffer);
                     channelsArrangement = channels switch
                     {
@@ -151,12 +151,12 @@ namespace ATL.AudioData.IO
                         _ => UNKNOWN
                     };
 
-                    source.Read(buffer, 0, 4);
+                    if (source.Read(buffer, 0, 4) < 4) return false;
                     sampleRate = StreamUtils.DecodeUInt32(buffer);
-                    source.Read(buffer, 0, 4);
+                    if (source.Read(buffer, 0, 4) < 4) return false;
                     bits = StreamUtils.DecodeUInt32(buffer);
 
-                    source.Read(buffer, 0, 8);
+                    if (source.Read(buffer, 0, 8) < 8) return false;
                     ulong sampleCount = StreamUtils.DecodeUInt64(buffer);
 
                     Duration = sampleCount * 1000.0 / sampleRate;

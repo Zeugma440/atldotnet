@@ -282,7 +282,7 @@ namespace ATL.AudioData.IO
 
             // ID3v1 tags are C-String(null-terminated)-based tags encoded in ASCII
             byte[] data = new byte[ID3V1_TAG_SIZE];
-            source.Read(data, 0, ID3V1_TAG_SIZE);
+            if (source.Read(data, 0, ID3V1_TAG_SIZE) < ID3V1_TAG_SIZE) return false;
 
             string header = Utils.Latin1Encoding.GetString(data, 0, 3);
             if (!header.Equals(ID3V1_ID)) return false;

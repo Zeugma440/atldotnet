@@ -31,42 +31,42 @@ namespace ATL.AudioData.IO
             byte[] data = new byte[256];
 
             // Description
-            source.Read(data, 0, 256);
+            if (source.Read(data, 0, 256) < 256) return;
             var str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(data).Trim());
             if (str.Length > 0) meta.SetMetaField("bext.description", str, readTagParams.ReadAllMetaFrames);
 
             // Originator
-            source.Read(data, 0, 32);
+            if (source.Read(data, 0, 32) < 32) return;
             str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(data, 0, 32).Trim());
             if (str.Length > 0) meta.SetMetaField("bext.originator", str, readTagParams.ReadAllMetaFrames);
 
             // OriginatorReference
-            source.Read(data, 0, 32);
+            if (source.Read(data, 0, 32) < 32) return;
             str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(data, 0, 32).Trim());
             if (str.Length > 0) meta.SetMetaField("bext.originatorReference", str, readTagParams.ReadAllMetaFrames);
 
             // OriginationDate
-            source.Read(data, 0, 10);
+            if (source.Read(data, 0, 10) < 10) return;
             str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(data, 0, 10).Trim());
             if (str.Length > 0) meta.SetMetaField("bext.originationDate", str, readTagParams.ReadAllMetaFrames);
 
             // OriginationTime
-            source.Read(data, 0, 8);
+            if (source.Read(data, 0, 8) < 8) return;
             str = Utils.StripEndingZeroChars(Encoding.UTF8.GetString(data, 0, 8).Trim());
             if (str.Length > 0) meta.SetMetaField("bext.originationTime", str, readTagParams.ReadAllMetaFrames);
 
             // TimeReference
-            source.Read(data, 0, 8);
+            if (source.Read(data, 0, 8) < 8) return;
             ulong timeReference = StreamUtils.DecodeUInt64(data);
             meta.SetMetaField("bext.timeReference", timeReference.ToString(), readTagParams.ReadAllMetaFrames);
 
             // BEXT version
-            source.Read(data, 0, 2);
+            if (source.Read(data, 0, 2) < 2) return;
             int intData = StreamUtils.DecodeUInt16(data);
             meta.SetMetaField("bext.version", intData.ToString(), readTagParams.ReadAllMetaFrames);
 
             // UMID
-            source.Read(data, 0, 64);
+            if (source.Read(data, 0, 64) < 64) return;
             int usefulLength = 32; // "basic" UMID
             if (data[12] > 19) usefulLength = 64; // data[12] gives the size of remaining UMID
             StringBuilder sbr = new StringBuilder();
@@ -75,27 +75,27 @@ namespace ATL.AudioData.IO
             meta.SetMetaField("bext.UMID", sbr.ToString(), readTagParams.ReadAllMetaFrames);
 
             // LoudnessValue
-            source.Read(data, 0, 2);
+            if (source.Read(data, 0, 2) < 2) return;
             intData = StreamUtils.DecodeInt16(data);
             meta.SetMetaField("bext.loudnessValue", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
 
             // LoudnessRange
-            source.Read(data, 0, 2);
+            if (source.Read(data, 0, 2) < 2) return;
             intData = StreamUtils.DecodeInt16(data);
             meta.SetMetaField("bext.loudnessRange", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
 
             // MaxTruePeakLevel
-            source.Read(data, 0, 2);
+            if (source.Read(data, 0, 2) < 2) return;
             intData = StreamUtils.DecodeInt16(data);
             meta.SetMetaField("bext.maxTruePeakLevel", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
 
             // MaxMomentaryLoudness
-            source.Read(data, 0, 2);
+            if (source.Read(data, 0, 2) < 2) return;
             intData = StreamUtils.DecodeInt16(data);
             meta.SetMetaField("bext.maxMomentaryLoudness", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
 
             // MaxShortTermLoudness
-            source.Read(data, 0, 2);
+            if (source.Read(data, 0, 2) < 2) return;
             intData = StreamUtils.DecodeInt16(data);
             meta.SetMetaField("bext.maxShortTermLoudness", (intData / 100.0).ToString(), readTagParams.ReadAllMetaFrames);
 
@@ -109,8 +109,9 @@ namespace ATL.AudioData.IO
                 long endPos = source.Position - 2;
                 source.Seek(initialPos, SeekOrigin.Begin);
 
-                if (data.Length < (int)(endPos - initialPos)) data = new byte[(int)(endPos - initialPos)];
-                source.Read(data, 0, (int)(endPos - initialPos));
+                int size = (int)(endPos - initialPos);
+                if (data.Length < size) data = new byte[size];
+                if (source.Read(data, 0, size) < size) return;
 
                 str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, (int)(endPos - initialPos)).Trim());
                 if (str.Length > 0) meta.SetMetaField("bext.codingHistory", str, readTagParams.ReadAllMetaFrames);
