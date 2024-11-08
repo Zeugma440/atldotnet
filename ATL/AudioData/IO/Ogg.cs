@@ -139,7 +139,7 @@ namespace ATL.AudioData.IO
                 Segments = buffer[0];
 
                 LacingValues = new byte[Segments];
-                r.Read(LacingValues, 0, Segments);
+                Segments = (byte)r.Read(LacingValues, 0, Segments);
             }
 
             public static OggPageHeader ReadFromStream(BufferedBinaryReader r)
