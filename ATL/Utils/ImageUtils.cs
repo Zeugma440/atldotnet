@@ -367,9 +367,9 @@ namespace Commons
                         else
                         {
                             // Read IHDR chunk
-                            s.Read(intData, 0, 4);
+                            if (s.Read(intData, 0, 4) < 4) break;
                             props.Width = StreamUtils.DecodeBEInt32(intData);
-                            s.Read(intData, 0, 4);
+                            if (s.Read(intData, 0, 4) < 4) break;
                             props.Height = StreamUtils.DecodeBEInt32(intData);
                             props.ColorDepth = r.ReadByte();
                             int colorType = r.ReadByte();
@@ -420,9 +420,9 @@ namespace Commons
                             // Skip frame length
                             s.Seek(2, SeekOrigin.Current);
                             bitsPerSample = r.ReadByte();
-                            s.Read(shortData, 0, 2);
+                            if (s.Read(shortData, 0, 2) < 2) break;
                             props.Height = StreamUtils.DecodeBEUInt16(shortData);
-                            s.Read(shortData, 0, 2);
+                            if (s.Read(shortData, 0, 2) < 2) break;
                             props.Width = StreamUtils.DecodeBEUInt16(shortData);
                             byte nbComponents = r.ReadByte();
                             props.ColorDepth = bitsPerSample * nbComponents;
@@ -480,9 +480,9 @@ namespace Commons
 
             while (s.Position < limit)
             {
-                s.Read(intData, 0, 4); // Chunk Size
+                if (s.Read(intData, 0, 4) < 4) break; // Chunk Size
                 chunkSize = StreamUtils.DecodeBEUInt32(intData);
-                s.Read(intData, 0, 4); // Chunk ID
+                if (s.Read(intData, 0, 4) < 4) break; // Chunk ID
                 foundChunk = intData.SequenceEqual(chunkID);
                 if (foundChunk) return chunkSize;
 

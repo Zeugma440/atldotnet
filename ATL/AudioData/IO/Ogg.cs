@@ -28,7 +28,6 @@ namespace ATL.AudioData.IO
 	partial class Ogg : VorbisTagHolder, IMetaDataIO, IAudioDataIO
     {
         // Contents of the file
-        private const int CONTENTS_UNSUPPORTED = -1;	    // Unsupported
         private const int CONTENTS_VORBIS = 0;				// Vorbis
         private const int CONTENTS_OPUS = 1;                // Opus
         private const int CONTENTS_FLAC = 2;                // FLAC
@@ -123,21 +122,20 @@ namespace ATL.AudioData.IO
             {
                 Offset = r.Position;
                 byte[] buffer = new byte[8];
-                r.Read(buffer, 0, 4);
                 ID = new byte[4];
-                Array.Copy(buffer, ID, 4);
-                r.Read(buffer, 0, 2);
+                if (r.Read(ID, 0, 4) < 4) return;
+                if (r.Read(buffer, 0, 2) < 2) return;
                 StreamVersion = buffer[0];
                 TypeFlag = buffer[1];
-                r.Read(buffer, 0, 8);
+                if (r.Read(buffer, 0, 8) < 8) return;
                 AbsolutePosition = StreamUtils.DecodeUInt64(buffer);
-                r.Read(buffer, 0, 4);
+                if (r.Read(buffer, 0, 4) < 4) return;
                 StreamId = StreamUtils.DecodeInt32(buffer);
-                r.Read(buffer, 0, 4);
+                if (r.Read(buffer, 0, 4) < 4) return;
                 PageNumber = StreamUtils.DecodeInt32(buffer);
-                r.Read(buffer, 0, 4);
+                if (r.Read(buffer, 0, 4) < 4) return;
                 Checksum = StreamUtils.DecodeUInt32(buffer);
-                r.Read(buffer, 0, 1);
+                if (r.Read(buffer, 0, 1) < 1) return;
                 Segments = buffer[0];
 
                 LacingValues = new byte[Segments];
@@ -407,11 +405,8 @@ namespace ATL.AudioData.IO
                     source.Seek(20, SeekOrigin.Current);
                     nbLacingValues = source.ReadByte();
                     nextPageOffset = 0;
-                    source.Read(lacingValues, 0, nbLacingValues);
-                    for (int i = 0; i < nbLacingValues; i++)
-                    {
-                        nextPageOffset += lacingValues[i];
-                    }
+                    int read = source.Read(lacingValues, 0, nbLacingValues);
+                    for (int i = 0; i < read; i++) nextPageOffset += lacingValues[i];
                 }
                 else
                 {
@@ -979,7 +974,7 @@ namespace ATL.AudioData.IO
             {
                 s.Seek(kv.Key, SeekOrigin.Begin);
                 if (data.Length < kv.Value) data = new byte[kv.Value]; // Enlarge only if needed; max size is 0xffff
-                s.Read(data, 0, kv.Value);
+                if (s.Read(data, 0, kv.Value) < kv.Value) return;
                 uint crc = OggCRC32.CalculateCRC(0, data, (uint)kv.Value);
                 // Write CRC value at the dedicated location within the OGG header
                 s.Seek(kv.Key + 22, SeekOrigin.Begin);
@@ -1007,7 +1002,7 @@ namespace ATL.AudioData.IO
                     s.Seek(nextPageOffset, SeekOrigin.Begin);
                     int dataSize = header.HeaderSize + header.GetPageSize();
                     if (data.Length < dataSize) data = new byte[dataSize]; // Only realloc when size is insufficient
-                    s.Read(data, 0, dataSize);
+                    if (s.Read(data, 0, dataSize) < dataSize) return false;
 
                     // Checksum has to include its own location, as if it were 0
                     data[22] = 0;

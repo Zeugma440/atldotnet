@@ -339,7 +339,7 @@ namespace ATL
         {
             Encoding result;
             byte[] bom = new byte[4]; // Get the byte-order mark, if there is one
-            file.Read(bom, 0, 4);
+            if (file.Read(bom, 0, 4) < 4) return Settings.DefaultTextEncoding;
             if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf) // utf-8
             {
                 result = Encoding.UTF8;
@@ -414,7 +414,7 @@ namespace ATL
             while (streamPos < streamLength && (0 == limit || nbRead < limit))
             {
                 // Read the size of a character
-                r.Read(buffer, 0, nbChars);
+                if (r.Read(buffer, 0, nbChars) < nbChars) break;
 
                 if (1 == nbChars && 0 == buffer[0]) // Null character read for single-char encodings
                 {
@@ -536,6 +536,7 @@ namespace ATL
             int bytesToRead;
             int iSequence = 0;
             int readBytes = 0;
+            int read;
             long initialPos = stream.Position;
 
             int remainingBytes = (int)((limit > 0) ? Math.Min(stream.Length - stream.Position, limit) : stream.Length - stream.Position);
@@ -544,9 +545,9 @@ namespace ATL
             {
                 bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
 
-                stream.Read(readBuffer, 0, bytesToRead);
+                read = stream.Read(readBuffer, 0, bytesToRead);
 
-                for (int i = 0; i < bytesToRead; i++)
+                for (int i = 0; i < read; i++)
                 {
                     if (sequence[iSequence] == readBuffer[i]) iSequence++;
                     else if (iSequence > 0) iSequence = 0;
@@ -559,7 +560,7 @@ namespace ATL
                 }
 
                 remainingBytes -= bytesToRead;
-                readBytes += bytesToRead;
+                readBytes += read;
             }
 
             // If we're here, the sequence hasn't been found
@@ -584,7 +585,7 @@ namespace ATL
 
             // Read a number of bits from file at the given position
             source.Seek(bitPosition / 8, SeekOrigin.Begin); // integer division =^ div
-            source.Read(buffer, 0, buffer.Length);
+            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return 0;
             uint result = DecodeBEUInt32(buffer);
             result = (result << (bitPosition % 8)) >> (32 - bitCount);
 
@@ -937,24 +938,25 @@ namespace ATL
             long nbIterations = (long)Math.Ceiling(length * 1f / bufferSize);
             long resolution = (long)Math.Ceiling(nbIterations / 10f);
             long iteration = 0;
+            int read;
 
             while (written < length)
             {
-                int bufSize = Math.Min(bufferSize, toInt(length - written));
+                int toRead = Math.Min(bufferSize, toInt(length - written));
                 if (forward)
                 {
-                    s.Seek(offsetFrom + length - written - bufSize, SeekOrigin.Begin);
-                    await s.ReadAsync(data, 0, bufSize);
-                    s.Seek(offsetTo + length - written - bufSize, SeekOrigin.Begin);
+                    s.Seek(offsetFrom + length - written - toRead, SeekOrigin.Begin);
+                    read = await s.ReadAsync(data, 0, toRead);
+                    s.Seek(offsetTo + length - written - read, SeekOrigin.Begin);
                 }
                 else
                 {
                     s.Seek(offsetFrom + written, SeekOrigin.Begin);
-                    await s.ReadAsync(data, 0, bufSize);
+                    read = await s.ReadAsync(data, 0, toRead);
                     s.Seek(offsetTo + written, SeekOrigin.Begin);
                 }
-                await s.WriteAsync(data, 0, bufSize);
-                written += bufSize;
+                await s.WriteAsync(data, 0, read);
+                written += toRead;
 
                 if (progress != null)
                 {
