@@ -192,14 +192,14 @@ namespace ATL.AudioData.IO
         private static bool readHeader(Stream source, ref PSFHeader header)
         {
             byte[] buffer = new byte[4];
-            source.Read(header.FormatTag, 0, 3);
+            if (source.Read(header.FormatTag, 0, 3) < 3) return false;
             if (IsValidHeader(header.FormatTag))
             {
-                source.Read(buffer, 0, 1);
+                if (source.Read(buffer, 0, 1) < 1) return false;
                 header.VersionByte = buffer[0];
-                source.Read(buffer, 0, 4);
+                if (source.Read(buffer, 0, 4) < 4) return false;
                 header.ReservedAreaLength = StreamUtils.DecodeUInt32(buffer);
-                source.Read(buffer, 0, 4);
+                if (source.Read(buffer, 0, 4) < 4) return false;
                 header.CompressedProgramLength = StreamUtils.DecodeUInt32(buffer);
                 return true;
             }
@@ -228,7 +228,7 @@ namespace ATL.AudioData.IO
             source.Seek(lineStart, SeekOrigin.Begin);
 
             byte[] data = new byte[lineEnd - lineStart];
-            source.Read(data, 0, data.Length);
+            if (source.Read(data, 0, data.Length) < data.Length) return "";
 
             for (int i = 0; i < data.Length; i++) if (data[i] < SPACE) data[i] = SPACE; // According to spec : "All characters 0x01-0x20 are considered whitespace"
 
@@ -241,7 +241,7 @@ namespace ATL.AudioData.IO
             Encoding encoding = Utils.Latin1Encoding;
 
             byte[] buffer = new byte[5];
-            source.Read(buffer, 0, buffer.Length);
+            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return false;
             tag.TagHeader = Utils.Latin1Encoding.GetString(buffer);
 
             if (TAG_HEADER == tag.TagHeader)

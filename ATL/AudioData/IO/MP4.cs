@@ -1582,7 +1582,7 @@ namespace ATL.AudioData.IO
             if (result.size >= 16 + 8)
             {
                 Span<byte> key = new byte[16];
-                source.Read(key);
+                if (source.Read(key) < key.Length) return result;
                 // Convert key to hex value
                 StringBuilder sbr = new StringBuilder();
                 for (int i = 0; i < 16; i++) sbr.Append(key[i].ToString("X2"));
@@ -1592,7 +1592,7 @@ namespace ATL.AudioData.IO
                 if (dataSize > 0)
                 {
                     Span<byte> data = new byte[dataSize];
-                    source.Read(data);
+                    if (source.Read(data) < dataSize) return result;
                     result.value = Encoding.UTF8.GetString(data);
                 }
             }
@@ -1645,14 +1645,14 @@ namespace ATL.AudioData.IO
             {
                 if (!first) source.Seek(atomSize - atomHeaderSize, SeekOrigin.Current);
                 atomHeaderSize = 8; // Default variant where size takes up 32-bit
-                source.Read(data, 0, 4);
+                if (source.Read(data, 0, 4) < 4) return new Tuple<uint, int>(0, atomHeaderSize);
                 atomSize = StreamUtils.DecodeBEUInt32(data);
-                source.Read(data, 0, 4);
+                if (source.Read(data, 0, 4) < 4) return new Tuple<uint, int>(0, atomHeaderSize);
                 atomHeader = Utils.Latin1Encoding.GetString(data, 0, 4);
                 if (1 == atomSize) // 64-bit size variant
                 {
                     atomHeaderSize += 8;
-                    source.Read(data, 0, 8);
+                    if (source.Read(data, 0, 8) < 8) return new Tuple<uint, int>(0, atomHeaderSize);
                     atomSize = StreamUtils.DecodeBEInt64(data);
                 }
 

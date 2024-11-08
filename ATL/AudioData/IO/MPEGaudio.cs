@@ -393,7 +393,7 @@ namespace ATL.AudioData.IO
             result.Found = true;
             result.ID = VBR_ID_XING.ToCharArray();
             source.Seek(4, SeekOrigin.Current);
-            source.Read(data, 0, 8);
+            if (source.Read(data, 0, 8) < 8) return result;
 
             result.Frames =
                 data[0] * 0x1000000 +
@@ -408,9 +408,9 @@ namespace ATL.AudioData.IO
 
             source.Seek(103, SeekOrigin.Current);
 
-            source.Read(data, 0, 1);
+            if (source.Read(data, 0, 1) < 1) return result;
             result.Scale = data[0];
-            source.Read(data, 0, 8);
+            if (source.Read(data, 0, 8) < 8) return result;
             result.VendorID = Utils.Latin1Encoding.GetString(data, 0, 8);
 
             return result;
@@ -425,7 +425,7 @@ namespace ATL.AudioData.IO
             result.Found = true;
             result.ID = VBR_ID_FHG.ToCharArray();
             source.Seek(5, SeekOrigin.Current);
-            source.Read(data, 0, 9);
+            if (source.Read(data, 0, 9) < 9) return result;
 
             result.Scale = data[0];
             result.Bytes =
@@ -452,17 +452,15 @@ namespace ATL.AudioData.IO
             // Check for VBR header at given position
             source.Seek(position, SeekOrigin.Begin);
 
-            source.Read(data, 0, 4);
-            string vbrId = Utils.Latin1Encoding.GetString(data);
-
-            if (VBR_ID_XING.Equals(vbrId)) result = getXingInfo(source);
-            else if (VBR_ID_FHG.Equals(vbrId)) result = getFhGInfo(source);
-            else
+            if (4 == source.Read(data, 0, 4))
             {
-                result = new VBRData();
-                result.Reset();
+                string vbrId = Utils.Latin1Encoding.GetString(data);
+                if (VBR_ID_XING.Equals(vbrId)) return getXingInfo(source);
+                if (VBR_ID_FHG.Equals(vbrId)) return getFhGInfo(source);
             }
 
+            result = new VBRData();
+            result.Reset();
             return result;
         }
 

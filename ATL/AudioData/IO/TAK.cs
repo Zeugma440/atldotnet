@@ -1,4 +1,3 @@
-using ATL.Logging;
 using System;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
@@ -83,7 +82,7 @@ namespace ATL.AudioData.IO
             resetData();
             source.Seek(sizeNfo.ID3v2Size, SeekOrigin.Begin);
 
-            source.Read(buffer, 0, 4);
+            if (source.Read(buffer, 0, 4) < 4) return false;
             if (IsValidHeader(buffer))
             {
                 result = true;
@@ -92,7 +91,7 @@ namespace ATL.AudioData.IO
 
                 do // Loop metadata
                 {
-                    source.Read(buffer, 0, 4);
+                    if (source.Read(buffer, 0, 4) < 4) return false;
                     var readData32 = StreamUtils.DecodeUInt32(buffer);
 
                     var metaType = readData32 & 0x7F;
@@ -103,11 +102,11 @@ namespace ATL.AudioData.IO
                     if (0 == metaType) doLoop = false; // End of metadata
                     else if (0x01 == metaType) // Stream info
                     {
-                        source.Read(buffer, 0, 2);
+                        if (source.Read(buffer, 0, 2) < 2) return false;
                         var readData16 = StreamUtils.DecodeUInt16(buffer);
-                        source.Read(buffer, 0, 4);
+                        if (source.Read(buffer, 0, 4) < 4) return false;
                         readData32 = StreamUtils.DecodeUInt32(buffer);
-                        source.Read(buffer, 0, 4);
+                        if (source.Read(buffer, 0, 4) < 4) return false;
                         uint restOfData = StreamUtils.DecodeUInt32(buffer);
 
                         var sampleCount = (readData16 >> 14) + (readData32 << 2) + ((restOfData & 0x00000080) << 34);
@@ -124,7 +123,7 @@ namespace ATL.AudioData.IO
                     }
                     else if (0x04 == metaType) // Encoder info
                     {
-                        source.Read(buffer, 0, 4);
+                        if (source.Read(buffer, 0, 4) < 4) return false;
                         readData32 = StreamUtils.DecodeUInt32(buffer);
                     }
 

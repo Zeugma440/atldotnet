@@ -170,21 +170,21 @@ namespace ATL.AudioData.IO
             long initialPos = source.Position;
             byte[] buffer = new byte[4];
 
-            source.Read(header.ID, 0, 4);
-            source.Read(buffer, 0, 4);
+            if (source.Read(header.ID, 0, 4) < 4) return false;
+            if (source.Read(buffer, 0, 4) < 4) return false;
             header.Size = StreamUtils.DecodeUInt32(buffer);
-            source.Read(buffer, 0, 4);
+            if (source.Read(buffer, 0, 4) < 4) return false;
             header.Length = StreamUtils.DecodeUInt32(buffer);
-            source.Read(buffer, 0, 2);
+            if (source.Read(buffer, 0, 2) < 2) return false;
             header.HiLength = StreamUtils.DecodeUInt16(buffer);
-            source.Read(buffer, 0, 2);
+            if (source.Read(buffer, 0, 2) < 2) return false;
             header.SampleType = buffer[0];
             header.ChannelMode = buffer[1];
-            source.Read(buffer, 0, 4);
+            if (source.Read(buffer, 0, 4) < 4) return false;
             header.SampleRate = StreamUtils.DecodeInt32(buffer);
-            source.Read(buffer, 0, 2);
+            if (source.Read(buffer, 0, 2) < 2) return false;
             header.EncoderID = StreamUtils.DecodeUInt16(buffer);
-            source.Read(buffer, 0, 1);
+            if (source.Read(buffer, 0, 1) < 1) return false;
             header.CompressionID = buffer[0];
 
             if (IsValidHeader(header.ID))

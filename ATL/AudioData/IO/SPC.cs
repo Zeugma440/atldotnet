@@ -251,11 +251,11 @@ namespace ATL.AudioData.IO
 
             long initialPosition = source.Position;
             byte[] buffer = new byte[SPC_FORMAT_TAG.Length];
-            source.Read(buffer, 0, buffer.Length);
+            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return false;
             if (IsValidHeader(buffer))
             {
                 source.Seek(8, SeekOrigin.Current); // Remainder of header tag (version marker vX.XX + 2 bytes)
-                source.Read(buffer, 0, 2);
+                if (source.Read(buffer, 0, 2) < 2) return false;
                 header.TagInHeader = buffer[0];
                 header.Size = source.Position - initialPosition;
                 return true;
@@ -271,13 +271,13 @@ namespace ATL.AudioData.IO
             byte[] buffer = new byte[32];
             long initialPosition = source.Position;
 
-            source.Read(buffer, 0, 32);
+            if (source.Read(buffer, 0, 32) < 32) return;
             SetMetaField(HEADER_TITLE.ToString(), Utils.Latin1Encoding.GetString(buffer).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
-            source.Read(buffer, 0, 32);
+            if (source.Read(buffer, 0, 32) < 32) return;
             SetMetaField(HEADER_ALBUM.ToString(), Utils.Latin1Encoding.GetString(buffer).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
-            source.Read(buffer, 0, 16);
+            if (source.Read(buffer, 0, 16) < 16) return;
             SetMetaField(HEADER_DUMPERNAME.ToString(), Utils.Latin1Encoding.GetString(buffer).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
-            source.Read(buffer, 0, 32);
+            if (source.Read(buffer, 0, 32) < 32) return;
             SetMetaField(HEADER_COMMENT.ToString(), Utils.Latin1Encoding.GetString(buffer).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
 
             byte[] date = new byte[11];
@@ -286,12 +286,11 @@ namespace ATL.AudioData.IO
 
             // NB : Dump date is used to determine if the tag is binary or text-based.
             // It won't be recorded as a property of TSPC
-            source.Read(date, 0, date.Length);
-            source.Read(song, 0, song.Length);
-            source.Read(fade, 0, fade.Length);
-
+            if (source.Read(date, 0, date.Length) < date.Length) return;
             int dateRes = isText(date);
+            if (source.Read(song, 0, song.Length) < song.Length) return;
             int songRes = isText(song);
+            if (source.Read(fade, 0, fade.Length) < fade.Length) return;
             int fadeRes = isText(fade);
 
             bool bin = true;
@@ -352,7 +351,7 @@ namespace ATL.AudioData.IO
             // if fadeval > 0 alone, the fade is applied on the default 3:00 duration without extending it
             if (songVal > 0) Duration = fadeVal + songVal;
 
-            source.Read(buffer, 0, 32);
+            if (source.Read(buffer, 0, 32) < 32) return;
             SetMetaField(HEADER_ARTIST.ToString(), Utils.Latin1Encoding.GetString(buffer).Replace("\0", "").Trim(), readTagParams.ReadAllMetaFrames, ZONE_HEADER);
             header.Size += source.Position - initialPosition;
 
@@ -378,11 +377,11 @@ namespace ATL.AudioData.IO
         {
             long initialPosition = source.Position;
             byte[] buffer = new byte[4];
-            source.Read(buffer, 0, buffer.Length);
+            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return;
             footer.FormatTag = Utils.Latin1Encoding.GetString(buffer);
             if (XTENDED_TAG == footer.FormatTag)
             {
-                source.Read(buffer, 0, buffer.Length);
+                if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return;
                 footer.Size = StreamUtils.DecodeUInt32(buffer);
 
                 string strData = "";
@@ -392,10 +391,10 @@ namespace ATL.AudioData.IO
                 long dataPosition = source.Position;
                 while (source.Position < dataPosition + footer.Size - 4)
                 {
-                    source.Read(buffer, 0, 2);
+                    if (source.Read(buffer, 0, 2) < 2) break;
                     var ID = buffer[0];
                     var type = buffer[1];
-                    source.Read(buffer, 0, 2);
+                    if (source.Read(buffer, 0, 2) < 2) break;
                     var size = StreamUtils.DecodeUInt16(buffer);
 
                     switch (type)
@@ -421,14 +420,14 @@ namespace ATL.AudioData.IO
                         case XID6_TSTR:
                             intData = 0;
                             byte[] strDatab = new byte[size];
-                            source.Read(strDatab, 0, size);
+                            if (source.Read(strDatab, 0, size) < size) break;
                             strData = Utils.Latin1Encoding.GetString(strDatab).Replace("\0", "").Trim();
 
                             while (source.Position < source.Length && 0 == source.ReadByte()) ; // Skip parasite ending zeroes
                             if (source.Position < source.Length) source.Seek(-1, SeekOrigin.Current);
                             break;
                         case XID6_TINT:
-                            source.Read(buffer, 0, 4);
+                            if (source.Read(buffer, 0, 4) < 4) break;
                             intData = StreamUtils.DecodeInt32(buffer);
                             strData = intData.ToString();
                             break;

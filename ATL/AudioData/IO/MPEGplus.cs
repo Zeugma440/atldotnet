@@ -122,7 +122,7 @@ namespace ATL.AudioData.IO
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             // Read header and get file size
-            source.Read(header.ByteArray, 0, header.ByteArray.Length);
+            if (source.Read(header.ByteArray, 0, header.ByteArray.Length) < header.ByteArray.Length) return false;
 
             // if transfer is not complete
             byte[] temp = new byte[4];
@@ -146,7 +146,7 @@ namespace ATL.AudioData.IO
                 while (!headerFound)
                 {
                     long initialPos = source.Position;
-                    source.Read(buffer, 0, 2);
+                    if (source.Read(buffer, 0, 2) < 2) break;
                     packetKey = Utils.Latin1Encoding.GetString(buffer);
 
                     readVariableSizeInteger(source); // Packet size (unused)
@@ -160,10 +160,12 @@ namespace ATL.AudioData.IO
                         long sampleCount = readVariableSizeInteger(source);
                         readVariableSizeInteger(source); // Skip beginning silence
 
-                        source.Read(buffer, 0, 1);// Sample frequency (3) + Max used bands (5)
+                        // Sample frequency (3) + Max used bands (5)
+                        if (source.Read(buffer, 0, 1) < 1) break;
                         SampleRate = MPP_SAMPLERATES[(buffer[0] & 0b11100000) >> 5]; // First 3 bits
 
-                        source.Read(buffer, 0, 1); // Channel count (4) + Mid/Side Stereo used (1) + Audio block frames (3)
+                        // Channel count (4) + Mid/Side Stereo used (1) + Audio block frames (3)
+                        if (source.Read(buffer, 0, 1) < 1) break;
                         int channelCount = (buffer[0] & 0b11110000) >> 4; // First 4 bits
                         bool isMidSideStereo = (buffer[0] & 0b00001000) > 0; // First 4 bits
                         if (isMidSideStereo) ChannelsArrangement = JOINT_STEREO_MID_SIDE;
@@ -300,7 +302,7 @@ namespace ATL.AudioData.IO
             // Data is coded with a Big-endian, 7-byte variable-length record
             while ((b & 128) > 0)
             {
-                source.Read(buffer, 0, 1);
+                if (source.Read(buffer, 0, 1) < 1) break;
                 b = buffer[0];
                 result = (result << 7) + (b & 127); // Big-endian
             }

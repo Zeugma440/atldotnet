@@ -87,20 +87,20 @@ namespace ATL.AudioData.IO
             bool result = false;
 
             byte[] buffer = new byte[4];
-            source.Read(buffer, 0, buffer.Length);
+            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return false;
             if (IsValidHeader(buffer))
             {
                 AudioDataOffset = source.Position - 4;
                 AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
 
                 source.Seek(2, SeekOrigin.Current); // audio format
-                source.Read(buffer, 0, 2);
+                if (source.Read(buffer, 0, 2) < 2) return false;
                 ChannelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeUInt16(buffer));
-                source.Read(buffer, 0, 2);
+                if (source.Read(buffer, 0, 2) < 2) return false;
                 bitsPerSample = StreamUtils.DecodeUInt16(buffer);
-                source.Read(buffer, 0, 4);
+                if (source.Read(buffer, 0, 4) < 4) return false;
                 sampleRate = StreamUtils.DecodeUInt32(buffer);
-                source.Read(buffer, 0, 4);
+                if (source.Read(buffer, 0, 4) < 4) return false;
                 samplesSize = StreamUtils.DecodeUInt32(buffer);
                 source.Seek(4, SeekOrigin.Current); // CRC
 

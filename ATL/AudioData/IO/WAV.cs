@@ -217,7 +217,7 @@ namespace ATL.AudioData.IO
             source.Seek(0, SeekOrigin.Begin);
 
             // Read header
-            source.Read(data, 0, 4);
+            if (source.Read(data, 0, 4) < 4) return false;
 
             if (data.SequenceEqual(HEADER_RF64)) isRf64 = true;
 
@@ -239,12 +239,12 @@ namespace ATL.AudioData.IO
             id3v2StructureHelper = new FileStructureHelper(isLittleEndian);
 
             var riffChunkSizePos = source.Position;
-            source.Read(data, 0, 4);
+            if (source.Read(data, 0, 4) < 4) return false;
             if (isLittleEndian) riffChunkSize = StreamUtils.DecodeUInt32(data); else riffChunkSize = StreamUtils.DecodeBEUInt32(data);
             if (riffChunkSize < uint.MaxValue) formattedRiffChunkSize = getFormattedRiffChunkSize(riffChunkSize, isRf64);
 
             // Format code
-            source.Read(data, 0, 4);
+            if (source.Read(data, 0, 4) < 4) return false;
             string str = Utils.Latin1Encoding.GetString(data);
             if (!str.Equals(FORMAT_WAVE)) return false;
 
@@ -269,7 +269,7 @@ namespace ATL.AudioData.IO
             {
                 if (paddingSize > 0)
                 {
-                    source.Read(data, 0, 1);
+                    if (source.Read(data, 0, 1) < 1) return false;
                     // Padding has been forgotten !
                     if (data[0] > 31 && data[0] < 255)
                     {
@@ -288,11 +288,11 @@ namespace ATL.AudioData.IO
                     }
                 }
                 // Chunk ID
-                source.Read(data, 0, 4);
+                if (source.Read(data, 0, 4) < 4) return false;
                 subChunkId = Utils.Latin1Encoding.GetString(data);
 
                 // Chunk size
-                source.Read(data, 0, 4);
+                if (source.Read(data, 0, 4) < 4) return false;
                 long chunkSize = isLittleEndian ? StreamUtils.DecodeUInt32(data) : StreamUtils.DecodeBEUInt32(data);
                 // Word-align declared chunk size, as per specs
                 paddingSize = (uint)(chunkSize % 2);
@@ -301,7 +301,7 @@ namespace ATL.AudioData.IO
 
                 if (subChunkId.Equals(CHUNK_FORMAT64, StringComparison.OrdinalIgnoreCase)) // DS64 always appears before FMT
                 {
-                    source.Read(data64, 0, 8); // riffSize
+                    if (source.Read(data64, 0, 8) < 8) return false; // riffSize
                     if (uint.MaxValue == riffChunkSize)
                     {
                         riffChunkSize = StreamUtils.DecodeInt64(data64);
@@ -309,34 +309,34 @@ namespace ATL.AudioData.IO
                         formattedRiffChunkSize = getFormattedRiffChunkSize(riffChunkSize, isRf64);
                     }
 
-                    source.Read(data64, 0, 8); // dataSize
+                    if (source.Read(data64, 0, 8) < 8) return false; // dataSize
                     AudioDataSize = StreamUtils.DecodeInt64(data64);
 
-                    source.Read(data64, 0, 8); // sampleCount
+                    if (source.Read(data64, 0, 8) < 8) return false; // sampleCount
                     sampleNumber = StreamUtils.DecodeInt64(data64);
 
-                    source.Read(data, 0, 4); // wave table length
+                    if (source.Read(data, 0, 4) < 4) return false; // wave table length
                     uint tableLength = StreamUtils.DecodeUInt32(data);
                     source.Seek(tableLength, SeekOrigin.Current); // wave table
                 }
                 else if (subChunkId.Equals(CHUNK_FORMAT, StringComparison.OrdinalIgnoreCase))
                 {
-                    source.Read(data, 0, 2);
+                    if (source.Read(data, 0, 2) < 2) return false;
                     if (isLittleEndian) formatId = StreamUtils.DecodeUInt16(data); else formatId = StreamUtils.DecodeBEUInt16(data);
 
-                    source.Read(data, 0, 2);
+                    if (source.Read(data, 0, 2) < 2) return false;
                     if (isLittleEndian) ChannelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeUInt16(data));
                     else ChannelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeBEUInt16(data));
 
-                    source.Read(data, 0, 4);
+                    if (source.Read(data, 0, 4) < 4) return false;
                     if (isLittleEndian) sampleRate = StreamUtils.DecodeUInt32(data); else sampleRate = StreamUtils.DecodeBEUInt32(data);
 
-                    source.Read(data, 0, 4);
+                    if (source.Read(data, 0, 4) < 4) return false;
                     if (isLittleEndian) bytesPerSecond = StreamUtils.DecodeUInt32(data); else bytesPerSecond = StreamUtils.DecodeBEUInt32(data);
 
                     source.Seek(2, SeekOrigin.Current); // BlockAlign
 
-                    source.Read(data, 0, 2);
+                    if (source.Read(data, 0, 2) < 2) return false;
                     if (isLittleEndian) bitsPerSample = StreamUtils.DecodeUInt16(data); else bitsPerSample = StreamUtils.DecodeBEUInt16(data);
                 }
                 else if (subChunkId.Equals(CHUNK_DATA, StringComparison.OrdinalIgnoreCase))
@@ -350,7 +350,7 @@ namespace ATL.AudioData.IO
                 }
                 else if (subChunkId.Equals(CHUNK_FACT, StringComparison.OrdinalIgnoreCase))
                 {
-                    source.Read(data, 0, 4);
+                    if (source.Read(data, 0, 4) < 4) return false;
                     uint inputSampleNumber;
                     if (isLittleEndian) inputSampleNumber = StreamUtils.DecodeUInt32(data); else inputSampleNumber = StreamUtils.DecodeBEUInt32(data);
                     if (inputSampleNumber < uint.MaxValue) sampleNumber = inputSampleNumber;

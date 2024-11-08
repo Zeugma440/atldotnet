@@ -219,8 +219,9 @@ namespace ATL.AudioData.IO
                 size = size - size % 4;
 
                 // Read the whole base64-encoded picture header _and_ binary data
-                byte[] encodedData = new byte[size];
-                source.Read(encodedData, 0, size);
+                using MemoryStream outStream = new MemoryStream(size);
+                StreamUtils.CopyStream(source, outStream, size);
+                byte[] encodedData = outStream.ToArray();
 
                 // Gets rid of unwanted zeroes
                 // 0x3D ('=' char) is the padding neutral character that has to replace zero, which is not part of base64 range
@@ -241,8 +242,9 @@ namespace ATL.AudioData.IO
                     // Make sure total size is a multiple of 4
                     size = size - size % 4;
 
-                    byte[] encodedData = new byte[size];
-                    source.Read(encodedData, 0, size);
+                    using MemoryStream outStream = new MemoryStream(size);
+                    StreamUtils.CopyStream(source, outStream, size);
+                    byte[] encodedData = outStream.ToArray();
 
                     PictureInfo picInfo = PictureInfo.fromBinaryData(Utils.DecodeFrom64(encodedData), picType, getImplementedTagType(), 0, picturePosition);
                     tagData.Pictures.Add(picInfo);
@@ -343,13 +345,14 @@ namespace ATL.AudioData.IO
                     byte[] stringData = new byte[KEY_BUFFER];
                     int equalsIndex = -1;
                     int nbBuffered = -1;
+                    int nbRead = 0;
 
                     while (-1 == equalsIndex)
                     {
-                        reader.Read(stringData, 0, KEY_BUFFER);
+                        nbRead = reader.Read(stringData, 0, KEY_BUFFER);
                         nbBuffered++;
 
-                        for (int i = 0; i < KEY_BUFFER; i++)
+                        for (int i = 0; i < nbRead; i++)
                         {
                             if (stringData[i] == 0x3D) // '=' character
                             {
@@ -358,7 +361,7 @@ namespace ATL.AudioData.IO
                             }
                         }
 
-                        tagIdBuilder.Append(Utils.Latin1Encoding.GetString(stringData, 0, (-1 == equalsIndex) ? KEY_BUFFER : equalsIndex));
+                        tagIdBuilder.Append(Utils.Latin1Encoding.GetString(stringData, 0, (-1 == equalsIndex) ? nbRead : equalsIndex));
                     }
                     equalsIndex += KEY_BUFFER * nbBuffered;
                     reader.Seek(position + equalsIndex + 1, SeekOrigin.Begin);
