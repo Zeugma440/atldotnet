@@ -75,7 +75,9 @@ namespace ATL.AudioData.IO
                 { "ISRC", Field.ISRC },
                 { "CATALOGNUMBER", Field.CATALOG_NUMBER },
                 { "LABELNO", Field.CATALOG_NUMBER },
-                { "LYRICIST", Field.LYRICIST }
+                { "LYRICIST", Field.LYRICIST },
+                { "ALBUMARTISTSORT", Field.SORT_ALBUM_ARTIST },
+                { "ARTISTSORT", Field.SORT_ARTIST }
         };
 
         // Tweak to prevent/allow pictures to be written within the rest of metadata (OGG vs. FLAC behaviour)
