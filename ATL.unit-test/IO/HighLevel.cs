@@ -256,7 +256,7 @@ namespace ATL.test.IO
             }
             finally
             {
-                ATL.Settings.DefaultTagsWhenNoMetadata = new MetaDataIOFactory.TagType[2] { MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.NATIVE };
+                //ATL.Settings.DefaultTagsWhenNoMetadata = new MetaDataIOFactory.TagType[2] { MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.NATIVE };
             }
         }
 
