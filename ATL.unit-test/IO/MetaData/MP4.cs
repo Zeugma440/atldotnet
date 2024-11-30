@@ -1186,6 +1186,35 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_MP4_Multiple_Values()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/multiple_artists.m4a");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.AreEqual("ArtistA" + ATL.Settings.InternalValueSeparator + "ArtistB" + ATL.Settings.InternalValueSeparator + "Demo", theFile.NativeTag.Artist);
+
+            // Write
+            TagHolder theTag = new TagHolder();
+            theTag.Title = "blah";
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            // Check if separated values are still intact after rewriting
+            Assert.AreEqual("ArtistA" + ATL.Settings.InternalValueSeparator + "ArtistB" + ATL.Settings.InternalValueSeparator + "Demo", theFile.NativeTag.Artist);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_R_MP4_Rating()
         {
             assumeRatingInFile("_Ratings/mediaMonkey_4.1.19.1859/0.mp4", 0, MetaDataIOFactory.TagType.NATIVE);

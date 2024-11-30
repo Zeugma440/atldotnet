@@ -9,6 +9,7 @@ using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
 using System.Collections.Concurrent;
 using static ATL.TagData;
+using System.Collections;
 
 namespace ATL.AudioData.IO
 {
@@ -1376,6 +1377,9 @@ namespace ATL.AudioData.IO
             StringBuilder atomHeaderBuilder = new StringBuilder();
             // Browse all metadata
             long iListPosition = 0;
+            IList<string> values = new List<string>();
+            string atomHeader = "";
+
             while (iListPosition < iListSize - 8)
             {
                 atomHeaderBuilder.Clear();
@@ -1408,7 +1412,14 @@ namespace ATL.AudioData.IO
                     source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte flags
                     atomHeaderBuilder.Append(Utils.Latin1Encoding.GetString(source.ReadBytes((int)metadataSize - 8 - 4)));
                 }
-                string atomHeader = atomHeaderBuilder.ToString();
+                var newAtomHeader = atomHeaderBuilder.ToString();
+                if (atomHeader.Length > 0 && newAtomHeader != atomHeader)
+                {
+                    var strVal = string.Join(Settings.InternalValueSeparator, values);
+                    if (strVal.Length > 0) SetMetaField(atomHeader, strVal, readTagParams.ReadAllMetaFrames);
+                    values.Clear();
+                }
+                atomHeader = newAtomHeader;
 
                 // Having a 'data' header here means we're still on the same field, with a 2nd value
                 // (e.g. multiple embedded pictures)
@@ -1438,32 +1449,7 @@ namespace ATL.AudioData.IO
 
                 if (1 == dataClass) // UTF-8 Text
                 {
-                    var strlen = metadataSize;
-                    long lastLocation;
-                    var currentData = new List<string>();
-
-                    do
-                    {
-                        var dataSize = Math.Max(0, (int) strlen - 16);
-                        if (dataSize > 0)
-                        {
-                            strData = Encoding.UTF8.GetString(source.ReadBytes((int)strlen - 16));
-                            currentData.Add(strData);
-                        }
-
-                        lastLocation = source.BaseStream.Position;
-                        strlen = navigateToAtom(source, "data");
-                        
-                        if (strlen <= 0) continue;
-                        
-                        source.BaseStream.Seek(3, SeekOrigin.Current); // We're only looking for the last byte of the flag
-                        dataClass = source.ReadByte();
-                        source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte NULL space
-                        metadataSize += strlen;
-                    } while (strlen > 0);
-                    source.BaseStream.Seek(lastLocation, SeekOrigin.Begin);
-                    strData = string.Join(Settings.InternalValueSeparator, currentData);
-                    SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
+                    values.Add(Encoding.UTF8.GetString(source.ReadBytes((int)metadataSize - 16)));
                 }
                 else if (21 == dataClass) // int8-16-24-32
                 {
@@ -1473,7 +1459,7 @@ namespace ATL.AudioData.IO
                     else if (fieldSize > 2) intData = StreamUtils.DecodeBEInt24(source.ReadBytes(3));
                     else if (fieldSize > 1) intData = StreamUtils.DecodeBEInt16(source.ReadBytes(2));
                     else intData = source.ReadByte();
-                    SetMetaField(atomHeader, intData.ToString(), readTagParams.ReadAllMetaFrames);
+                    values.Add(intData.ToString());
                 }
                 else
                 {
@@ -1485,7 +1471,7 @@ namespace ATL.AudioData.IO
                         else if (fieldSize > 2) uIntData = StreamUtils.DecodeBEUInt24(source.ReadBytes(3));
                         else if (fieldSize > 1) uIntData = StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
                         else uIntData = source.ReadByte();
-                        SetMetaField(atomHeader, uIntData.ToString(), readTagParams.ReadAllMetaFrames);
+                        values.Add(uIntData.ToString());
                     }
                     else if (13 == dataClass || 14 == dataClass || (0 == dataClass && "covr".Equals(atomHeader))) // Picture
                     {
@@ -1531,7 +1517,7 @@ namespace ATL.AudioData.IO
                             source.BaseStream.Seek(2, SeekOrigin.Current);
                             ushort number = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)); // Current track/disc number
                             ushort total = StreamUtils.DecodeBEUInt16(source.ReadBytes(2)); // Total number of tracks/discs
-                            SetMetaField(atomHeader, number.ToString() + "/" + total.ToString(), readTagParams.ReadAllMetaFrames);
+                            values.Add(number.ToString() + "/" + total.ToString());
                         }
                         else if ("gnre".Equals(atomHeader)) // ©gen is a text field and doesn't belong here
                         {
@@ -1539,8 +1525,7 @@ namespace ATL.AudioData.IO
 
                             strData = "";
                             if (uIntData < ID3v1.MAX_MUSIC_GENRES) strData = ID3v1.MusicGenre[uIntData - 1];
-
-                            SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
+                            values.Add(strData);
                         }
                         // else - Other unhandled cases ?
                     }
@@ -1549,6 +1534,12 @@ namespace ATL.AudioData.IO
 
                 source.BaseStream.Seek(atomPosition + metadataSize, SeekOrigin.Begin);
                 iListPosition += atomSize;
+            } // While
+
+            if (values.Count > 0)
+            {
+                var strVal = string.Join(Settings.InternalValueSeparator, values);
+                SetMetaField(atomHeader, strVal, readTagParams.ReadAllMetaFrames);
             }
         }
 
@@ -1929,16 +1920,16 @@ namespace ATL.AudioData.IO
             // Supported textual fields
             foreach (Field frameType in map.Keys)
             {
-                foreach (string s in frameMapping_mp4.Keys)
+                foreach (string code in frameMapping_mp4.Keys)
                 {
-                    if (frameType == frameMapping_mp4[s])
+                    if (frameType == frameMapping_mp4[code])
                     {
                         if (map[frameType].Length > 0) // No frame with empty value
                         {
                             string value = formatBeforeWriting(frameType, tag, map);
 
-                            writeTextFrame(w, s, value);
-                            writtenFieldCodes.Add(s.ToUpper());
+                            writeTextFrame(w, code, value);
+                            writtenFieldCodes.Add(code.ToUpper());
                             counter++;
                         }
                         break;
@@ -1992,6 +1983,7 @@ namespace ATL.AudioData.IO
         private void writeTextFrame(BinaryWriter writer, string frameCode, string text)
         {
             const int frameFlags = 0;
+            long finalFramePos = 0;
 
             // == METADATA HEADER ==
             var frameSizePos1 = writer.BaseStream.Position;
@@ -2057,7 +2049,33 @@ namespace ATL.AudioData.IO
             }
             else if (1 == frameClass) // UTF-8 text
             {
-                writer.Write(Encoding.UTF8.GetBytes(text));
+                string[] values = text.Split(Settings.InternalValueSeparator);
+                var first = true;
+                // Handle multiple values
+                foreach (string value in values)
+                {
+                    if (0 == value.Length) continue;
+                    if (first) first = false;
+                    else
+                    {
+                        finalFramePos = writer.BaseStream.Position;
+                        writer.BaseStream.Seek(frameSizePos1, SeekOrigin.Begin);
+                        writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos1)));
+                        writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
+                        writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
+                        writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+
+                        frameSizePos1 = writer.BaseStream.Position;
+                        writer.Write(0); // Frame size placeholder to be rewritten in a few lines
+                        writer.Write(Utils.Latin1Encoding.GetBytes(frameCode));
+                        frameSizePos2 = writer.BaseStream.Position;
+                        writer.Write(0); // Frame size placeholder to be rewritten in a few lines
+                        writer.Write(Utils.Latin1Encoding.GetBytes("data"));
+                        writer.Write(StreamUtils.EncodeBEInt32(frameClass));
+                        writer.Write(frameFlags);
+                    }
+                    writer.Write(Encoding.UTF8.GetBytes(value));
+                }
             }
             else if (21 == frameClass) // int8-16-24-32, depending on the value
             {
@@ -2094,7 +2112,7 @@ namespace ATL.AudioData.IO
 
 
             // Go back to frame size locations to write their actual size 
-            var finalFramePos = writer.BaseStream.Position;
+            finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameSizePos1, SeekOrigin.Begin);
             writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos1)));
             writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
