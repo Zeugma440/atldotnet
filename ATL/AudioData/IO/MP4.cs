@@ -1438,7 +1438,31 @@ namespace ATL.AudioData.IO
 
                 if (1 == dataClass) // UTF-8 Text
                 {
-                    strData = Encoding.UTF8.GetString(source.ReadBytes((int)metadataSize - 16));
+                    var strlen = metadataSize;
+                    long lastLocation;
+                    var currentData = new List<string>();
+
+                    do
+                    {
+                        var dataSize = Math.Max(0, (int) strlen - 16);
+                        if (dataSize > 0)
+                        {
+                            strData = Encoding.UTF8.GetString(source.ReadBytes((int)strlen - 16));
+                            currentData.Add(strData);
+                        }
+
+                        lastLocation = source.BaseStream.Position;
+                        strlen = navigateToAtom(source, "data");
+                        
+                        if (strlen <= 0) continue;
+                        
+                        source.BaseStream.Seek(3, SeekOrigin.Current); // We're only looking for the last byte of the flag
+                        dataClass = source.ReadByte();
+                        source.BaseStream.Seek(4, SeekOrigin.Current); // 4-byte NULL space
+                        metadataSize += strlen;
+                    } while (strlen > 0);
+                    source.BaseStream.Seek(lastLocation, SeekOrigin.Begin);
+                    strData = string.Join(Settings.InternalValueSeparator, currentData);
                     SetMetaField(atomHeader, strData, readTagParams.ReadAllMetaFrames);
                 }
                 else if (21 == dataClass) // int8-16-24-32
