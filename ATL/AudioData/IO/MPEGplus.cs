@@ -85,6 +85,8 @@ namespace ATL.AudioData.IO
                 MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.ID3V1
             };
         }
+        /// <inheritdoc/>
+        public bool IsNativeMetadataRich => false;
 
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }

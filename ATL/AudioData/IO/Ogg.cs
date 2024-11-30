@@ -343,6 +343,8 @@ namespace ATL.AudioData.IO
             // According to id3.org (FAQ), ID3 is not compatible with OGG. Hence ATL does not allow ID3 tags to be written on OGG files; native is for VorbisTag
             return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
         }
+        /// <inheritdoc/>
+        public bool IsNativeMetadataRich => true;
 
         /// <inheritdoc/>
         public override IList<Format> MetadataFormats

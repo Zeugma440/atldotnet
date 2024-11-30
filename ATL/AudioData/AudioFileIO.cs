@@ -247,6 +247,8 @@ namespace ATL.AudioData
             return audioData.GetSupportedMetas();
         }
         /// <inheritdoc/>
+        public bool IsNativeMetadataRich => audioData.IsNativeMetadataRich;
+        /// <inheritdoc/>
         public bool Read(Stream source, AudioDataManager.SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
             return audioData.Read(source, sizeNfo, readTagParams);

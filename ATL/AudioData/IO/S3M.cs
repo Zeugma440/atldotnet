@@ -84,6 +84,8 @@ namespace ATL.AudioData.IO
         // IMetaDataIO
         protected override int getDefaultTagOffset() => TO_BUILTIN;
         protected override MetaDataIOFactory.TagType getImplementedTagType() => MetaDataIOFactory.TagType.NATIVE;
+        /// <inheritdoc/>
+        public bool IsNativeMetadataRich => false;
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             throw new NotImplementedException();

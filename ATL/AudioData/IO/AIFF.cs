@@ -112,6 +112,8 @@ namespace ATL.AudioData.IO
         {
             return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.NATIVE };
         }
+        /// <inheritdoc/>
+        public bool IsNativeMetadataRich => false;
 
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }

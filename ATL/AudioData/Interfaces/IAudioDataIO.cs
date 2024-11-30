@@ -96,6 +96,14 @@ namespace ATL.AudioData
         List<MetaDataIOFactory.TagType> GetSupportedMetas();
 
         /// <summary>
+        /// True if the native tagging system contains a wide array of fields
+        /// </summary>
+        bool IsNativeMetadataRich
+        {
+            get;
+        }
+
+        /// <summary>
         /// Read audio data from the given stream.
         /// NB1 : Standard metadata (i.e. ID3v2, ID3v1 and APE) have to be read _before_ calling this method, and their size stored in sizeInfo
         /// NB2 : Stream is _not_ closed after reading; resource deallocation has to be done by the caller

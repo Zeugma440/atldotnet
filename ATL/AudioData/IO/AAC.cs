@@ -94,6 +94,8 @@ namespace ATL.AudioData.IO
             return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V1 };
         }
         /// <inheritdoc/>
+        public bool IsNativeMetadataRich => false;
+        /// <inheritdoc/>
         public ChannelsArrangement ChannelsArrangement { get; private set; }
 
         /// <inheritdoc/>

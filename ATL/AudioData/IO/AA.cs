@@ -147,6 +147,8 @@ namespace ATL.AudioData.IO
             return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE };
         }
         /// <inheritdoc/>
+        public bool IsNativeMetadataRich => false;
+        /// <inheritdoc/>
         public ChannelsArrangement ChannelsArrangement => MONO;
         /// <inheritdoc/>
         public long AudioDataOffset { get; set; }

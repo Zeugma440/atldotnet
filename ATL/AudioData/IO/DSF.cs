@@ -53,7 +53,8 @@ namespace ATL.AudioData.IO
         {
             return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2 };
         }
-
+        /// <inheritdoc/>
+        public bool IsNativeMetadataRich => false;
         // IMetaDataEmbedder
         public long HasEmbeddedID3v2 => id3v2Offset;
         public uint ID3v2EmbeddingHeaderSize => 0;

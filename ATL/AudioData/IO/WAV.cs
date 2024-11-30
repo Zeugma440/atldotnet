@@ -124,6 +124,8 @@ namespace ATL.AudioData.IO
             // Native for bext, info and iXML chunks
             return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ID3V1 };
         }
+        /// <inheritdoc/>
+        public bool IsNativeMetadataRich => false;
 
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }

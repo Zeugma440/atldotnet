@@ -256,14 +256,16 @@ namespace ATL.AudioData
             if (1 == supportedMetas.Count) result.Add(supportedMetas[0]);
             else
             {
-                if (audioDataIO is OptimFrog) result.Add(TagType.APE); // TODO this is ugly
+                if (audioDataIO is OptimFrog) result.Add(TagType.APE); // TODO this is ugly (see #249)
                 else
                 {
                     var id3v2Exists = supportedMetas.Contains(TagType.ID3V2);
+                    bool isNativeRich = audioDataIO.IsNativeMetadataRich && supportedMetas.Exists(meta => meta == TagType.NATIVE);
                     foreach (var meta in supportedMetas.Where(meta => meta != TagType.ID3V1))
                     {
-                        if (meta == TagType.ID3V2 || meta == TagType.NATIVE) result.Add(meta); // Default preference go to these
-                        if (meta == TagType.APE && !id3v2Exists) result.Add(meta); // If no ID3v2 support at all
+                        if (meta == TagType.NATIVE && isNativeRich) result.Add(meta);
+                        if (meta == TagType.ID3V2 && !isNativeRich) result.Add(meta); // If poor native metadata
+                        if (meta == TagType.APE && !id3v2Exists && !isNativeRich) result.Add(meta); // If no ID3v2 support and poor native metadata
                     }
                 }
             }

@@ -187,6 +187,8 @@ namespace ATL.AudioData.IO
         {
             return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.ID3V1 };
         }
+        /// <inheritdoc/>
+        public bool IsNativeMetadataRich => true;
 
         /// <inheritdoc/>
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)

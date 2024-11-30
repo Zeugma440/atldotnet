@@ -332,6 +332,8 @@ namespace ATL.AudioData.IO
         {
             return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.ID3V1 };
         }
+        /// <inheritdoc/>
+        public bool IsNativeMetadataRich => false;
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS

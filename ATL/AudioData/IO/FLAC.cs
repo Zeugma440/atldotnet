@@ -112,6 +112,8 @@ namespace ATL.AudioData.IO
             // Native is for VorbisTag
             return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V2 };
         }
+        /// <inheritdoc/>
+        public bool IsNativeMetadataRich => true;
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS
