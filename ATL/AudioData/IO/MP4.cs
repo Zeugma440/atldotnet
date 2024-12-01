@@ -1449,7 +1449,31 @@ namespace ATL.AudioData.IO
 
                 if (1 == dataClass) // UTF-8 Text
                 {
-                    values.Add(Encoding.UTF8.GetString(source.ReadBytes((int)metadataSize - 16)));
+                    uint strSize = metadataSize;
+                    long lastLocation;
+                    var currentData = new List<string>();
+
+                    do
+                    {
+                        int dataSize = Math.Max(0, (int)strSize - 16);
+                        if (dataSize > 0)
+                        {
+                            strData = Encoding.UTF8.GetString(source.ReadBytes((int)strSize - 16));
+                            currentData.Add(strData);
+                        }
+
+                        // Look for multiple values
+                        lastLocation = source.BaseStream.Position;
+                        strSize = navigateToAtom(source, "data");
+                        if (strSize > 0)
+                        {
+                            source.BaseStream.Seek(8, SeekOrigin.Current);
+                            metadataSize += strSize;
+                        }
+                    } while (strSize > 0);
+                    source.BaseStream.Seek(lastLocation, SeekOrigin.Begin);
+                    strData = string.Join(Settings.InternalValueSeparator, currentData);
+                    values.Add(strData);
                 }
                 else if (21 == dataClass) // int8-16-24-32
                 {
@@ -2051,7 +2075,7 @@ namespace ATL.AudioData.IO
             {
                 string[] values = text.Split(Settings.InternalValueSeparator);
                 var first = true;
-                // Handle multiple values
+                // Handle multiple values = repeat the 'data' atom
                 foreach (string value in values)
                 {
                     if (0 == value.Length) continue;
@@ -2059,15 +2083,10 @@ namespace ATL.AudioData.IO
                     else
                     {
                         finalFramePos = writer.BaseStream.Position;
-                        writer.BaseStream.Seek(frameSizePos1, SeekOrigin.Begin);
-                        writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos1)));
                         writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
                         writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
                         writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
-                        frameSizePos1 = writer.BaseStream.Position;
-                        writer.Write(0); // Frame size placeholder to be rewritten in a few lines
-                        writer.Write(Utils.Latin1Encoding.GetBytes(frameCode));
                         frameSizePos2 = writer.BaseStream.Position;
                         writer.Write(0); // Frame size placeholder to be rewritten in a few lines
                         writer.Write(Utils.Latin1Encoding.GetBytes("data"));

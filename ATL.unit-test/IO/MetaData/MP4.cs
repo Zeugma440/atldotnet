@@ -1190,6 +1190,7 @@ namespace ATL.test.IO.MetaData
         {
             new ConsoleLogger();
 
+            // == 1st variant : repetition of the same metadata structure
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/multiple_artists.m4a");
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
@@ -1209,6 +1210,30 @@ namespace ATL.test.IO.MetaData
 
             // Check if separated values are still intact after rewriting
             Assert.AreEqual("ArtistA" + ATL.Settings.InternalValueSeparator + "ArtistB" + ATL.Settings.InternalValueSeparator + "Demo", theFile.NativeTag.Artist);
+
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
+
+            // == 2nd variant : repetition of the 'data' atom inside one single field
+            testFileLocation = TestUtils.CopyAsTempTestFile("MP4/multiple_artists2.m4a");
+            theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            Assert.AreEqual("ArtistA" + ATL.Settings.InternalValueSeparator + "ArtistB" + ATL.Settings.InternalValueSeparator + "Demo2", theFile.NativeTag.Artist);
+
+            // Write
+            theTag = new TagHolder();
+            theTag.Title = "blah";
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+
+            // Check if separated values are still intact after rewriting
+            Assert.AreEqual("ArtistA" + ATL.Settings.InternalValueSeparator + "ArtistB" + ATL.Settings.InternalValueSeparator + "Demo2", theFile.NativeTag.Artist);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
