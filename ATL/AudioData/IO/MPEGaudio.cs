@@ -296,6 +296,7 @@ namespace ATL.AudioData.IO
         private VBRData vbrData = new VBRData();
         private FrameHeader FirstFrame = new FrameHeader();
         private readonly AudioFormat audioFormat;
+        private float avgBitrate = 0;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -344,6 +345,7 @@ namespace ATL.AudioData.IO
             FirstFrame.Reset();
             AudioDataOffset = -1;
             AudioDataSize = 0;
+            avgBitrate = 0;
         }
 
         public MPEGaudio(string filePath, AudioFormat format)
@@ -384,7 +386,7 @@ namespace ATL.AudioData.IO
                             / 1000.0
                     );
             else
-                return FirstFrame.BitRate;
+                return avgBitrate;
         }
 
         private static VBRData getXingInfo(Stream source)
@@ -469,9 +471,9 @@ namespace ATL.AudioData.IO
         private double getDuration()
         {
             if (FirstFrame.Found)
-                if (vbrData.Found && (vbrData.Frames > 0))
+                if (vbrData.Found && vbrData.Frames > 0)
                     return vbrData.Frames * FirstFrame.Coefficient * 8.0 * 1000.0 / FirstFrame.SampleRate;
-                else return AudioDataSize * 1.0 / FirstFrame.BitRate * 8.0;
+                else return AudioDataSize * 1.0 / avgBitrate * 8.0;
             else
                 return 0;
         }
@@ -633,12 +635,16 @@ namespace ATL.AudioData.IO
         private long parseExactAudioDataSize(BufferedBinaryReader reader)
         {
             byte[] buffer = new byte[4];
+            var bitrates = new List<float>();
+            bitrates.Add(FirstFrame.BitRate);
             reader.Seek(FirstFrame.Offset, SeekOrigin.Begin);
             FrameHeader nextFrame = findNextFrame(reader, FirstFrame, buffer);
             while (nextFrame.Found)
             {
+                bitrates.Add(nextFrame.BitRate);
                 nextFrame = findNextFrame(reader, nextFrame, buffer);
             }
+            avgBitrate = bitrates.Average();
             return reader.Position - FirstFrame.Offset;
         }
 
@@ -657,8 +663,9 @@ namespace ATL.AudioData.IO
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Could not detect MPEG Audio header starting @ " + sizeNfo.ID3v2Size);
                 return false;
             }
-
+            avgBitrate = FirstFrame.BitRate;
             AudioDataOffset = FirstFrame.Offset;
+
             if (Settings.MP3_parseExactDuration) AudioDataSize = parseExactAudioDataSize(reader);
             else AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
 
