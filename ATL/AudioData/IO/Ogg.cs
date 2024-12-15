@@ -926,7 +926,7 @@ namespace ATL.AudioData.IO
                 }
                 else if (CONTENTS_SPEEX == contents)
                 {
-                    vorbisTag.switchOggBehaviour();
+                    vorbisTag.switchFlacBehaviour();
                     await vorbisTag.WriteAsync(memStream, tag);
                 }
                 else if (CONTENTS_FLAC == contents)

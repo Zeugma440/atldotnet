@@ -404,7 +404,7 @@ namespace ATL.test.IO.MetaData
             // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed metadata-free
