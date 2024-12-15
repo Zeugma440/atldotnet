@@ -197,7 +197,6 @@ CUE
 ## What is the roadmap of ATL.NET ?
 
 * Support for Broadcast wave metadata : aXML
-* Support for other audio file formats : Speex
 * Connectors to __other library file formats__ (e.g. iTunes)
 
 NB : Any user request that can be granted quickly will take priority over the roadmap
