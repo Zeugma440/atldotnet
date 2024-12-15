@@ -617,7 +617,6 @@ namespace ATL.AudioData.IO
 
                 if (readTagParams.PrepareForWriting) // Metrics to prepare writing
                 {
-                    // TODO Speex
                     if (CONTENTS_VORBIS == contents || CONTENTS_FLAC == contents)
                     {
                         // Determine the boundaries of 3rd header (Setup header) by searching from the last-but-one page
@@ -660,7 +659,7 @@ namespace ATL.AudioData.IO
                             info.CommentHeaderEnd = source.Position - OGG_PAGE_ID.Length;
                         }
                     }
-                    else if (CONTENTS_OPUS == contents)
+                    else if (CONTENTS_OPUS == contents || CONTENTS_SPEEX == contents)
                     {
                         info.SetupHeaderStart = info.SetupHeaderEnd;
                         info.CommentHeaderEnd = info.SetupHeaderStart;
@@ -922,6 +921,11 @@ namespace ATL.AudioData.IO
                 else if (CONTENTS_OPUS == contents)
                 {
                     await memStream.WriteAsync(OPUS_TAG_ID, 0, OPUS_TAG_ID.Length);
+                    vorbisTag.switchOggBehaviour();
+                    await vorbisTag.WriteAsync(memStream, tag);
+                }
+                else if (CONTENTS_SPEEX == contents)
+                {
                     vorbisTag.switchOggBehaviour();
                     await vorbisTag.WriteAsync(memStream, tag);
                 }
