@@ -31,6 +31,7 @@ namespace ATL.AudioData.IO
         private const int CONTENTS_VORBIS = 0;				// Vorbis
         private const int CONTENTS_OPUS = 1;                // Opus
         private const int CONTENTS_FLAC = 2;                // FLAC
+        private const int CONTENTS_SPEEX = 3;               // Speex
 
         private const int MAX_PAGE_SIZE = 255 * 255;
 
@@ -62,6 +63,10 @@ namespace ATL.AudioData.IO
         private static readonly byte[] FLAC_HEADER_ID = { 0x7F, 0x46, 0x4C, 0x41, 0x43 }; // 0x7f + "FLAC"
 
 
+        // Speex identification packet (frame) ID
+        private static readonly byte[] SPEEX_HEADER_ID = Utils.Latin1Encoding.GetBytes("Speex   ");
+
+
         private readonly AudioFormat audioFormat;
 
         private readonly FileInfo info = new FileInfo();
@@ -85,8 +90,8 @@ namespace ATL.AudioData.IO
 
         public double Duration => getDuration();
         public ChannelsArrangement ChannelsArrangement { get; private set; }
+        public bool IsVBR => isVbr();
 
-        public bool IsVBR => contents != CONTENTS_FLAC;
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 
@@ -217,6 +222,24 @@ namespace ATL.AudioData.IO
                 BlockSize = 0;
                 StopFlag = 0;
             }
+
+            public void FromStream(BufferedBinaryReader source)
+            {
+                ID = source.ReadBytes(7);
+                BitstreamVersion = source.ReadBytes(4);
+                ChannelMode = source.ReadByte();
+                SampleRate = source.ReadInt32();
+                BitRateMaximal = source.ReadInt32();
+                BitRateNominal = source.ReadInt32();
+                BitRateMinimal = source.ReadInt32();
+                BlockSize = source.ReadByte();
+                StopFlag = source.ReadByte();
+            }
+
+            public bool IsValid()
+            {
+                return StreamUtils.ArrBeginsWith(ID, VORBIS_HEADER_ID);
+            }
         }
 
         // Opus parameter header
@@ -246,6 +269,97 @@ namespace ATL.AudioData.IO
                 StreamCount = 0;
                 CoupledStreamCount = 0;
             }
+
+            public void FromStream(BufferedBinaryReader source)
+            {
+                ID = source.ReadBytes(8);
+
+                Version = source.ReadByte();
+                OutputChannelCount = source.ReadByte();
+                PreSkip = source.ReadUInt16();
+                InputSampleRate = 48000; // Actual sample rate is hardware-dependent. Let's assume for now that the hardware ATL runs on supports 48KHz
+
+                source.Seek(4, SeekOrigin.Current);
+                OutputGain = source.ReadInt16();
+
+                ChannelMappingFamily = source.ReadByte();
+
+                if (ChannelMappingFamily > 0)
+                {
+                    StreamCount = source.ReadByte();
+                    CoupledStreamCount = source.ReadByte();
+
+                    ChannelMapping = new byte[OutputChannelCount];
+                    for (int i = 0; i < OutputChannelCount; i++)
+                    {
+                        ChannelMapping[i] = source.ReadByte();
+                    }
+                }
+            }
+
+            public bool IsValid()
+            {
+                return StreamUtils.ArrBeginsWith(ID, OPUS_HEADER_ID);
+            }
+        }
+
+        // Speex parameter header
+        private sealed class SpeexHeader
+        {
+            public byte[] ID;
+            public byte[] VersionStr;
+            public int Version;
+            public int HeaderSize;
+            public int Rate;
+            public int Mode;
+            public int ModeBitstreamVersion;
+            public int NbChannels;
+            public int Bitrate;
+            public int FrameSize;
+            public int Vbr;
+            public int FramesPerPacket;
+            public int ExtraHeaders;
+
+
+            public void Reset()
+            {
+                ID = Array.Empty<byte>();
+                VersionStr = Array.Empty<byte>();
+                Version = 0;
+                HeaderSize = 0;
+                Rate = 0;
+                Mode = 0;
+                ModeBitstreamVersion = 0;
+                NbChannels = 0;
+                Bitrate = 0;
+                FrameSize = 0;
+                Vbr = 0;
+                FramesPerPacket = 0;
+                ExtraHeaders = 0;
+            }
+
+            public void FromStream(BufferedBinaryReader source)
+            {
+                ID = source.ReadBytes(8);
+                VersionStr = source.ReadBytes(20);
+                Version = source.ReadInt32();
+                HeaderSize = source.ReadInt32();
+                Rate = source.ReadInt32();
+                Mode = source.ReadInt32();
+                ModeBitstreamVersion = source.ReadInt32();
+                NbChannels = source.ReadInt32();
+                Bitrate = source.ReadInt32();
+                FrameSize = source.ReadInt32();
+                Vbr = source.ReadInt32();
+                FramesPerPacket = source.ReadInt32();
+                ExtraHeaders = source.ReadInt32();
+                source.Seek(8, SeekOrigin.Current); // Skip reserved bytes
+            }
+
+            public bool IsValid()
+            {
+                return StreamUtils.ArrBeginsWith(ID, SPEEX_HEADER_ID);
+            }
         }
 #pragma warning restore S4487 // Unread "private" fields should be removed
 
@@ -256,10 +370,11 @@ namespace ATL.AudioData.IO
             // First, second and third Vorbis packets
             public int AudioStreamId;
 
-            // Following two properties are mutually exclusive
-            public readonly VorbisHeader VorbisParameters = new VorbisHeader();  // Vorbis parameter header
-            public readonly OpusHeader OpusParameters = new OpusHeader();        // Opus parameter header
-            public FlacHeader FlacParameters;                           // FLAC parameter header
+            // Following properties are mutually exclusive
+            public readonly VorbisHeader VorbisParameters = new VorbisHeader(); // Vorbis parameter header
+            public readonly OpusHeader OpusParameters = new OpusHeader();       // Opus parameter header
+            public readonly SpeexHeader SpeexParameters = new SpeexHeader();    // Speex parameter header
+            public FlacHeader FlacParameters;                                   // FLAC parameter header
 
             // Total number of samples
             public ulong Samples;
@@ -279,6 +394,7 @@ namespace ATL.AudioData.IO
 
                 VorbisParameters.Reset();
                 OpusParameters.Reset();
+                SpeexParameters.Reset();
 
                 Samples = 0;
 
@@ -324,6 +440,7 @@ namespace ATL.AudioData.IO
                 string subformat;
                 if (contents == CONTENTS_VORBIS) subformat = "Vorbis";
                 else if (contents == CONTENTS_OPUS) subformat = "Opus";
+                else if (contents == CONTENTS_SPEEX) subformat = "Speex";
                 else if (contents == CONTENTS_FLAC)
                 {
                     subformat = "FLAC";
@@ -500,6 +617,7 @@ namespace ATL.AudioData.IO
 
                 if (readTagParams.PrepareForWriting) // Metrics to prepare writing
                 {
+                    // TODO Speex
                     if (CONTENTS_VORBIS == contents || CONTENTS_FLAC == contents)
                     {
                         // Determine the boundaries of 3rd header (Setup header) by searching from the last-but-one page
@@ -588,44 +706,14 @@ namespace ATL.AudioData.IO
             if (StreamUtils.ArrBeginsWith(VORBIS_HEADER_ID, headerStart))
             {
                 contents = CONTENTS_VORBIS;
-                info.VorbisParameters.ID = source.ReadBytes(7);
-                isSupportedHeader = StreamUtils.ArrBeginsWith(info.VorbisParameters.ID, VORBIS_HEADER_ID);
-
-                info.VorbisParameters.BitstreamVersion = source.ReadBytes(4);
-                info.VorbisParameters.ChannelMode = source.ReadByte();
-                info.VorbisParameters.SampleRate = source.ReadInt32();
-                info.VorbisParameters.BitRateMaximal = source.ReadInt32();
-                info.VorbisParameters.BitRateNominal = source.ReadInt32();
-                info.VorbisParameters.BitRateMinimal = source.ReadInt32();
-                info.VorbisParameters.BlockSize = source.ReadByte();
-                info.VorbisParameters.StopFlag = source.ReadByte();
+                info.VorbisParameters.FromStream(source);
+                isSupportedHeader = info.VorbisParameters.IsValid();
             }
             else if (StreamUtils.ArrBeginsWith(OPUS_HEADER_ID, headerStart))
             {
                 contents = CONTENTS_OPUS;
-                info.OpusParameters.ID = source.ReadBytes(8);
-                isSupportedHeader = StreamUtils.ArrBeginsWith(info.OpusParameters.ID, OPUS_HEADER_ID);
-
-                info.OpusParameters.Version = source.ReadByte();
-                info.OpusParameters.OutputChannelCount = source.ReadByte();
-                info.OpusParameters.PreSkip = source.ReadUInt16();
-                info.OpusParameters.InputSampleRate = 48000; // Actual sample rate is hardware-dependent. Let's assume for now that the hardware ATL runs on supports 48KHz
-                source.Seek(4, SeekOrigin.Current);
-                info.OpusParameters.OutputGain = source.ReadInt16();
-
-                info.OpusParameters.ChannelMappingFamily = source.ReadByte();
-
-                if (info.OpusParameters.ChannelMappingFamily > 0)
-                {
-                    info.OpusParameters.StreamCount = source.ReadByte();
-                    info.OpusParameters.CoupledStreamCount = source.ReadByte();
-
-                    info.OpusParameters.ChannelMapping = new byte[info.OpusParameters.OutputChannelCount];
-                    for (int i = 0; i < info.OpusParameters.OutputChannelCount; i++)
-                    {
-                        info.OpusParameters.ChannelMapping[i] = source.ReadByte();
-                    }
-                }
+                info.OpusParameters.FromStream(source);
+                isSupportedHeader = info.OpusParameters.IsValid();
             }
             else if (StreamUtils.ArrBeginsWith(FLAC_HEADER_ID, headerStart))
             {
@@ -633,8 +721,14 @@ namespace ATL.AudioData.IO
                 source.Seek(FLAC_HEADER_ID.Length, SeekOrigin.Current); // Skip the entire FLAC segment header
                 source.Seek(2, SeekOrigin.Current); // FLAC-to-Ogg mapping version
                 short nbHeaderPackets = StreamUtils.DecodeBEInt16(source.ReadBytes(2));
-                info.FlacParameters = FlacHelper.readHeader(source);
+                info.FlacParameters = FlacHelper.ReadHeader(source);
                 isSupportedHeader = info.FlacParameters.IsValid();
+            }
+            else if (StreamUtils.ArrBeginsWith(SPEEX_HEADER_ID, headerStart))
+            {
+                contents = CONTENTS_SPEEX;
+                info.SpeexParameters.FromStream(source);
+                isSupportedHeader = info.SpeexParameters.IsValid();
             }
             else if (StreamUtils.ArrBeginsWith(THEORA_HEADER_ID, headerStart))
             {
@@ -656,6 +750,10 @@ namespace ATL.AudioData.IO
             {
                 if (source.Read(buffer, 0, 8) < 8) return;
                 isValidTagHeader = StreamUtils.ArrBeginsWith(buffer, OPUS_TAG_ID);
+            }
+            else if (contentType.Equals(CONTENTS_SPEEX))
+            {
+                isValidTagHeader = true; // No specific tag header
             }
             else if (contentType.Equals(CONTENTS_FLAC))
             {
@@ -705,6 +803,17 @@ namespace ATL.AudioData.IO
 
             return result;
         }
+
+        private bool isVbr()
+        {
+            switch (contents)
+            {
+                case CONTENTS_FLAC: return false;
+                case CONTENTS_SPEEX: return info.SpeexParameters.Vbr > 0;
+                default: return true;
+            }
+        }
+
 
         /// <summary>
         /// Check for file correctness
@@ -761,6 +870,12 @@ namespace ATL.AudioData.IO
                     ChannelsArrangement = getArrangementFromCode(info.OpusParameters.OutputChannelCount);
                     SampleRate = (int)info.OpusParameters.InputSampleRate;
                     // No nominal bitrate for OPUS
+                }
+                else if (contents.Equals(CONTENTS_SPEEX))
+                {
+                    ChannelsArrangement = GuessFromChannelNumber(info.SpeexParameters.NbChannels);
+                    SampleRate = info.SpeexParameters.Rate;
+                    bitRateNominal = (ushort)(info.SpeexParameters.Bitrate / 1000);
                 }
                 else if (contents.Equals(CONTENTS_FLAC))
                 {

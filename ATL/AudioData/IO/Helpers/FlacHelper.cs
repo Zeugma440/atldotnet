@@ -45,7 +45,7 @@ namespace ATL.AudioData
             /// Read data from the given stream
             /// </summary>
             /// <param name="source">Stream to read data from</param>
-            public void fromStream(Stream source)
+            public void FromStream(Stream source)
             {
                 Offset = source.Position;
                 if (source.Read(StreamMarker, 0, 4) < 4) return;
@@ -127,11 +127,11 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="source">Source to read data from</param>
         /// <returns>FLAC headers</returns>
-        public static FlacHeader readHeader(Stream source)
+        public static FlacHeader ReadHeader(Stream source)
         {
             // Read header data    
             FlacHeader flacHeader = new FlacHeader();
-            flacHeader.fromStream(source);
+            flacHeader.FromStream(source);
             return flacHeader;
         }
     }

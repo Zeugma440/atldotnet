@@ -28,4 +28,8 @@
     <ProjectReference Include="..\ATL\ATL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Resources\SPX\" />
+  </ItemGroup>
+
 </Project>

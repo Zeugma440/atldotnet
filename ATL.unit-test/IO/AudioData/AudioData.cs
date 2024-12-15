@@ -384,6 +384,13 @@ namespace ATL.test.IO
             testGenericAudio("MKA/mka.mka", CID_MKA, CID_MPEG, 3422, 128, -1, 44100, false, CF_LOSSY, STEREO, "Matroska / MPEG", 459, 69016);
             testGenericAudio("MKA/no_info_duration.webm", CID_MKA, CID_OGG, 7159, 16, 0, 48000, false, CF_LOSSY, MONO, "Matroska / Opus", 167, 112605);
         }
+
+        [TestMethod]
+        public void Audio_SPX()
+        {
+            testGenericAudio("SPX/empty.spx", CID_OGG, CID_OGG, 15675, 9, -1, 8000, false, CF_LOSSY, MONO, "OGG (Speex)", 156, 17010);
+            testGenericAudio("SPX/stereo.spx", CID_OGG, CID_OGG, 8715, 17, -1, 8000, false, CF_LOSSY, STEREO, "OGG (Speex)", 322, 18119);
+        }
 #pragma warning restore S2699 // Tests should include assertions
     }
 }

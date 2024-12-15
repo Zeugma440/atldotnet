@@ -179,7 +179,7 @@ namespace ATL.AudioData.IO
             long blockEndOffset = -1;
 
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            header = readHeader(source);
+            header = ReadHeader(source);
 
             // Process data if loaded and header valid    
             if (header.IsValid())

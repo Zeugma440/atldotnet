@@ -118,9 +118,12 @@ namespace ATL.AudioData
                     tempFmt.AddMimeType("audio/vorbis");
                     tempFmt.AddMimeType("audio/opus");
                     tempFmt.AddMimeType("audio/ogg;codecs=opus");
+                    tempFmt.AddMimeType("audio/speex");
+                    tempFmt.AddMimeType("audio/x-speex");
                     tempFmt.AddExtension(".ogg");
                     tempFmt.AddExtension(".oga");
                     tempFmt.AddExtension(".opus");
+                    tempFmt.AddExtension(".spx");
                     tempFmt.CheckHeader = Ogg.IsValidHeader;
                     theFactory.addFormat(tempFmt);
 
