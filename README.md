@@ -113,7 +113,7 @@ Monkey's Audio | .APE | R/W | R/W | R/W |
 MPEG Audio Layer | .MP1, .MP2, .MP3 | R/W | R/W | R/W | |
 MusePack / MPEGplus|.MPC, .MP+|R/W|R/W|R/W| |
 Noisetracker/Soundtracker/Protracker|.MOD| | | |R/W (2)|
-OGG : Vorbis, Opus, Embedded FLAC|.OGG, .OGA, .OPUS| | | |R/W|
+OGG : Vorbis, Opus, Embedded FLAC, Speex|.OGG, .OGA, .OPUS, .SPX| | | |R/W|
 OptimFROG|.OFR, .OFS|R/W|R/W|R/W| |
 Portable  Sound Format|.PSF, .PSF1, .PSF2, .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINIQSF| | | |R/W|
 ScreamTracker|.S3M| | | |R/W (2)|
