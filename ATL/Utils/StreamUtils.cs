@@ -583,7 +583,6 @@ namespace ATL
             if (bitCount < 1 || bitCount > 32) throw new NotSupportedException("Bit count must be between 1 and 32");
             byte[] buffer = new byte[4];
 
-            // Read a number of bits from file at the given position
             source.Seek(bitPosition / 8, SeekOrigin.Begin); // integer division =^ div
             if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return 0;
             uint result = DecodeBEUInt32(buffer);
@@ -598,11 +597,11 @@ namespace ATL
         /// </summary>
         public static int ReadBits(byte[] source, int offset, int length)
         {
-            if (source.Length > 4) throw new NotSupportedException("Only supports 32-bit input or less");
             if (offset + length > source.Length * 8) throw new NotSupportedException("Incompatible parameters");
+            if (offset + length > 32) throw new NotSupportedException("Only supports 32-bit input or less");
 
             byte[] intBytes = new byte[4];
-            source.CopyTo(intBytes, 0);
+            Array.Copy(source, 0, intBytes, 0, Math.Min(4, source.Length));
             int full = DecodeInt32(intBytes);
             int mask = (1 << length) - 1;
             return (full >> offset) & mask;

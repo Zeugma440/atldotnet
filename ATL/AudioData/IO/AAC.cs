@@ -135,7 +135,17 @@ namespace ATL.AudioData.IO
 
         public static bool IsValidHeader(byte[] data)
         {
-            return recognizeHeaderType(data) != AAC_BITRATE_TYPE_UNKNOWN;
+            var headerTypeID = recognizeHeaderType(data);
+            // Read header data
+            if (AAC_HEADER_TYPE_ADIF == headerTypeID) return true;
+            else if (AAC_HEADER_TYPE_ADTS == headerTypeID)
+            {
+                if (StreamUtils.ReadBits(data, 0, 8) != 0xFF) return false;
+                if (StreamUtils.ReadBits(data, 12, 4) != 0xF) return false;
+                if (StreamUtils.ReadBits(data, 9, 2) != 0) return false;  // Make sure Layer is 0
+                return true;
+            }
+            else return false;
         }
 
         private static byte recognizeHeaderType(byte[] data)
@@ -170,17 +180,17 @@ namespace ATL.AudioData.IO
         }
 
         // Read ADIF header data
-        private void readADIF(Stream Source)
+        private bool readADIF(Stream source)
         {
             var Position = (int)(sizeInfo.ID3v2Size * 8 + 32);
-            if (0 == StreamUtils.ReadBEBits(Source, Position, 1)) Position += 3;
+            if (0 == StreamUtils.ReadBEBits(source, Position, 1)) Position += 3;
             else Position += 75;
-            if (0 == StreamUtils.ReadBEBits(Source, Position, 1)) bitrateTypeID = AAC_BITRATE_TYPE_CBR;
+            if (0 == StreamUtils.ReadBEBits(source, Position, 1)) bitrateTypeID = AAC_BITRATE_TYPE_CBR;
             else bitrateTypeID = AAC_BITRATE_TYPE_VBR;
 
             Position++;
 
-            bitrate = (int)StreamUtils.ReadBEBits(Source, Position, 23);
+            bitrate = (int)StreamUtils.ReadBEBits(source, Position, 23);
 
             if (AAC_BITRATE_TYPE_CBR == bitrateTypeID) Position += 51;
             else Position += 31;
@@ -188,20 +198,22 @@ namespace ATL.AudioData.IO
             Position += 2;
 
             uint channels = 1;
-            SampleRate = SAMPLE_RATE[StreamUtils.ReadBEBits(Source, Position, 4)];
+            SampleRate = SAMPLE_RATE[StreamUtils.ReadBEBits(source, Position, 4)];
             Position += 4;
-            channels += StreamUtils.ReadBEBits(Source, Position, 4);
+            channels += StreamUtils.ReadBEBits(source, Position, 4);
             Position += 4;
-            channels += StreamUtils.ReadBEBits(Source, Position, 4);
+            channels += StreamUtils.ReadBEBits(source, Position, 4);
             Position += 4;
-            channels += StreamUtils.ReadBEBits(Source, Position, 4);
+            channels += StreamUtils.ReadBEBits(source, Position, 4);
             Position += 4;
-            channels += StreamUtils.ReadBEBits(Source, Position, 2);
+            channels += StreamUtils.ReadBEBits(source, Position, 2);
             ChannelsArrangement = GuessFromChannelNumber((int)channels);
+
+            return ChannelsArrangement != UNKNOWN;
         }
 
         // Read ADTS header data
-        private void readADTS(Stream source)
+        private bool readADTS(Stream source)
         {
             int frames = 0;
             int totalSize = 0;
@@ -211,9 +223,11 @@ namespace ATL.AudioData.IO
                 frames++;
                 var position = (int)(sizeInfo.ID3v2Size + totalSize) * 8;
 
-                if (StreamUtils.ReadBEBits(source, position, 12) != 0xFFF) break;
-
-                position += 18;
+                if (StreamUtils.ReadBEBits(source, position, 12) != 0xFFF) return false;
+                position += 12;
+                position += 1;
+                if (StreamUtils.ReadBEBits(source, position, 2) != 0) return false; // Make sure Layer is 0
+                position += 5;
 
                 SampleRate = SAMPLE_RATE[StreamUtils.ReadBEBits(source, position, 4)];
                 position += 5;
@@ -235,6 +249,8 @@ namespace ATL.AudioData.IO
             }
             while (source.Length > sizeInfo.ID3v2Size + totalSize);
             bitrate = (int)Math.Round(8 * totalSize / 1024.0 / frames * SampleRate);
+
+            return true;
         }
 
         // Read data from file
@@ -248,17 +264,13 @@ namespace ATL.AudioData.IO
 
         protected bool read(Stream source, MetaDataIO.ReadTagParams readTagParams)
         {
-            bool result = true;
-
             resetData();
 
             headerTypeID = recognizeHeaderType(source);
             // Read header data
-            if (AAC_HEADER_TYPE_ADIF == headerTypeID) readADIF(source);
-            else if (AAC_HEADER_TYPE_ADTS == headerTypeID) readADTS(source);
-            else result = false;
-
-            return result;
+            if (AAC_HEADER_TYPE_ADIF == headerTypeID) return readADIF(source);
+            else if (AAC_HEADER_TYPE_ADTS == headerTypeID) return readADTS(source);
+            else return false;
         }
     }
 }
