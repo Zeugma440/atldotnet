@@ -25,6 +25,8 @@ namespace ATL.test
             Assert.AreEqual("01:01:00.0", Utils.EncodeTimecode_ms(60 * 60 * 1000 + 60 * 1000));
             // Display d, h, m, s and ms
             Assert.AreEqual("2d 01:01:00.0", Utils.EncodeTimecode_ms(48 * 60 * 60 * 1000 + 60 * 60 * 1000 + 60 * 1000));
+            // Display m, s and ms for very long durations in MM:SS.UUUU format
+            Assert.AreEqual("2941:01.0", Utils.EncodeTimecode_ms(48 * 60 * 60 * 1000 + 60 * 60 * 1000 + 60 * 1000 + 1000, true));
         }
 
         [TestMethod]
