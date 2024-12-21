@@ -45,21 +45,26 @@ namespace Commons
         /// <summary>
         /// Format the given duration using the following format
         ///     DDdHH:MM:SS.UUUU
+        ///     OR
+        ///     MM:SS.UUUU
         ///     
         ///  Where
         ///     DD is the number of days, if applicable (i.e. durations of less than 1 day won't display the "DDd" part)
         ///     HH is the number of hours, if applicable (i.e. durations of less than 1 hour won't display the "HH:" part)
-        ///     MM is the number of minutes
+        ///     MM is the number of minutes, when using MMSS format, this will extend beyond two digits if necessary
         ///     SS is the number of seconds
         ///     UUUU is the number of milliseconds
         /// </summary>
         /// <param name="milliseconds">Duration to format (in milliseconds)</param>
+        /// <param name="useMmSsFormat">Format in MM:SS.UUUU format. Default is false</param>
         /// <returns>Formatted duration according to the abovementioned convention</returns>
-        public static string EncodeTimecode_ms(long milliseconds)
+        public static string EncodeTimecode_ms(long milliseconds, bool useMmSsFormat = false)
         {
             long seconds = Convert.ToInt64(Math.Floor(milliseconds / 1000.00));
+            
+            var encodedString = useMmSsFormat ? EncodeMmSsTimecode_s(seconds) : EncodeTimecode_s(seconds);
 
-            return EncodeTimecode_s(seconds) + "." + (milliseconds - seconds * 1000);
+            return encodedString + "." + (milliseconds - seconds * 1000);
         }
 
         /// <summary>
@@ -91,6 +96,29 @@ namespace Commons
 
             if (d > 0) return d + "d " + hStr + ":" + mStr + ":" + sStr;
             if (h > 0) return hStr + ":" + mStr + ":" + sStr;
+            return mStr + ":" + sStr;
+        }
+        
+        /// <summary>
+        /// Format the given duration using the following format
+        ///     MM:SS
+        ///     
+        ///  Where
+        ///     MM is the number of minutes, this will extend beyond two digits if necessary
+        ///     SS is the number of seconds
+        /// </summary>
+        /// <param name="seconds">Duration to format (in seconds)</param>
+        /// <returns>Formatted duration according to the abovementioned convention</returns>
+        public static string EncodeMmSsTimecode_s(long seconds)
+        {
+            var m = Convert.ToInt64(Math.Floor(seconds / 60.00));
+            var s = seconds - 60 * m;
+
+            var mStr = m.ToString();
+            if (1 == mStr.Length) mStr = "0" + mStr;
+            var sStr = s.ToString();
+            if (1 == sStr.Length) sStr = "0" + sStr;
+            
             return mStr + ":" + sStr;
         }
 
