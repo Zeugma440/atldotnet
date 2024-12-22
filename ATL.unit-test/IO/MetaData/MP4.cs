@@ -1588,7 +1588,7 @@ namespace ATL.test.IO.MetaData
             System.Console.WriteLine("Chapters(2) Image: " + (track.Chapters[1].Picture != null));
 
             //Switch these Assertions for expected editing.
-            Assert.IsTrue(track.Chapters[0].Picture != null);
+            Assert.IsTrue(track.Chapters[0].Picture != null && 734 == track.Chapters[0].Picture.PictureData.Length); // 1x1 default pic from ATL
             Assert.IsTrue(track.Chapters[1].Picture != null);
 
             System.Console.WriteLine("# Remove Tags #");
@@ -1880,7 +1880,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual($"New Album", track.Album, "Album should be the same.");
             Assert.AreEqual($"New Chap0", track.Chapters[0].Title, "Chapter0 Title should be the same.");
             Assert.AreEqual($"New Chap1", track.Chapters[1].Title, "Chapter1 should be the same.");
-            Assert.IsTrue(track.Chapters[0].Picture != null);
+            Assert.IsTrue(track.Chapters[0].Picture != null && 734 == track.Chapters[0].Picture.PictureData.Length); // 1x1 default pic from ATL
             Assert.IsTrue(track.Chapters[1].Picture != null);
 
             //3. Remove Tag first
