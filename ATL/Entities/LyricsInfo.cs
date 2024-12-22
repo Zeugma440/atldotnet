@@ -350,7 +350,7 @@ namespace ATL
             // Lyrics
             foreach (var line in SynchronizedLyrics)
             {
-                sb.Append('[').Append(Utils.EncodeTimecode_ms(line.TimestampMs)).Append(']').Append(line.Text).Append('\n');
+                sb.Append('[').Append(Utils.EncodeTimecode_ms(line.TimestampMs, true)).Append(']').Append(line.Text).Append('\n');
             }
 
             return sb.ToString();
