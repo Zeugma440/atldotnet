@@ -9,7 +9,6 @@ using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
 using System.Collections.Concurrent;
 using static ATL.TagData;
-using System.Collections;
 
 namespace ATL.AudioData.IO
 {
@@ -2299,10 +2298,11 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.EncodeBEInt32(256));
             }
 
+            int nbActualChapterImages = chapters.Count(ch => ch.Picture != null && ch.Picture.PictureData.Length > 0);
             foreach (var chapter in chapters)
             {
                 if (chapter.Picture != null) w.Write(chapter.Picture.PictureData);
-                else w.Write(Properties.Resources._1px_black);
+                else if (nbActualChapterImages > 0) w.Write(Properties.Resources._1px_black);
             }
 
             return 1;
@@ -2601,12 +2601,20 @@ namespace ATL.AudioData.IO
             }
             if (!isText)
             {
+                int nbActualChapterImages = chapters.Count(ch => ch.Picture != null && ch.Picture.PictureData.Length > 0);
                 foreach (ChapterInfo chapter in workingChapters)
                 {
                     byte[] pictureData = chapter.Picture != null
                         ? chapter.Picture.PictureData
                         : Properties.Resources._1px_black;
-                    w.Write(StreamUtils.EncodeBEUInt32((uint)pictureData.Length));
+                    if (nbActualChapterImages > 0)
+                    {
+                        w.Write(StreamUtils.EncodeBEUInt32((uint)pictureData.Length));
+                    }
+                    else
+                    {
+                        w.Write(0);
+                    }
                 }
             }
             finalFramePos = w.BaseStream.Position;
