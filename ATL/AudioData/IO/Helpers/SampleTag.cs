@@ -108,7 +108,7 @@ namespace ATL.AudioData.IO
 
             // Sample loops data size
             long sampleLoopsPos = w.BaseStream.Position;
-            w.Write(0); // Placeholder for data size that will be rewritten at the end of the method
+            w.Write(0); // We don't store anything else than the loop itself => value should be 0
 
             // Sample loops data
             foreach (string key in keys)
@@ -126,10 +126,6 @@ namespace ATL.AudioData.IO
             // Add the extra padding byte if needed
             long paddingSize = (finalPos - sizePos) % 2;
             if (paddingSize > 0) w.BaseStream.WriteByte(0);
-
-            // Write actual sample loops data size
-            w.BaseStream.Seek(sampleLoopsPos, SeekOrigin.Begin);
-            w.Write((int)(finalPos - sampleLoopsPos - 4));
 
             // Write actual tag size
             w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
