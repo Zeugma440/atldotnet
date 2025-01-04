@@ -256,7 +256,13 @@ namespace ATL.AudioData
             if (1 == supportedMetas.Count) result.Add(supportedMetas[0]);
             else
             {
-                if (audioDataIO is OptimFrog) result.Add(TagType.APE); // TODO this is ugly (see #249)
+                // TODO this is ugly (see #249)
+                if (audioDataIO is OptimFrog) result.Add(TagType.APE);
+                else if (audioDataIO is WAV)
+                {
+                    result.Add(TagType.ID3V2);
+                    result.Add(TagType.NATIVE);
+                }
                 else
                 {
                     var id3v2Exists = supportedMetas.Contains(TagType.ID3V2);
