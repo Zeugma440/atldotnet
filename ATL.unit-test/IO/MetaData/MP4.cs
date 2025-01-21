@@ -113,7 +113,7 @@ namespace ATL.test.IO.MetaData
             readExistingTagsOnFile(theFile, 1);
 
             string pid = testData.ProductId;
-            int? bpm = testData.BPM;
+            float? bpm = testData.BPM;
             string lyricist = testData.Lyricist;
             // Test reading complete recording date
             try

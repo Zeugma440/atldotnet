@@ -47,7 +47,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Default constructor
         /// </summary>
-        protected MetaDataIO() {}
+        protected MetaDataIO() { }
 
         /// <summary>
         /// Instanciate a new TagHolder populated with the given TagData
@@ -398,7 +398,10 @@ namespace ATL.AudioData.IO
             string value = map[frameType];
             switch (frameType)
             {
-                case Field.RATING: return TrackUtils.EncodePopularity(Utils.ParseDouble(map[frameType]) * 5, ratingConvention).ToString();
+                case Field.RATING:
+                    var valueD = Utils.ParseDouble(map[frameType]);
+                    if (double.IsNaN(valueD)) valueD = 0;
+                    return TrackUtils.EncodePopularity(valueD * 5, ratingConvention).ToString();
                 case Field.RECORDING_DATE:
                 case Field.PUBLISHING_DATE:
                     if (DateTime.TryParse(value, out dateTime)) return EncodeDate(dateTime);

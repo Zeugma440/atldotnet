@@ -108,7 +108,7 @@ namespace ATL.test.IO.MetaData
             var theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             string comment = testData.Comment;
-            int bpm = testData.BPM.Value;
+            var bpm = testData.BPM.Value;
             DateTime publishingDate = testData.PublishingDate;
             IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
             string catalogNumber = testData.CatalogNumber;
@@ -142,7 +142,7 @@ namespace ATL.test.IO.MetaData
             var theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
             string comment = testData.Comment;
-            int bpm = testData.BPM.Value;
+            var bpm = testData.BPM.Value;
             DateTime publishingDate = testData.PublishingDate;
             IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
             string catalogNumber = testData.CatalogNumber;
@@ -175,7 +175,7 @@ namespace ATL.test.IO.MetaData
             string location = "OGG/embedded-flac.ogg";
 
             string comment = testData.Comment;
-            int bpm = testData.BPM.Value;
+            var bpm = testData.BPM.Value;
             DateTime publishingDate = testData.PublishingDate;
             IList<PictureInfo> pictureInfos = testData.EmbeddedPictures;
             string catalogNumber = testData.CatalogNumber;
@@ -209,7 +209,7 @@ namespace ATL.test.IO.MetaData
             string location = TestUtils.GetResourceLocationRoot() + "OGG/ogg_dirtyTrackDiscNumbering.ogg";
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
-            int bpm = testData.BPM.Value;
+            var bpm = testData.BPM.Value;
             DateTime publishingDate = testData.PublishingDate;
             string catalogNumber = testData.CatalogNumber;
             try

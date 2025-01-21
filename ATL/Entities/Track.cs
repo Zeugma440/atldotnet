@@ -197,7 +197,7 @@ namespace ATL
         /// <summary>
         /// Beats per minute
         /// </summary>
-        public int? BPM { get; set; }
+        public float? BPM { get; set; }
         /// <summary>
         /// Person or organization that encoded the file
         /// </summary>
@@ -1034,7 +1034,10 @@ namespace ATL
         {
             return value.HasValue && (Settings.NullAbsentValues || value != 0);
         }
-
+        private static bool canUseValue(float? value)
+        {
+            return value.HasValue && (Settings.NullAbsentValues || value != 0);
+        }
         private static bool canUseValue(float value)
         {
             return Settings.NullAbsentValues || !Utils.ApproxEquals(value, 0);
@@ -1055,6 +1058,12 @@ namespace ATL
         private static string toTagValue(float value)
         {
             if (canUseValue(value)) return value.ToString();
+            return Settings.NullAbsentValues ? "" : "0";
+        }
+
+        private static string toTagValue(float? value)
+        {
+            if (canUseValue(value)) return value.Value.ToString();
             return Settings.NullAbsentValues ? "" : "0";
         }
     }

@@ -292,7 +292,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Beats per minute
         /// </summary>
-        int? BPM
+        float? BPM
         {
             get;
         }

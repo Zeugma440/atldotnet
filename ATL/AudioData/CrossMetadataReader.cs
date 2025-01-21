@@ -578,11 +578,11 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public int? BPM
+        public float? BPM
         {
             get
             {
-                int? result = null;
+                float? result = null;
                 if (!Settings.NullAbsentValues) result = 0;
                 foreach (IMetaDataIO reader in metaReaders)
                 {

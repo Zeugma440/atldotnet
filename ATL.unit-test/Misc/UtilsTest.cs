@@ -204,8 +204,8 @@ namespace ATL.test
             Assert.AreEqual(-1.11, Utils.ParseDouble("-1,11"));
             Assert.AreEqual(0.5, Utils.ParseDouble("0.5"));
 
-            Assert.AreEqual(0, Utils.ParseDouble("a"));
-            Assert.AreEqual(0, Utils.ParseDouble("1.11.1"));
+            Assert.AreEqual(double.NaN, Utils.ParseDouble("a"));
+            Assert.AreEqual(double.NaN, Utils.ParseDouble("1.11.1"));
         }
     }
 }

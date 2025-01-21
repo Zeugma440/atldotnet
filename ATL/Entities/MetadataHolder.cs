@@ -424,16 +424,17 @@ namespace ATL
             set => tagData.IntegrateValue(Field.LONG_DESCRIPTION, value);
         }
         /// <inheritdoc/>
-        public int? BPM
+        public float? BPM
         {
             get
             {
-                if (!int.TryParse(tagData[Field.BPM], out var result))
+                var dbl = Utils.ParseDouble(tagData[Field.BPM]);
+                if (double.IsNaN(dbl))
                 {
                     if (Settings.NullAbsentValues) return null;
                     return 0;
                 }
-                return result;
+                return (float)dbl;
             }
             set => tagData.IntegrateValue(Field.BPM, (null == value) ? null : value.ToString());
         }

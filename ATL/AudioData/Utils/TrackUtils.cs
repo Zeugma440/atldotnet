@@ -124,8 +124,9 @@ namespace ATL.AudioData
 
             if (Utils.IsNumeric(ratingString))
             {
-                ratingString = ratingString.Replace(',', '.');
-                return DecodePopularity(Utils.ParseDouble(ratingString), convention);
+                var rating = Utils.ParseDouble(ratingString);
+                if (double.IsNaN(rating)) rating = 0;
+                return DecodePopularity(rating, convention);
             }
 
             // If the field is only one byte long, rating is evaluated numerically
@@ -215,6 +216,7 @@ namespace ATL.AudioData
         public static int EncodePopularity(string ratingStr, int convention)
         {
             double rating = Utils.ParseDouble(ratingStr);
+            if (double.IsNaN(rating)) rating = 0;
             return EncodePopularity(rating, convention);
         }
         /// <summary>

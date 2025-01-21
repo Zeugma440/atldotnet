@@ -516,11 +516,11 @@ namespace Commons
         /// <returns>Parsed value; 0 if a parsing issue has been encountered</returns>
         public static double ParseDouble(string s)
         {
-            if (!IsNumeric(s)) return 0;
+            if (!IsNumeric(s)) return double.NaN;
 
             string[] parts = s.Split(new char[] { ',', '.' });
 
-            if (parts.Length > 2) return 0;
+            if (parts.Length > 2) return double.NaN;
             if (1 == parts.Length) return double.Parse(s);
 
             // Other possibilities : 2 == parts.Length

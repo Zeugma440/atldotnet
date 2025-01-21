@@ -88,7 +88,7 @@ namespace ATL.test.IO.MetaData
             string location = TestUtils.GetResourceLocationRoot() + "FLAC/flac_dirtyTrackDiscNumbering.flac";
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
-            int? bpm = testData.BPM;
+            float? bpm = testData.BPM;
             DateTime publishingDate = testData.PublishingDate;
             try
             {
