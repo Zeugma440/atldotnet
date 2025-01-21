@@ -1036,7 +1036,7 @@ namespace ATL
         }
         private static bool canUseValue(float? value)
         {
-            return value.HasValue && (Settings.NullAbsentValues || value != 0);
+            return value.HasValue && (Settings.NullAbsentValues || Math.Abs((double)value) > 0.001);
         }
         private static bool canUseValue(float value)
         {
