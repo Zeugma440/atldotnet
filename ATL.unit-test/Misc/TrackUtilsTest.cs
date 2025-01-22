@@ -39,6 +39,7 @@ namespace ATL.test
             Assert.AreEqual(16, TrackUtils.ExtractTrackTotal("15//16"));
             Assert.AreEqual(16, TrackUtils.ExtractTrackTotal("15//16.1"));
             Assert.AreEqual(16, TrackUtils.ExtractTrackTotal("15//16,1"));
+            Assert.AreEqual(16, TrackUtils.ExtractTrackTotal("15/aaa16"));
 
             Assert.AreEqual(0, TrackUtils.ExtractTrackTotal("15"));
             Assert.AreEqual(0, TrackUtils.ExtractTrackTotal(" 15"));
@@ -160,6 +161,14 @@ namespace ATL.test
             Assert.AreEqual("1990-04-01", TrackUtils.FormatISOTimestamp("1990", "0104", ""));
             Assert.AreEqual("1990-04-01T04:12", TrackUtils.FormatISOTimestamp("1990", "0104", "0412"));
             Assert.AreEqual("1990-04-01T04:12:44", TrackUtils.FormatISOTimestamp("1990", "0104", "041244"));
+        }
+
+        [TestMethod]
+        public void TrackUtils_ExtractIntYear()
+        {
+            Assert.AreEqual(1990, TrackUtils.ExtractIntYear("1990"));
+            Assert.AreEqual(0, TrackUtils.ExtractIntYear(""));
+            Assert.AreEqual(0, TrackUtils.ExtractIntYear("a"));
         }
     }
 }
