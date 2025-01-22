@@ -527,8 +527,19 @@ namespace ATL.AudioData.IO
                     && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
                     )
                 {
-                    writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
-                    nbFrames++;
+                    string value = FormatBeforeWriting(fieldInfo.Value);
+                    if (value.Contains(Settings.DisplayValueSeparator + ""))
+                    {
+                        // Write multiple fields when there are multiple values (specific to VorbisTag)
+                        string[] valueParts = value.Split(Settings.DisplayValueSeparator);
+                        foreach (string valuePart in valueParts) writeTextFrame(w, fieldInfo.NativeFieldCode, valuePart);
+                        nbFrames += (uint)valueParts.Length;
+                    }
+                    else
+                    {
+                        writeTextFrame(w, fieldInfo.NativeFieldCode, value);
+                        nbFrames++;
+                    }
                 }
             }
 
