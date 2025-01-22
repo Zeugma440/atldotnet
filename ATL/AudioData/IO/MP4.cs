@@ -1350,7 +1350,8 @@ namespace ATL.AudioData.IO
             source.BaseStream.Seek(4, SeekOrigin.Current); // Quicktime type
             string strData = Utils.Latin1Encoding.GetString(source.ReadBytes(4)); // Meta data type
 
-            if (!strData.Equals("mdir"))
+            // mdir and mdta both represent the same kind of metadata
+            if (!strData.Equals("mdir") && !strData.Equals("mdta"))
             {
                 string errMsg = "ATL does not support ";
                 if (strData.Equals("mp7t")) errMsg += "MPEG-7 XML metadata";
