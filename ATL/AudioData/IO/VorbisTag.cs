@@ -498,18 +498,19 @@ namespace ATL.AudioData.IO
                         if (map[frameType].Length > 0) // Don't write frames with empty values
                         {
                             string value = formatBeforeWriting(frameType, tag, map);
-                            if (frameType == Field.ARTIST && value.Contains(Settings.DisplayValueSeparator + ""))
+                            if (value.Contains(Settings.DisplayValueSeparator + ""))
                             {
-                                // Write multiple fields (specific to FLAC; restrained to artists for now)
+                                // Write multiple fields when there are multiple values (specific to VorbisTag)
                                 string[] valueParts = value.Split(Settings.DisplayValueSeparator);
                                 foreach (string valuePart in valueParts) writeTextFrame(w, s, valuePart);
+                                nbFrames += (uint)valueParts.Length;
                             }
                             else
                             {
                                 writeTextFrame(w, s, value);
+                                nbFrames++;
                             }
                             writtenFieldCodes.Add(s.ToUpper());
-                            nbFrames++;
                         }
                         break;
                     }
