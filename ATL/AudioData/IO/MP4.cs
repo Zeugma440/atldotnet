@@ -647,11 +647,9 @@ namespace ATL.AudioData.IO
                 if (s.Read(data, 0, 4) < 4) break;
                 var mdatSize = StreamUtils.DecodeBEUInt32(data);
                 s.Seek(mdatSize - 4, SeekOrigin.Current);
-                if (s.Read(data, 0, 4) < 4) break;
-                moofSize = StreamUtils.DecodeBEUInt32(data);
-                if (s.Read(data, 0, 4) < 4) break;
-                var atomName = Utils.Latin1Encoding.GetString(data);
-                if (!atomName.Equals("moof")) break;
+
+                // Look for the next moof atom; other atoms may exist between successive moof atoms
+                moofSize = navigateToAtom(s, "moof");
             }
 
             calculatedDurationMs = durationAll * 1000.0 / SampleRate;
