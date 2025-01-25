@@ -440,7 +440,7 @@ namespace ATL.AudioData
         /// <param name="value">Reference value</param>
         /// <param name="delta">Value to add</param>
         /// <param name="updatedValue">Updated value (out parameter; will be returned as same type as reference value)</param>
-        /// <returns>Resulting value after the addition, encoded into an array of bytes, as the same type of the reference value</returns>
+        /// <returns>Resulting value after the addition, encoded into an array of bytes, as the same type of the reference value. Empty array if failed.</returns>
         private static byte[] addToValue(object value, long delta, out object updatedValue)
         {
             switch (value)
@@ -478,7 +478,7 @@ namespace ATL.AudioData
                     }
                 default:
                     updatedValue = value;
-                    return null;
+                    return new byte[0];
             }
         }
 
@@ -646,7 +646,7 @@ namespace ATL.AudioData
 
                     value = addToValue(header.Value, delta, out updatedValue);
 
-                    if (null == value) throw new NotSupportedException("Value type not supported for " + zoneName + "@" + header.Position + " : " + header.Value.GetType());
+                    if (0 == value.Length) throw new NotSupportedException("Value type not supported for " + zoneName + "@" + header.Position + " : " + header.Value.GetType());
 
                     // The very same frame header is referenced from another frame and must be updated to its new value
                     updateAllHeadersAtPosition(header.Position, header.Type, updatedValue);

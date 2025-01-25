@@ -356,7 +356,7 @@ namespace ATL
                                 {
                                     Lyrics.ParseLRC(value);
                                 }
-                                catch (Exception e)
+                                catch (Exception)
                                 {
                                     Lyrics.UnsynchronizedLyrics = value;
                                 }

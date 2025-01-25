@@ -160,14 +160,14 @@ namespace ATL
                     {
                         StringBuilder dateTimeBuilder = new StringBuilder();
                         dateTimeBuilder.Append(year).Append('-');
-                        dateTimeBuilder.Append(dayMonth.Substring(2, 2)).Append('-');
+                        dateTimeBuilder.Append(dayMonth.AsSpan(2, 2)).Append('-');
                         dateTimeBuilder.Append(dayMonth[..2]);
                         string time = Utils.ProtectValue(tagData[Field.RECORDING_TIME]); // Try to add time if available
                         if (time.Length >= 4)
                         {
                             dateTimeBuilder.Append('T');
                             dateTimeBuilder.Append(time[..2]).Append(':');
-                            dateTimeBuilder.Append(time.Substring(2, 2)).Append(':');
+                            dateTimeBuilder.Append(time.AsSpan(2, 2)).Append(':');
                             dateTimeBuilder.Append((6 == time.Length) ? time.Substring(4, 2) : "00");
                         }
                         success = DateTime.TryParse(dateTimeBuilder.ToString(), out result);
@@ -193,7 +193,7 @@ namespace ATL
                             {
                                 dateTimeBuilder.Append('T');
                                 dateTimeBuilder.Append(time[..2]).Append(':');
-                                dateTimeBuilder.Append(time.Substring(2, 2)).Append(':');
+                                dateTimeBuilder.Append(time.AsSpan(2, 2)).Append(':');
                                 dateTimeBuilder.Append(6 == time.Length ? time.Substring(4, 2) : "00");
                             }
                             DateTime.TryParse(dateTimeBuilder.ToString(), out result);
