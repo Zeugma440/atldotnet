@@ -478,7 +478,7 @@ namespace ATL.AudioData
                     }
                 default:
                     updatedValue = value;
-                    return new byte[0];
+                    return Array.Empty<byte>();
             }
         }
 
