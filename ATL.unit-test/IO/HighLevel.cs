@@ -1005,7 +1005,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void TagIO_R_VorbisFLAC_multipleArtists()
         {
-            string resource = "FLAC/multiple_artists.flac";
+            string resource = "FLAC/multiple_artists_custom.flac";
             string testFileLocation = TestUtils.CopyAsTempTestFile(resource);
 
             Track theTrack = new Track(testFileLocation);

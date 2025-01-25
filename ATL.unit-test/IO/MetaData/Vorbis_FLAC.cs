@@ -104,11 +104,11 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_VorbisFLAC_multipleArtists()
+        public void TagIO_RW_VorbisFLAC_multipleArtistsCustom()
         {
             new ConsoleLogger();
 
-            string fileName = "FLAC/multiple_artists.flac";
+            string fileName = "FLAC/multiple_artists_custom.flac";
             string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
@@ -122,10 +122,18 @@ namespace ATL.test.IO.MetaData
             // Read
             Assert.AreEqual("lovesick (feat. Punipuni Denki)", meta.Title);
             Assert.AreEqual("Kamome Sano" + ATL.Settings.InternalValueSeparator + "Punipuni Denki", meta.Artist);
+            string customStuff = "";
+            meta.AdditionalFields.TryGetValue("CUSTOMSTUFF", out customStuff);
+            Assert.AreEqual("1" + ATL.Settings.InternalValueSeparator + "2", customStuff);
 
             // Write same data and keep initial format
             TagHolder theTag = new TagHolder();
             theTag.Artist = "Kamome Sano" + ATL.Settings.DisplayValueSeparator + "Punipuni Denki";
+            var additionalFields = new Dictionary<string, string>
+            {
+                { "CUSTOMSTUFF", "1" + ATL.Settings.DisplayValueSeparator + "2" }
+            };
+            theTag.AdditionalFields = additionalFields;
             Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             // Check that the resulting file (working copy that has been tagged, then untagged) remains identical to the original file (i.e. no byte lost nor added)
@@ -139,6 +147,11 @@ namespace ATL.test.IO.MetaData
             // Write and modify
             theTag = new TagHolder();
             theTag.Artist = "aaa" + ATL.Settings.DisplayValueSeparator + "bbb" + ATL.Settings.DisplayValueSeparator + "ccc";
+            additionalFields = new Dictionary<string, string>
+            {
+                { "CUSTOMSTUFF", "1" + ATL.Settings.DisplayValueSeparator + "2" + ATL.Settings.DisplayValueSeparator + "3"}
+            };
+            theTag.AdditionalFields = additionalFields;
             Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
 
             // Read again
@@ -149,6 +162,9 @@ namespace ATL.test.IO.MetaData
             Assert.IsTrue(meta.Exists);
 
             Assert.AreEqual("aaa" + ATL.Settings.InternalValueSeparator + "bbb" + ATL.Settings.InternalValueSeparator + "ccc", meta.Artist);
+            customStuff = "";
+            meta.AdditionalFields.TryGetValue("CUSTOMSTUFF", out customStuff);
+            Assert.AreEqual("1" + ATL.Settings.InternalValueSeparator + "2" + ATL.Settings.InternalValueSeparator + "3", customStuff);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
