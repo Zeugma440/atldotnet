@@ -997,7 +997,7 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
-        public void TagIO_RW_MP4_Chapters_QT_Pic_QA()
+        public void TagIO_RW_MP4_Chapters_QT_Pic_Warnings()
         {
             new ConsoleLogger();
             ArrayLogger log = new ArrayLogger();
@@ -1043,9 +1043,8 @@ namespace ATL.test.IO.MetaData
             foreach (LogItem l in logItems)
             {
                 if (l.Message.Contains("First chapter start time is > 0:00")) nbFound++;
-                if (l.Message.Contains("Not all chapters have an associated picture")) nbFound++;
             }
-            Assert.AreEqual(2, nbFound);
+            Assert.AreEqual(1, nbFound);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

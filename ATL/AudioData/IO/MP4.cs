@@ -1758,14 +1758,10 @@ namespace ATL.AudioData.IO
             // Chapter picture-related QA checks specific to MP4/M4A
             if (dataToWrite.Chapters != null)
             {
-                long nbPics = dataToWrite.Chapters.LongCount(c => c.Picture != null);
-                if (nbPics > 0)
+                if (anyWithPicture(dataToWrite.Chapters))
                 {
                     if (dataToWrite.Chapters[0].StartTime > 0)
                         LogDelegator.GetLogDelegate()(Log.LV_WARNING, "First chapter start time is > 0:00 - that might cause chapter picture display issues on some players such as VLC.");
-
-                    if (nbPics < dataToWrite.Chapters.Count)
-                        LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Not all chapters have an associated picture - that might cause chapter picture display issues on some players such as VLC.");
                 }
             }
         }
@@ -1777,8 +1773,8 @@ namespace ATL.AudioData.IO
             if (Chapters.Count > 0)
             {
                 var zones = structureHelper.Zones;
-                if (zones.Any(z => z.Name == ZONE_MP4_QT_CHAP_PIC_TRAK)) maxTrack = Math.Max(maxTrack, qtChapterPictureTrackId);
-                if (zones.Any(z => z.Name == ZONE_MP4_QT_CHAP_TXT_TRAK)) maxTrack = Math.Max(maxTrack, qtChapterTextTrackId);
+                if (zones.Any(z => z.Name == ZONE_MP4_QT_CHAP_PIC_TRAK && z.Size > 0)) maxTrack = Math.Max(maxTrack, qtChapterPictureTrackId);
+                if (zones.Any(z => z.Name == ZONE_MP4_QT_CHAP_TXT_TRAK && z.Size > 0)) maxTrack = Math.Max(maxTrack, qtChapterTextTrackId);
             }
             s.Seek(structureHelper.getCorrectedOffset(trackCounterPosition), SeekOrigin.Begin);
             s.Write(StreamUtils.EncodeBEUInt32((uint)maxTrack + 1));
@@ -2270,8 +2266,8 @@ namespace ATL.AudioData.IO
             if (qtChapterTextTrackNum > 0)
                 w.Write(StreamUtils.EncodeBEInt32(qtChapterTextTrackNum));
 
-            int nbActualChapterImages = chapters.Count(ch => ch.Picture != null && ch.Picture.PictureData.Length > 0);
-            if (qtChapterPictureTrackNum > 0 && nbActualChapterImages > 0)
+            bool shouldWriteChapterPics = anyWithPicture(chapters);
+            if (qtChapterPictureTrackNum > 0 && shouldWriteChapterPics)
                 w.Write(StreamUtils.EncodeBEInt32(qtChapterPictureTrackNum)); // As many pictures as there are chapters
 
             long finalFramePos = w.BaseStream.Position;
@@ -2297,11 +2293,11 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.EncodeBEInt32(256));
             }
 
-            int nbActualChapterImages = chapters.Count(ch => ch.Picture != null && ch.Picture.PictureData.Length > 0);
+            bool anyChapterPic = anyWithPicture(chapters);
             foreach (var chapter in chapters)
             {
                 if (chapter.Picture != null) w.Write(chapter.Picture.PictureData);
-                else if (nbActualChapterImages > 0) w.Write(Properties.Resources._1px_black);
+                else if (anyChapterPic) w.Write(Properties.Resources._1px_black);
             }
 
             return 1;
@@ -2310,8 +2306,9 @@ namespace ATL.AudioData.IO
         private int writeQTChaptersTrack(BinaryWriter w, int trackNum, IList<ChapterInfo> chapters, uint globalTimeScale, uint trackDurationMs, bool isText)
         {
             if (null == chapters || 0 == chapters.Count) return 0;
+            if (!isText && !anyWithPicture(chapters)) return 0;
+
             IList<ChapterInfo> workingChapters = chapters;
-            if (0 == workingChapters.Count) return 0;
 
             // Find largest dimensions and color depth among all chapter pictures
             short maxWidth = 0;
@@ -2600,13 +2597,13 @@ namespace ATL.AudioData.IO
             }
             if (!isText)
             {
-                int nbActualChapterImages = chapters.Count(ch => ch.Picture != null && ch.Picture.PictureData.Length > 0);
+                bool anyChapterPic = anyWithPicture(chapters);
                 foreach (ChapterInfo chapter in workingChapters)
                 {
                     byte[] pictureData = chapter.Picture != null
                         ? chapter.Picture.PictureData
                         : Properties.Resources._1px_black;
-                    if (nbActualChapterImages > 0)
+                    if (anyChapterPic)
                     {
                         w.Write(StreamUtils.EncodeBEUInt32((uint)pictureData.Length));
                     }
@@ -2760,6 +2757,11 @@ namespace ATL.AudioData.IO
                 (byte)((intPart & 0xFF00) >> 8), (byte)(intPart & 0x00FF),
                 (byte)((decPart & 0xFF00) >> 8), (byte)(decPart & 0x00FF)
             };
+        }
+
+        private static bool anyWithPicture(ICollection<ChapterInfo> chapters)
+        {
+            return chapters.Any(ch => ch.Picture != null && ch.Picture.PictureData.Length > 0);
         }
 
         // reduce the useful MDAT to a few Kbs (for dev purposes only)
