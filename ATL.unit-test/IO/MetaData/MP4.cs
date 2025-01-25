@@ -1053,8 +1053,8 @@ namespace ATL.test.IO.MetaData
         // Test behaviour when creating empty chapter pics
         // Cases
         // A: No chapter track should be created if there's no chapter
-        // B: No chapter picture track should be created if none of the chapters have an attached picture
-        // C: No empty chapter picture should be generated if all chapters that contain a picture are contiguous (=no gap > 1ms)
+        // B: No chapter picture (video) track should be created if none of the chapters have an attached picture
+        // C: No empty chapter picture should be generated if all chapters that contain a picture come one after the other
         // D: An empty chapter picture should be generated for any chapter without pictures that's included between chapters that have one
         [TestMethod]
         public void TagIO_RW_MP4_Chapters_QT_Pic_DynamicPics()
