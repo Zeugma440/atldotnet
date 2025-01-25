@@ -2293,11 +2293,10 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.EncodeBEInt32(256));
             }
 
-            bool anyChapterPic = anyWithPicture(chapters);
-            foreach (var chapter in chapters)
+            foreach (ChapterInfo chapter in chapters)
             {
                 if (chapter.Picture != null) w.Write(chapter.Picture.PictureData);
-                else if (anyChapterPic) w.Write(Properties.Resources._1px_black);
+                else if (shouldCreateDynamicPicFor(chapters, chapter)) w.Write(Properties.Resources._1px_black);
             }
 
             return 1;
@@ -2318,9 +2317,10 @@ namespace ATL.AudioData.IO
             {
                 foreach (ChapterInfo chapter in workingChapters)
                 {
+                    var canGoDynamic = shouldCreateDynamicPicFor(chapters, chapter);
                     byte[] pictureData = chapter.Picture != null
                         ? chapter.Picture.PictureData
-                        : Properties.Resources._1px_black;
+                        : canGoDynamic ? Properties.Resources._1px_black : Array.Empty<byte>();
                     ImageProperties props = ImageUtils.GetImageProperties(pictureData);
                     maxWidth = (short)Math.Min(Math.Max(props.Width, maxWidth), short.MaxValue);
                     maxHeight = (short)Math.Min(Math.Max(props.Height, maxHeight), short.MaxValue);
@@ -2597,20 +2597,13 @@ namespace ATL.AudioData.IO
             }
             if (!isText)
             {
-                bool anyChapterPic = anyWithPicture(chapters);
                 foreach (ChapterInfo chapter in workingChapters)
                 {
+                    var canGoDynamic = shouldCreateDynamicPicFor(chapters, chapter);
                     byte[] pictureData = chapter.Picture != null
                         ? chapter.Picture.PictureData
-                        : Properties.Resources._1px_black;
-                    if (anyChapterPic)
-                    {
-                        w.Write(StreamUtils.EncodeBEUInt32((uint)pictureData.Length));
-                    }
-                    else
-                    {
-                        w.Write(0);
-                    }
+                        : canGoDynamic ? Properties.Resources._1px_black : Array.Empty<byte>();
+                    w.Write(StreamUtils.EncodeBEUInt32((uint)pictureData.Length));
                 }
             }
             finalFramePos = w.BaseStream.Position;
@@ -2762,6 +2755,19 @@ namespace ATL.AudioData.IO
         private static bool anyWithPicture(ICollection<ChapterInfo> chapters)
         {
             return chapters.Any(ch => ch.Picture != null && ch.Picture.PictureData.Length > 0);
+        }
+
+        private static bool shouldCreateDynamicPicFor(ICollection<ChapterInfo> chapters, ChapterInfo chapter)
+        {
+            if (chapter.Picture != null && chapter.Picture.PictureData.Length > 0) return false;
+            var isFirst = !chapters.Any(ch => ch.StartTime < chapter.StartTime);
+            if (!isFirst)
+            {
+                var chapterBefore = chapters.FirstOrDefault(ch => ch.StartTime < chapter.StartTime && ch.Picture != null && ch.Picture.PictureData.Length > 0);
+                if (null == chapterBefore) return false;
+            }
+            var chapterAfter = chapters.FirstOrDefault(ch => ch.StartTime > chapter.StartTime && ch.Picture != null && ch.Picture.PictureData.Length > 0);
+            return chapterAfter != null;
         }
 
         // reduce the useful MDAT to a few Kbs (for dev purposes only)

@@ -192,7 +192,7 @@ namespace Commons
 
             if (ImageFormat.Undefined.Equals(format) && imageData.Length > 11) format = GetImageFormatFromPictureHeader(imageData);
 
-            if (format.Equals(ImageFormat.Unsupported)) return props;
+            if (format.Equals(ImageFormat.Unsupported) || format.Equals(ImageFormat.Undefined)) return props;
 
             props.NumColorsInPalette = 0;
             props.Format = format;

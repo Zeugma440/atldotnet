@@ -1050,6 +1050,176 @@ namespace ATL.test.IO.MetaData
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
+        // Test behaviour when creating empty chapter pics
+        // Cases
+        // A: No chapter track should be created if there's no chapter
+        // B: No chapter picture track should be created if none of the chapters have an attached picture
+        // C: No empty chapter picture should be generated if all chapters that contain a picture are contiguous (=no gap > 1ms)
+        // D: An empty chapter picture should be generated for any chapter without pictures that's included between chapters that have one
+        [TestMethod]
+        public void TagIO_RW_MP4_Chapters_QT_Pic_DynamicPics()
+        {
+            new ConsoleLogger();
+            ArrayLogger log = new ArrayLogger();
+
+            // Source : file without 'chpl' atom
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/empty.m4a");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            Assert.IsNotNull(theFile.getMeta(tagType));
+            Assert.IsFalse(theFile.getMeta(tagType).Exists);
+
+            // Case A
+            TagData theTag = new TagData();
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            using (FileStream s = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
+            {
+                Assert.IsFalse(StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("Chapter titles")));
+            }
+
+            // Case B
+            theTag = new TagData();
+
+            theTag.Chapters = new List<ChapterInfo>();
+
+            ChapterInfo ch = new ChapterInfo();
+            ch.StartTime = 111;
+            ch.Title = "aaa";
+
+            theTag.Chapters.Add(ch);
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            using (FileStream s = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
+            {
+                Assert.IsTrue(StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("Chapter titles")));
+                s.Seek(0, SeekOrigin.Begin);
+                Assert.IsFalse(StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("Chapter pictures")));
+            }
+
+
+            // Case C
+            var dynamicPicSegment = new byte[] { 0xff, 0xdb, 0x00, 0x43, 0x00, 0x01 };
+            theTag = new TagData();
+
+            theTag.Chapters = new List<ChapterInfo>();
+
+            ch = new ChapterInfo();
+            ch.StartTime = 111;
+            ch.Title = "aaa";
+            ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"));
+            ch.Picture.ComputePicHash();
+
+            theTag.Chapters.Add(ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 222;
+            ch.Title = "bbb";
+            ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpeg"));
+            ch.Picture.ComputePicHash();
+
+            theTag.Chapters.Add(ch);
+
+            // Two chapters with pictures => Shouldn't create a dynamic pic
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            using (FileStream s = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
+            {
+                Assert.IsTrue(StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("Chapter titles")));
+                s.Seek(0, SeekOrigin.Begin);
+                Assert.IsTrue(StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("Chapter pictures")));
+                s.Seek(0, SeekOrigin.Begin);
+                Assert.IsFalse(StreamUtils.FindSequence(s, dynamicPicSegment));
+            }
+
+            ch = new ChapterInfo();
+            ch.StartTime = 333;
+            ch.Title = "ccc";
+            theTag.Chapters.Add(ch);
+
+            // Three chapters; the first two with pictures => Shouldn't create a dynamic pic
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            using (FileStream s = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
+            {
+                Assert.IsTrue(StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("Chapter titles")));
+                s.Seek(0, SeekOrigin.Begin);
+                Assert.IsTrue(StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("Chapter pictures")));
+                s.Seek(0, SeekOrigin.Begin);
+                Assert.IsFalse(StreamUtils.FindSequence(s, dynamicPicSegment));
+            }
+
+            // Case D
+            theTag = new TagData();
+
+            theTag.Chapters = new List<ChapterInfo>();
+
+            ch = new ChapterInfo();
+            ch.StartTime = 111;
+            ch.Title = "aaa";
+
+            theTag.Chapters.Add(ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 222;
+            ch.Title = "bbb";
+            ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpeg"));
+            ch.Picture.ComputePicHash();
+
+            theTag.Chapters.Add(ch);
+
+            // Two chapters; the first without picture, the 2nd with a picture => Should create a dynamic pic
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            using (FileStream s = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
+            {
+                Assert.IsTrue(StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("Chapter titles")));
+                s.Seek(0, SeekOrigin.Begin);
+                Assert.IsTrue(StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("Chapter pictures")));
+                s.Seek(0, SeekOrigin.Begin);
+                Assert.IsTrue(StreamUtils.FindSequence(s, dynamicPicSegment));
+            }
+            
+
+            theTag = new TagData();
+
+            theTag.Chapters = new List<ChapterInfo>();
+
+            ch = new ChapterInfo();
+            ch.StartTime = 111;
+            ch.Title = "aaa";
+            ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"));
+            ch.Picture.ComputePicHash();
+
+            theTag.Chapters.Add(ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 222;
+            ch.Title = "bbb";
+
+            theTag.Chapters.Add(ch);
+
+            ch = new ChapterInfo();
+            ch.StartTime = 333;
+            ch.Title = "ccc";
+            ch.Picture = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic2.jpeg"));
+            ch.Picture.ComputePicHash();
+
+            theTag.Chapters.Add(ch);
+
+            // Three chapters; 1 and 3 with a picture, 2 without => Should create a dynamic pic
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            using (FileStream s = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read))
+            {
+                Assert.IsTrue(StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("Chapter titles")));
+                s.Seek(0, SeekOrigin.Begin);
+                Assert.IsTrue(StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("Chapter pictures")));
+                s.Seek(0, SeekOrigin.Begin);
+                Assert.IsTrue(StreamUtils.FindSequence(s, dynamicPicSegment));
+            }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
         [TestMethod]
         public void TagIO_RW_MP4_Chapters_CapNero()
         {
