@@ -367,12 +367,14 @@ namespace ATL.test.CodeSnippets
             pathsToWrite.Add("aaa.mp3");
             pathsToWrite.Add("bbb.mp3");
             pls.FilePaths = pathsToWrite;
+            pls.Save();
 
             // Writing tracks
             IList<Track> tracksToWrite = new List<Track>();
             tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MP3/empty.mp3"));
             tracksToWrite.Add(new Track(TestUtils.GetResourceLocationRoot() + "MOD/mod.mod"));
             pls.Tracks = tracksToWrite;
+            pls.Save();
         }
     }
 #pragma warning restore S2699 // Tests should include assertions
