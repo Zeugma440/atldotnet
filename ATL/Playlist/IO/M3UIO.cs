@@ -59,16 +59,16 @@ namespace ATL.Playlist.IO
                         var parts2 = parts[1].Split(','); // duration,artistTitle
                         if (1 == parts2.Length) continue;
 
-                        var artistTitle = parts2[1].Trim();
+                        var artistTitle = parts2[1];
                         if (0 == artistTitle.Length) continue;
 
                         var index = artistTitle.IndexOf(" - ", StringComparison.Ordinal);
                         if (index != -1)
                         {
-                            artist = artistTitle[..index];
-                            title = artistTitle[(index + 1)..];
+                            artist = artistTitle[..index].Trim();
+                            title = artistTitle[(index + 1)..].Trim();
                         }
-                        else title = artistTitle;
+                        else title = artistTitle.Trim();
                     }
                 }
                 else
