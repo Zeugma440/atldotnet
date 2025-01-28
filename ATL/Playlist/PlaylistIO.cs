@@ -154,7 +154,7 @@ namespace ATL.Playlist
                         }
                         else
                         {
-                            trackList.Add(new Track(path, false));
+                            trackList.Add(new Track(path));
                         }
                     }
                     save(fs, trackList);

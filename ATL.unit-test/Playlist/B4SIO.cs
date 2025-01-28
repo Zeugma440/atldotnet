@@ -64,7 +64,7 @@ namespace ATL.test.IO.Playlist
                 IList<string> filePaths = pls.FilePaths;
                 Assert.AreEqual(pathsToWrite.Count, filePaths.Count);
                 for (int i = 0; i < pathsToWrite.Count; i++) Assert.IsTrue(filePaths[i].EndsWith(pathsToWrite[i]));
-                
+
                 if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
 
 

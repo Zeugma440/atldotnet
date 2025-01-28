@@ -96,7 +96,9 @@ namespace ATL.test.IO.Playlist
                     Assert.AreEqual("#EXTM3U", sr.ReadLine());
                     foreach (string s in pathsToWrite)
                     {
-                        Assert.AreEqual("#EXTINF:-1," + Path.GetFileNameWithoutExtension(s), sr.ReadLine());
+                        var t = new Track(s);
+                        var duration = (t.Duration > 0) ? t.Duration : -1;
+                        Assert.AreEqual("#EXTINF:" + duration + "," + t.Title, sr.ReadLine());
                         Assert.AreEqual(s, sr.ReadLine());
                     }
                     Assert.IsTrue(sr.EndOfStream);

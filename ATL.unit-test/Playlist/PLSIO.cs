@@ -41,9 +41,11 @@ namespace ATL.test.IO.Playlist
                         int counter = 1;
                         foreach (string s in pathsToWrite)
                         {
+                            var t = new Track(s);
+                            var duration = (t.Duration > 0) ? t.Duration : -1;
                             Assert.AreEqual("File" + counter + "=" + s, sr.ReadLine());
-                            Assert.AreEqual("Title" + counter + "=" + System.IO.Path.GetFileNameWithoutExtension(s), sr.ReadLine());
-                            Assert.AreEqual("Length" + counter + "=-1", sr.ReadLine());
+                            Assert.AreEqual("Title" + counter + "=" + t.Title, sr.ReadLine());
+                            Assert.AreEqual("Length" + counter + "=" + duration, sr.ReadLine());
                             sr.ReadLine();
                             counter++;
                         }

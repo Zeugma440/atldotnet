@@ -1,5 +1,4 @@
 ﻿using ATL.Playlist;
-using System.Xml;
 
 namespace ATL.test.IO.Playlist
 {
@@ -26,6 +25,13 @@ namespace ATL.test.IO.Playlist
                 pls.FilePaths = pathsToWrite;
                 pls.Save();
 
+                double totalDuration = 0;
+                for (int i = 0; i < pathsToWrite.Count; i++)
+                {
+                    var t = new Track(pathsToWrite[i]);
+                    totalDuration += t.DurationMs;
+                }
+
                 using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
                 {
                     // Test if the default UTF-8 BOM has been written at the beginning of the file
@@ -39,8 +45,15 @@ namespace ATL.test.IO.Playlist
                         Assert.AreEqual("DAUMPLAYLIST", sr.ReadLine());
                         Assert.AreEqual("topindex=0", sr.ReadLine());
                         Assert.AreEqual("saveplaypos=0", sr.ReadLine());
-                        Assert.AreEqual("playtime=0", sr.ReadLine());
-                        for (int i = 0; i < pathsToWrite.Count; i++) Assert.AreEqual(i + 1 + "*file*" + pathsToWrite[i], sr.ReadLine());
+                        Assert.AreEqual("playtime=" + (long)totalDuration, sr.ReadLine());
+                        for (int i = 0; i < pathsToWrite.Count; i++)
+                        {
+                            var t = new Track(pathsToWrite[i]);
+                            Assert.AreEqual(i + 1 + "*file*" + pathsToWrite[i], sr.ReadLine());
+                            Assert.AreEqual(i + 1 + "*title*" + t.Title, sr.ReadLine());
+                            if (t.DurationMs > 0)
+                                Assert.AreEqual(i + 1 + "*duration2*" + (long)t.DurationMs, sr.ReadLine());
+                        }
                         Assert.IsTrue(sr.EndOfStream);
                     }
                 }
@@ -94,7 +107,7 @@ namespace ATL.test.IO.Playlist
         }
 
         [TestMethod]
-        public void PLIO_PLIO_RW_Absolute_Relative_Path_ASX()
+        public void PLIO_PLIO_RW_Absolute_Relative_Path_DPL()
         {
             var testFileLocation = PLIO_RW_Absolute_Relative_Path("dpl");
             try
@@ -108,7 +121,7 @@ namespace ATL.test.IO.Playlist
                     sr.ReadLine();
                     sr.ReadLine();
                     sr.ReadLine();
-                    for (int i = 0; i < 3; i++)
+                    for (int i = 0; i < 4; i++)
                     {
                         string path;
                         switch (nbEntries)
@@ -135,10 +148,10 @@ namespace ATL.test.IO.Playlist
                         sr.ReadLine(); // Duration
                         nbEntries++;
                     }
-                    sr.ReadLine();
+                    var hop = sr.ReadLine();
                     Assert.IsTrue(sr.EndOfStream);
                 }
-                Assert.AreEqual(4, nbEntries);
+                Assert.AreEqual(4, nbEntries - 1);
             }
             finally
             {

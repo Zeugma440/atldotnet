@@ -95,7 +95,7 @@ namespace ATL.test.IO.Playlist
             }
         }
 
-        public string PLIO_RW_Absolute_Relative_Path(string extension)
+        public static string PLIO_RW_Absolute_Relative_Path(string extension)
         {
             // == RESOURCE PREPARATION
             // Create new playlist file on temp folder
