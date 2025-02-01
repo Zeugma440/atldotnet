@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,11 +20,18 @@ namespace ATL.AudioData
 
         private readonly ISet<string> structuralAttributes = new HashSet<string>();
         private readonly IDictionary<string, string> defaultNamespaces = new Dictionary<string, string>();
+        // Specific anchors for namespaces
+        //   Key = Anchor node name
+        //   Value = Namespace name
+        // NB1 : If no anchor is defined for a given namespace, it will be written on the root element
+        // NB2 : If no namespace is defined for a given node name, all namespaces without an explicit anchor will be written on that node
+        private readonly IDictionary<string, ISet<string>> namespaceAnchors = new Dictionary<string, ISet<string>>();
 
         private sealed class Node
         {
             public string Prefix { get; }
             public string Name { get; }
+            public string FullName => (Prefix?.Length > 0) ? Prefix + ":" + Name : Name;
 
             public Node(string prefix, string name)
             {
@@ -48,12 +56,20 @@ namespace ATL.AudioData
 
         public void setStructuralAttributes(ISet<string> attrs)
         {
+            structuralAttributes.Clear();
             foreach (var attr in attrs) structuralAttributes.Add(attr.ToLower());
         }
 
         public void setDefaultNamespaces(IDictionary<string, string> defaultNs)
         {
+            defaultNamespaces.Clear();
             foreach (var ns in defaultNs) defaultNamespaces.Add(ns.Key, ns.Value);
+        }
+
+        public void setNamespaceAnchors(IDictionary<string, ISet<string>> nsAnchors)
+        {
+            namespaceAnchors.Clear();
+            foreach (var a in nsAnchors) namespaceAnchors.Add(a.Key, a.Value);
         }
 
         public void FromStream(Stream source, MetaDataIO meta, MetaDataIO.ReadTagParams readTagParams, long chunkSize)
@@ -150,18 +166,12 @@ namespace ATL.AudioData
             }
         }
 
-        public int ToStream(BinaryWriter w, MetaDataHolder meta)
+        public int ToStream(Stream s, MetaDataHolder meta)
         {
             // Filter eligible additionalData
             IDictionary<string, string> additionalFields = meta.AdditionalFields
                 .Where(f => f.Key.StartsWith(displayPrefix + ".", StringComparison.OrdinalIgnoreCase))
                 .ToDictionary(x => x.Key, x => x.Value);
-
-            XmlWriterSettings settings = new XmlWriterSettings
-            {
-                CloseOutput = false,
-                Encoding = Encoding.UTF8
-            };
 
             // Isolate all namespaces provided as input
             var nsKeys = meta.AdditionalFields.Keys.Where(k => k.Contains("xmlns:")).ToHashSet();
@@ -177,14 +187,6 @@ namespace ATL.AudioData
                 if (!namespaces.ContainsKey(defaultNs.Key)) namespaces.Add(defaultNs.Key, defaultNs.Value);
             }
 
-            using XmlWriter writer = XmlWriter.Create(w.BaseStream, settings);
-            writer.WriteStartDocument();
-            var node = parseNode(prefix);
-            if (null == node.Prefix) writer.WriteStartElement(node.Name);
-            else writer.WriteStartElement(node.Prefix, node.Name, namespaces[node.Prefix]);
-
-            // == Register all useful namespaces on the top level element
-
             // Detect all used namespaces
             ISet<string> usedNamespaces = new HashSet<string>();
             var nonNsKeys = meta.AdditionalFields.Keys.Where(k => !k.Contains("xmlns:")).ToHashSet();
@@ -194,7 +196,29 @@ namespace ATL.AudioData
                 foreach (var part in parts) usedNamespaces.Add(part.Split(':')[0]);
             }
 
-            // Register them on the top level element
+            // Start writing
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                CloseOutput = false,
+                Encoding = Encoding.UTF8
+            };
+
+            using XmlWriter writer = XmlWriter.Create(s, settings);
+            writer.WriteStartDocument();
+            var node = parseNode(prefix);
+            if (null == node.Prefix) writer.WriteStartElement(node.Name);
+            else writer.WriteStartElement(node.Prefix, node.Name, namespaces[node.Prefix]);
+
+            // Namespaces explicitly attached to current element
+            ISet<string> namespacesToAnchor = null;
+            namespaceAnchors.TryGetValue(node.FullName, out namespacesToAnchor);
+            if (namespacesToAnchor != null && namespacesToAnchor.Any(e => e.Equals("")))
+            {
+                namespacesToAnchor.Clear();
+                namespacesToAnchor.UnionWith(usedNamespaces);
+            }
+
+            // Register used namespaces on the top level element if declared or unanchored
             foreach (var ns in usedNamespaces)
             {
                 if (!namespaces.ContainsKey(ns))
@@ -202,6 +226,13 @@ namespace ATL.AudioData
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Namespace not found : " + ns);
                     continue;
                 }
+                if (null == namespacesToAnchor || !namespacesToAnchor.Contains(ns))
+                {
+                    // Not attached to any element => Attached to root
+                    var isAnchored = namespaceAnchors.Values.Any(s => s.Any(v => v.Equals("") || v.Equals(ns, StringComparison.OrdinalIgnoreCase)));
+                    if (isAnchored) continue;
+                }
+
                 writer.WriteAttributeString(ns, "http://www.w3.org/2000/xmlns/", namespaces[ns]);
             }
 
@@ -215,7 +246,7 @@ namespace ATL.AudioData
                          .Where(key => !nsKeys.Contains(key))
                     )
             {
-                // Create the list of path nodes
+                // Create the list of path nodes for the current element
                 List<string> singleNodes = new List<string>(key.Split('.'));
                 singleNodes.RemoveAt(0);// Remove the root node
                 StringBuilder nodePrefix = new StringBuilder();
@@ -248,9 +279,23 @@ namespace ATL.AudioData
                     if (subkey.Equals(singleNodes[^1])) continue; // Last node is a leaf, not a node
                     node = parseNode(subkey);
 
+                    // Namespaces explicitly attached to current element
+                    namespaceAnchors.TryGetValue(node.FullName, out namespacesToAnchor);
+                    if (namespacesToAnchor != null && namespacesToAnchor.Any(e => e.Equals("")))
+                    {
+                        namespacesToAnchor.Clear();
+                        namespacesToAnchor.UnionWith(usedNamespaces);
+                    }
+
                     openedNodes.Push(nodePath);
                     if (null == node.Prefix) writer.WriteStartElement(node.Name);
                     else writer.WriteStartElement(node.Prefix, node.Name, namespaces[node.Prefix]);
+
+                    // Attach anchored namespaces
+                    if (namespacesToAnchor != null)
+                        foreach (var ns in namespacesToAnchor)
+                            if (namespaces.ContainsKey(ns))
+                                writer.WriteAttributeString(ns, "http://www.w3.org/2000/xmlns/", namespaces[ns]);
                 }
 
                 // Write the last node (=leaf) as a proper value if it does not belong to structural attributes

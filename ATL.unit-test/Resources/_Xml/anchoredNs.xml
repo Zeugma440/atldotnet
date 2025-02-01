@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<container xmlns:pap="test:ns:meta/">
+		<pap:one>aaa</pap:one>
+		<pap:two>bbb</pap:two>
+	</container>
+</root>

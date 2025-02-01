@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<one>aaa</one>
+	<two>bbb</two>
+	<theList>
+		<elt><value>11</value></elt>
+		<elt><value>22</value></elt>
+		<elt><value>33</value></elt>
+	</theList>
+</root>

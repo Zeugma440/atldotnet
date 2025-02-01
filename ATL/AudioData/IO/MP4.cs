@@ -2675,8 +2675,7 @@ namespace ATL.AudioData.IO
             if (keyNominal.Equals(XmpTag.UUID_XMP, StringComparison.OrdinalIgnoreCase))
             {
                 using var mem = new MemoryStream();
-                using var memW = new BinaryWriter(mem);
-                XmpTag.ToStream(memW, new TagHolder(tag));
+                XmpTag.ToStream(mem, new TagHolder(tag));
                 data = mem.ToArray();
             }
             else

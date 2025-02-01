@@ -57,6 +57,13 @@ namespace ATL.AudioData.IO
             {"tscHS", "http://www.techsmith.com/xmp/tscHS/"},
         };
 
+        // Namespace anchors
+        private static readonly IDictionary<string, ISet<string>> NAMESPACE_ANCHORS = new Dictionary<string, ISet<string>>
+        {
+            { "x:xmpmeta", new HashSet<string>{ "x" } },
+            { "rdf:RDF", new HashSet<string> { "" } }
+        };
+
 
         private static XmlArray createXmlArray()
         {
@@ -72,6 +79,7 @@ namespace ATL.AudioData.IO
             );
             result.setStructuralAttributes(ATTRIBUTES);
             result.setDefaultNamespaces(DEFAULT_NAMESPACES);
+            result.setNamespaceAnchors(NAMESPACE_ANCHORS);
             return result;
         }
 
@@ -86,25 +94,25 @@ namespace ATL.AudioData.IO
             return WavHelper.IsDataEligible(meta, "xmp.");
         }
 
-        public static int ToStream(BinaryWriter w, MetaDataHolder meta, bool isLittleEndian = false, bool wavEmbed = false)
+        public static int ToStream(Stream w, MetaDataHolder meta, bool isLittleEndian = false, bool wavEmbed = false)
         {
             if (wavEmbed) w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_XMP));
 
-            long sizePos = w.BaseStream.Position;
+            long sizePos = w.Position;
             // Placeholder for chunk size that will be rewritten at the end of the method
-            if (wavEmbed) w.Write(0);
+            if (wavEmbed) w.Write(StreamUtils.EncodeInt32(0));
 
             XmlArray xmlArray = createXmlArray();
             int result = xmlArray.ToStream(w, meta);
 
             if (wavEmbed) // Add the extra padding byte if needed
             {
-                long finalPos = w.BaseStream.Position;
+                long finalPos = w.Position;
                 long paddingSize = (finalPos - sizePos) % 2;
-                if (paddingSize > 0) w.BaseStream.WriteByte(0);
+                if (paddingSize > 0) w.WriteByte(0);
 
-                w.BaseStream.Seek(sizePos, SeekOrigin.Begin);
-                if (isLittleEndian) w.Write((int)(finalPos - sizePos - 4));
+                w.Seek(sizePos, SeekOrigin.Begin);
+                if (isLittleEndian) w.Write(StreamUtils.EncodeInt32((int)(finalPos - sizePos - 4)));
                 else w.Write(StreamUtils.EncodeBEInt32((int)(finalPos - sizePos - 4)));
             }
 
