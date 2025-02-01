@@ -1,17 +1,12 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Commons;
-using System.Text;
-using System.IO;
-using ATL.AudioData.IO;
-using System.Collections.Generic;
+﻿using ATL.AudioData.IO;
 
 namespace ATL.test
 {
     [TestClass]
-    public class WavUtilsTest
+    public class WavHelperTest
     {
         [TestMethod]
-        public void WavUtils_writeFixedFieldTextValue()
+        public void WavHelper_writeFixedFieldTextValue()
         {
             IDictionary<string, string> additionalFields = new Dictionary<string, string>();
             additionalFields.Add("aaa", "bbb");
@@ -37,7 +32,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void WavUtils_writeFieldIntValue()
+        public void WavHelper_writeFieldIntValue()
         {
             IDictionary<string, string> additionalFields = new Dictionary<string, string>();
             additionalFields.Add("aaa", "2");
@@ -79,7 +74,7 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void WavUtils_writeField100DecimalValue()
+        public void WavHelper_writeField100DecimalValue()
         {
             IDictionary<string, string> additionalFields = new Dictionary<string, string>();
             additionalFields.Add("aaa", (252.0/100).ToString());
