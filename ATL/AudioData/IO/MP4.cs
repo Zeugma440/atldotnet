@@ -1756,13 +1756,9 @@ namespace ATL.AudioData.IO
             }
 
             // Chapter picture-related QA checks specific to MP4/M4A
-            if (dataToWrite.Chapters != null)
+            if (dataToWrite.Chapters != null && anyWithPicture(dataToWrite.Chapters) && dataToWrite.Chapters[0].StartTime > 0)
             {
-                if (anyWithPicture(dataToWrite.Chapters))
-                {
-                    if (dataToWrite.Chapters[0].StartTime > 0)
-                        LogDelegator.GetLogDelegate()(Log.LV_WARNING, "First chapter start time is > 0:00 - that might cause chapter picture display issues on some players such as VLC.");
-                }
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "First chapter start time is > 0:00 - that might cause chapter picture display issues on some players such as VLC.");
             }
         }
 

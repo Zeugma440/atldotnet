@@ -212,7 +212,7 @@ namespace ATL.AudioData
             // Namespaces explicitly attached to current element
             ISet<string> namespacesToAnchor = null;
             namespaceAnchors.TryGetValue(node.FullName, out namespacesToAnchor);
-            if (namespacesToAnchor != null && namespacesToAnchor.Any(e => e.Equals("")))
+            if (namespacesToAnchor != null && namespacesToAnchor.Any(e => string.IsNullOrEmpty(e)))
             {
                 namespacesToAnchor.Clear();
                 namespacesToAnchor.UnionWith(usedNamespaces);
@@ -229,7 +229,7 @@ namespace ATL.AudioData
                 if (null == namespacesToAnchor || !namespacesToAnchor.Contains(ns))
                 {
                     // Not attached to any element => Attached to root
-                    var isAnchored = namespaceAnchors.Values.Any(s => s.Any(v => v.Equals("") || v.Equals(ns, StringComparison.OrdinalIgnoreCase)));
+                    var isAnchored = namespaceAnchors.Values.Any(s => s.Any(v => string.IsNullOrEmpty(v) || v.Equals(ns, StringComparison.OrdinalIgnoreCase)));
                     if (isAnchored) continue;
                 }
 
@@ -281,7 +281,7 @@ namespace ATL.AudioData
 
                     // Namespaces explicitly attached to current element
                     namespaceAnchors.TryGetValue(node.FullName, out namespacesToAnchor);
-                    if (namespacesToAnchor != null && namespacesToAnchor.Any(e => e.Equals("")))
+                    if (namespacesToAnchor != null && namespacesToAnchor.Any(e => string.IsNullOrEmpty(e)))
                     {
                         namespacesToAnchor.Clear();
                         namespacesToAnchor.UnionWith(usedNamespaces);
@@ -293,9 +293,10 @@ namespace ATL.AudioData
 
                     // Attach anchored namespaces
                     if (namespacesToAnchor != null)
-                        foreach (var ns in namespacesToAnchor)
-                            if (namespaces.ContainsKey(ns))
-                                writer.WriteAttributeString(ns, "http://www.w3.org/2000/xmlns/", namespaces[ns]);
+                        foreach (var ns in namespacesToAnchor.Where(ns => namespaces.ContainsKey(ns)))
+                        {
+                            writer.WriteAttributeString(ns, "http://www.w3.org/2000/xmlns/", namespaces[ns]);
+                        }
                 }
 
                 // Write the last node (=leaf) as a proper value if it does not belong to structural attributes
