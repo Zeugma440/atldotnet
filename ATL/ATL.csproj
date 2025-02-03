@@ -8,28 +8,58 @@
     <PackageId>z440.atl.core</PackageId>
     <PackageVersion>6.16.0</PackageVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageTags>audio metadata tag mp3 mp4 aac id3v2 ogg vorbis opus flac playlist cue</PackageTags>
-    <PackageLicenseUrl></PackageLicenseUrl>
+    <PackageTags>audio;metadata;tag;mp3;mp4;aac;id3v2;ogg;vorbis;opus;flac;playlist;cue</PackageTags>
     <PackageProjectUrl>https://github.com/Zeugma440/atldotnet</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/Zeugma440/atldotnet.git</RepositoryUrl>
     <Authors>Zeugma440</Authors>
     <Product>Audio Tools Library (ATL) for .NET</Product>
-    <FileVersion>6.16.0.0</FileVersion>
     <PackageReleaseNotes></PackageReleaseNotes>
     <Version>6.16.0</Version>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net30|AnyCPU'">
-    <DebugType>full</DebugType>
-    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup>
     <!-- Explicitly generate Assembly Info -->
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl></RepositoryUrl>
-    <RepositoryType></RepositoryType>
+    <Copyright>Zeugma440</Copyright>
   </PropertyGroup>
+
+  <!-- Ensure nuget show deterministic tag as valid, https://devblogs.microsoft.com/dotnet/producing-packages-with-source-link/#deterministic-builds -->
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
+    <DebugType>embedded</DebugType>
+    <Deterministic>True</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
+    <DebugType>embedded</DebugType>
+    <Deterministic>True</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0|AnyCPU'">
+    <DebugType>embedded</DebugType>
+    <Deterministic>True</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
+    <DebugType>embedded</DebugType>
+    <Deterministic>True</Deterministic>
+  </PropertyGroup>
+
+  <!-- Original / source : https://dev.to/j_sakamoto/writing-a-nuget-package-release-notes-in-an-outside-of-a-csproj-file-3f94 -->
+  <Target Name="PreparePackageReleaseNotesFromFile" BeforeTargets="GenerateNuspec">
+    <ReadLinesFromFile File="../PACKAGE-RELEASE-NOTES.txt">
+      <Output TaskParameter="Lines" ItemName="ReleaseNoteLines" />
+    </ReadLinesFromFile>
+    <PropertyGroup>
+      <!-- Add new line character between each lines -->
+      <PackageReleaseNotes>@(ReleaseNoteLines, '%0a')</PackageReleaseNotes>
+    </PropertyGroup>
+  </Target>
 
   <ItemGroup>
     <InternalsVisibleTo Include="ATL.unit-test" />
@@ -67,5 +97,15 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Include README in the nuget package -->
+    <None Include="../README.md" Pack="true" PackagePath="/" />
+
+    <!-- Copy README to the build output directory -->
+    <None Include="../README.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
