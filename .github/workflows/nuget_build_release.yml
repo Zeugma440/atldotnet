@@ -7,7 +7,7 @@ on:
 env:
   PROJECT_PATH: ATL/ATL.csproj
   PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}/build-output
-  NUGET_SOURCE_URL: "https://apiint.nugettest.org/v3/index.json"
+  NUGET_SOURCE_URL: "https://api.nuget.org/v3/index.json"
 
 jobs:
   publish:
