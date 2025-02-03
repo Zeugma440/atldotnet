@@ -49,6 +49,14 @@
     <DebugType>embedded</DebugType>
     <Deterministic>True</Deterministic>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
+    <DebugType>embedded</DebugType>
+    <Deterministic>True</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
+    <DebugType>embedded</DebugType>
+    <Deterministic>True</Deterministic>
+  </PropertyGroup>
 
   <!-- Original / source : https://dev.to/j_sakamoto/writing-a-nuget-package-release-notes-in-an-outside-of-a-csproj-file-3f94 -->
   <Target Name="PreparePackageReleaseNotesFromFile" BeforeTargets="GenerateNuspec">
