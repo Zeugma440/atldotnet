@@ -1,0 +1,39 @@
+name: "Publish to NuGet Gallery"
+
+on: 
+  release:
+    types: [published]
+
+env:
+  PROJECT_PATH: ATL/ATL.csproj
+  PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}/build-output
+  NUGET_SOURCE_URL: "https://api.nuget.org/v3/index.json"
+
+jobs:
+  publish:
+    name: "Publish to NuGet Gallery"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+        
+      - name: "Install Dotnet"
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: "Create NuGet release note file"
+        run: |
+          echo "${{ github.event.release.body }}" > PACKAGE-RELEASE-NOTES.txt
+
+      - name: "Restore packages"
+        run: dotnet restore "${{ env.PROJECT_PATH }}"
+
+      - name: "Build project"
+        run: dotnet build "${{ env.PROJECT_PATH }}" --no-restore --configuration Release -p:Version=${{ github.event.release.tag_name }} -p:FileVersion=${{ github.event.release.tag_name }}
+
+      - name: "Pack project"
+        run: dotnet pack "${{ env.PROJECT_PATH }}" -p:PackageVersion=${{ github.event.release.tag_name }} --no-restore --no-build --configuration Release --output "${{ env.PACKAGE_OUTPUT_DIRECTORY }}"
+
+      - name: "Push package"
+        run: dotnet nuget push "${{ env.PACKAGE_OUTPUT_DIRECTORY }}/*.nupkg" --source ${{ env.NUGET_SOURCE_URL }} --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
