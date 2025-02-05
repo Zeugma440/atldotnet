@@ -404,18 +404,25 @@ namespace ATL.AudioData.IO
 
             // Find AudioDataOffset using Clusters' timecodes
             reader.seek(segmentOffset);
-            // Cluster with Timecode 0
+            // Seek Cluster with Timecode 0
             crits = new HashSet<Tuple<long, int>>
             {
                 new Tuple<long, int>(ID_TIMESTAMP, 0), // Timestamp
             };
-            res = reader.seekElement(ID_CLUSTER, crits); // Cluster
+            res = reader.seekElement(ID_CLUSTER, crits);
             if (res != EBMLReader.SeekResult.FOUND_MATCH)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Couldn't locate Cluster for timestamp 0");
-                return false;
+                // Seek first cluster instead
+                reader.seek(segmentOffset);
+                if (!reader.seekElement(ID_CLUSTER))
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Couldn't locate any Cluster!");
+                    return false;
+                }
             }
-            long zeroClusterOffset = reader.Position;
+
+            long firstClusterOffset = reader.Position;
 
             long blockAudioSize = -1;
             while (-1 == AudioDataOffset)
@@ -440,7 +447,7 @@ namespace ATL.AudioData.IO
                 else break;
             }
 
-            reader.seek(zeroClusterOffset);
+            reader.seek(firstClusterOffset);
             while (-1 == AudioDataOffset)
             {
                 if (reader.seekElement(ID_SIMPLEBLOCK)) // SimpleBlock

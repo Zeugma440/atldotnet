@@ -1,5 +1,4 @@
 ﻿using ATL.Playlist;
-using System.Xml;
 
 namespace ATL.test.IO.Playlist
 {
@@ -85,7 +84,7 @@ namespace ATL.test.IO.Playlist
 
                 IPlaylistIO pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
 
-                // Test Path writing + absolute formatting
+                // Path writing + absolute formatting
                 ATL.Settings.PlaylistWriteAbsolutePath = true;
                 pls.FilePaths = pathsToWrite;
                 pls.Save();
@@ -111,7 +110,7 @@ namespace ATL.test.IO.Playlist
                 if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
 
 
-                // Test Track writing + relative formatting
+                // Track writing + relative formatting
                 ATL.Settings.PlaylistWriteAbsolutePath = false;
 
                 testFileLocation = TestUtils.CreateTempTestFile("test.m3u");
@@ -139,6 +138,37 @@ namespace ATL.test.IO.Playlist
                 for (int i = 0; i < tracksToWrite.Count; i++) Assert.AreEqual(tracksToWrite[i].Path, tracks[i].Path);
                 Assert.IsTrue(tracks[0].Duration > 0);
                 Assert.IsTrue(tracks[1].Duration > 0);
+
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
+
+                // Reloading to append
+                testFileLocation = TestUtils.CreateTempTestFile("test.m3u");
+
+                for (int i = 0; i < 2; i++)
+                {
+                    pls = PlaylistIOFactory.GetInstance().GetPlaylistIO(testFileLocation);
+                    var trks = new List<Track>(pls.Tracks);
+                    trks.Add(tracksToWrite[i]);
+                    pls.Tracks = trks;
+                    pls.Save();
+
+                    using (FileStream fs = new FileStream(testFileLocation, FileMode.Open))
+                    using (StreamReader sr = new StreamReader(fs))
+                    {
+                        Assert.AreEqual("#EXTM3U", sr.ReadLine());
+                        for (int j = 0; j <= i; j++)
+                        {
+                            var t = tracksToWrite[j];
+                            string line = "#EXTINF:" + (t.Duration > 0 ? t.Duration : -1) + ",";
+                            if (!string.IsNullOrEmpty(t.Artist)) line += t.Artist + " - ";
+                            line += t.Title;
+                            Assert.AreEqual(line, sr.ReadLine());
+                            Assert.AreEqual(TestUtils.MakePathRelative(testFileLocation, t.Path), sr.ReadLine());
+                        }
+                        Assert.IsTrue(sr.EndOfStream);
+                    }
+                }
 
                 if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }

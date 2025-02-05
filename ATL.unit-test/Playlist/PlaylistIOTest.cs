@@ -25,7 +25,12 @@ namespace ATL.test.IO.Playlist
             pathsToWrite.Add(testTrackLocation2);
             pathsToWrite.Add("http://this-is-a-stre.am:8405/live");
 
-            foreach (var s in pathsToWrite) tracksToWrite.Add(new Track(s));
+            foreach (var s in pathsToWrite)
+            {
+                var t = new Track(s);
+                t.Artist = "artist";
+                tracksToWrite.Add(t);
+            }
 
             // == PLIO_RW_Absolute_Relative_Path
             // Select a remote file to link

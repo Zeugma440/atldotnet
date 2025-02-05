@@ -10,6 +10,8 @@ namespace ATL.Playlist.IO
     /// </summary>
     public class M3UIO : PlaylistIO
     {
+        private const string TITLE_SEPARATOR = " - ";
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -53,20 +55,21 @@ namespace ATL.Playlist.IO
                         title = "";
                         artist = "";
 
-                        var parts = s.Split(':'); // #EXTINF:duration,artistTitle
+                        var parts = s.Split(':'); // #EXTINF:duration,artist - Title
                         if (1 == parts.Length) continue;
 
-                        var parts2 = parts[1].Split(','); // duration,artistTitle
+                        var parts2 = parts[1].Split(','); // duration,artist - Title
                         if (1 == parts2.Length) continue;
 
                         var artistTitle = parts2[1];
                         if (0 == artistTitle.Length) continue;
 
-                        var index = artistTitle.IndexOf(" - ", StringComparison.Ordinal);
+                        // Take the first index, in case the title itself contains a " - "
+                        var index = artistTitle.IndexOf(TITLE_SEPARATOR, StringComparison.Ordinal);
                         if (index != -1)
                         {
                             artist = artistTitle[..index].Trim();
-                            title = artistTitle[(index + 1)..].Trim();
+                            title = artistTitle[(index + TITLE_SEPARATOR.Length)..].Trim();
                         }
                         else title = artistTitle.Trim();
                     }
@@ -100,7 +103,7 @@ namespace ATL.Playlist.IO
                     if (t.Duration > 0) w.Write(t.Duration); else w.Write(-1);
                     w.Write(",");
                     string label = "";
-                    if (!string.IsNullOrEmpty(t.Artist)) label = t.Artist + " - ";
+                    if (!string.IsNullOrEmpty(t.Artist)) label = t.Artist + TITLE_SEPARATOR;
                     if (!string.IsNullOrEmpty(t.Title)) label += t.Title;
                     if (0 == label.Length) label = System.IO.Path.GetFileNameWithoutExtension(t.Path);
                     w.WriteLine(label);
