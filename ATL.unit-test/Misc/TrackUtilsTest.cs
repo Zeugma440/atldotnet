@@ -32,6 +32,35 @@ namespace ATL.test
         }
 
         [TestMethod]
+        public void TrackUtils_ExtractTrackNumberStr()
+        {
+            Assert.AreEqual("1", TrackUtils.ExtractTrackNumberStr("1"));
+            Assert.AreEqual("01", TrackUtils.ExtractTrackNumberStr("01"));
+            Assert.AreEqual("15", TrackUtils.ExtractTrackNumberStr("15"));
+            Assert.AreEqual("15", TrackUtils.ExtractTrackNumberStr(" 15"));
+            Assert.AreEqual("15", TrackUtils.ExtractTrackNumberStr(" 15 "));
+            Assert.AreEqual("15", TrackUtils.ExtractTrackNumberStr("15 "));
+            Assert.AreEqual("15.1", TrackUtils.ExtractTrackNumberStr("15.1"));
+            Assert.AreEqual("15,1", TrackUtils.ExtractTrackNumberStr("15,1"));
+            Assert.AreEqual("a15a", TrackUtils.ExtractTrackNumberStr("a15a"));
+
+            Assert.AreEqual("1", TrackUtils.ExtractTrackNumberStr("1/16"));
+            Assert.AreEqual("01", TrackUtils.ExtractTrackNumberStr("01/16"));
+            Assert.AreEqual("15", TrackUtils.ExtractTrackNumberStr("15/16"));
+            Assert.AreEqual("15", TrackUtils.ExtractTrackNumberStr(" 15 / 16"));
+            Assert.AreEqual("15", TrackUtils.ExtractTrackNumberStr(" 15//16"));
+
+            Assert.AreEqual("A1", TrackUtils.ExtractTrackNumberStr(" A1"));
+            Assert.AreEqual("A1", TrackUtils.ExtractTrackNumberStr("A1"));
+            Assert.AreEqual("A1", TrackUtils.ExtractTrackNumberStr(" A1 "));
+            Assert.AreEqual("aaa", TrackUtils.ExtractTrackNumberStr("aaa"));
+
+            Assert.AreEqual("", TrackUtils.ExtractTrackNumberStr(""));
+            Assert.AreEqual("", TrackUtils.ExtractTrackNumberStr(null));
+            Assert.AreEqual("99999999", TrackUtils.ExtractTrackNumberStr("99999999"));
+        }
+
+        [TestMethod]
         public void TrackUtils_ExtractTrackTotal()
         {
             Assert.AreEqual(16, TrackUtils.ExtractTrackTotal("15/16"));

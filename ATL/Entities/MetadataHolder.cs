@@ -79,15 +79,15 @@ namespace ATL
             set => tagData.IntegrateValue(Field.GENRE, value);
         }
         /// <inheritdoc/>
-        public ushort TrackNumber
+        public string TrackNumber
         {
             get
             {
                 if (tagData[Field.TRACK_NUMBER_TOTAL] != null)
-                    return TrackUtils.ExtractTrackNumber(tagData[Field.TRACK_NUMBER_TOTAL]);
-                return TrackUtils.ExtractTrackNumber(tagData[Field.TRACK_NUMBER]);
+                    return TrackUtils.ExtractTrackNumberStr(tagData[Field.TRACK_NUMBER_TOTAL]);
+                return TrackUtils.ExtractTrackNumberStr(tagData[Field.TRACK_NUMBER]);
             }
-            set => tagData.IntegrateValue(Field.TRACK_NUMBER, value.ToString());
+            set => tagData.IntegrateValue(Field.TRACK_NUMBER, value);
         }
         /// <inheritdoc/>
         public ushort TrackTotal

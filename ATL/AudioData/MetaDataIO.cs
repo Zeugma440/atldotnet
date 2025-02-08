@@ -336,20 +336,15 @@ namespace ATL.AudioData.IO
         protected void setMetaField(Field ID, string dataIn)
         {
             string dataOut = dataIn;
-            if (Field.TRACK_NUMBER == ID && dataIn.Length > 1 && dataIn.StartsWith('0')) tagData.TrackDigitsForLeadingZeroes = dataIn.Length;
-            else if (Field.TRACK_NUMBER_TOTAL == ID)
+            if (Field.TRACK_NUMBER == ID || Field.TRACK_NUMBER_TOTAL == ID)
             {
-                if (dataIn.Contains('/'))
-                {
-                    string[] parts = dataIn.Split('/');
-                    if (parts[0].Length > 1 && parts[0].StartsWith('0')) tagData.TrackDigitsForLeadingZeroes = parts[0].Length;
-                }
+                string trackNumberStr = TrackUtils.ExtractTrackNumberStr(dataIn);
+                if (trackNumberStr.Length > 1 && trackNumberStr.StartsWith('0')) tagData.TrackDigitsForLeadingZeroes = trackNumberStr.Length;
             }
-            else if (Field.DISC_NUMBER == ID && dataIn.Length > 1 && dataIn.StartsWith('0')) tagData.DiscDigitsForLeadingZeroes = dataIn.Length;
-            else if (Field.DISC_NUMBER_TOTAL == ID && dataIn.Contains('/'))
+            else if (Field.DISC_NUMBER_TOTAL == ID || Field.DISC_NUMBER == ID)
             {
-                string[] parts = dataIn.Split('/');
-                if (parts[0].Length > 1 && parts[0].StartsWith('0')) tagData.DiscDigitsForLeadingZeroes = parts[0].Length;
+                string discNumberStr = TrackUtils.ExtractTrackNumberStr(dataIn);
+                if (discNumberStr.Length > 1 && discNumberStr.StartsWith('0')) tagData.DiscDigitsForLeadingZeroes = discNumberStr.Length;
             }
 
             // Use the appropriate convention if needed

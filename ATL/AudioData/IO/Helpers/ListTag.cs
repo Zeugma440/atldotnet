@@ -132,7 +132,6 @@ namespace ATL.AudioData.IO
             if (meta.Genre.Length > 0) return true;
             if (meta.Date > DateTime.MinValue) return true;
             if (meta.Copyright.Length > 0) return true;
-            if (meta.TrackNumber > 0) return true;
             if (meta.Popularity > 0) return true;
             if (meta.EncodedBy.Length > 0) return true;
             if (meta.Encoder.Length > 0) return true;
@@ -210,9 +209,9 @@ namespace ATL.AudioData.IO
                 if (value.Length > 0) writeSizeAndNullTerminatedString("IRTD", value, w, writtenFields);
             }
             // Track number
-            if (meta.TrackNumber > 0)
+            if (meta.TrackNumber != null && meta.TrackNumber != "")
             {
-                value = meta.TrackNumber.ToString();
+                value = meta.TrackNumber;
                 if (0 == value.Length && additionalFields.TryGetValue("info.TRCK", out var additionalField3)) value = additionalField3;
                 if (0 == value.Length && additionalFields.TryGetValue("info.IPRT", out var field4)) value = field4;
                 if (0 == value.Length && additionalFields.TryGetValue("info.ITRK", out var additionalField4)) value = additionalField4;

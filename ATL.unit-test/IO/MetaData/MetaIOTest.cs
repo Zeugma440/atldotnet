@@ -68,7 +68,7 @@ namespace ATL.test.IO.MetaData
             testData.Date = DateTime.Parse("1997-06-20T04:04:04");
             testData.Genre = "House";
             testData.Popularity = null;
-            testData.TrackNumber = 1;
+            testData.TrackNumber = "01";
             testData.TrackTotal = 2;
             testData.Composer = "ccᱬdd";
             testData.Conductor = "";  // Empty string means "supported, but not valued in test sample"
@@ -429,7 +429,7 @@ namespace ATL.test.IO.MetaData
             if (testData.PublishingDate > DateTime.MinValue) theTag.PublishingDate = DateTime.Parse("2007/02/02");
             if (testData.Genre != "") theTag.Genre = "Merengue";
             if (testData.Popularity != 0) theTag.Popularity = 2.5f / 5;
-            if (testData.TrackNumber != 0) theTag.TrackNumber = 1;
+            if (testData.TrackNumber != null && testData.TrackNumber != "") theTag.TrackNumber = "1";
             if (testData.TrackTotal != 0) theTag.TrackTotal = 2;
             if (testData.DiscNumber != 0) theTag.DiscNumber = 3;
             if (testData.DiscTotal != 0) theTag.DiscTotal = 4;
@@ -510,7 +510,7 @@ namespace ATL.test.IO.MetaData
             }
             if (testData.Genre != "") Assert.AreEqual("Merengue", meta.Genre);
             if (testData.Popularity != 0) Assert.AreEqual(2.5f / 5, meta.Popularity);
-            if (testData.TrackNumber != 0) Assert.AreEqual(1, meta.TrackNumber);
+            if (testData.TrackNumber != null && testData.TrackNumber != "") Assert.AreEqual("1", meta.TrackNumber);
             if (testData.TrackTotal != 0) Assert.AreEqual(2, meta.TrackTotal);
             if (testData.DiscNumber != 0) Assert.AreEqual(3, meta.DiscNumber);
             if (testData.DiscTotal != 0) Assert.AreEqual(4, meta.DiscTotal);
@@ -856,7 +856,7 @@ namespace ATL.test.IO.MetaData
             if (testData.Genre != "") Assert.AreEqual(testData.Genre, meta.Genre);
             if (testData.Composer != "") Assert.AreEqual(testData.Composer, meta.Composer);
             if (testData.Popularity != 0) Assert.AreEqual(testData.Popularity, meta.Popularity);
-            if (testData.TrackNumber != 0) Assert.AreEqual(testData.TrackNumber, meta.TrackNumber);
+            if (testData.TrackNumber != null && testData.TrackNumber != "") Assert.AreEqual(testData.TrackNumber, meta.TrackNumber);
             if (testData.TrackTotal != 0) Assert.AreEqual(testData.TrackTotal, meta.TrackTotal);
             if (testData.DiscNumber != 0) Assert.AreEqual(testData.DiscNumber, meta.DiscNumber);
             if (testData.DiscTotal != 0) Assert.AreEqual(testData.DiscTotal, meta.DiscTotal);

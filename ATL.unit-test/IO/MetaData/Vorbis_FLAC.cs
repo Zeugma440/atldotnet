@@ -196,7 +196,7 @@ namespace ATL.test.IO.MetaData
             theTag.Comment = "This is a test";
             theTag.Date = DateTime.Parse("2008/01/01");
             theTag.Genre = "Merengue";
-            theTag.TrackNumber = 1;
+            theTag.TrackNumber = "1";
             theTag.TrackTotal = 1;
             theTag.DiscNumber = 2;
             theTag.Popularity = 2.5f / 5;
@@ -220,7 +220,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
             Assert.AreEqual(2008, theFile.NativeTag.Date.Year);
             Assert.AreEqual("Merengue", theFile.NativeTag.Genre);
-            Assert.AreEqual(1, theFile.NativeTag.TrackNumber);
+            Assert.AreEqual("1", theFile.NativeTag.TrackNumber);
             Assert.AreEqual(2, theFile.NativeTag.DiscNumber);
             Assert.AreEqual((float)(2.5 / 5), theFile.NativeTag.Popularity);
             Assert.AreEqual("Me", theFile.NativeTag.Composer);

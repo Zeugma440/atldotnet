@@ -1374,6 +1374,57 @@ namespace ATL.test.IO
         }
 
         [TestMethod]
+        public void TagIO_RW_Track_Number_Str_Num()
+        {
+            // Using VorbisTag as it allows storing track numbers as strings
+            var emptyFile = "OGG/empty.ogg";
+
+            // == 1- Add a numeric track number to an empty file
+            string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            Track theTrack = new Track(testFileLocation);
+
+            theTrack.TrackNumber = 2;
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(2, theTrack.TrackNumber);
+            Assert.AreEqual("2", theTrack.TrackNumberStr);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
+
+            // == 2- Add a string track number to an empty file
+            testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            theTrack = new Track(testFileLocation);
+
+            theTrack.TrackNumberStr = "02";
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(2, theTrack.TrackNumber);
+            Assert.AreEqual("02", theTrack.TrackNumberStr);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
+
+            // == 3- Add an LP string track number to an empty file
+            testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
+            theTrack = new Track(testFileLocation);
+
+            theTrack.TrackNumberStr = "A2";
+            Assert.IsTrue(theTrack.Save());
+
+            theTrack = new Track(testFileLocation);
+            Assert.AreEqual(2, theTrack.TrackNumber);
+            Assert.AreEqual("A2", theTrack.TrackNumberStr);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_RW_WriteSpecificTagType()
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/APE.mp3");

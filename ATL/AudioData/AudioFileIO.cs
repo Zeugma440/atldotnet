@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using static ATL.AudioData.MetaDataIOFactory;
 using static ATL.LyricsInfo;
+using Commons;
 
 namespace ATL.AudioData
 {
@@ -90,7 +91,7 @@ namespace ATL.AudioData
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Could not find any metadata");
 
             // Consistency checks
-            if (result.TrackTotal > 0 && result.TrackNumber > result.TrackTotal)
+            if (result.TrackTotal > 0 && Utils.IsNumeric(result.TrackNumber) && Utils.ParseFirstIntegerPart(result.TrackNumber) > result.TrackTotal)
                 LogDelegator.GetLogDelegate()(Log.LV_INFO, "Track number (" + result.TrackNumber + ") is > total tracks (" + result.TrackTotal + ")");
 
             if (result.DiscTotal > 0 && result.DiscNumber > result.DiscTotal)

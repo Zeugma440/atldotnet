@@ -58,6 +58,27 @@ namespace ATL.AudioData
         }
 
         /// <summary>
+        /// Extract the track number from the given string
+        /// </summary>
+        /// <param name="str">Raw "track" field in string form</param>
+        /// <returns>Track number, trimmed and isolated from its total; empty string if nothing found</returns>
+        public static string ExtractTrackNumberStr(string str)
+        {
+            // == Optimizations (Regex are too damn expensive to use them lazily)
+
+            // Invalid inputs
+            if (null == str) return "";
+            str = str.Trim();
+            if (str.Length < 1) return "";
+
+            // Ignore "total" part if exists
+            int delimiterOffset = str.IndexOf('/');
+            if (delimiterOffset > -1) str = str.Substring(0, delimiterOffset).Trim();
+            
+            return str;
+        }
+
+        /// <summary>
         /// Extract the total track number from the given string
         /// </summary>
         /// <param name="str">Raw "track" field in string form</param>

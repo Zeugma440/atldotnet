@@ -53,8 +53,10 @@ namespace ATL.AudioData
         }
         /// <summary>
         /// Track number
+        /// NB1 : Stored in string for to alow storing LP tracks (e.g. A1, A2...)
+        /// NB2 : Does not include total notation (e.g. 01/12); only the track number itself
         /// </summary>
-        ushort TrackNumber
+        string TrackNumber
         {
             get;
         }

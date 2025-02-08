@@ -68,7 +68,7 @@ namespace ATL.test.IO.MetaData
                 Genre = "info.IGNR",
                 Comment = "info.ICMT",
                 Date = DateTime.Parse("2018-01-09T01:23:45"),
-                TrackNumber = 5,
+                TrackNumber = "5",
                 Popularity = 0.2f,
                 EncodedBy = "info.ITCH",
                 Encoder = "info.ISFT",

@@ -372,7 +372,7 @@ namespace ATL.AudioData.IO
 
             // ID3v1.1 standard
             s.WriteByte(0);
-            s.WriteByte((byte)Math.Min(TrackUtils.ExtractTrackNumber(tag[Field.TRACK_NUMBER]), Byte.MaxValue));
+            s.WriteByte((byte)Math.Min(TrackUtils.ExtractTrackNumber(tag[Field.TRACK_NUMBER]), byte.MaxValue));
 
             byte genre = byte.MaxValue;
             if (tag[Field.GENRE] != null)

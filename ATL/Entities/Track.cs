@@ -270,9 +270,33 @@ namespace ATL
             }
         }
         /// <summary>
+		/// Track number in string form
+        /// Useful for storing LP tracks (e.g. A1, A2...)
+        /// NB : Does not include total notation (e.g. 01/12); only the track number itself
+		/// </summary>
+        public string TrackNumberStr { get; set; }
+        /// <summary>
 		/// Track number
 		/// </summary>
-        public int? TrackNumber { get; set; }
+        public int? TrackNumber
+        {
+            get
+            {
+                var result = Utils.ParseFirstIntegerPart(TrackNumberStr);
+                if (-1 == result)
+                {
+                    if (Settings.NullAbsentValues) return null;
+                    else return 0;
+                }
+                return result;
+            }
+            set
+            {
+                if (canUseValue(value) && value.Value > -1) TrackNumberStr = value.ToString();
+                else if (Settings.NullAbsentValues) TrackNumberStr = null;
+                else TrackNumberStr = "";
+            }
+        }
         /// <summary>
 		/// Total track number
 		/// </summary>
@@ -499,7 +523,7 @@ namespace ATL
                 OriginalReleaseDate = update(metadata.OriginalReleaseDate);
             }
             PublishingDate = update(metadata.PublishingDate);
-            TrackNumber = update(metadata.TrackNumber);
+            TrackNumberStr = metadata.TrackNumber;
             TrackTotal = update(metadata.TrackTotal);
             DiscNumber = update(metadata.DiscNumber);
             DiscTotal = update(metadata.DiscTotal);
@@ -596,7 +620,7 @@ namespace ATL
                 result.IntegrateValue(Field.ORIG_RELEASE_YEAR, "");
             }
             result.IntegrateValue(Field.ALBUM, Album);
-            result.IntegrateValue(Field.TRACK_NUMBER, toTagValue(TrackNumber));
+            result.IntegrateValue(Field.TRACK_NUMBER, TrackNumberStr);
             result.IntegrateValue(Field.TRACK_TOTAL, toTagValue(TrackTotal));
             result.IntegrateValue(Field.DISC_NUMBER, toTagValue(DiscNumber));
             result.IntegrateValue(Field.DISC_TOTAL, toTagValue(DiscTotal));

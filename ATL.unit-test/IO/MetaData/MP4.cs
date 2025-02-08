@@ -66,7 +66,7 @@ namespace ATL.test.IO.MetaData
             titleFieldCode = "©nam";
 
             // MP4 does not support leading zeroes
-            testData.TrackNumber = 1;
+            testData.TrackNumber = "1";
             testData.TrackTotal = 2;
             testData.DiscNumber = 3;
             testData.DiscTotal = 4;

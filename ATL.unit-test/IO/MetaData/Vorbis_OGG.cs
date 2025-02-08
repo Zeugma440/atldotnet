@@ -275,7 +275,7 @@ namespace ATL.test.IO.MetaData
             theTag.Comment = "This is a test";
             theTag.Date = DateTime.Parse("2008/01/01"); // <-- TODO : this field is _not_ valued when passing through Track + beware of alternate formattings depending on the format
             theTag.Genre = "Merengue";
-            theTag.TrackNumber = 1;
+            theTag.TrackNumber = "1";
             theTag.TrackTotal = 2;
             theTag.DiscNumber = 3;
             theTag.DiscTotal = 4;
@@ -299,7 +299,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
             Assert.AreEqual(2008, theFile.NativeTag.Date.Year);
             Assert.AreEqual("Merengue", theFile.NativeTag.Genre);
-            Assert.AreEqual(1, theFile.NativeTag.TrackNumber);
+            Assert.AreEqual("1", theFile.NativeTag.TrackNumber);
             Assert.AreEqual(2, theFile.NativeTag.TrackTotal);
             Assert.AreEqual(3, theFile.NativeTag.DiscNumber);
             Assert.AreEqual(4, theFile.NativeTag.DiscTotal);

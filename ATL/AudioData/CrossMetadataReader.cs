@@ -133,17 +133,17 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
-        public ushort TrackNumber
+        public string TrackNumber
         {
             get
             {
-                ushort track = 0;
+                string value = "";
                 foreach (IMetaDataIO reader in metaReaders)
                 {
-                    track = reader.TrackNumber;
-                    if (track != 0) break;
+                    value = reader.TrackNumber;
+                    if (value != null && value != "") break;
                 }
-                return track;
+                return value;
             }
         }
         /// <inheritdoc/>

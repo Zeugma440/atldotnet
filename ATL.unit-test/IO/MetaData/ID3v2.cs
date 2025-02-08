@@ -60,7 +60,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("I have no IDE and i must code", theFile.ID3v2.Comment);
             Assert.AreEqual(1997, theFile.ID3v2.Date.Year);
             Assert.AreEqual("House", theFile.ID3v2.Genre);
-            Assert.AreEqual(1, theFile.ID3v2.TrackNumber);
+            Assert.AreEqual("1", theFile.ID3v2.TrackNumber);
             Assert.AreEqual(2, theFile.ID3v2.TrackTotal);
             Assert.AreEqual("COMP!", theFile.ID3v2.Composer);
             Assert.AreEqual(2, theFile.ID3v2.DiscNumber);
@@ -109,7 +109,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("I have no IDE and i must code bébé 父", theFile.ID3v2.Comment);
             Assert.AreEqual(1997, theFile.ID3v2.Date.Year);
             Assert.AreEqual("House", theFile.ID3v2.Genre);
-            Assert.AreEqual(1, theFile.ID3v2.TrackNumber);
+            Assert.AreEqual("1", theFile.ID3v2.TrackNumber);
             Assert.AreEqual(2, theFile.ID3v2.TrackTotal);
             Assert.AreEqual("COMP!", theFile.ID3v2.Composer);
             Assert.AreEqual(2, theFile.ID3v2.DiscNumber);
@@ -1068,7 +1068,7 @@ namespace ATL.test.IO.MetaData
 
             // Supported fields
             Assert.AreEqual(0, theFile.ID3v2.DiscNumber);
-            Assert.AreEqual(0, theFile.ID3v2.TrackNumber);
+            Assert.AreEqual("90000A", theFile.ID3v2.TrackNumber);
         }
 
         [TestMethod]

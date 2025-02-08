@@ -77,7 +77,7 @@ namespace ATL.test.IO.MetaData
             theTag.Artist = "Artist";
             theTag.Comment = "This is a test";
             theTag.Date = DateTime.Parse("01/01/2008");
-            theTag.TrackNumber = 1;
+            theTag.TrackNumber = "1";
             theTag.TrackTotal = 1;
             theTag.DiscNumber = 2;
 
@@ -94,7 +94,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Artist", theFile.NativeTag.Artist);
             Assert.AreEqual("This is a test", theFile.NativeTag.Comment);
             Assert.AreEqual(2008, theFile.NativeTag.Date.Year);
-            Assert.AreEqual(1, theFile.NativeTag.TrackNumber);
+            Assert.AreEqual("1", theFile.NativeTag.TrackNumber);
             Assert.AreEqual(2, theFile.NativeTag.DiscNumber);
 
             // Remove the tag and check that it has been indeed removed
@@ -267,7 +267,7 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Yasunori Mitsuda", theFile.NativeTag.Artist);
             Assert.AreEqual("", theFile.NativeTag.Comment);
             Assert.AreEqual(1995, theFile.NativeTag.Date.Year);
-            Assert.AreEqual(23, theFile.NativeTag.TrackNumber);
+            Assert.AreEqual("23", theFile.NativeTag.TrackNumber);
             Assert.AreEqual(2, theFile.NativeTag.DiscNumber);
             Assert.AreEqual(publisherStr, theFile.NativeTag.Publisher);
 
