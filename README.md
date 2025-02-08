@@ -1,6 +1,6 @@
 # Audio Tools Library (ATL) for .NET ![NetStandard](https://img.shields.io/badge/.NET%20Standard-2.1-lightgrey.svg) ![.NET](https://img.shields.io/badge/.NET-6-lightgrey.svg)
 
-__Latest stable version__ : [![NuGet](https://img.shields.io/nuget/v/z440.atl.core.svg)](https://www.nuget.org/packages/z440.atl.core/)
+__Latest stable version__ : [![NuGet](https://img.shields.io/nuget/v/z440.atl.core.svg)](https://www.nuget.org/packages/z440.atl.core/) [![Publish to NuGet Gallery](https://github.com/Zeugma440/atldotnet/actions/workflows/nuget_build_release.yml/badge.svg)](https://github.com/Zeugma440/atldotnet/actions/workflows/nuget_build_release.yml)
 
 __Optimized with__ : [ReSharper](https://jb.gg/OpenSourceSupport), [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) and [CodeTrack](http://www.getcodetrack.com/)
 
