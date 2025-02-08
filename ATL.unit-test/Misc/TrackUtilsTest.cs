@@ -1,6 +1,5 @@
 ﻿using ATL.AudioData;
 using ATL.AudioData.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ATL.test
 {
@@ -11,6 +10,7 @@ namespace ATL.test
         public void TrackUtils_ExtractTrackNumber()
         {
             Assert.AreEqual(1, TrackUtils.ExtractTrackNumber("1"));
+            Assert.AreEqual(1, TrackUtils.ExtractTrackNumber("01"));
             Assert.AreEqual(15, TrackUtils.ExtractTrackNumber("15"));
             Assert.AreEqual(15, TrackUtils.ExtractTrackNumber(" 15"));
             Assert.AreEqual(15, TrackUtils.ExtractTrackNumber(" 15 "));
@@ -20,6 +20,7 @@ namespace ATL.test
             Assert.AreEqual(15, TrackUtils.ExtractTrackNumber("a15a"));
 
             Assert.AreEqual(1, TrackUtils.ExtractTrackNumber("1/16"));
+            Assert.AreEqual(1, TrackUtils.ExtractTrackNumber("01/16"));
             Assert.AreEqual(15, TrackUtils.ExtractTrackNumber("15/16"));
             Assert.AreEqual(15, TrackUtils.ExtractTrackNumber(" 15 / 16"));
             Assert.AreEqual(15, TrackUtils.ExtractTrackNumber(" 15//16"));
@@ -35,6 +36,7 @@ namespace ATL.test
         {
             Assert.AreEqual(16, TrackUtils.ExtractTrackTotal("15/16"));
             Assert.AreEqual(1, TrackUtils.ExtractTrackTotal("15/1"));
+            Assert.AreEqual(9, TrackUtils.ExtractTrackTotal("01/09"));
             Assert.AreEqual(16, TrackUtils.ExtractTrackTotal(" 15 / 16 "));
             Assert.AreEqual(16, TrackUtils.ExtractTrackTotal("15//16"));
             Assert.AreEqual(16, TrackUtils.ExtractTrackTotal("15//16.1"));
