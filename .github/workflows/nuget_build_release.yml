@@ -24,7 +24,9 @@ jobs:
 
       - name: "Create NuGet release note file"
         run: |
-          echo "${{ github.event.release.body }}" > PACKAGE-RELEASE-NOTES.txt
+          cat << 'EOF-WORKFLOW' > PACKAGE-RELEASE-NOTES.txt
+          ${{ github.event.release.body }}
+          EOF-WORKFLOW
 
       - name: "Restore packages"
         run: dotnet restore "${{ env.PROJECT_PATH }}"
