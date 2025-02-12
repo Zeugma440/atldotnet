@@ -144,8 +144,9 @@ namespace ATL.AudioData.IO
         // Mapping between standard fields and ID3v2.2 identifiers
         private static readonly IDictionary<string, Field> frameMapping_v22 = new Dictionary<string, Field>
             {
-                { "TT1", Field.GENERAL_DESCRIPTION },
+                { "TT1", Field.GROUP },
                 { "TT2", Field.TITLE },
+                { "TT3", Field.GENERAL_DESCRIPTION },
                 { "TP1", Field.ARTIST },
                 { "TP2", Field.ALBUM_ARTIST },  // De facto standard, regardless of spec
                 { "TP3", Field.CONDUCTOR },
@@ -205,6 +206,7 @@ namespace ATL.AudioData.IO
                 { "MVIN", Field.SERIES_PART}, // Not part of ID3v2.3 standard
                 { "MVNM", Field.SERIES_TITLE }, // Not part of ID3v2.3 standard
                 { "TDES", Field.LONG_DESCRIPTION }, // Not part of ID3v2.3 standard
+                { "TIT3", Field.GENERAL_DESCRIPTION},
                 { "TBPM", Field.BPM },
                 { "TENC", Field.ENCODED_BY },
                 { "TORY", Field.ORIG_RELEASE_YEAR},
@@ -246,6 +248,7 @@ namespace ATL.AudioData.IO
                 { "MVIN", Field.SERIES_PART}, // Not part of ID3v2.4 standard
                 { "MVNM", Field.SERIES_TITLE }, // Not part of ID3v2.4 standard
                 { "TDES", Field.LONG_DESCRIPTION }, // Not part of ID3v2.4 standard
+                { "TIT3", Field.GENERAL_DESCRIPTION},
                 { "TBPM", Field.BPM },
                 { "TENC", Field.ENCODED_BY },
                 { "TDOR", Field.ORIG_RELEASE_DATE },
@@ -292,7 +295,6 @@ namespace ATL.AudioData.IO
                 //{ "TRD", "" } no direct equivalent
                 // TSI / Size field has been dropped
                 { "TSS", "TSSE" },
-                { "TT3", "TIT3" },
                 { "TXT", "TEXT" },
                 { "TXX", "TXXX" },
                 { "UFI", "UFID" },
