@@ -491,7 +491,12 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public override byte FieldCodeFixedLength => 0; // Actually 3 or 4 when strictly applying ID3v2.3 / ID3v2.4 specs, but thanks to TXXX fields, any code is supported
+        // Actually 3 or 4 when strictly applying ID3v2.3 / ID3v2.4 specs, but thanks to TXXX fields, any code is supported
+        public override byte FieldCodeFixedLength => 0; 
+        /// <inheritdoc/>
+        protected override bool supportsAdditionalFields => true;
+        /// <inheritdoc/>
+        protected override bool supportsPictures => true;
 
 
         // ********************* Auxiliary functions & voids ********************

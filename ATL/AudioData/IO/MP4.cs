@@ -186,6 +186,10 @@ namespace ATL.AudioData.IO
         }
         /// <inheritdoc/>
         public bool IsNativeMetadataRich => true;
+        /// <inheritdoc/>
+        protected override bool supportsAdditionalFields => true;
+        /// <inheritdoc/>
+        protected override bool supportsPictures => true;
         public ChannelsArrangement ChannelsArrangement { get; private set; }
 
         public long AudioDataOffset { get; set; }

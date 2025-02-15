@@ -168,6 +168,10 @@ namespace ATL.AudioData.IO
             return MetaDataIOFactory.TagType.NATIVE;
         }
         /// <inheritdoc/>
+        protected override bool supportsPictures => true;
+        /// <inheritdoc/>
+        protected override bool supportsAdditionalFields => true;
+        /// <inheritdoc/>
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             Field supportedMetaId = Field.NO_FIELD;

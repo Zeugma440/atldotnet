@@ -100,6 +100,8 @@ namespace ATL.AudioData.IO
         }
         /// <inheritdoc/>
         public bool IsNativeMetadataRich => false;
+        /// <inheritdoc/>
+        protected override bool supportsAdditionalFields => true;
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 

@@ -175,6 +175,17 @@ namespace ATL.AudioData.IO
         protected virtual byte ratingConvention => RC_ID3v2;
 
         /// <summary>
+        /// Indicate if the tagging system supports embedded pictures
+        /// </summary>
+        protected virtual bool supportsPictures => false;
+
+        /// <summary>
+        /// Indicate if the tagging system supports additional fields
+        /// NB : Usually true except when the fields are a fixed set
+        /// </summary>
+        protected virtual bool supportsAdditionalFields => false;
+
+        /// <summary>
         /// Encode the given DateTime for the current tagging format
         /// </summary>
         public virtual string EncodeDate(DateTime date)
@@ -462,7 +473,7 @@ namespace ATL.AudioData.IO
             bool result = await surgeon.RewriteZonesAsync(s, writeAdapter, Zones, dataToWrite, Exists);
 
             // Update tag information without calling Read
-            if (result) tagData.IntegrateValues(dataToWrite);
+            if (result) tagData.IntegrateValues(dataToWrite, supportsPictures, supportsAdditionalFields);
 
             postprocessWrite(s);
 
@@ -518,8 +529,9 @@ namespace ATL.AudioData.IO
                 structureHelper.AddZone(0, 0);
             }
 
+            // Merge existing information + new tag information
             var dataToWrite = new TagData(tagData);
-            dataToWrite.IntegrateValues(tag); // Merge existing information + new tag information
+            dataToWrite.IntegrateValues(tag, supportsPictures, supportsAdditionalFields);
             dataToWrite.Cleanup();
 
             preprocessWrite(dataToWrite);

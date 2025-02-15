@@ -250,6 +250,11 @@ namespace ATL.AudioData.IO
 
         /// <inheritdoc/>
         public bool IsNativeMetadataRich => true;
+        /// <inheritdoc/>
+        protected override bool supportsAdditionalFields => true;
+        /// <inheritdoc/>
+        protected override bool supportsPictures => true;
+
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             Field supportedMetaId = Field.NO_FIELD;

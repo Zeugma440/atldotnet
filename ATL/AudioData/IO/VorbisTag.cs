@@ -116,6 +116,11 @@ namespace ATL.AudioData.IO
 
         protected override byte ratingConvention => RC_APE;
 
+        /// <inheritdoc/>
+        protected override bool supportsAdditionalFields => true;
+        /// <inheritdoc/>
+        protected override bool supportsPictures => true;
+
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)
         {
             Field supportedMetaId = Field.NO_FIELD;

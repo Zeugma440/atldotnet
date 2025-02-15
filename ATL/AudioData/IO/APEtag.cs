@@ -165,6 +165,10 @@ namespace ATL.AudioData.IO
 
         /// <inheritdoc/>
         protected override byte ratingConvention => RC_APE;
+        /// <inheritdoc/>
+        protected override bool supportsAdditionalFields => true;
+        /// <inheritdoc/>
+        protected override bool supportsPictures => true;
 
         /// <inheritdoc/>
         protected override Field getFrameMapping(string zone, string ID, byte tagVersion)

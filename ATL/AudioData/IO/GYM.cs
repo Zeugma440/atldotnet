@@ -69,6 +69,8 @@ namespace ATL.AudioData.IO
         }
         /// <inheritdoc/>
         public bool IsNativeMetadataRich => false;
+        /// <inheritdoc/>
+        protected override bool supportsAdditionalFields => true;
 
         // IMetaDataIO
         protected override int getDefaultTagOffset()
