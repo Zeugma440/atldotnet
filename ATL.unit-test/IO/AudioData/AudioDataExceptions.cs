@@ -1,8 +1,5 @@
 ﻿using ATL.Logging;
 using Commons;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.IO;
 using static ATL.Logging.Log;
 
 namespace ATL.test.IO
