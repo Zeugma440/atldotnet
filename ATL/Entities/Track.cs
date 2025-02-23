@@ -33,6 +33,7 @@ namespace ATL
         {
             this.Path = path;
             stream = null;
+            streamInitialPos = -1;
             if (load) Update();
         }
 
@@ -44,6 +45,7 @@ namespace ATL
         public Track(Stream stream, string mimeType = "")
         {
             this.stream = stream;
+            streamInitialPos = stream.Position;
             this.mimeType = mimeType;
             Path = AudioDataIOFactory.IN_MEMORY;
             Update();
@@ -60,6 +62,10 @@ namespace ATL
         /// Stream used to access in-memory Track contents (alternative to path, which is used to access on-disk Track contents)
         /// </summary>
         private Stream stream;
+        /// <summary>
+        /// Initial position of stream when passed to constructor
+        /// </summary>
+        private long streamInitialPos;
         /// <summary>
         /// MIME-type that describes in-memory Track contents (used in conjunction with stream)
         /// </summary>
@@ -442,7 +448,11 @@ namespace ATL
 
             // TODO when tag is not available, customize by naming options // tracks (...)
             if (null == stream) fileIO = new AudioFileIO(Path, onlyReadEmbeddedPictures, Settings.ReadAllMetaFrames);
-            else fileIO = new AudioFileIO(stream, mimeType, onlyReadEmbeddedPictures, Settings.ReadAllMetaFrames);
+            else
+            {
+                stream.Position = streamInitialPos;
+                fileIO = new AudioFileIO(stream, mimeType, onlyReadEmbeddedPictures, Settings.ReadAllMetaFrames);
+            }
 
             IMetaDataIO metadata = fileIO.Metadata;
             MetadataFormats = new List<Format>(metadata.MetadataFormats);
@@ -716,15 +726,15 @@ namespace ATL
             if (null == target || target == Path) return false;
 
             // Copy the contents of the file
-            if (null == this.stream)
+            if (null == stream)
             {
                 File.Copy(Path, target, true);
             }
             else
             {
-                this.stream.Seek(0, SeekOrigin.Begin);
+                stream.Position = streamInitialPos;
                 using FileStream to = new FileStream(target, FileMode.Create, FileAccess.Write, FileShare.Read);
-                StreamUtils.CopyStream(this.stream, to);
+                StreamUtils.CopyStream(stream, to);
             }
             // Write what needs to be written
             bool result = fileIO.Save(toTagData(), null, target, null, new ProgressToken<float>(writeProgress));
@@ -746,7 +756,9 @@ namespace ATL
         ///
         /// After completion, any further update on this object will be made on the _target_ Stream.
         ///
-        /// Please note that saving to the Stream you're already using will result in failure.
+        /// Addional notes : 
+        /// - Saving to the Stream you're already using will result in failure
+        /// - Saving will be done to offset 0 of the target Stream
         /// </summary>
         /// <param name="target">Stream to save to</param>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
@@ -754,18 +766,18 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public bool SaveTo(Stream target, Action<float> writeProgress = null)
         {
-            if (null == target || target == this.stream) return false;
+            if (null == target || target == stream) return false;
 
             // Copy the contents of the file
-            if (null == this.stream)
+            if (null == stream)
             {
                 using FileStream from = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read);
                 StreamUtils.CopyStream(from, target);
             }
             else
             {
-                this.stream.Seek(0, SeekOrigin.Begin);
-                StreamUtils.CopyStream(this.stream, target);
+                stream.Position = streamInitialPos;
+                StreamUtils.CopyStream(stream, target);
             }
             target.Seek(0, SeekOrigin.Begin);
             // Write what needs to be written
@@ -773,7 +785,8 @@ namespace ATL
             // Update internal references
             if (result)
             {
-                this.stream = target;
+                stream = target;
+                streamInitialPos = 0;
                 this.Path = AudioDataIOFactory.IN_MEMORY;
                 Update();
             }
@@ -799,15 +812,15 @@ namespace ATL
             if (null == target || target == Path) return false;
 
             // Copy the contents of the file
-            if (null == this.stream)
+            if (null == stream)
             {
                 await StreamUtils.CopyFileAsync(Path, target);
             }
             else
             {
-                this.stream.Seek(0, SeekOrigin.Begin);
+                stream.Position = streamInitialPos;
                 await using FileStream to = new FileStream(target, FileMode.Create, FileAccess.Write, FileShare.Read);
-                await StreamUtils.CopyStreamAsync(this.stream, to);
+                await StreamUtils.CopyStreamAsync(stream, to);
             }
             // Write what needs to be written
             bool result = await fileIO.SaveAsync(toTagData(), null, target, null, new ProgressToken<float>(writeProgress));
@@ -829,7 +842,9 @@ namespace ATL
         ///
         /// After completion, any further update on this object will be made on the _target_ Stream.
         ///
-        /// Please note that saving to the Stream you're already using will result in failure.
+        /// Addional notes : 
+        /// - Saving to the Stream you're already using will result in failure
+        /// - Saving will be done to offset 0 of the target Stream
         /// </summary>
         /// <param name="target">Stream to save to</param>
         /// <param name="writeProgress">Callback that will be called multiple times when saving changes, as saving progresses (default : null = no callback)</param>
@@ -837,18 +852,18 @@ namespace ATL
         /// NB : Failure reason is saved to the ATL log</returns>
         public async Task<bool> SaveToAsync(Stream target, Action<float> writeProgress = null)
         {
-            if (null == target || target == this.stream) return false;
+            if (null == target || target == stream) return false;
 
             // Copy the contents
-            if (null == this.stream)
+            if (null == stream)
             {
                 await using FileStream from = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read);
                 await StreamUtils.CopyStreamAsync(from, target);
             }
             else
             {
-                this.stream.Seek(0, SeekOrigin.Begin);
-                await StreamUtils.CopyStreamAsync(this.stream, target);
+                stream.Position = streamInitialPos;
+                await StreamUtils.CopyStreamAsync(stream, target);
             }
             target.Seek(0, SeekOrigin.Begin);
             // Write what needs to be written
@@ -856,7 +871,8 @@ namespace ATL
             // Update internal references
             if (result)
             {
-                this.stream = target;
+                stream = target;
+                streamInitialPos = 0;
                 this.Path = AudioDataIOFactory.IN_MEMORY;
                 Update();
             }
