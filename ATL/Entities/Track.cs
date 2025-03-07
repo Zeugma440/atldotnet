@@ -238,7 +238,7 @@ namespace ATL
             }
             set
             {
-                if (canUseValue(value) && value.Value > DateTime.MinValue.Year) Date = new DateTime(value.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                if (canUseValue(value) && value.Value > DateTime.MinValue.Year && value.Value < DateTime.MaxValue.Year) Date = new DateTime(value.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc);
                 else if (Settings.NullAbsentValues) Date = null;
                 else Date = DateTime.MinValue;
                 isYearExplicit = true;
@@ -269,7 +269,7 @@ namespace ATL
             }
             set
             {
-                if (canUseValue(value) && value.Value > DateTime.MinValue.Year) OriginalReleaseDate = new DateTime(value.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                if (canUseValue(value) && value.Value > DateTime.MinValue.Year && value.Value < DateTime.MaxValue.Year) OriginalReleaseDate = new DateTime(value.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc);
                 else if (Settings.NullAbsentValues) OriginalReleaseDate = null;
                 else OriginalReleaseDate = DateTime.MinValue;
                 isORYearExplicit = true;

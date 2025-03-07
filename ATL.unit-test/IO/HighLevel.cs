@@ -532,7 +532,13 @@ namespace ATL.test.IO
 
                 Assert.AreEqual(0, theTrack.Year);
                 Assert.AreEqual(DateTime.MinValue.ToString(), theTrack.Date.ToString());
-
+                
+                // Test additional case where the year is an invalid value
+                theTrack.Year = 99999999;
+                Assert.AreEqual(0, theTrack.Year);
+                
+                theTrack.OriginalReleaseYear = 99999999;
+                Assert.AreEqual(0, theTrack.OriginalReleaseYear);
 
                 // Get rid of the working copy
                 if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
