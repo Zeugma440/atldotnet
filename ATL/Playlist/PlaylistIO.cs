@@ -130,7 +130,6 @@ namespace ATL.Playlist
         /// <inheritdoc/>
         public bool Save()
         {
-            bool havePathsChanged = !initialFilePaths.Select(ifp => ifp.Path).SequenceEqual(FilePaths);
             bool haveMetaChanged = !initialMetadata.SequenceEqual(Tracks.Select(t => new TagHolder(t.toTagData())));
 
             LogDelegator.GetLocateDelegate()(Path);
