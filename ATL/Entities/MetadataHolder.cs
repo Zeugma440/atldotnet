@@ -176,27 +176,27 @@ namespace ATL
                     // Year only
                     if (!success)
                     {
-                        // ...then try with RecordingDate
-                        foreach (var dateValue in dateValues)
+                        DateTime? dateTimeFromYear = null;
+                        if (!Utils.TryExtractDateTimeFromDigits(year, out dateTimeFromYear))
                         {
-                            if (4 == year.Length) break;
-                            year = Utils.ProtectValue(dateValue);
+                            // ...then try with RecordingDate
+                            foreach (var dateValue in dateValues)
+                            {
+                                if (Utils.TryExtractDateTimeFromDigits(dateValue, out dateTimeFromYear)) break;
+                            }
                         }
 
-                        // We have a year !
-                        if (4 == year.Length)
+                        // We have a valid value !
+                        if (dateTimeFromYear.HasValue)
                         {
-                            StringBuilder dateTimeBuilder = new StringBuilder();
-                            dateTimeBuilder.Append(year).Append("-01-01");
+                            result = dateTimeFromYear.Value;
                             string time = Utils.ProtectValue(tagData[Field.RECORDING_TIME]); // Try to add time if available
-                            if (time.Length >= 4)
+                            if (time.Length >= 4 && Utils.IsNumeric(time))
                             {
-                                dateTimeBuilder.Append('T');
-                                dateTimeBuilder.Append(time[..2]).Append(':');
-                                dateTimeBuilder.Append(time.AsSpan(2, 2)).Append(':');
-                                dateTimeBuilder.Append(6 == time.Length ? time.Substring(4, 2) : "00");
+                                result.AddHours(int.Parse(time[..2]));
+                                result.AddMinutes(int.Parse(time.AsSpan(2, 2)));
+                                if (6 == time.Length) result.AddSeconds(int.Parse(time.Substring(4, 2)));
                             }
-                            DateTime.TryParse(dateTimeBuilder.ToString(), out result);
                         }
                     }
                 }
@@ -231,12 +231,19 @@ namespace ATL
                 {
                     bool success = false;
                     string year = Utils.ProtectValue(tagData[Field.ORIG_RELEASE_YEAR]);
-                    if (year.Length != 4) year = Utils.ProtectValue(tagData[Field.ORIG_RELEASE_DATE]); // ...then with OriginalReleaseDate
-                    if (4 == year.Length) // We have a year !
+
+                    DateTime? dateTimeFromYear = null;
+                    // ...then with OriginalReleaseDate
+                    if (!Utils.TryExtractDateTimeFromDigits(year, out dateTimeFromYear))
                     {
-                        StringBuilder dateTimeBuilder = new StringBuilder();
-                        dateTimeBuilder.Append(year).Append("-01-01");
-                        success = DateTime.TryParse(dateTimeBuilder.ToString(), out result);
+                        year = Utils.ProtectValue(tagData[Field.ORIG_RELEASE_DATE]);
+                        Utils.TryExtractDateTimeFromDigits(year, out dateTimeFromYear);
+                    }
+                    // We have a valid value !
+                    if (dateTimeFromYear.HasValue)
+                    {
+                        result = dateTimeFromYear.Value;
+                        success = true;
                     }
                     if (!success) result = DateTime.MinValue;
                 }

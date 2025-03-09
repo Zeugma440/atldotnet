@@ -238,10 +238,18 @@ namespace ATL
             }
             set
             {
-                if (canUseValue(value) && value.Value > DateTime.MinValue.Year) Date = new DateTime(value.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                if (canUseValue(value))
+                {
+                    DateTime? tmpDate = null;
+                    if (Utils.TryExtractDateTimeFromDigits(value.ToString(), out tmpDate))
+                    {
+                        Date = tmpDate.Value;
+                        isYearExplicit = 1 == Date.Value.Day && 1 == Date.Value.Month;
+                    }
+                    else Date = DateTime.MinValue;
+                }
                 else if (Settings.NullAbsentValues) Date = null;
                 else Date = DateTime.MinValue;
-                isYearExplicit = true;
             }
         }
         /// <summary>
@@ -269,10 +277,18 @@ namespace ATL
             }
             set
             {
-                if (canUseValue(value) && value.Value > DateTime.MinValue.Year) OriginalReleaseDate = new DateTime(value.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                if (canUseValue(value))
+                {
+                    DateTime? tmpDate = null;
+                    if (Utils.TryExtractDateTimeFromDigits(value.ToString(), out tmpDate))
+                    {
+                        OriginalReleaseDate = tmpDate.Value;
+                        isORYearExplicit = 1 == OriginalReleaseDate.Value.Day && 1 == OriginalReleaseDate.Value.Month;
+                    }
+                    else OriginalReleaseDate = DateTime.MinValue;
+                }
                 else if (Settings.NullAbsentValues) OriginalReleaseDate = null;
                 else OriginalReleaseDate = DateTime.MinValue;
-                isORYearExplicit = true;
             }
         }
         /// <summary>

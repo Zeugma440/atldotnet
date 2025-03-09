@@ -534,6 +534,29 @@ namespace ATL.test.IO
                 Assert.AreEqual(DateTime.MinValue.ToString(), theTrack.Date.ToString());
 
 
+                // Use "year field as a date" informal convention
+
+                // OK case
+                theTrack.Year = 19900812;
+                Assert.IsTrue(theTrack.Save());
+                theTrack = new Track(testFileLocation);
+
+                Assert.AreEqual(1990, theTrack.Year);
+                Assert.IsTrue(theTrack.Date.HasValue);
+                Assert.AreEqual(1990, theTrack.Date.Value.Year);
+                Assert.AreEqual(08, theTrack.Date.Value.Month);
+                Assert.AreEqual(12, theTrack.Date.Value.Day);
+
+                // KO case
+                theTrack.Year = 19909912;
+                Assert.IsTrue(theTrack.Save());
+                theTrack = new Track(testFileLocation);
+
+                Assert.AreEqual(0, theTrack.Year);
+                Assert.IsTrue(theTrack.Date.HasValue);
+                Assert.AreEqual(DateTime.MinValue, theTrack.Date.Value);
+
+
                 // Get rid of the working copy
                 if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
             }

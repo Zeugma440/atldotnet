@@ -61,7 +61,7 @@ namespace Commons
         public static string EncodeTimecode_ms(long milliseconds, bool useMmSsFormat = false)
         {
             long seconds = Convert.ToInt64(Math.Floor(milliseconds / 1000.00));
-            
+
             var encodedString = useMmSsFormat ? EncodeMmSsTimecode_s(seconds) : EncodeTimecode_s(seconds);
 
             return encodedString + "." + (milliseconds - seconds * 1000);
@@ -98,7 +98,7 @@ namespace Commons
             if (h > 0) return hStr + ":" + mStr + ":" + sStr;
             return mStr + ":" + sStr;
         }
-        
+
         /// <summary>
         /// Format the given duration using the following format
         ///     MM:SS
@@ -118,7 +118,7 @@ namespace Commons
             if (1 == mStr.Length) mStr = "0" + mStr;
             var sStr = s.ToString();
             if (1 == sStr.Length) sStr = "0" + sStr;
-            
+
             return mStr + ":" + sStr;
         }
 
@@ -231,6 +231,54 @@ namespace Commons
             if (intVal < 0 || intVal > 59) return false;
             intVal = int.Parse(parts[2]);
             return intVal >= 0 && intVal <= 59;
+        }
+
+        /// <summary>
+		/// Try to extract a DateTime from a digits-only string
+        /// Accepted values :
+        ///     YYYY
+        ///     YYYYMM
+        ///     YYYYMMDD
+		/// </summary>
+		/// <param name="str">String to extract the date from</param>
+        /// <param name="date">DateTime to populate</param>
+		/// <returns>True if a valid DateTime has been found inside str (date will be valued); false instead (date will be null)</returns>
+		public static bool TryExtractDateTimeFromDigits(string str, out DateTime? date)
+        {
+            date = null;
+            if (!IsNumeric(str, true, false)) return false;
+
+            switch (str.Length)
+            {
+                case 4:
+                    int year = int.Parse(str);
+                    if (year >= DateTime.MinValue.Year && year <= DateTime.MaxValue.Year)
+                    {
+                        date = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                        return true;
+                    }
+                    break;
+                case 6:
+                    year = int.Parse(str.Substring(0, 4));
+                    int month = int.Parse(str.Substring(4, 2));
+                    if (year >= DateTime.MinValue.Year && year <= DateTime.MaxValue.Year && month <= DateTime.MaxValue.Month)
+                    {
+                        date = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+                        return true;
+                    }
+                    break;
+                case 8:
+                    year = int.Parse(str.Substring(0, 4));
+                    month = int.Parse(str.Substring(4, 2));
+                    int day = int.Parse(str.Substring(6, 2));
+                    if (year >= DateTime.MinValue.Year && year <= DateTime.MaxValue.Year && month <= DateTime.MaxValue.Month && day <= DateTime.MaxValue.Day)
+                    {
+                        date = new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc);
+                        return true;
+                    }
+                    break;
+            }
+            return false;
         }
 
         /// <summary>

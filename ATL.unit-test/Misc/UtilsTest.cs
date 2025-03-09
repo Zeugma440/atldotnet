@@ -81,6 +81,45 @@ namespace ATL.test
         }
 
         [TestMethod]
+        public void Utils_TryExtractDateTimeFromDigits()
+        {
+            DateTime? date = null;
+            Assert.IsTrue(Utils.TryExtractDateTimeFromDigits("1930", out date));
+            Assert.IsTrue(date.HasValue);
+            Assert.AreEqual(date.Value.Year, 1930);
+            Assert.AreEqual(date.Value.Month, 1);
+            Assert.AreEqual(date.Value.Day, 1);
+
+            date = null;
+            Assert.IsTrue(Utils.TryExtractDateTimeFromDigits("193008", out date));
+            Assert.IsTrue(date.HasValue);
+            Assert.AreEqual(date.Value.Year, 1930);
+            Assert.AreEqual(date.Value.Month, 8);
+            Assert.AreEqual(date.Value.Day, 1);
+
+            date = null;
+            Assert.IsTrue(Utils.TryExtractDateTimeFromDigits("19300812", out date));
+            Assert.IsTrue(date.HasValue);
+            Assert.AreEqual(date.Value.Year, 1930);
+            Assert.AreEqual(date.Value.Month, 8);
+            Assert.AreEqual(date.Value.Day, 12);
+
+            // KO cases
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("sds", out date));
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("12sds12", out date));
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("123456789", out date));
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("123", out date));
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("12345", out date));
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("-320", out date));
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("19.0", out date));
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("0000", out date));
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("193088", out date));
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("000012", out date));
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("19300140", out date));
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("00000101", out date));
+        }
+
+        [TestMethod]
         public void Utils_StrictLengthString()
         {
             Assert.AreEqual("0000", Utils.BuildStrictLengthString(null, 4, '0', false));
