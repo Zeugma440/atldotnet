@@ -46,7 +46,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static ushort DecodeBEUInt16(byte[] data)
         {
-            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 2) throw new InvalidDataException($"Data should be at least 2 bytes long; found {data.Length} bytes");
             return (ushort)((data[0] << 8) | (data[1] << 0));
         }
 
@@ -68,7 +68,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static ushort DecodeUInt16(byte[] data)
         {
-            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 2) throw new InvalidDataException($"Data should be at least 2 bytes long; found {data.Length} bytes");
             return (ushort)((data[0]) | (data[1] << 8));
         }
 
@@ -79,7 +79,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static short DecodeInt16(byte[] data)
         {
-            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 2) throw new InvalidDataException($"Data should be at least 2 bytes long; found {data.Length} bytes");
             return (short)(data[0] | (data[1] << 8));
         }
 
@@ -101,7 +101,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static short DecodeBEInt16(byte[] data)
         {
-            if (data.Length < 2) throw new InvalidDataException("Data should be at least 2 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 2) throw new InvalidDataException($"Data should be at least 2 bytes long; found {data.Length} bytes");
             return (short)((data[0] << 8) | (data[1] << 0));
         }
 
@@ -112,7 +112,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static int DecodeBEInt24(byte[] data)
         {
-            if (data.Length < 3) throw new InvalidDataException("Data should be at least 3 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 3) throw new InvalidDataException($"Data should be at least 3 bytes long; found {data.Length} bytes");
             return (data[0] << 16) | (data[1] << 8) | (data[2] << 0);
         }
 
@@ -124,7 +124,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static uint DecodeBEUInt24(byte[] data, int offset = 0)
         {
-            if (data.Length - offset < 3) throw new InvalidDataException("Value should at least contain 3 bytes after offset; actual size=" + (data.Length - offset) + " bytes");
+            if (data.Length - offset < 3) throw new InvalidDataException($"Value should at least contain 3 bytes after offset; actual size={data.Length - offset} bytes");
             return (uint)(data[offset] << 16 | data[offset + 1] << 8 | data[offset + 2]);
         }
 
@@ -148,7 +148,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static uint DecodeBEUInt32(byte[] data)
         {
-            if (data.Length < 4) throw new InvalidDataException("Data should be at least 4 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 4) throw new InvalidDataException($"Data should be at least 4 bytes long; found {data.Length} bytes");
             return (uint)((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0));
         }
 
@@ -159,7 +159,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static ulong DecodeBEUInt40(byte[] data)
         {
-            if (data.Length < 5) throw new InvalidDataException("Data should be at least 5 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 5) throw new InvalidDataException($"Data should be at least 5 bytes long; found {data.Length} bytes");
             return ((ulong)data[0] << 32) | ((ulong)data[1] << 24) | ((ulong)data[2] << 16) | ((ulong)data[3] << 8) | ((ulong)data[4] << 0);
         }
 
@@ -170,7 +170,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static ulong DecodeBEUInt64(byte[] data)
         {
-            if (data.Length < 8) throw new InvalidDataException("Data should be at least 8 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 8) throw new InvalidDataException($"Data should be at least 8 bytes long; found {data.Length} bytes");
             return ((ulong)data[0] << 56) | ((ulong)data[1] << 48) | ((ulong)data[2] << 40) | ((ulong)data[3] << 32) | ((ulong)data[4] << 24) | ((ulong)data[5] << 16) | ((ulong)data[6] << 8) | ((ulong)data[7] << 0);
         }
 
@@ -181,7 +181,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static uint DecodeUInt32(byte[] data)
         {
-            if (data.Length < 4) throw new InvalidDataException("Data should be at least 4 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 4) throw new InvalidDataException($"Data should be at least 4 bytes long; found {data.Length} bytes");
             return (uint)(data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
         }
 
@@ -203,7 +203,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static int DecodeBEInt32(byte[] data)
         {
-            if (data.Length < 4) throw new InvalidDataException("Data should be at least 4 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 4) throw new InvalidDataException($"Data should be at least 4 bytes long; found {data.Length} bytes");
             return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3] << 0);
         }
 
@@ -245,7 +245,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static int DecodeInt32(byte[] data)
         {
-            if (data.Length < 4) throw new InvalidDataException("data should be at least 4 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 4) throw new InvalidDataException($"Data should be at least 4 bytes long; found {data.Length} bytes");
             return (data[0]) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
         }
 
@@ -267,7 +267,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static ulong DecodeUInt64(byte[] data)
         {
-            if (data.Length < 8) throw new InvalidDataException("Data should be at least 8 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 8) throw new InvalidDataException($"Data should be at least 8 bytes long; found {data.Length} bytes");
             return data[0] | ((ulong)data[1] << 8) | ((ulong)data[2] << 16) | ((ulong)data[3] << 24) | ((ulong)data[4] << 32) | ((ulong)data[5] << 40) | ((ulong)data[6] << 48) | ((ulong)data[7] << 56);
         }
 
@@ -278,7 +278,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static long DecodeInt64(byte[] data)
         {
-            if (data.Length < 8) throw new InvalidDataException("data should be at least 8 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 8) throw new InvalidDataException($"Data should be at least 8 bytes long; found {data.Length} bytes");
             return (data[0]) | ((long)data[1] << 8) | ((long)data[2] << 16) | ((long)data[3] << 24) | ((long)data[4] << 32) | ((long)data[5] << 40) | ((long)data[6] << 48) | ((long)data[7] << 56);
         }
 
@@ -289,7 +289,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static long DecodeBEInt64(byte[] data)
         {
-            if (data.Length < 8) throw new InvalidDataException("Data should be at least 8 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 8) throw new InvalidDataException($"Data should be at least 8 bytes long; found {data.Length} bytes");
             return ((long)data[0] << 56) | ((long)data[1] << 48) | ((long)data[2] << 40) | ((long)data[3] << 32) | ((long)data[4] << 24) | ((long)data[5] << 16) | ((long)data[6] << 8) | ((long)data[7] << 0);
         }
 
@@ -321,7 +321,7 @@ namespace ATL
         /// <returns>Decoded value</returns>
         public static double DecodeBEDouble(byte[] data)
         {
-            if (data.Length < 8) throw new InvalidDataException("Data should be at least 8 bytes long; found " + data.Length + " bytes");
+            if (data.Length < 8) throw new InvalidDataException($"Data should be at least 8 bytes long; found {data.Length} bytes");
             if (BitConverter.IsLittleEndian)
                 Array.Reverse(data);
 
@@ -450,7 +450,7 @@ namespace ATL
         /// <returns>Decoded Int32</returns>
         public static int DecodeSynchSafeInt(byte[] bytes)
         {
-            if (bytes.Length > 5) throw new ArgumentException("Array too long : has to be 1 to 5 bytes; found : " + bytes.Length + " bytes");
+            if (bytes.Length > 5) throw new ArgumentException($"Array too long : has to be 1 to 5 bytes; found : {bytes.Length} bytes");
             int result = 0;
 
             for (int i = 0; i < bytes.Length; i++)
@@ -469,7 +469,7 @@ namespace ATL
         /// <returns>Decoded Int32</returns>
         public static int DecodeSynchSafeInt32(byte[] data)
         {
-            if (data.Length < 4) throw new ArgumentException("Array length has to be at least 4 bytes; found : " + data.Length + " bytes");
+            if (data.Length < 4) throw new ArgumentException($"Array length has to be at least 4 bytes; found : {data.Length} bytes");
 
             return
                 data[0] * 0x200000 +   //2^21

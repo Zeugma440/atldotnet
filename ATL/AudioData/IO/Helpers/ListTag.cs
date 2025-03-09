@@ -59,7 +59,7 @@ namespace ATL.AudioData.IO
                     // Manage parasite zeroes at the end of data
                     if (source.Position < maxPos && source.ReadByte() != 0) source.Seek(-1, SeekOrigin.Current);
                     var value = Encoding.UTF8.GetString(data, 0, size);
-                    meta.SetMetaField("info." + key, Utils.StripEndingZeroChars(value), readTagParams.ReadAllMetaFrames);
+                    meta.SetMetaField($"info.{key}", Utils.StripEndingZeroChars(value), readTagParams.ReadAllMetaFrames);
 
                     WavHelper.SkipEndPadding(source, maxPos);
                 }
@@ -83,7 +83,7 @@ namespace ATL.AudioData.IO
                 size = StreamUtils.DecodeInt32(data);
                 if (size <= 0) continue;
 
-                meta.SetMetaField("adtl.Labels[" + position + "].Type", id, readTagParams.ReadAllMetaFrames);
+                meta.SetMetaField($"adtl.Labels[{position}].Type", id, readTagParams.ReadAllMetaFrames);
                 if (id.Equals(CHUNK_LABEL, StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
                 else if (id.Equals(CHUNK_NOTE, StringComparison.OrdinalIgnoreCase)) readLabelSubChunk(source, meta, position, size, readTagParams);
                 else if (id.Equals(CHUNK_LABELED_TEXT, StringComparison.OrdinalIgnoreCase)) readLabeledTextSubChunk(source, meta, position, size, readTagParams);
@@ -96,31 +96,31 @@ namespace ATL.AudioData.IO
         private static void readLabelSubChunk(Stream source, MetaDataIO meta, int position, int size, ReadTagParams readTagParams)
         {
             byte[] data = new byte[Math.Max(4, size - 4)];
-            WavHelper.ReadInt32(source, meta, "adtl.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, $"adtl.Labels[{position}].CuePointId", data, readTagParams.ReadAllMetaFrames);
 
             if (source.Read(data, 0, size - 4) < size - 4) return;
             string value = Encoding.UTF8.GetString(data, 0, size - 4);
             value = Utils.StripEndingZeroChars(value); // Not ideal but effortslessly handles the ending zero
 
-            meta.SetMetaField("adtl.Labels[" + position + "].Text", value, readTagParams.ReadAllMetaFrames);
+            meta.SetMetaField($"adtl.Labels[{position}].Text", value, readTagParams.ReadAllMetaFrames);
         }
 
         private static void readLabeledTextSubChunk(Stream source, MetaDataIO meta, int position, int size, ReadTagParams readTagParams)
         {
             byte[] data = new byte[Math.Max(4, size - 4)];
-            WavHelper.ReadInt32(source, meta, "adtl.Labels[" + position + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.ReadInt32(source, meta, "adtl.Labels[" + position + "].SampleLength", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.ReadInt32(source, meta, "adtl.Labels[" + position + "].PurposeId", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.ReadInt16(source, meta, "adtl.Labels[" + position + "].Country", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.ReadInt16(source, meta, "adtl.Labels[" + position + "].Language", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.ReadInt16(source, meta, "adtl.Labels[" + position + "].Dialect", data, readTagParams.ReadAllMetaFrames);
-            WavHelper.ReadInt16(source, meta, "adtl.Labels[" + position + "].CodePage", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, $"adtl.Labels[{position}].CuePointId", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, $"adtl.Labels[{position}].SampleLength", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt32(source, meta, $"adtl.Labels[{position}].PurposeId", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt16(source, meta, $"adtl.Labels[{position}].Country", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt16(source, meta, $"adtl.Labels[{position}].Language", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt16(source, meta, $"adtl.Labels[{position}].Dialect", data, readTagParams.ReadAllMetaFrames);
+            WavHelper.ReadInt16(source, meta, $"adtl.Labels[{position}].CodePage", data, readTagParams.ReadAllMetaFrames);
 
             if (source.Read(data, 0, size - 20) < size - 20) return;
             string value = Encoding.UTF8.GetString(data, 0, size - 20);
             value = Utils.StripEndingZeroChars(value); // Not ideal but effortslessly handles the ending zero
 
-            meta.SetMetaField("adtl.Labels[" + position + "].Text", value, readTagParams.ReadAllMetaFrames);
+            meta.SetMetaField($"adtl.Labels[{position}].Text", value, readTagParams.ReadAllMetaFrames);
         }
 
         public static bool IsDataEligible(MetaDataHolder meta)
@@ -325,12 +325,12 @@ namespace ATL.AudioData.IO
         {
             if (key.Length > 4)
             {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + key + "' : LIST.INFO field key must be 4-characters long; cropping");
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, $"'{key}' : LIST.INFO field key must be 4-characters long; cropping");
                 key = Utils.BuildStrictLengthString(key, 4, ' ');
             }
             else if (key.Length < 4)
             {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + key + "' : LIST.INFO field key must be 4-characters long; completing with whitespaces");
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, $"'{key}' : LIST.INFO field key must be 4-characters long; completing with whitespaces");
                 key = Utils.BuildStrictLengthString(key, 4, ' ');
             }
             w.Write(Utils.Latin1Encoding.GetBytes(key));
@@ -347,7 +347,7 @@ namespace ATL.AudioData.IO
             string keyFull = "info." + key;
             if (writtenFields.ContainsKey(keyFull))
             {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + key + "' : already written");
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, $"'{key}' : already written");
             }
             else writtenFields.Add(keyFull, value);
         }

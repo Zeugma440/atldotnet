@@ -31,23 +31,23 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < numCuePoints; i++)
             {
                 // Cue point ID
-                WavHelper.ReadInt32(source, meta, "cue.CuePoints[" + i + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, $"cue.CuePoints[{i}].CuePointId", data, readTagParams.ReadAllMetaFrames);
 
                 // Play order position
-                WavHelper.ReadInt32(source, meta, "cue.CuePoints[" + i + "].Position", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, $"cue.CuePoints[{i}].Position", data, readTagParams.ReadAllMetaFrames);
 
                 // RIFF ID of corresponding data chunk
                 if (source.Read(data, 0, 4) < 4) return;
-                meta.SetMetaField("cue.CuePoints[" + i + "].DataChunkId", Utils.Latin1Encoding.GetString(data, 0, 4), readTagParams.ReadAllMetaFrames);
+                meta.SetMetaField($"cue.CuePoints[{i}].DataChunkId", Utils.Latin1Encoding.GetString(data, 0, 4), readTagParams.ReadAllMetaFrames);
 
                 // Byte Offset of Data Chunk
-                WavHelper.ReadInt32(source, meta, "cue.CuePoints[" + i + "].ChunkStart", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, $"cue.CuePoints[{i}].ChunkStart", data, readTagParams.ReadAllMetaFrames);
 
                 // Byte Offset to sample of First Channel
-                WavHelper.ReadInt32(source, meta, "cue.CuePoints[" + i + "].BlockStart", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, $"cue.CuePoints[{i}].BlockStart", data, readTagParams.ReadAllMetaFrames);
 
                 // Byte Offset to sample byte of First Channel
-                WavHelper.ReadInt32(source, meta, "cue.CuePoints[" + i + "].SampleOffset", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, $"cue.CuePoints[{i}].SampleOffset", data, readTagParams.ReadAllMetaFrames);
             }
         }
 

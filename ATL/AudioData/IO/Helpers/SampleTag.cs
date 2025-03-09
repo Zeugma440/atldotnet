@@ -48,22 +48,22 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < numSampleLoops; i++)
             {
                 // Cue point ID
-                WavHelper.ReadInt32(source, meta, "sample.SampleLoop[" + i + "].CuePointId", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, $"sample.SampleLoop[{i}].CuePointId", data, readTagParams.ReadAllMetaFrames);
 
                 // Type
-                WavHelper.ReadInt32(source, meta, "sample.SampleLoop[" + i + "].Type", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, $"sample.SampleLoop[{i}].Type", data, readTagParams.ReadAllMetaFrames);
 
                 // Start
-                WavHelper.ReadInt32(source, meta, "sample.SampleLoop[" + i + "].Start", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, $"sample.SampleLoop[{i}].Start", data, readTagParams.ReadAllMetaFrames);
 
                 // End
-                WavHelper.ReadInt32(source, meta, "sample.SampleLoop[" + i + "].End", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, $"sample.SampleLoop[{i}].End", data, readTagParams.ReadAllMetaFrames);
 
                 // Fraction
-                WavHelper.ReadInt32(source, meta, "sample.SampleLoop[" + i + "].Fraction", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, $"sample.SampleLoop[{i}].Fraction", data, readTagParams.ReadAllMetaFrames);
 
                 // Play count
-                WavHelper.ReadInt32(source, meta, "sample.SampleLoop[" + i + "].PlayCount", data, readTagParams.ReadAllMetaFrames);
+                WavHelper.ReadInt32(source, meta, $"sample.SampleLoop[{i}].PlayCount", data, readTagParams.ReadAllMetaFrames);
             }
         }
 

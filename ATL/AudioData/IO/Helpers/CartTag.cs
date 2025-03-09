@@ -159,23 +159,23 @@ namespace ATL.AudioData.IO
             // Dates and times
             if (additionalFields.TryGetValue("cart.startDate", out var startDate) && !Utils.CheckDateFormat(startDate))
             {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'cart.startDate' : error writing field - YYYY-MM-DD format required; " + startDate + " found");
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, $"'cart.startDate' : error writing field - YYYY-MM-DD format required; {startDate} found");
             }
             WavHelper.WriteFixedFieldTextValue("cart.startDate", additionalFields, 10, w);
             if (additionalFields.TryGetValue("cart.startTime", out var startTime) && !Utils.CheckTimeFormat(startTime))
             {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'cart.startTime' : error writing field - hh:mm:ss format required; " + startTime + " found");
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, $"'cart.startTime' : error writing field - hh:mm:ss format required; {startTime} found");
             }
             WavHelper.WriteFixedFieldTextValue("cart.startTime", additionalFields, 8, w);
 
             if (additionalFields.TryGetValue("cart.endDate", out var endDate) && !Utils.CheckDateFormat(endDate))
             {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'cart.endDate' : error writing field - YYYY-MM-DD format required; " + endDate + " found");
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, $"'cart.endDate' : error writing field - YYYY-MM-DD format required; {endDate} found");
             }
             WavHelper.WriteFixedFieldTextValue("cart.endDate", additionalFields, 10, w);
             if (additionalFields.TryGetValue("cart.endTime", out var endTime) && !Utils.CheckTimeFormat(endTime))
             {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'cart.endTime' : error writing field - hh:mm:ss format required; " + endTime + " found");
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, $"'cart.endTime' : error writing field - hh:mm:ss format required; {endTime} found");
             }
             WavHelper.WriteFixedFieldTextValue("cart.endTime", additionalFields, 8, w);
 
