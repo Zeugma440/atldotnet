@@ -836,7 +836,7 @@ namespace ATL.AudioData.IO
                 string descFormat = Utils.Latin1Encoding.GetString(data32);
 
                 // Descriptors for audio
-                if (descFormat.Equals("mp4a") || descFormat.Equals("enca") || descFormat.Equals("samr") || descFormat.Equals("sawb") || descFormat.Equals("Opus"))
+                if (descFormat.Equals("mp4a") || descFormat.Equals("enca") || descFormat.Equals("samr") || descFormat.Equals("alac") || descFormat.Equals("sawb") || descFormat.Equals("Opus"))
                 {
                     source.Seek(6, SeekOrigin.Current); // SampleEntry / 6-byte reserved zone set to zero
                     source.Seek(2, SeekOrigin.Current); // SampleEntry / Data reference index
