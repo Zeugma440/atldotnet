@@ -40,7 +40,7 @@ namespace ATL.AudioData
         }
         /// <summary>
 		/// Bit depth (bits per sample)
-        /// -1 if bit depth is not relevant to that audio format
+        /// -1 if bit depth is not relevant to that audio format (e.g. lossy audio)
 		/// </summary>
 		int BitDepth
         {
