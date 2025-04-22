@@ -149,7 +149,7 @@ namespace ATL.test.IO
         public void Audio_MP4()
         {
             testGenericAudio("MP4/mp4.m4a", CID_MP4, CID_MP4, 14053, 75, -1, 48000, true, CF_LOSSY, ISO_3_4_1, "MPEG-4 Part 14", 25746, 131708);
-            // Bitrate is 0 as the MDAT has been manually truncated
+            // Bitrate is 0 as the MDAT has been manually truncated => too little data for a long duration
             testGenericAudio("MP4/fragmented.mp4", CID_MP4, CID_MP4, 87211, 0, -1, 48000, false, CF_LOSSY, STEREO, "MPEG-4 Part 14", 18820, 2252);
         }
 

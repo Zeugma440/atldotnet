@@ -159,6 +159,7 @@ namespace ATL.AudioData.IO
         private byte bitrateTypeID;
         private double bitrate;
         private double calculatedDurationMs; // Calculated track duration, in milliseconds
+        private bool isFragmented;
 
         private AudioDataManager.SizeInfo sizeInfo;
 
@@ -239,6 +240,7 @@ namespace ATL.AudioData.IO
             bitrate = 0;
             SampleRate = 0;
             calculatedDurationMs = 0;
+            isFragmented = false;
 
             chapterTextTrackEdits = null;
             chapterPictureTrackEdits = null;
@@ -422,7 +424,8 @@ namespace ATL.AudioData.IO
             }
             while (trakSize > 0);
 
-            if (Utils.ApproxEquals(calculatedDurationMs, 0)) readMoof(source);
+            // Read fragmented data, if any
+            readMoof(source);
 
             // Look for uuid atoms
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
@@ -450,11 +453,12 @@ namespace ATL.AudioData.IO
             } while (uuid.size > 0);
 
 
-            // Seek audio data segment to calculate mean bitrate 
+            // Seek audio data segment to calculate mean bitrate (non-fragmented files only)
             // NB : This figure is closer to truth than the "average bitrate" recorded in the esds/m4ds header
 
             // == Audio binary data, chapter or subtitle data
-            // Per convention, audio binary data always seems to be in the 1st mdat atom of the file
+            // Contiguous files : Per convention, audio binary data always seems to be in the 1st mdat atom of the file
+            // Fragmented files : This value has been detected during readMoof
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
             var mdatAtomData = navigateToAtomSize(source, "mdat");
             uint mdatSize = mdatAtomData.Item1;
@@ -466,8 +470,8 @@ namespace ATL.AudioData.IO
             }
             long mdatOffset = source.Position;
             AudioDataOffset = mdatOffset - mdatHeaderSize;
-            AudioDataSize = mdatSize;
-            bitrate = (int)Math.Round(mdatSize * 8 / calculatedDurationMs * 1000.0, 0);
+            if (0 == AudioDataSize) AudioDataSize = mdatSize;
+            if (0 == bitrate) bitrate = (int)Math.Round(mdatSize * 8 / calculatedDurationMs * 1000.0, 0);
 
             // Set zone for new UUIDs to write at the end of the file
             if (readTagParams.PrepareForWriting) structureHelper.AddZone(AudioDataOffset + AudioDataSize, 0, ZONE_MP4_ADDITIONAL_UUIDS);
@@ -609,9 +613,11 @@ namespace ATL.AudioData.IO
         private void readMoof(Stream s)
         {
             long durationAll = 0;
+            long mdatSizeAll = 0;
             s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             uint moofSize = navigateToAtom(s, "moof");
+            isFragmented = moofSize > 0;
             while (moofSize > 0)
             {
                 var moofOffset = s.Position;
@@ -665,14 +671,23 @@ namespace ATL.AudioData.IO
                 // Seek next moof atom, skipping the mdat atom
                 s.Seek(moofOffset + moofSize - 8, SeekOrigin.Begin);
                 if (s.Read(data, 0, 4) < 4) break;
+                var mdatOffset = s.Position;
                 var mdatSize = StreamUtils.DecodeBEUInt32(data);
                 s.Seek(mdatSize - 4, SeekOrigin.Current);
+                // Account for stream truncation
+                if (mdatOffset + mdatSize > s.Length) mdatSize = (uint)(s.Length - mdatOffset + 4);
+                mdatSizeAll += mdatSize;
 
                 // Look for the next moof atom; other atoms may exist between successive moof atoms
                 moofSize = navigateToAtom(s, "moof");
             }
 
-            calculatedDurationMs = durationAll * 1000.0 / SampleRate;
+            if (isFragmented)
+            {
+                calculatedDurationMs = durationAll * 1000.0 / SampleRate;
+                bitrate = (int)Math.Round(mdatSizeAll * 8 / calculatedDurationMs * 1000.0, 0);
+                AudioDataSize = mdatSizeAll;
+            }
         }
 
         private long readTrack(
