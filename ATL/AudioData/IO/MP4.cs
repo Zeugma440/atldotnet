@@ -471,7 +471,7 @@ namespace ATL.AudioData.IO
             long mdatOffset = source.Position;
             AudioDataOffset = mdatOffset - mdatHeaderSize;
             if (0 == AudioDataSize) AudioDataSize = mdatSize;
-            if (0 == bitrate) bitrate = (int)Math.Round(mdatSize * 8 / calculatedDurationMs * 1000.0, 0);
+            if (Utils.ApproxEquals(bitrate, 0)) bitrate = (int)Math.Round(mdatSize * 8 / calculatedDurationMs * 1000.0, 0);
 
             // Set zone for new UUIDs to write at the end of the file
             if (readTagParams.PrepareForWriting) structureHelper.AddZone(AudioDataOffset + AudioDataSize, 0, ZONE_MP4_ADDITIONAL_UUIDS);

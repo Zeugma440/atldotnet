@@ -32,7 +32,7 @@ namespace ATL.benchmark
 
             //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
 
-            //info(@"D:\temp\wav\185\Largo.WAV");
+            info(@"D:\temp\m4a-mp4\327\327.mp4");
 
             //reduce(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a");
 
