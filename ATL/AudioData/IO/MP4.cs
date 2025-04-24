@@ -408,21 +408,23 @@ namespace ATL.AudioData.IO
 
             source.Seek(moovPosition, SeekOrigin.Begin);
             byte currentTrakIndex = 0;
-            long trakSize;
 
             // Loop through tracks
             do
             {
-                trakSize = readTrack(source, readTagParams, ++currentTrakIndex, chapterTextTrackSamples, chapterPictureTrackSamples, chapterTrackIndexes, audioTrackOffsets, moovPosition, moovSize);
-                if (-1 == trakSize)
+                uint trakSize = navigateToAtom(source, "trak");
+                if (0 == trakSize)
                 {
-                    // TODO do better than that
-                    currentTrakIndex = 0; // Convention to start reading from index 1 again
-                    source.Seek(moovPosition, SeekOrigin.Begin);
-                    trakSize = 1;
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "total tracks found : " + (currentTrakIndex - 1));
+                    break;
                 }
+                long trakPosition = source.Position - 8;
+
+                readTrack(source, trakPosition, trakSize, readTagParams, ++currentTrakIndex, chapterTextTrackSamples, chapterPictureTrackSamples, chapterTrackIndexes, audioTrackOffsets, moovPosition, moovSize);
+
+                source.Seek(trakPosition + trakSize, SeekOrigin.Begin);
             }
-            while (trakSize > 0);
+            while (currentTrakIndex < 10); // Failsafe
 
             // Read fragmented data, if any
             readMoof(source);
@@ -690,8 +692,10 @@ namespace ATL.AudioData.IO
             }
         }
 
-        private long readTrack(
+        private void readTrack(
             Stream source,
+            long trakPosition,
+            uint trakSize,
             ReadTagParams readTagParams,
             int currentTrakIndex,
             IList<MP4Sample> chapterTextTrackSamples,
@@ -715,26 +719,17 @@ namespace ATL.AudioData.IO
 
             string trackZoneName = "";
 
-            uint trakSize = navigateToAtom(source, "trak");
-            if (0 == trakSize)
-            {
-                LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "total tracks found : " + (currentTrakIndex - 1));
-                return 0;
-            }
-            var trakPosition = source.Position - 8;
-
             // Read track ID
             if (0 == navigateToAtom(source, "tkhd"))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "trak.tkhd atom could not be found; aborting read on track " + currentTrakIndex);
-                source.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                return trakSize;
+                return;
             }
             int intLength = 0 == source.ReadByte() ? 4 : 8;
             source.Seek(3, SeekOrigin.Current); // Flags
             source.Seek(intLength * 2, SeekOrigin.Current); // Creation & Modification Dates
 
-            if (source.Read(data32, 0, 4) < 4) return -1;
+            if (source.Read(data32, 0, 4) < 4) return;
             int trackId = StreamUtils.DecodeBEInt32(data32);
 
             // Detect the track type
@@ -742,8 +737,7 @@ namespace ATL.AudioData.IO
             if (0 == navigateToAtom(source, "mdia"))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "mdia atom could not be found; aborting read on track " + currentTrakIndex);
-                source.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                return trakSize;
+                return;
             }
 
             long mdiaPosition = source.Position;
@@ -752,8 +746,7 @@ namespace ATL.AudioData.IO
                 if (0 == navigateToAtom(source, "mdhd"))
                 {
                     LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "mdia.mdhd atom could not be found; aborting read on track " + currentTrakIndex);
-                    source.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                    return trakSize;
+                    return;
                 }
 
                 int mdhdVersion = source.ReadByte();
@@ -762,7 +755,7 @@ namespace ATL.AudioData.IO
                 if (0 == mdhdVersion) source.Seek(8, SeekOrigin.Current);
                 else source.Seek(16, SeekOrigin.Current); // Creation and modification date
 
-                if (source.Read(data32, 0, 4) < 4) return -1;
+                if (source.Read(data32, 0, 4) < 4) return;
                 mediaTimeScale = StreamUtils.DecodeBEInt32(data32);
 
                 source.Seek(mdiaPosition, SeekOrigin.Begin);
@@ -772,12 +765,11 @@ namespace ATL.AudioData.IO
             if (0 == navigateToAtom(source, "hdlr"))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "mdia.hdlr atom could not be found; aborting read on track " + currentTrakIndex);
-                source.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                return trakSize;
+                return;
             }
             source.Seek(4, SeekOrigin.Current); // Version and flags
             source.Seek(4, SeekOrigin.Current); // Quicktime type
-            if (source.Read(data32, 0, 4) < 4) return -1;
+            if (source.Read(data32, 0, 4) < 4) return;
             string mediaType = Utils.Latin1Encoding.GetString(data32);
 
             // Check if current track is the 1st chapter track
@@ -821,14 +813,12 @@ namespace ATL.AudioData.IO
             if (0 == navigateToAtom(source, "minf"))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "mdia.minf atom could not be found; aborting read on track " + currentTrakIndex);
-                source.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                return trakSize;
+                return;
             }
             if (0 == navigateToAtom(source, "stbl"))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "mdia.minf.stbl atom could not be found; aborting read on track " + currentTrakIndex);
-                source.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                return trakSize;
+                return;
             }
             long stblPosition = source.Position;
 
@@ -836,18 +826,17 @@ namespace ATL.AudioData.IO
             if (0 == navigateToAtom(source, "stsd"))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "stsd atom could not be found; aborting read on track " + currentTrakIndex);
-                source.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                return trakSize;
+                return;
             }
             source.Seek(4, SeekOrigin.Current); // 4-byte flags
-            if (source.Read(data32, 0, 4) < 4) return -1;
+            if (source.Read(data32, 0, 4) < 4) return;
             uint nbDescriptions = StreamUtils.DecodeBEUInt32(data32);
 
             for (int i = 0; i < nbDescriptions; i++)
             {
-                if (source.Read(data32, 0, 4) < 4) return -1;
+                if (source.Read(data32, 0, 4) < 4) return;
                 int32Data = StreamUtils.DecodeBEUInt32(data32); // 4-byte description length
-                if (source.Read(data32, 0, 4) < 4) return -1;
+                if (source.Read(data32, 0, 4) < 4) return;
                 string descFormat = Utils.Latin1Encoding.GetString(data32);
 
                 // Descriptors for audio
@@ -858,19 +847,20 @@ namespace ATL.AudioData.IO
 
                     source.Seek(8, SeekOrigin.Current); // AudioSampleEntry / 8-byte reserved zone
 
-                    if (source.Read(data32, 0, 2) < 2) return -1;
+                    if (source.Read(data32, 0, 2) < 2) return;
                     ushort channels = StreamUtils.DecodeBEUInt16(data32); // Channel count
                     ChannelsArrangement = GuessFromChannelNumber(channels);
 
                     source.Seek(2, SeekOrigin.Current); // Sample size
                     source.Seek(2, SeekOrigin.Current); // Quicktime stuff (should be length 4, but sampleRate doesn't work when it is...)
 
-                    if (source.Read(data32, 0, 4) < 4) return -1;
+                    if (source.Read(data32, 0, 4) < 4) return;
                     SampleRate = (int)StreamUtils.DecodeBEUInt32(data32);
                 }
                 else if (descFormat.Equals("jpeg")) // Descriptor for picture (slides / chapter pictures)
                 {
                     isCurrentTrackFirstChapterPicturesTrack = chapterTrackIndexes.Values.Any(list => list.Contains(trackId));
+                    source.Seek(int32Data - 4, SeekOrigin.Current);
                 }
                 else
                 {
@@ -898,7 +888,7 @@ namespace ATL.AudioData.IO
                     IList<int> thisTrackIndexes = new List<int>();
                     for (int i = 0; i < (chapSize - 8) / 4; i++)
                     {
-                        if (source.Read(data32, 0, 4) < 4) return -1;
+                        if (source.Read(data32, 0, 4) < 4) return;
                         thisTrackIndexes.Add(StreamUtils.DecodeBEInt32(data32));
                     }
                     chapterTrackIndexes.Add(trackId, thisTrackIndexes);
@@ -917,7 +907,7 @@ namespace ATL.AudioData.IO
                 if (parsePreviousTracks)
                 {
                     LogDelegator.GetLogDelegate()(Log.LV_INFO, "detected chapter track located before read cursor; restarting reading tracks from track 1");
-                    return -1;
+                    return;
                 }
             }
             else if (isCurrentTrackFirstAudioTrack && Settings.MP4_createQuicktimeChapters) // Only add QT chapters to the 1st detected audio or video track
@@ -938,14 +928,14 @@ namespace ATL.AudioData.IO
             if (isCurrentTrackFirstChapterTextTrack)
             {
                 uint result = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, chapterTextTrackSamples, mediaTimeScale, true);
-                if (result > 0) return int32Data; // An error has occured
+                if (result > 0) return;
             }
 
             // Read chapters picture data
             if (isCurrentTrackFirstChapterPicturesTrack)
             {
                 uint result = readQtChapter(source, readTagParams, stblPosition, trakPosition, trakSize, trackId, chapterPictureTrackSamples, mediaTimeScale, false);
-                if (result > 0) return int32Data; // An error has occured
+                if (result > 0) return;
             }
 
             source.Seek(stblPosition, SeekOrigin.Begin);
@@ -955,22 +945,21 @@ namespace ATL.AudioData.IO
             if (0 == atomSize)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "stsz atom could not be found; aborting read on track " + currentTrakIndex);
-                source.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                return trakSize;
+                return;
             }
             source.Seek(4, SeekOrigin.Current); // 4-byte flags
-            if (source.Read(data32, 0, 4) < 4) return -1;
+            if (source.Read(data32, 0, 4) < 4) return;
             uint blocByteSizeForAll = StreamUtils.DecodeBEUInt32(data32);
             if (0 == blocByteSizeForAll) // If value other than 0, same size everywhere => CBR
             {
-                if (source.Read(data32, 0, 4) < 4) return -1;
+                if (source.Read(data32, 0, 4) < 4) return;
                 uint nbSizes = StreamUtils.DecodeBEUInt32(data32);
                 uint max = 0;
                 uint min = uint.MaxValue;
 
                 for (int i = 0; i < nbSizes; i++)
                 {
-                    if (source.Read(data32, 0, 4) < 4) return -1;
+                    if (source.Read(data32, 0, 4) < 4) return;
                     int32Data = StreamUtils.DecodeBEUInt32(data32);
                     min = Math.Min(min, int32Data);
                     max = Math.Max(max, int32Data);
@@ -1062,13 +1051,12 @@ namespace ATL.AudioData.IO
                     else
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_ERROR, "neither stco, nor co64 atoms could not be found; aborting read on track " + currentTrakIndex);
-                        source.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-                        return trakSize;
+                        return;
                     }
                 }
 
                 source.Seek(4, SeekOrigin.Current); // Version and flags
-                if (source.Read(data32, 0, 4) < 4) return -1;
+                if (source.Read(data32, 0, 4) < 4) return;
                 var nbChunkOffsets = StreamUtils.DecodeBEUInt32(data32);
 
                 for (int i = 0; i < nbChunkOffsets; i++)
@@ -1077,14 +1065,14 @@ namespace ATL.AudioData.IO
                     long valueLong;
                     if (4 == nbBytes)
                     {
-                        if (source.Read(data32, 0, 4) < 4) return -1;
+                        if (source.Read(data32, 0, 4) < 4) return;
                         valueLong = StreamUtils.DecodeBEUInt32(data32);
                         valueObj = (uint)valueLong;
 
                     }
                     else
                     {
-                        if (source.Read(data32, 0, 8) < 8) return -1;
+                        if (source.Read(data32, 0, 8) < 8) return;
                         valueLong = StreamUtils.DecodeBEInt64(data64);
                         valueObj = valueLong;
                     }
@@ -1112,10 +1100,6 @@ namespace ATL.AudioData.IO
                     }
                 } // Chunk offsets
             }
-
-            source.Seek(trakPosition + trakSize, SeekOrigin.Begin);
-
-            return trakSize;
         }
 
         private uint readQtChapter(
