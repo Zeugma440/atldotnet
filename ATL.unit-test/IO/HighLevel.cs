@@ -1007,7 +1007,7 @@ namespace ATL.test.IO
             // File without extension (autodetect)
             int dotIndex = testFileLocation.LastIndexOf("ogg.ogg");
             string testFileLocation2 = testFileLocation.Substring(0, dotIndex + 3);
-            File.Copy(testFileLocation, testFileLocation2);
+            File.Copy(testFileLocation, testFileLocation2, true);
 
             theTrack = new Track(testFileLocation2);
 

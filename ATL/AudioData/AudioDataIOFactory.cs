@@ -376,7 +376,7 @@ namespace ATL.AudioData
                 theFormat = new AudioFormat(Format.UNKNOWN_FORMAT);
             }
 
-            return getFromFormat(path, theFormat);
+            return GetFromFormat(path, theFormat);
         }
 
         /// <summary>
@@ -402,7 +402,7 @@ namespace ATL.AudioData
                 theFormat = new AudioFormat(Format.UNKNOWN_FORMAT);
             }
 
-            return getFromFormat(path, theFormat);
+            return GetFromFormat(path, theFormat);
         }
 
         /// <summary>
@@ -418,7 +418,7 @@ namespace ATL.AudioData
             byte[] data = new byte[32];
             long offset = 0;
             bool hasID3v2 = false;
-            if (s.Read(data, 0, 32) < 32) return getFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));
+            if (s.Read(data, 0, 32) < 32) return GetFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));
             // Hardcoded case of ID3v2 as it is the sole standard metadata system to appear at the beginning of file
             // NB : useful to detect files tagged with ID3v2 even though their format isn't compatible (e.g. MP4/M4A)
             if (ID3v2.IsValidHeader(data))
@@ -429,7 +429,7 @@ namespace ATL.AudioData
                 int id3v2Size = StreamUtils.DecodeSynchSafeInt32(data2) + 10;  // 10 being the size of the header
                 s.Seek(id3v2Size, SeekOrigin.Begin);
                 offset = s.Position;
-                if (s.Read(data, 0, 32) < 32) return getFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));
+                if (s.Read(data, 0, 32) < 32) return GetFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));
             }
             try
             {
@@ -444,7 +444,7 @@ namespace ATL.AudioData
                     s.Seek(offset, SeekOrigin.Begin);
                     if (f.SearchHeader(s)) return checkFromFormat(IN_MEMORY, f, hasID3v2);
                 }
-                return getFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));
+                return GetFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));
             }
             finally
             {
@@ -453,16 +453,24 @@ namespace ATL.AudioData
         }
         private static IAudioDataIO checkFromFormat(string path, AudioFormat theFormat, bool hasID3v2)
         {
-            var result = getFromFormat(path, theFormat);
+            var result = GetFromFormat(path, theFormat);
             if (hasID3v2 && !result.GetSupportedMetas().Contains(MetaDataIOFactory.TagType.ID3V2))
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "ATL doesn't support " + result.AudioFormat.Name + " files illegally tagged with ID3v2");
             return result;
         }
 
 
-        private static IAudioDataIO getFromFormat(string path, AudioFormat theFormat)
+        /// <summary>
+        /// Get the IAudioDataIO to exploit the data of the given path, using the given format
+        /// </summary>
+        /// <param name="path">Absolute path to the file to exploit</param>
+        /// <param name="theFormat">Format to use</param>
+        /// <returns>Appropriate IAudioDataIO to exploit the data of the given path, using the given format</returns>
+        public static IAudioDataIO GetFromFormat(string path, AudioFormat theFormat)
         {
-            switch (theFormat.ID)
+            // Use container format ID if different than audio data format ID
+            var id = (theFormat.ContainerId != theFormat.DataFormat.ID) ? theFormat.ContainerId : theFormat.DataFormat.ID;
+            switch (id)
             {
                 case CID_MPEG:
                     return new MPEGaudio(path, theFormat);
