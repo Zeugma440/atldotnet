@@ -217,16 +217,17 @@ namespace ATL.AudioData.IO
         {
             int frames = 0;
             int totalSize = 0;
+            bool result = false;
 
             do
             {
                 frames++;
                 var position = (int)(sizeInfo.ID3v2Size + totalSize) * 8;
 
-                if (StreamUtils.ReadBEBits(source, position, 12) != 0xFFF) return false;
+                if (StreamUtils.ReadBEBits(source, position, 12) != 0xFFF) break;
                 position += 12;
                 position += 1;
-                if (StreamUtils.ReadBEBits(source, position, 2) != 0) return false; // Make sure Layer is 0
+                if (StreamUtils.ReadBEBits(source, position, 2) != 0) break; // Make sure Layer is 0
                 position += 5;
 
                 SampleRate = SAMPLE_RATE[StreamUtils.ReadBEBits(source, position, 4)];
@@ -245,12 +246,14 @@ namespace ATL.AudioData.IO
                 else
                     bitrateTypeID = AAC_BITRATE_TYPE_CBR;
 
+                if (1 ==  frames) result = true;
+
                 if (AAC_BITRATE_TYPE_CBR == bitrateTypeID) break;
             }
             while (source.Length > sizeInfo.ID3v2Size + totalSize);
             bitrate = (int)Math.Round(8 * totalSize / 1024.0 / frames * SampleRate);
 
-            return true;
+            return result;
         }
 
         // Read data from file
