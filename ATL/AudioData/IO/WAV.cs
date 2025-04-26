@@ -111,10 +111,10 @@ namespace ATL.AudioData.IO
         public int CodecFamily => AudioDataIOFactory.CF_LOSSLESS;
         public string FileName { get; }
 
-        public double BitRate { get; private set; }
+        public double BitRate => getBitrate();
 
         public int BitDepth => bitsPerSample;
-        public double Duration { get; private set; }
+        public double Duration => getDuration();
 
         public ChannelsArrangement ChannelsArrangement { get; private set; }
 
@@ -176,9 +176,6 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
         {
-            Duration = 0;
-            BitRate = 0;
-
             formatId = 0;
             sampleRate = 0;
             bytesPerSecond = 0;
@@ -445,7 +442,9 @@ namespace ATL.AudioData.IO
                     id3v2StructureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_ID3);
                 }
 
-                source.Seek(chunkDataPos + chunkSize, SeekOrigin.Begin);
+                var nextPos = chunkDataPos + chunkSize;
+                if (nextPos > source.Length) break;
+                source.Seek(nextPos, SeekOrigin.Begin);
             }
 
             // Add zone placeholders for future tag writing
@@ -535,7 +534,6 @@ namespace ATL.AudioData.IO
 
         private double getDuration()
         {
-            // Get duration
             double result = 0;
 
             if (sampleNumber == 0 && bytesPerSecond > 0)
@@ -563,10 +561,6 @@ namespace ATL.AudioData.IO
             resetData();
 
             if (!readWAV(source, readTagParams)) return false;
-
-            // Process data if loaded and header valid
-            BitRate = getBitrate();
-            Duration = getDuration();
 
             return true;
         }
