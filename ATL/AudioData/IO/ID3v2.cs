@@ -679,7 +679,7 @@ namespace ATL.AudioData.IO
         ref IList<MetaFieldInfo> comments,
         bool inChapter = false)
         {
-            FrameHeader Frame = new FrameHeader();
+            FrameHeader frame = new FrameHeader();
             byte encodingCode;
 
             long initialTagPos = source.Position;
@@ -691,12 +691,12 @@ namespace ATL.AudioData.IO
 
 
             // Read frame header and check frame ID
-            Frame.ID = TAG_VERSION_2_2 == m_tagVersion ? Utils.Latin1Encoding.GetString(source.ReadBytes(3)) : Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+            frame.ID = TAG_VERSION_2_2 == m_tagVersion ? Utils.Latin1Encoding.GetString(source.ReadBytes(3)) : Utils.Latin1Encoding.GetString(source.ReadBytes(4));
 
-            if (!char.IsLetter(Frame.ID[0]) || !char.IsUpper(Frame.ID[0]))
+            if (!char.IsLetter(frame.ID[0]) || !char.IsUpper(frame.ID[0]))
             {
                 // We might be at the beginning of a padding frame
-                if (0 == Frame.ID[0] + Frame.ID[1] + Frame.ID[2])
+                if (0 == frame.ID[0] + frame.ID[1] + frame.ID[2])
                 {
                     tag.PaddingOffset = initialTagPos;
                     tag.ActualEnd = StreamUtils.TraversePadding(source);
@@ -722,46 +722,50 @@ namespace ATL.AudioData.IO
             switch (m_tagVersion)
             {
                 case TAG_VERSION_2_2:
-                    Frame.Size = StreamUtils.DecodeBEInt24(source.ReadBytes(3));
+                    frame.Size = StreamUtils.DecodeBEInt24(source.ReadBytes(3));
                     break;
                 case TAG_VERSION_2_3:
-                    Frame.Size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+                    frame.Size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
                     break;
                 case TAG_VERSION_2_4:
                     long sizePosition = source.Position;
                     byte[] sizeDescriptor = source.ReadBytes(4);
-                    Frame.Size = StreamUtils.DecodeSynchSafeInt32(sizeDescriptor);
+                    frame.Size = StreamUtils.DecodeSynchSafeInt32(sizeDescriptor);
                     // Important: Certain implementation of ID3v2.4 still use the ID3v2.3 size descriptor (e.g.FFMpeg 4.3.1 for the CTOC frame).
                     // => We have to test reading the frame to "guess" which convention its size descriptor uses
                     // when its size is described on more than 1 byte
                     //
                     // If the size descriptor, read as a plain integer, is larger than the whole tag size, we should keep it as a synch safe int
                     if (sizeDescriptor[2] + sizeDescriptor[1] + sizeDescriptor[0] > 0
-                        && misencodedSizev4Fields.Contains(Frame.ID)
+                        && misencodedSizev4Fields.Contains(frame.ID)
                         && StreamUtils.DecodeBEInt32(sizeDescriptor) < tag.GetSize(false))
                     {
                         // Check if the end of the frame is immediately followed by 4 uppercase chars or by padding chars
                         // If not, try again by reading frame size as a plain integer
-                        source.Seek(sizePosition + 6 + Frame.Size, SeekOrigin.Begin);
+                        source.Seek(sizePosition + 6 + frame.Size, SeekOrigin.Begin);
                         string frameId = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-                        if (!isUpperAlpha(frameId) && !frameId.Equals("\0\0\0\0")) Frame.Size = StreamUtils.DecodeBEInt32(sizeDescriptor);
+                        if (!isUpperAlpha(frameId) && !frameId.Equals("\0\0\0\0")) frame.Size = StreamUtils.DecodeBEInt32(sizeDescriptor);
                         source.Seek(sizePosition + 4, SeekOrigin.Begin);
                     }
                     break;
             }
 
-            Frame.Flags = TAG_VERSION_2_2 == m_tagVersion ? (ushort)0 : StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
+            frame.Flags = TAG_VERSION_2_2 == m_tagVersion ? (ushort)0 : StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
 
-            var dataSize = Frame.Size;
+            var dataSize = frame.Size;
 
             // Skips data size indicator if signaled by the flag
-            if ((Frame.Flags & 1) > 0)
+            if ((frame.Flags & 1) > 0)
             {
                 source.Seek(4, SeekOrigin.Current);
                 dataSize -= 4;
             }
 
-            if (!noTextEncodingFields.Contains(Frame.ID))
+            // Detect frame-level settings
+            //var isCompressed = (frame.Flags & 8) > 0; Unused for now
+            var isUnsynchronized = tag.UsesUnsynchronisation || (frame.Flags & 2) > 0;
+
+            if (!noTextEncodingFields.Contains(frame.ID))
             {
                 dataSize--; // Minus encoding byte
                 encodingCode = source.ReadByte();
@@ -777,11 +781,11 @@ namespace ATL.AudioData.IO
             //   a "short content description", as an encoded null-terminated string
             //   the actual data (i.e. comment or lyrics), as an encoded, null-terminated string
             // => lg lg lg (BOM) (encoded description) 00 (00) (BOM) encoded text 00 (00)
-            if (Frame.ID.StartsWith("COM") || Frame.ID.StartsWith("USL") || Frame.ID.StartsWith("ULT"))
+            if (frame.ID.StartsWith("COM") || frame.ID.StartsWith("USL") || frame.ID.StartsWith("ULT"))
             {
                 RichStructure structure = readCommentStructure(source, m_tagVersion, encodingCode, frameEncoding, dataSize);
 
-                if (Frame.ID.StartsWith("COM"))
+                if (frame.ID.StartsWith("COM"))
                 {
                     comments ??= new List<MetaFieldInfo>();
                     comment = new MetaFieldInfo(getImplementedTagType(), "")
@@ -790,7 +794,7 @@ namespace ATL.AudioData.IO
                         NativeFieldCode = structure.ContentDescriptor
                     };
                 }
-                else if (Frame.ID.StartsWith("USL") || Frame.ID.StartsWith("ULT"))
+                else if (frame.ID.StartsWith("USL") || frame.ID.StartsWith("ULT"))
                 {
                     tagData.Lyrics ??= new LyricsInfo();
                     tagData.Lyrics.LanguageCode = structure.LanguageCode;
@@ -800,7 +804,7 @@ namespace ATL.AudioData.IO
 
                 dataSize -= structure.Size;
             }
-            else if (Frame.ID.StartsWith("SYL")) // Synch'ed lyrics
+            else if (frame.ID.StartsWith("SYL")) // Synch'ed lyrics
             {
                 RichStructure structure = readSynchedLyricsStructure(source, m_tagVersion, encodingCode, frameEncoding);
                 tagData.Lyrics ??= new LyricsInfo();
@@ -833,23 +837,23 @@ namespace ATL.AudioData.IO
             }
 
             // General Encapsulated Object
-            if (Frame.ID.StartsWith("GEO"))
+            if (frame.ID.StartsWith("GEO"))
             {
                 long geoStartOffset = source.Position;
                 StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Mime-type; unused
                 StreamUtils.ReadNullTerminatedString(source, frameEncoding); // File name; unused
                 string cDesc = StreamUtils.ReadNullTerminatedString(source, frameEncoding); // Content description
-                Frame.ID += "." + cDesc;
+                frame.ID += "." + cDesc;
                 dataSize -= (int)(source.Position - geoStartOffset);
                 frameEncoding = Utils.Latin1Encoding; // Decode encapsulated object using Latin-1
             }
 
             // General Encapsulated Object
-            if (Frame.ID.StartsWith("PRIV"))
+            if (frame.ID.StartsWith("PRIV"))
             {
                 long privStartOffset = source.Position;
                 string owner = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
-                Frame.ID += "." + owner;
+                frame.ID += "." + owner;
                 dataSize -= (int)(source.Position - privStartOffset);
                 frameEncoding = Utils.Latin1Encoding; // Decode private data using Latin-1
             }
@@ -860,25 +864,25 @@ namespace ATL.AudioData.IO
 
             if (dataSize >= 0 && dataSize < source.Length)
             {
-                if (!("PIC".Equals(Frame.ID) || "APIC".Equals(Frame.ID))) // Not a picture frame
+                if (!("PIC".Equals(frame.ID) || "APIC".Equals(frame.ID))) // Not a picture frame
                 {
                     string strData;
 
                     // Specific to Popularitymeter : Rating data has to be extracted from the POPM block
-                    if (Frame.ID.StartsWith("POP"))
+                    if (frame.ID.StartsWith("POP"))
                     {
                         // ID3v2.2 : According to spec (see paragraph3.2), encoding should actually be ISO-8859-1
                         // ID3v2.3+ : Spec is unclear whether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
                         strData = readRatingInPopularityMeter(source, Utils.Latin1Encoding).ToString();
                     }
-                    else if (Frame.ID.StartsWith("TXX"))
+                    else if (frame.ID.StartsWith("TXX"))
                     {
                         // Read frame data and set tag item if frame supported
                         byte[] bData = source.ReadBytes(dataSize);
                         strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
 
                         string[] tabS = strData.Split('\0');
-                        Frame.ID = tabS[0];
+                        frame.ID = tabS[0];
                         // Handle multiple values (ID3v2.4 only, theoretically)
                         if (tabS.Length > 1) strData = string.Join(Settings.InternalValueSeparator + "", tabS, 1, tabS.Length - 1);
                         else strData = ""; //if the 2nd part of the array isn't there, value is non-existent (TXXX...KEY\0\0 or TXXX...KEY\0)
@@ -887,27 +891,27 @@ namespace ATL.AudioData.IO
                         // (pattern : TXXX-stuff-BOM-ID-\0-BOM-VALUE-\0-BOM-VALUE-\0)
                         if (1 == encodingCode) strData = strData.Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
                     }
-                    else if (Frame.ID.StartsWith("CTO")) // Chapters table of contents -> store chapter description
+                    else if (frame.ID.StartsWith("CTO")) // Chapters table of contents -> store chapter description
                     {
                         StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Skip element ID
                         source.Seek(1, SeekOrigin.Current); // Skip flags
                         int entryCount = source.ReadByte();
                         for (int i = 0; i < entryCount; i++) StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Skip chapter element IDs
                                                                                                                                  // There's an optional header here
-                        if (source.Position - dataOffset < Frame.Size && "TIT2".Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4)), StringComparison.OrdinalIgnoreCase))
+                        if (source.Position - dataOffset < frame.Size && "TIT2".Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4)), StringComparison.OrdinalIgnoreCase))
                         {
                             source.Seek(6, SeekOrigin.Current); // Skip size and flags
                             encodingCode = source.ReadByte();
                             Encoding encoding = decodeID3v2CharEncoding(encodingCode);
                             if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode || 2 == encodingCode)) readBOM(source);
-                            strData = StreamUtils.ReadNullTerminatedStringFixed(source, encoding, (int)(dataOffset + Frame.Size - source.Position));
+                            strData = StreamUtils.ReadNullTerminatedStringFixed(source, encoding, (int)(dataOffset + frame.Size - source.Position));
                         }
                         else
                         {
                             strData = "";
                         }
                     }
-                    else if (Frame.ID.StartsWith("CHA")) // Chapters
+                    else if (frame.ID.StartsWith("CHA")) // Chapters
                     {
                         tagData.Chapters ??= new List<ChapterInfo>();
                         chapter = new ChapterInfo();
@@ -932,7 +936,7 @@ namespace ATL.AudioData.IO
 
                         strData = "";
                     }
-                    else if (Frame.ID.StartsWith("SYL")) // Synch'ed lyrics
+                    else if (frame.ID.StartsWith("SYL")) // Synch'ed lyrics
                     {
                         long initPos = source.Position;
                         long remainingData = dataSize - (source.Position - initPos);
@@ -943,7 +947,7 @@ namespace ATL.AudioData.IO
                         }
                         strData = "";
                     }
-                    else if (Frame.ID.StartsWith("WXX")) // Custom URL
+                    else if (frame.ID.StartsWith("WXX")) // Custom URL
                     {
                         var terminator = getNullTerminatorFromEncoding(frameEncoding);
                         // Find the separator
@@ -977,9 +981,9 @@ namespace ATL.AudioData.IO
                         strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
 
                         // Parse GENRE frame
-                        if (isGenreField(Frame.ID, m_tagVersion)) strData = extractGenreFromID3v2Code(strData);
+                        if (isGenreField(frame.ID, m_tagVersion)) strData = extractGenreFromID3v2Code(strData);
                         // Parse Involved People frame for ID3v2.2-2.3 (IPL/IPLS) where value separator is a \0
-                        else if (Frame.ID.StartsWith("IPL"))
+                        else if (frame.ID.StartsWith("IPL"))
                         {
                             string[] parts = strData.Trim().Split(new[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
                             // Individual parts of that field may have a BOM
@@ -991,7 +995,7 @@ namespace ATL.AudioData.IO
                             strData = string.Join(Settings.InternalValueSeparator + "", parts);
                         }
                         // Handle multiple values on text information frames
-                        else if (Frame.ID.StartsWith('T'))
+                        else if (frame.ID.StartsWith('T'))
                         {
                             string[] parts = null;
                             if (TAG_VERSION_2_4 == m_tagVersion) // All text information frames may contain multiple values on ID3v2.4
@@ -999,7 +1003,7 @@ namespace ATL.AudioData.IO
                                 parts = strData.Trim().Split(new char[] { VALUE_SEPARATOR_24 }, StringSplitOptions.RemoveEmptyEntries);
                             }
                             // Only specific text information frames may contain multiple values on ID3v2.2-3
-                            else if (multipleValuev23Fields.Contains(Frame.ID) && Settings.ID3v2_separatev2v3Values)
+                            else if (multipleValuev23Fields.Contains(frame.ID) && Settings.ID3v2_separatev2v3Values)
                             {
                                 parts = strData.Trim().Split(new char[] { VALUE_SEPARATOR_22 }, StringSplitOptions.RemoveEmptyEntries);
                             }
@@ -1013,11 +1017,11 @@ namespace ATL.AudioData.IO
                     }
                     else if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value
                     {
-                        if (!inChapter) SetMetaField(Frame.ID, strData, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version);
+                        if (!inChapter) SetMetaField(frame.ID, strData, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version);
                         else
                         {
                             chapter = tagData.Chapters[^1];
-                            switch (Frame.ID)
+                            switch (frame.ID)
                             {
                                 case "TIT2": chapter.Title = strData; break;
                                 case "TIT3": chapter.Subtitle = strData; break;
@@ -1095,7 +1099,7 @@ namespace ATL.AudioData.IO
                         int picSize = dataSize - (int)(source.Position - position);
 
                         byte[] data;
-                        if (tag.UsesUnsynchronisation)
+                        if (isUnsynchronized)
                         {
                             data = decodeUnsynchronizedStream(source, picSize);
                         }
@@ -1122,7 +1126,7 @@ namespace ATL.AudioData.IO
             }
             else // Data size <= 0 or larger than file
             {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Frame " + Frame.ID + " has an invalid size : " + dataSize);
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Frame " + frame.ID + " has an invalid size : " + dataSize);
                 return false;
             }
 
