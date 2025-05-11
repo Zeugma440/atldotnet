@@ -39,6 +39,8 @@ namespace ATL.AudioData.IO
 
         private static readonly byte[] ILST_CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
 
+        private static readonly ISet<string> VALID_AUDIO_DESCRIPTORS = new HashSet<string> { "mp4a", "enca", "samr", "alac", "sawb", "Opus", "ec-3" };
+
         private const string ZONE_MP4_NOUDTA = "noudta";                // Placeholder for missing 'udta' atom
         private const string ZONE_MP4_NOMETA = "nometa";                // Placeholder for missing 'meta' atom
         private const string ZONE_MP4_ILST = "ilst";                    // When editing a file with an existing 'meta' atom
@@ -840,7 +842,7 @@ namespace ATL.AudioData.IO
                 string descFormat = Utils.Latin1Encoding.GetString(data32);
 
                 // Descriptors for audio
-                if (descFormat.Equals("mp4a") || descFormat.Equals("enca") || descFormat.Equals("samr") || descFormat.Equals("alac") || descFormat.Equals("sawb") || descFormat.Equals("Opus"))
+                if (VALID_AUDIO_DESCRIPTORS.Contains(descFormat))
                 {
                     source.Seek(6, SeekOrigin.Current); // SampleEntry / 6-byte reserved zone set to zero
                     source.Seek(2, SeekOrigin.Current); // SampleEntry / Data reference index
