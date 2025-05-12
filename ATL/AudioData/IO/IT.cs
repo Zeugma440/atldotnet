@@ -320,7 +320,7 @@ namespace ATL.AudioData.IO
         private void readPatterns(BufferedBinaryReader source, IList<uint> patternPointers)
         {
             ushort nbRows;
-            byte rowNum;
+            ushort rowNum;
             byte what;
             byte maskVariable = 0;
             IList<Event> aRow;
