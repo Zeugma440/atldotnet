@@ -478,6 +478,7 @@ namespace ATL.test.IO.MetaData
                     if (expectedChaps.ContainsKey(chap.StartTime))
                     {
                         found++;
+                        Assert.AreEqual(ChapterInfo.FORMAT.Nero, chap.Format);
                         Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
                         Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
                     }
@@ -599,6 +600,7 @@ namespace ATL.test.IO.MetaData
                     if (expectedChaps.ContainsKey(chap.StartTime))
                     {
                         found++;
+                        Assert.AreEqual(ChapterInfo.FORMAT.Nero, chap.Format);
                         Assert.AreEqual(chap.StartTime, expectedChaps[chap.StartTime].StartTime);
                         Assert.AreEqual(chap.Title, expectedChaps[chap.StartTime].Title);
                     }
@@ -896,6 +898,7 @@ namespace ATL.test.IO.MetaData
                     if (expectedChaps.ContainsKey(chap.StartTime))
                     {
                         found++;
+                        Assert.AreEqual(ChapterInfo.FORMAT.QT, chap.Format);
                         Assert.AreEqual(expectedChaps[chap.StartTime].StartTime, chap.StartTime);
                         Assert.AreEqual(expectedChaps[chap.StartTime].Title, chap.Title);
                     }
@@ -973,6 +976,7 @@ namespace ATL.test.IO.MetaData
                     if (expectedChaps.ContainsKey(chap.StartTime))
                     {
                         found++;
+                        Assert.AreEqual(ChapterInfo.FORMAT.QT, chap.Format);
                         Assert.AreEqual(expectedChaps[chap.StartTime].StartTime, chap.StartTime);
                         Assert.AreEqual(expectedChaps[chap.StartTime].Title, chap.Title);
                         Assert.IsNotNull(chap.Picture);

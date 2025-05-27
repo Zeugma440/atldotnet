@@ -717,6 +717,7 @@ namespace ATL.test.IO.MetaData
                 if (expectedChaps.ContainsKey(chap.StartTime))
                 {
                     found++;
+                    Assert.AreEqual(ChapterInfo.FORMAT.Native, chap.Format);
                     Assert.AreEqual(expectedChaps[chap.StartTime].StartTime, chap.StartTime);
                     Assert.AreEqual(expectedChaps[chap.StartTime].Title, chap.Title);
                     if (expectedChaps[chap.StartTime].Url != null)

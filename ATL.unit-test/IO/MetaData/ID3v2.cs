@@ -98,8 +98,12 @@ namespace ATL.test.IO.MetaData
 
             Assert.IsTrue(theFile.ReadFromFile(true, true));
 
-            Assert.IsNotNull(theFile.ID3v2);
-            Assert.IsTrue(theFile.ID3v2.Exists);
+            IMetaDataIO theMeta = theFile.ID3v2;
+
+            Assert.IsNotNull(theMeta);
+            Assert.IsTrue(theMeta.Exists);
+
+            ((MetaDataHolder)theMeta).tagData.ToMap();
 
             // Supported fields
             Assert.AreEqual("bébé", theFile.ID3v2.Title);

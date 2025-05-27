@@ -304,6 +304,7 @@ namespace ATL.AudioData.IO
                 if (textSample.ChunkOffset > 0)
                 {
                     ChapterInfo chapter = new ChapterInfo();
+                    chapter.Format = ChapterInfo.FORMAT.QT;
 
                     source.Seek(textSample.ChunkOffset + textSample.RelativeOffset, SeekOrigin.Begin);
                     byte[] data = new byte[2];
@@ -1328,6 +1329,7 @@ namespace ATL.AudioData.IO
                         for (int i = 0; i < neroChapterCount; i++)
                         {
                             var chapter = new ChapterInfo();
+                            chapter.Format = ChapterInfo.FORMAT.Nero;
                             tagData.Chapters.Add(chapter);
 
                             if (source.Read(data64, 0, 8) < 8) return;

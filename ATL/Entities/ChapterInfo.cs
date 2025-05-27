@@ -5,6 +5,22 @@
     /// </summary>
     public class ChapterInfo
     {
+        public enum FORMAT
+        {
+            /// <summary>
+            /// MP4 Quicktime chapters
+            /// </summary>
+            QT,
+            /// <summary>
+            /// MP4 Nero Chapters
+            /// </summary>
+            Nero,
+            /// <summary>
+            /// Other native formats (e.g. Vorbis CHAPTER, Matroska Chapters)
+            /// </summary>
+            Native
+        }
+
         /// <summary>
         /// Information describing an URL
         /// </summary>
@@ -60,6 +76,11 @@
             }
         }
 
+
+        /// <summary>
+        /// Format the chapter has been persisted with
+        /// </summary>
+        public FORMAT Format { get; set; }
         /// <summary>
         /// Start time (ms)
         /// NB : Only used when <see cref="UseOffset"/> is false
@@ -133,6 +154,7 @@
         /// </summary>
         public ChapterInfo(uint startTime = 0, string title = "")
         {
+            Format = FORMAT.Native;
             StartTime = startTime;
             EndTime = 0;
             StartOffset = 0;
@@ -152,7 +174,7 @@
         /// <param name="chapter">Structure to copy information from</param>
         public ChapterInfo(ChapterInfo chapter)
         {
-            StartTime = chapter.StartTime; EndTime = chapter.EndTime; StartOffset = chapter.StartOffset; EndOffset = chapter.EndOffset; Title = chapter.Title; Subtitle = chapter.Subtitle; Url = chapter.Url; UniqueID = chapter.UniqueID; UniqueNumericID = chapter.UniqueNumericID;
+            Format = chapter.Format; StartTime = chapter.StartTime; EndTime = chapter.EndTime; StartOffset = chapter.StartOffset; EndOffset = chapter.EndOffset; Title = chapter.Title; Subtitle = chapter.Subtitle; Url = chapter.Url; UniqueID = chapter.UniqueID; UniqueNumericID = chapter.UniqueNumericID;
 
             if (chapter.Url != null) Url = new UrlInfo(chapter.Url);
             if (chapter.Picture != null) Picture = new PictureInfo(chapter.Picture);
