@@ -240,8 +240,14 @@ namespace ATL.AudioData.IO
                 if (frameDataSize > 0)
                 {
                     var frameNameLow = frameName.ToLower();
+                    
+                    PictureInfo.PIC_TYPE picType = decodeAPEPictureType(frameName);
+                    
                     var isPicture = picValuesLower.Contains(frameNameLow) ||
-                                    (frameDataSize > 1000 && !frameNameLow.Contains("lyrics") && !frameNameLow.Equals("logfile"));
+                                    (frameDataSize > 1000 && !frameNameLow.Contains("lyrics") && 
+                                     !frameNameLow.Equals("logfile") &&
+                                     picType != PictureInfo.PIC_TYPE.Unsupported);
+
                     if (!isPicture)
                     {
                         /*
@@ -259,12 +265,10 @@ namespace ATL.AudioData.IO
                     }
                     else // Pictures
                     {
-                        PictureInfo.PIC_TYPE picType = decodeAPEPictureType(frameName);
-
                         var picturePosition = picType.Equals(PictureInfo.PIC_TYPE.Unsupported)
                             ? takePicturePosition(getImplementedTagType(), frameName)
                             : takePicturePosition(picType);
-
+                        
                         if (readTagParams.ReadPictures)
                         {
                             // Description seems to be a null-terminated ANSI string containing 
