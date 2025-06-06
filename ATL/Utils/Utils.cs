@@ -510,7 +510,13 @@ namespace Commons
                 }
             }
 
-            return sb.Length > 0 ? int.Parse(sb.ToString()) : -1;
+            if (sb.Length > 0)
+            {
+                long number = long.Parse(sb.ToString());
+                if (number > int.MaxValue) number = 0;
+                return (int)number;
+            }
+            return -1;
         }
 
         /// <summary>
