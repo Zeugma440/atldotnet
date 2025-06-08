@@ -460,15 +460,16 @@ namespace Commons
         {
             if (string.IsNullOrEmpty(s)) return false;
 
-            foreach (var t in s)
+            for (int i = 0; i < s.Length; i++)
             {
+                char t = s[i];
                 if (t == '.' || t == ',')
                 {
                     if (allowsOnlyIntegers) return false;
                 }
                 else
                 {
-                    if (!(char.IsDigit(t) || (allowsSigned && t == '-'))) return false;
+                    if (!(char.IsDigit(t) || (allowsSigned && 0 == i && t == '-'))) return false;
                 }
             }
 
