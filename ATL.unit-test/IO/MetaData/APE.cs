@@ -72,7 +72,7 @@ namespace ATL.test.IO.MetaData
         [TestMethod]
         public void TagIO_RW_APE_Unsupported_Empty()
         {
-            test_RW_Unsupported_Empty(emptyFile);
+            test_RW_Unsupported_Empty(emptyFile, false);
         }
 
         [TestMethod]

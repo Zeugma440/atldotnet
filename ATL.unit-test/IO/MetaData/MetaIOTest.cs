@@ -635,7 +635,8 @@ namespace ATL.test.IO.MetaData
             if (deleteTempFile && Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
-        public void test_RW_Unsupported_Empty(string fileName, bool deleteTempFile = true)
+        // Test for unsupported metadata fields support (both non-picture and picture)
+        public void test_RW_Unsupported_Empty(string fileName, bool handleUnsupportedPics = true, bool deleteTempFile = true)
         {
             new ConsoleLogger();
 
@@ -652,7 +653,7 @@ namespace ATL.test.IO.MetaData
 
 
             bool handleUnsupportedFields = testData.AdditionalFields != null && testData.AdditionalFields.Count > 0;
-            bool handleUnsupportedPictures = testData.EmbeddedPictures != null && testData.EmbeddedPictures.Count > 0;
+            bool handleUnsupportedPictures = testData.EmbeddedPictures != null && testData.EmbeddedPictures.Count > 0 && handleUnsupportedPics;
             char internationalChar = supportsInternationalChars ? '父' : '!';
 
             // Add new unsupported fields
