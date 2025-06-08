@@ -455,7 +455,7 @@ namespace ATL.AudioData
         {
             var result = GetFromFormat(path, theFormat);
             if (hasID3v2 && !result.GetSupportedMetas().Contains(MetaDataIOFactory.TagType.ID3V2))
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "ATL doesn't support " + result.AudioFormat.Name + " files illegally tagged with ID3v2");
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, result.AudioFormat.Name + " file illegally tagged with ID3v2");
             return result;
         }
 

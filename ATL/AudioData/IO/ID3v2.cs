@@ -68,7 +68,6 @@ namespace ATL.AudioData.IO
 
         private TagInfo tagHeader;
 
-
         // Technical 'shortcut' data
         private static readonly byte[] BOM_UTF16_LE = { 0xFF, 0xFE };
         private static readonly byte[] BOM_UTF16_BE = { 0xFE, 0xFF };
@@ -492,7 +491,7 @@ namespace ATL.AudioData.IO
 
         /// <inheritdoc/>
         // Actually 3 or 4 when strictly applying ID3v2.3 / ID3v2.4 specs, but thanks to TXXX fields, any code is supported
-        public override byte FieldCodeFixedLength => 0; 
+        public override byte FieldCodeFixedLength => 0;
         /// <inheritdoc/>
         protected override bool supportsAdditionalFields => true;
         /// <inheritdoc/>
@@ -699,7 +698,8 @@ namespace ATL.AudioData.IO
                 if (0 == frame.ID[0] + frame.ID[1] + frame.ID[2])
                 {
                     tag.PaddingOffset = initialTagPos;
-                    tag.ActualEnd = StreamUtils.TraversePadding(source);
+                    tag.ActualEnd = readTagParams.ExtraID3v2PaddingDetection ? StreamUtils.TraversePadding(source) :
+                    Math.Min(tag.GetSize(false), StreamUtils.TraversePadding(source));
                 }
                 else // If not, we're in the wrong place
                 {
@@ -1137,7 +1137,6 @@ namespace ATL.AudioData.IO
         private void readFrames(BufferedBinaryReader source, TagInfo tag, long offset, ReadTagParams readTagParams)
         {
             long streamLength = source.Length;
-            int tagSize = tag.GetSize(false);
 
             tag.PaddingOffset = -1;
             tag.ActualEnd = -1;
@@ -1147,7 +1146,7 @@ namespace ATL.AudioData.IO
             source.Seek(tag.HeaderEnd, SeekOrigin.Begin);
             long streamPos = source.Position;
 
-            while (streamPos - offset < tagSize && streamPos < streamLength)
+            while (streamPos - offset < tag.GetSize(false) && streamPos < streamLength)
             {
                 if (!readFrame(source, tag, readTagParams, ref comments)) break;
 
@@ -1180,7 +1179,7 @@ namespace ATL.AudioData.IO
             if (-1 == tag.ActualEnd) // No padding frame has been detected so far
             {
                 // Prod to see if there's padding after the end of the tag
-                if (streamPos + 4 < source.Length && 0 == source.ReadInt32())
+                if (readTagParams.ExtraID3v2PaddingDetection && streamPos + 4 < source.Length && 0 == source.ReadInt32())
                 {
                     tag.PaddingOffset = streamPos;
                     tag.ActualEnd = StreamUtils.TraversePadding(source);

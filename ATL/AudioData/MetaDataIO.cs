@@ -84,6 +84,11 @@ namespace ATL.AudioData.IO
             public bool PrepareForWriting { get; set; }
 
             /// <summary>
+            /// True : read extra padding bytes at the end of ID3v2 block
+            /// </summary>
+            public bool ExtraID3v2PaddingDetection { get; set; }
+
+            /// <summary>
             /// File offset to start reading metadata from (bytes)
             /// </summary>
             public long Offset { get; set; }
@@ -99,6 +104,7 @@ namespace ATL.AudioData.IO
                 ReadAllMetaFrames = readAllMetaFrames;
                 ReadTag = true;
                 PrepareForWriting = false;
+                ExtraID3v2PaddingDetection = true;
                 Offset = 0;
             }
         }
