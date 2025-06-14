@@ -435,9 +435,9 @@ namespace ATL.AudioData.IO
 
         // Specific implementation for rewriting of the TOC after zone removal
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public override async Task<bool> RemoveAsync(Stream s)
+        public override async Task<bool> RemoveAsync(Stream s, WriteTagParams args)
         {
-            bool result = await base.RemoveAsync(s);
+            bool result = await base.RemoveAsync(s, args);
             if (result)
             {
                 int newTocSize = writeCoreToc(s);

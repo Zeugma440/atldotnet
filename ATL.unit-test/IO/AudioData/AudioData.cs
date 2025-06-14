@@ -86,7 +86,7 @@ namespace ATL.test.IO
 
 #pragma warning disable S2699 // Tests should include assertions
         [TestMethod]
-        public void Audio_MP3()
+        public void Audio_Mpeg()
         {
             var initialSetting = ATL.Settings.MP3_parseExactDuration;
             try

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using static ATL.AudioData.IO.MetaDataIO;
 using static ATL.AudioData.MetaDataIOFactory;
 
 namespace ATL.AudioData
@@ -384,7 +385,7 @@ namespace ATL.AudioData
             LogDelegator.GetLocateDelegate()(targetPath);
             theTag.DurationMs = audioDataIO.Duration;
 
-            if (isMetaSupported(tagType))
+            if (isMetaSupported(tagType) || hasMeta(tagType)) // Update supported _and_ present tagging systems
             {
                 try
                 {
@@ -397,7 +398,10 @@ namespace ATL.AudioData
                         handleEmbedder(s, theMetaIO);
 
                         ProgressToken<float> progress = writeProgress?.CreateProgressToken();
-                        result = await theMetaIO.WriteAsync(s, theTag, progress);
+                        var args = new WriteTagParams() {
+                            ExtraID3v2PaddingDetection = isMetaSupported(TagType.ID3V2)
+                        };
+                        result = await theMetaIO.WriteAsync(s, theTag, args, progress);
                         if (result) setMeta(theMetaIO);
                     }
                     finally
@@ -453,7 +457,11 @@ namespace ATL.AudioData
                     result = read(s, false, false, true);
 
                     IMetaDataIO metaIO = getMeta(tagType);
-                    if (metaIO.Exists) await metaIO.RemoveAsync(s);
+                    var args = new WriteTagParams()
+                    {
+                        ExtraID3v2PaddingDetection = isMetaSupported(TagType.ID3V2)
+                    };
+                    if (metaIO.Exists) await metaIO.RemoveAsync(s, args);
                 }
                 finally
                 {

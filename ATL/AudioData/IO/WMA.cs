@@ -1067,14 +1067,14 @@ namespace ATL.AudioData.IO
 
         // Specific implementation for conservation of non-WM/xxx fields
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public override async Task<bool> RemoveAsync(Stream s)
+        public override async Task<bool> RemoveAsync(Stream s, WriteTagParams args)
         {
             if (Settings.ASF_keepNonWMFieldsWhenRemovingTag)
             {
                 TagData tag = prepareRemove();
-                return await WriteAsync(s, tag);
+                return await WriteAsync(s, tag, args);
             }
-            return await base.RemoveAsync(s);
+            return await base.RemoveAsync(s, args);
         }
 
         private TagData prepareRemove()

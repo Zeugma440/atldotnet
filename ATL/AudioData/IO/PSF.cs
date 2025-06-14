@@ -478,13 +478,13 @@ namespace ATL.AudioData.IO
 
         // Specific implementation for conservation of fields that are required for playback
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public override async Task<bool> RemoveAsync(Stream s)
+        public override async Task<bool> RemoveAsync(Stream s, WriteTagParams args)
         {
             TagData tag = prepareRemove();
 
             s.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
-            return await WriteAsync(s, tag);
+            return await WriteAsync(s, tag, args);
         }
 
         private TagData prepareRemove()

@@ -1,6 +1,7 @@
 using ATL.AudioData.IO;
 using System.IO;
 using System.Threading.Tasks;
+using static ATL.AudioData.IO.MetaDataIO;
 
 namespace ATL.AudioData
 {
@@ -54,9 +55,10 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="s">Stream for the resource to edit</param>
         /// <param name="tag">Tag information to be added</param>
+        /// <param name="args">Parameters to use</param>
         /// <param name="writeProgress">Progress to be updated during write operations</param>
         /// <returns>true if the operation suceeded; false if not</returns>
-        bool Write(Stream s, TagData tag, ProgressToken<float> writeProgress = null);
+        bool Write(Stream s, TagData tag, WriteTagParams args, ProgressToken<float> writeProgress = null);
 
         /// <summary>
         /// Add the specified information to current tag information (async variant)
@@ -65,23 +67,26 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="s">Stream for the resource to edit</param>
         /// <param name="tag">Tag information to be added</param>
+        /// <param name="args">Parameters to use</param>
         /// <param name="writeProgress">Progress to be updated during write operations</param>
         /// <returns>true if the operation suceeded; false if not</returns>
-        Task<bool> WriteAsync(Stream s, TagData tag, ProgressToken<float> writeProgress = null);
+        Task<bool> WriteAsync(Stream s, TagData tag, WriteTagParams args, ProgressToken<float> writeProgress = null);
 
         /// <summary>
         /// Remove current tag (direct call variant)
         /// </summary>
         /// <param name="s">Stream for the resource to edit</param>
+        /// <param name="args">Parameters to use</param>
         /// <returns>true if the operation suceeded; false if not</returns>
-        bool Remove(Stream s);
+        bool Remove(Stream s, WriteTagParams args);
 
         /// <summary>
         /// Remove current tag (async variant)
         /// </summary>
         /// <param name="s">Stream for the resource to edit</param>
+        /// <param name="args">Parameters to use</param>
         /// <returns>true if the operation suceeded; false if not</returns>
-        Task<bool> RemoveAsync(Stream s);
+        Task<bool> RemoveAsync(Stream s, WriteTagParams args);
 
         /// <summary>
         /// Clear all metadata

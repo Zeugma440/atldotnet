@@ -1808,6 +1808,8 @@ namespace ATL.AudioData.IO
             if (readTagParams is null) throw new ArgumentNullException(nameof(readTagParams));
 
             resetData();
+            // ID3v2 isn't supported but some files can contain it anyway (illegal tagging)
+            source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             if (recognizeHeaderType(source)) return readMP4(source, readTagParams);
             else

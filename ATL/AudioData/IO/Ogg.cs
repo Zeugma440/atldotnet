@@ -898,7 +898,7 @@ namespace ATL.AudioData.IO
         //  - tag spans over multiple pages, each having its own header
         //  - last page may include whole or part of Vorbis Setup header
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public async Task<bool> WriteAsync(Stream s, TagData tag, ProgressToken<float> writeProgress = null)
+        public async Task<bool> WriteAsync(Stream s, TagData tag, WriteTagParams args, ProgressToken<float> writeProgress = null)
         {
             bool result = true;
             int writtenPages;
@@ -916,18 +916,18 @@ namespace ATL.AudioData.IO
                 {
                     await memStream.WriteAsync(VORBIS_COMMENT_ID, 0, VORBIS_COMMENT_ID.Length);
                     vorbisTag.switchOggBehaviour();
-                    await vorbisTag.WriteAsync(memStream, tag);
+                    await vorbisTag.WriteAsync(memStream, tag, args);
                 }
                 else if (CONTENTS_OPUS == contents)
                 {
                     await memStream.WriteAsync(OPUS_TAG_ID, 0, OPUS_TAG_ID.Length);
                     vorbisTag.switchOggBehaviour();
-                    await vorbisTag.WriteAsync(memStream, tag);
+                    await vorbisTag.WriteAsync(memStream, tag, args);
                 }
                 else if (CONTENTS_SPEEX == contents)
                 {
                     vorbisTag.switchFlacBehaviour();
-                    await vorbisTag.WriteAsync(memStream, tag);
+                    await vorbisTag.WriteAsync(memStream, tag, args);
                 }
                 else if (CONTENTS_FLAC == contents)
                 {
@@ -1149,10 +1149,10 @@ namespace ATL.AudioData.IO
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public async Task<bool> RemoveAsync(Stream s)
+        public async Task<bool> RemoveAsync(Stream s, WriteTagParams args)
         {
             TagData tag = vorbisTag.GetDeletionTagData();
-            return await WriteAsync(s, tag);
+            return await WriteAsync(s, tag, args);
         }
 
         public void SetEmbedder(IMetaDataEmbedder embedder)

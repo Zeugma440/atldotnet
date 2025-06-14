@@ -1308,11 +1308,11 @@ namespace ATL.AudioData.IO
 
         /// <inheritdoc/>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public override async Task<bool> RemoveAsync(Stream s)
+        public override async Task<bool> RemoveAsync(Stream s, WriteTagParams args)
         {
             // Overriding this is mandatory as we need SeekHead to be updated after metadata have been removed
             TagData tag = prepareRemove();
-            return await WriteAsync(s, tag);
+            return await WriteAsync(s, tag, args);
         }
 
         // Create an empty tag for integration

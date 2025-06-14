@@ -279,7 +279,7 @@ namespace ATL.AudioData.IO
 
         // NB : This only works if writeVorbisTag is called _before_ writePictures, since tagData fusion is done by vorbisTag.Write
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public async Task<bool> WriteAsync(Stream s, TagData tag, ProgressToken<float> writeProgress = null)
+        public async Task<bool> WriteAsync(Stream s, TagData tag, WriteTagParams args, ProgressToken<float> writeProgress = null)
         {
             Tuple<bool, TagData> results = prepareWrite(s, tag);
 
@@ -385,7 +385,7 @@ namespace ATL.AudioData.IO
             w.Write(new byte[] { 0, 0, 0 }, 0, 3); // Placeholder for 24-bit integer that will be rewritten at the end of the method
 
             var dataPos = w.Position;
-            int writtenFields = vorbisTag.Write(w, tag);
+            int writtenFields = vorbisTag.Write(w, tag, new WriteTagParams());
 
             var finalPos = w.Position;
             w.Seek(sizePos, SeekOrigin.Begin);
@@ -479,7 +479,7 @@ namespace ATL.AudioData.IO
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public async Task<bool> RemoveAsync(Stream s)
+        public async Task<bool> RemoveAsync(Stream s, WriteTagParams args)
         {
             long cumulativeDelta = 0;
 
