@@ -666,8 +666,15 @@ namespace ATL.AudioData.IO
             avgBitrate = FirstFrame.BitRate;
             AudioDataOffset = FirstFrame.Offset;
 
-            if (Settings.MP3_parseExactDuration) AudioDataSize = parseExactAudioDataSize(reader);
-            else AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
+            AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
+            if (Settings.MP3_parseExactDuration)
+            {
+                var altSize = parseExactAudioDataSize(reader);
+                // If too much difference between the two, take the longest
+                // (might be a file with multiple streams stitched back to back)
+                if (AudioDataSize < altSize * 1.5) AudioDataSize = altSize;
+            }
+
 
             return true;
         }
