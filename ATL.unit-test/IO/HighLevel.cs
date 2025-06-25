@@ -1196,13 +1196,14 @@ namespace ATL.test.IO
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/ID3v2.4-SYLT_cn.mp3");
             Track t = new Track(testFileLocation);
 
-            Assert.IsTrue(t.Lyrics.SynchronizedLyrics.Count > 0);
+            Assert.IsTrue(t.Lyrics.Count > 0);
+            Assert.IsTrue(t.Lyrics[0].SynchronizedLyrics.Count > 0);
 
-            t.Lyrics = null;
+            t.Lyrics[0].SynchronizedLyrics = null;
             t.Save();
 
             t = new Track(testFileLocation);
-            Assert.IsTrue(0 == t.Lyrics.SynchronizedLyrics.Count);
+            Assert.IsTrue(0 == t.Lyrics.Count);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -1212,13 +1213,29 @@ namespace ATL.test.IO
             testFileLocation = TestUtils.CopyAsTempTestFile("MP3/ID3v2.4-USLT_JP_eng.mp3");
             t = new Track(testFileLocation);
 
-            Assert.IsTrue(t.Lyrics.UnsynchronizedLyrics.Length > 0);
+            Assert.IsTrue(t.Lyrics.Count > 0);
+
+            t.Lyrics[0].UnsynchronizedLyrics = null;
+            t.Save();
+
+            t = new Track(testFileLocation);
+            Assert.IsTrue(0 == t.Lyrics.Count);
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+
+
+            // 3- Everything
+            testFileLocation = TestUtils.CopyAsTempTestFile("MP3/ID3v2.4-USLT_JP_eng.mp3");
+            t = new Track(testFileLocation);
+
+            Assert.IsTrue(t.Lyrics.Count > 0);
 
             t.Lyrics = null;
             t.Save();
 
             t = new Track(testFileLocation);
-            Assert.IsTrue(0 == t.Lyrics.UnsynchronizedLyrics.Length);
+            Assert.IsTrue(0 == t.Lyrics.Count);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -1236,15 +1253,20 @@ namespace ATL.test.IO
             string testFileLocation = TestUtils.CopyAsTempTestFile("OGG/empty.ogg");
             Track t = new Track(testFileLocation);
 
-            t.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(1000, "aaa"));
-            t.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(2000, "bbb"));
-            t.Lyrics.UnsynchronizedLyrics = "some stuff";
+            LyricsInfo info = new LyricsInfo();
+            IList<LyricsInfo.LyricsPhrase> synchedLyrics = new List<LyricsInfo.LyricsPhrase>();
+            info.SynchronizedLyrics = synchedLyrics;
+            synchedLyrics.Add(new LyricsInfo.LyricsPhrase(1000, "aaa"));
+            synchedLyrics.Add(new LyricsInfo.LyricsPhrase(2000, "bbb"));
+            info.UnsynchronizedLyrics = "some stuff";
+
+            t.Lyrics.Add(info);
 
             t.Save();
 
             t = new Track(testFileLocation);
-            Assert.IsTrue(0 == t.Lyrics.UnsynchronizedLyrics.Length);
-            Assert.IsTrue(2 == t.Lyrics.SynchronizedLyrics.Count);
+            Assert.IsTrue(0 == t.Lyrics[0].UnsynchronizedLyrics.Length);
+            Assert.IsTrue(2 == t.Lyrics[0].SynchronizedLyrics.Count);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

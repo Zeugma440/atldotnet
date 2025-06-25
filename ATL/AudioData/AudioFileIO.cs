@@ -114,12 +114,28 @@ namespace ATL.AudioData
                 }
             }
 
-            if (result.Lyrics != null && result.Lyrics.SynchronizedLyrics.Count > 0)
+            if (result.Lyrics != null)
             {
-                foreach (LyricsPhrase phrase in result.Lyrics.SynchronizedLyrics)
+                foreach (LyricsInfo lyrics in result.Lyrics)
                 {
-                    if (phrase.TimestampMs > audioData.Duration)
-                        LogDelegator.GetLogDelegate()(Log.LV_INFO, "Lyrics phrase " + phrase.Text + " : start timestamp goes beyond file duration !");
+                    foreach (LyricsPhrase phrase in lyrics.SynchronizedLyrics)
+                    {
+                        if (phrase.TimestampStart > audioData.Duration)
+                            LogDelegator.GetLogDelegate()(Log.LV_INFO, "Lyrics phrase " + phrase.Text + " : start timestamp goes beyond file duration !");
+
+                        if (phrase.TimestampEnd > audioData.Duration)
+                            LogDelegator.GetLogDelegate()(Log.LV_INFO, "Lyrics phrase " + phrase.Text + " : end timestamp goes beyond file duration !");
+
+                        if (phrase.Beats != null)
+                            foreach (LyricsPhrase beat in phrase.Beats)
+                            {
+                                if (beat.TimestampStart < phrase.TimestampStart && phrase.TimestampEnd > -1 && beat.TimestampStart > phrase.TimestampEnd)
+                                    LogDelegator.GetLogDelegate()(Log.LV_INFO, "Lyrics beat " + beat.Text + " : start timestamp is out of phrase boundaries !");
+
+                                if (beat.TimestampEnd > -1 && beat.TimestampEnd < phrase.TimestampStart && phrase.TimestampEnd > -1 && beat.TimestampEnd > phrase.TimestampEnd)
+                                    LogDelegator.GetLogDelegate()(Log.LV_INFO, "Lyrics beat " + beat.Text + " : end timestamp is out of phrase boundaries !");
+                            }
+                    }
                 }
             }
 

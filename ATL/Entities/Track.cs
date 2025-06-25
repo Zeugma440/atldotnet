@@ -347,8 +347,7 @@ namespace ATL
         /// <summary>
         /// Synchronized and unsynchronized lyrics
         /// </summary>
-        public LyricsInfo Lyrics { get; set; }
-        private LyricsInfo initialLyrics; // Initial field, used to identify removal
+        public IList<LyricsInfo> Lyrics { get; set; }
 
         /// <summary>
         /// Contains any other metadata field that is not represented by a getter in the above interface
@@ -560,8 +559,13 @@ namespace ATL
 
             Chapters = metadata.Chapters;
             ChaptersTableDescription = Utils.ProtectValue(metadata.ChaptersTableDescription);
-            Lyrics = metadata.Lyrics;
-            initialLyrics = metadata.Lyrics;
+
+            // Deep copy
+            Lyrics = new List<LyricsInfo>();
+            foreach (LyricsInfo l in metadata.Lyrics)
+            {
+                Lyrics.Add(new LyricsInfo(l));
+            }
 
             // Deep copy
             AdditionalFields = new Dictionary<string, string>();
@@ -658,10 +662,13 @@ namespace ATL
                 result.Chapters.Add(new ChapterInfo(chapter));
             }
 
-            if (Lyrics != null) result.Lyrics = new LyricsInfo(Lyrics);
-            else if (initialLyrics != null)
+            result.Lyrics = new List<LyricsInfo>();
+            if (Lyrics != null)
             {
-                result.Lyrics = LyricsInfo.ForRemoval();
+                foreach (LyricsInfo lyrics in Lyrics)
+                {
+                    result.Lyrics.Add(new LyricsInfo(lyrics));
+                }
             }
 
             foreach (string s in AdditionalFields.Keys)
@@ -1054,7 +1061,10 @@ namespace ATL
                 foreach (var chap in Chapters) t.Chapters.Add(new ChapterInfo(chap));
             t.ChaptersTableDescription = ChaptersTableDescription;
 
-            if (Lyrics != null) t.Lyrics = new LyricsInfo(Lyrics);
+            t.Lyrics ??= new List<LyricsInfo>();
+            t.Lyrics.Clear();
+            if (Lyrics != null)
+                foreach (var l in Lyrics) t.Lyrics.Add(new LyricsInfo(l));
             else t.Lyrics = null;
 
             t.AdditionalFields ??= new Dictionary<string, string>();

@@ -20,10 +20,11 @@ namespace ATL.test.IO
             referencePic.ComputePicHash();
             PictureInfo picture1 = referencePic;
             track.EmbeddedPictures.Add(picture1);
-            LyricsInfo lyrics = new LyricsInfo
+            LyricsInfo info = new LyricsInfo
             {
                 UnsynchronizedLyrics = "lalala"
             };
+            var lyrics = new List<LyricsInfo>() { info };
             track.Lyrics = lyrics;
 
             // Test initial file is empty
@@ -34,7 +35,7 @@ namespace ATL.test.IO
             Assert.AreEqual(0, track2.Year);
             Assert.AreEqual(0, track2.AdditionalFields.Count);
             Assert.AreEqual(0, track2.EmbeddedPictures.Count);
-            Assert.AreEqual(false, track2.Lyrics.Exists());
+            Assert.AreEqual(false, track2.Lyrics.Count > 0);
 
             // Test in-memory data after copy
             track.CopyMetadataTo(track2);
@@ -53,7 +54,7 @@ namespace ATL.test.IO
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
-        private void testCopiedMetadata(Track track, PictureInfo refPic, LyricsInfo refLyrics)
+        private void testCopiedMetadata(Track track, PictureInfo refPic, IList<LyricsInfo> refLyrics)
         {
             Assert.AreEqual("aaa", track.Title);
             Assert.AreEqual(1997, track.Year);
@@ -63,7 +64,11 @@ namespace ATL.test.IO
             Assert.AreEqual(1, track.EmbeddedPictures.Count);
             PictureInfo image = track.EmbeddedPictures[0];
             Assert.AreEqual(refPic.PictureHash, image.ComputePicHash());
-            Assert.AreEqual(refLyrics.UnsynchronizedLyrics, track.Lyrics.UnsynchronizedLyrics);
+            Assert.AreEqual(refLyrics.Count, track.Lyrics.Count);
+            for (int i = 0; i < refLyrics.Count; i++)
+            {
+                Assert.AreEqual(refLyrics[i].UnsynchronizedLyrics, track.Lyrics[i].UnsynchronizedLyrics);
+            }
         }
     }
 }

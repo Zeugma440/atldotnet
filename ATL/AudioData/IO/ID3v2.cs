@@ -495,6 +495,8 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         protected override bool supportsAdditionalFields => true;
         /// <inheritdoc/>
+        protected override bool supportsSynchronizedLyrics => true;
+        /// <inheritdoc/>
         protected override bool supportsPictures => true;
 
 
@@ -796,9 +798,12 @@ namespace ATL.AudioData.IO
                 }
                 else if (frame.ID.StartsWith("USL") || frame.ID.StartsWith("ULT"))
                 {
-                    tagData.Lyrics ??= new LyricsInfo();
-                    tagData.Lyrics.LanguageCode = structure.LanguageCode;
-                    tagData.Lyrics.Description = structure.ContentDescriptor;
+                    tagData.Lyrics ??= new List<LyricsInfo>();
+                    LyricsInfo info = new LyricsInfo();
+                    tagData.Lyrics.Add(info);
+                    info.LanguageCode = structure.LanguageCode;
+                    info.Description = structure.ContentDescriptor;
+                    info.Format = LyricsInfo.LyricsFormat.UNSYNCHRONIZED;
                     inLyrics = true;
                 }
 
@@ -807,10 +812,12 @@ namespace ATL.AudioData.IO
             else if (frame.ID.StartsWith("SYL")) // Synch'ed lyrics
             {
                 RichStructure structure = readSynchedLyricsStructure(source, m_tagVersion, encodingCode, frameEncoding);
-                tagData.Lyrics ??= new LyricsInfo();
-                tagData.Lyrics.LanguageCode = structure.LanguageCode;
-                tagData.Lyrics.Description = structure.ContentDescriptor;
-                tagData.Lyrics.ContentType = (LyricsInfo.LyricsType)structure.ContentType;
+                tagData.Lyrics ??= new List<LyricsInfo>();
+                LyricsInfo info = new LyricsInfo();
+                tagData.Lyrics.Add(info);
+                info.LanguageCode = structure.LanguageCode;
+                info.Description = structure.ContentDescriptor;
+                info.ContentType = (LyricsInfo.LyricsType)structure.ContentType;
                 inLyrics = true;
 
                 dataSize -= structure.Size;
@@ -940,9 +947,11 @@ namespace ATL.AudioData.IO
                     {
                         long initPos = source.Position;
                         long remainingData = dataSize - (source.Position - initPos);
+
+                        LyricsInfo info = tagData.Lyrics[^1];
                         while (remainingData > 0)
                         {
-                            tagData.Lyrics.SynchronizedLyrics.Add(readLyricsPhrase(source, frameEncoding));
+                            info.SynchronizedLyrics.Add(readLyricsPhrase(source, frameEncoding));
                             remainingData = dataSize - (source.Position - initPos);
                         }
                         strData = "";
@@ -1490,7 +1499,8 @@ namespace ATL.AudioData.IO
             // Lyrics
             if (tag.Lyrics != null)
             {
-                nbFrames += writeLyrics(w, tag.Lyrics, tagEncoding);
+                foreach (LyricsInfo lyricsInfo in tag.Lyrics)
+                    nbFrames += writeLyrics(w, lyricsInfo, tagEncoding);
             }
 
             // Other textual fields
@@ -1703,12 +1713,12 @@ namespace ATL.AudioData.IO
         {
             int result = 0;
 
-            if (lyrics.UnsynchronizedLyrics.Length > 0)
+            if (lyrics.UnsynchronizedLyrics != null && lyrics.UnsynchronizedLyrics.Length > 0)
             {
                 writeTextFrame(writer, "USLT", lyrics.UnsynchronizedLyrics, tagEncoding, lyrics.LanguageCode, lyrics.Description);
                 result++;
             }
-            if (lyrics.SynchronizedLyrics.Count > 0)
+            if (lyrics.SynchronizedLyrics != null && lyrics.SynchronizedLyrics.Count > 0)
             {
                 writeSynchedLyrics(writer, lyrics, tagEncoding);
                 result++;
@@ -1746,7 +1756,7 @@ namespace ATL.AudioData.IO
                 w.Write((byte)10); // Emulate SyltEdit's behaviour that seems to be the de facto standard
                 w.Write(tagEncoding.GetBytes(phrase.Text));
                 w.Write(getNullTerminatorFromEncoding(tagEncoding));
-                w.Write(StreamUtils.EncodeBEInt32(phrase.TimestampMs));
+                w.Write(StreamUtils.EncodeBEInt32(phrase.TimestampStart));
             }
 
             // Go back to frame size location to write its actual size 

@@ -211,6 +211,11 @@ namespace ATL.AudioData.IO
         protected virtual bool supportsAdditionalFields => false;
 
         /// <summary>
+        /// Indicate if the tagging system supports synchronized lyrics
+        /// </summary>
+        protected virtual bool supportsSynchronizedLyrics => false;
+
+        /// <summary>
         /// Encode the given DateTime for the current tagging format
         /// </summary>
         public virtual string EncodeDate(DateTime date)
@@ -550,14 +555,11 @@ namespace ATL.AudioData.IO
             }
 
             // Give engine something to work with if the tag is really empty
-            if (!Exists && 0 == Zones.Count)
-            {
-                structureHelper.AddZone(0, 0);
-            }
+            if (!Exists && 0 == Zones.Count) structureHelper.AddZone(0, 0);
 
             // Merge existing information + new tag information
-            var dataToWrite = new TagData(tagData);
-            dataToWrite.IntegrateValues(tag, supportsPictures, supportsAdditionalFields);
+            var dataToWrite = new TagData(tagData, supportsSynchronizedLyrics);
+            dataToWrite.IntegrateValues(tag, supportsPictures, supportsAdditionalFields, supportsSynchronizedLyrics);
             dataToWrite.Cleanup();
 
             preprocessWrite(dataToWrite);

@@ -177,17 +177,20 @@ namespace ATL.test.CodeSnippets
         {
             Track theFile = new Track(audioFilePath);
 
-            theFile.Lyrics = new LyricsInfo();
-            theFile.Lyrics.LanguageCode = "eng";
-            theFile.Lyrics.Description = "song";
+            theFile.Lyrics = new List<LyricsInfo>();
+            LyricsInfo info = new LyricsInfo();
+            theFile.Lyrics.Add(info);
+
+            info.LanguageCode = "eng";
+            info.Description = "song";
 
             // Option A : Unsynchronized lyrics
-            theFile.Lyrics.UnsynchronizedLyrics = "I'm the one\r\n中を";
+            info.UnsynchronizedLyrics = "I'm the one\r\n中を";
 
             // Option B : Synchronized lyrics
-            theFile.Lyrics.ContentType = LyricsInfo.LyricsType.LYRICS;
-            theFile.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(12000, "I'm the one")); // 12s timestamp
-            theFile.Lyrics.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase("00:00:45", "中を"));   // 45s timestamp
+            info.ContentType = LyricsInfo.LyricsType.LYRICS;
+            info.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase(12000, "I'm the one")); // 12s timestamp
+            info.SynchronizedLyrics.Add(new LyricsInfo.LyricsPhrase("00:00:45", "中を"));   // 45s timestamp
 
             // Persists the chapters
             theFile.Save();
@@ -196,10 +199,13 @@ namespace ATL.test.CodeSnippets
             theFile = new Track(audioFilePath);
 
             // Display lyrics
-            System.Console.WriteLine(theFile.Lyrics.UnsynchronizedLyrics);
-            foreach (LyricsInfo.LyricsPhrase phrase in theFile.Lyrics.SynchronizedLyrics)
+            foreach (LyricsInfo lyrics in theFile.Lyrics)
             {
-                System.Console.WriteLine("[" + Utils.EncodeTimecode_ms(phrase.TimestampMs) + "] " + phrase.Text);
+                System.Console.WriteLine(lyrics.UnsynchronizedLyrics);
+                foreach (LyricsInfo.LyricsPhrase phrase in lyrics.SynchronizedLyrics)
+                {
+                    System.Console.WriteLine("[" + Utils.EncodeTimecode_ms(phrase.TimestampStart) + "] " + phrase.Text);
+                }
             }
         }
 

@@ -699,13 +699,17 @@ namespace ATL.AudioData
         }
 
         /// <inheritdoc/>
-        public LyricsInfo Lyrics
+        public IList<LyricsInfo> Lyrics
         {
             get
             {
-                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.Lyrics != null && r.Lyrics.Exists());
-                if (reader != null) return new LyricsInfo(reader.Lyrics);
-                return new LyricsInfo();
+                IList<LyricsInfo> result = new List<LyricsInfo>();
+
+                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.Lyrics != null && r.Lyrics.Count > 0);
+                if (reader != null)
+                    foreach (LyricsInfo l in reader.Lyrics) result.Add(l);
+
+                return result;
             }
         }
 

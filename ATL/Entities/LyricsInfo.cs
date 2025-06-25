@@ -1,8 +1,10 @@
-﻿using Commons;
+﻿using ATL.Logging;
+using Commons;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ATL
 {
@@ -11,6 +13,9 @@ namespace ATL
     /// </summary>
     public class LyricsInfo
     {
+        // LRC A2 beat pattern
+        private static readonly Lazy<Regex> rxLRCA2Beat = new(() => new Regex("<\\d+:\\d+\\.\\d+>"));
+
         /// <summary>
         /// Type (contents) of lyrics data
         /// NB : Directly inspired by ID3v2 format
@@ -56,52 +61,105 @@ namespace ATL
         }
 
         /// <summary>
+        /// Format of lyrics data
+        /// </summary>
+        public enum LyricsFormat
+        {
+            /// <summary>
+            /// LRC
+            /// </summary>
+            LRC = 0,
+            /// <summary>
+            /// LRC A2
+            /// </summary>
+            LRC_A2 = 1,
+            /// <summary>
+            /// SRT
+            /// </summary>
+            SRT = 2,
+            /// <summary>
+            /// Unsynchronized
+            /// </summary>
+            UNSYNCHRONIZED = 98,
+            /// <summary>
+            /// Other / non supported
+            /// </summary>
+            OTHER = 99
+        }
+
+        /// <summary>
         /// Phrase ("line") inside lyrics
         /// </summary>
         public sealed class LyricsPhrase : IComparable<LyricsPhrase>, IEquatable<LyricsPhrase>
         {
             /// <summary>
-            /// Timestamp of the phrase, in milliseconds
+            /// Start timestamp of the phrase, in milliseconds
             /// </summary>
-            public int TimestampMs { get; }
+            public int TimestampStart { get; }
+            /// <summary>
+            /// End timestamp of the phrase, in milliseconds
+            /// </summary>
+            public int TimestampEnd { get; }
             /// <summary>
             /// Text
             /// </summary>
             public string Text { get; }
+            /// <summary>
+            /// Beats
+            /// </summary>
+            public List<LyricsPhrase> Beats { get; }
 
             /// <summary>
             /// Construct a lyrics phrase from its parts
             /// </summary>
-            /// <param name="timestampMs">Timestamp, in milliseconds</param>
+            /// <param name="timestampStart">Start timestamp, in milliseconds</param>
             /// <param name="text">Text</param>
-            public LyricsPhrase(int timestampMs, string text)
+            /// <param name="timestampEnd">End timestamp, in milliseconds</param>
+            /// <param name="beats">Timed beats (optional)</param>
+            public LyricsPhrase(
+                int timestampStart,
+                string text,
+                int timestampEnd = -1,
+                List<LyricsPhrase> beats = null)
             {
-                TimestampMs = timestampMs;
+                TimestampStart = timestampStart;
+                TimestampEnd = timestampEnd;
                 Text = text;
+                if (beats != null) Beats = beats.Select(b => new LyricsPhrase(b)).ToList();
             }
 
             /// <summary>
             /// Construct a lyrics phrase from its parts
             /// </summary>
-            /// <param name="timestamp">Timestamp, in the form of a timecode
+            /// <param name="timestampStart">Start timestamp, in the form of a timecode
             /// Supported formats : hh:mm, hh:mm:ss.ddd, mm:ss, hh:mm:ss and mm:ss.ddd</param>
             /// <param name="text">Text</param>
-            public LyricsPhrase(string timestamp, string text)
+            /// <param name="timestampEnd">End timestamp, in the form of a timecode</param>
+            /// <param name="beats">Timed beats (optional)</param>
+            public LyricsPhrase(
+                string timestampStart,
+                string text,
+                string timestampEnd = "",
+                List<LyricsPhrase> beats = null)
             {
-                TimestampMs = Utils.DecodeTimecodeToMs(timestamp);
+                TimestampStart = Utils.DecodeTimecodeToMs(timestampStart);
+                TimestampEnd = Utils.DecodeTimecodeToMs(timestampEnd);
                 Text = text;
+                if (beats != null) Beats = beats.Select(b => new LyricsPhrase(b)).ToList();
             }
-            
+
             /// <summary>
             /// Construct a lyrics phrase by copying data from the given LyricsPhrase object
             /// </summary>
             /// <param name="phrase">Object to copy data from</param>
             public LyricsPhrase(LyricsPhrase phrase)
             {
-                TimestampMs = phrase.TimestampMs;
+                TimestampStart = phrase.TimestampStart;
+                TimestampEnd = phrase.TimestampEnd;
                 Text = phrase.Text;
+                if (phrase.Beats != null) Beats = phrase.Beats.Select(b => new LyricsPhrase(b)).ToList();
             }
-            
+
             /// <summary>
             /// Compares this with other
             /// </summary>
@@ -140,13 +198,18 @@ namespace ATL
             /// </summary>
             /// <param name="toCompare">The LyricsPhrase object to compare</param>
             /// <returns>True if equals, else false</returns>
-            public bool Equals(LyricsPhrase toCompare) => !ReferenceEquals(toCompare, null) && TimestampMs == toCompare.TimestampMs && Text == toCompare.Text;
+            public bool Equals(LyricsPhrase toCompare) => !ReferenceEquals(toCompare, null)
+                && TimestampStart == toCompare.TimestampStart
+                && TimestampEnd == toCompare.TimestampEnd
+                && Text == toCompare.Text
+                && (Beats == toCompare.Beats
+                || Beats.Count == toCompare.Beats.Count); // TODO do better than that
 
             /// <summary>
             /// Gets a hash code for the object
             /// </summary>
             /// <returns>The object's hash code</returns>
-            public override int GetHashCode() => TimestampMs ^ Text.GetHashCode();
+            public override int GetHashCode() => TimestampStart ^ Text.GetHashCode();
 
             /// <summary>
             /// Compares two LyricsPhrase objects by equals
@@ -184,7 +247,7 @@ namespace ATL
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a is greater than b, else false</returns>
-            public static bool operator <(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !ReferenceEquals(b, null) && a.TimestampMs < b.TimestampMs && a.Text.CompareTo(b.Text) < 0;
+            public static bool operator <(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !ReferenceEquals(b, null) && a.TimestampStart < b.TimestampStart && a.Text.CompareTo(b.Text) < 0;
 
             /// <summary>
             /// Compares two LyricsPhrase objects by superior
@@ -192,7 +255,7 @@ namespace ATL
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a is less than b, else false</returns>
-            public static bool operator >(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !ReferenceEquals(b, null) && a.TimestampMs > b.TimestampMs && a.Text.CompareTo(b.Text) > 0;
+            public static bool operator >(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !ReferenceEquals(b, null) && a.TimestampStart > b.TimestampStart && a.Text.CompareTo(b.Text) > 0;
 
             /// <summary>
             /// Compares two LyricsPhrase objects by inferior-or-equals
@@ -200,7 +263,7 @@ namespace ATL
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a is greater than b, else false</returns>
-            public static bool operator <=(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !ReferenceEquals(b, null) && a.TimestampMs <= b.TimestampMs && a.Text.CompareTo(b.Text) <= 0;
+            public static bool operator <=(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !ReferenceEquals(b, null) && a.TimestampStart <= b.TimestampStart && a.Text.CompareTo(b.Text) <= 0;
 
             /// <summary>
             /// Compares two LyricsPhrase objects by superior-or-equals
@@ -208,13 +271,17 @@ namespace ATL
             /// <param name="a">The first LyricsPhrase object</param>
             /// <param name="b">The second LyricsPhrase object</param>
             /// <returns>True if a is less than b, else false</returns>
-            public static bool operator >=(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !ReferenceEquals(b, null) && a.TimestampMs >= b.TimestampMs && a.Text.CompareTo(b.Text) >= 0;
+            public static bool operator >=(LyricsPhrase a, LyricsPhrase b) => !ReferenceEquals(a, null) && !ReferenceEquals(b, null) && a.TimestampStart >= b.TimestampStart && a.Text.CompareTo(b.Text) >= 0;
         }
 
         /// <summary>
         /// Type
         /// </summary>
         public LyricsType ContentType { get; set; }
+        /// <summary>
+        /// Format
+        /// </summary>
+        public LyricsFormat Format { get; set; }
         /// <summary>
         /// Description
         /// </summary>
@@ -238,6 +305,7 @@ namespace ATL
         /// <summary>
         /// Indicate if this object is marked for removal
         /// </summary>
+        // TODO maintain ??
         public bool IsMarkedForRemoval { get; private set; }
 
 
@@ -265,6 +333,7 @@ namespace ATL
             LanguageCode = "";
             UnsynchronizedLyrics = "";
             ContentType = LyricsType.LYRICS;
+            Format = LyricsFormat.OTHER;
             SynchronizedLyrics = new List<LyricsPhrase>();
             Metadata = new Dictionary<string, string>();
         }
@@ -279,7 +348,15 @@ namespace ATL
             LanguageCode = info.LanguageCode;
             UnsynchronizedLyrics = info.UnsynchronizedLyrics;
             ContentType = info.ContentType;
-            SynchronizedLyrics = info.SynchronizedLyrics.Select(x => new LyricsPhrase(x)).ToList();
+            Format = info.Format;
+            if (info.SynchronizedLyrics != null)
+            {
+                SynchronizedLyrics = info.SynchronizedLyrics.Select(x => new LyricsPhrase(x)).ToList();
+            }
+            else
+            {
+                SynchronizedLyrics = new List<LyricsPhrase>();
+            }
             Metadata = info.Metadata.ToDictionary(x => x.Key, x => x.Value);
         }
 
@@ -306,17 +383,65 @@ namespace ATL
         }
 
         /// <summary>
-        /// Parse the given unsynchronized LRC string into synchronized lyrics
+        /// Guess and set the format
         /// </summary>
-        public void ParseLRC(string data)
+        public void GuessFormat()
+        {
+            if (Format != LyricsFormat.OTHER) return;
+            if (UnsynchronizedLyrics.Length > 0 && SynchronizedLyrics.Count == 0) Format = LyricsFormat.UNSYNCHRONIZED;
+            else if (SynchronizedLyrics.Count > 0)
+            {
+                if (SynchronizedLyrics.Any(sl => sl.Beats != null && sl.Beats.Count > 0)) Format = LyricsFormat.LRC_A2;
+                else if (Metadata.Count > 0) Format = LyricsFormat.LRC;
+                else
+                {
+                    int prevEndTimestamp = -1;
+                    foreach (LyricsPhrase sl in SynchronizedLyrics)
+                    {
+                        if (prevEndTimestamp > -1 && prevEndTimestamp < sl.TimestampStart)
+                        {
+                            Format = LyricsFormat.SRT;
+                            break;
+                        }
+                        prevEndTimestamp = sl.TimestampEnd;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Parse the given data into lyrics (synchronized and, if nothing is recognized, unsynchronized)
+        /// </summary>
+        /// <param name="data">Data to parse</param>
+        public void Parse(string data)
+        {
+            try
+            {
+                if (data.Contains("[0") && ParseLRC(data)) return;
+                if ((data.Contains("--> 0") || data.Contains("-->0")) && ParseSRT(data)) return;
+            }
+            catch (Exception e)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, e.Message + "\n" + e.StackTrace);
+            }
+            UnsynchronizedLyrics = data;
+            Format = LyricsFormat.UNSYNCHRONIZED;
+        }
+
+        /// <summary>
+        /// Parse the given unsynchronized LRC or LRC A2 string into synchronized lyrics
+        /// </summary>
+        private bool ParseLRC(string data)
         {
             List<string> lines = data.Split('\n').Select(l => l.Trim()).ToList();
+            bool hasLrcA2 = false;
             foreach (string line in lines)
             {
                 int endIndex = line.IndexOf(']');
                 if (endIndex < 0) continue;
                 if (endIndex == line.Length - 1)
                 {
+                    // Metadata
                     int metaIndex = line.IndexOf(':');
                     if (metaIndex < 0) continue;
                     string key = line.Substring(1, metaIndex - 1);
@@ -325,17 +450,101 @@ namespace ATL
                 }
                 else
                 {
-                    string timestamp = line.Substring(1, endIndex - 1);
-                    string lyrics = line.Substring(endIndex + 1);
-                    SynchronizedLyrics.Add(new LyricsPhrase(timestamp, lyrics.Trim()));
+                    // Regular lyrics
+                    string start = line.Substring(1, endIndex - 1);
+                    string lyrics = line.Substring(endIndex + 1).Trim();
+                    LyricsPhrase phrase;
+
+                    // Look for beats (LRC A2)
+                    if (lyrics.Contains('<') && lyrics.Contains('>') && rxLRCA2Beat.Value.Match(lyrics).Success)
+                    {
+                        hasLrcA2 = true;
+                        var beats = new List<LyricsPhrase>();
+                        string[] parts = lyrics.Split('<').Select(s => s.Trim()).ToArray();
+                        foreach (string part in parts)
+                        {
+                            int endIdx = part.IndexOf('>');
+                            if (endIdx < 0) continue;
+                            string beatStart = part.Substring(1, endIdx - 1);
+                            string beatLyrics = part.Substring(endIdx + 1).Trim();
+                            if (0 == beatLyrics.Length)
+                            {
+                                // Timestamp end of last beat
+                                int timestampEnd = Utils.DecodeTimecodeToMs(beatStart);
+                                if (timestampEnd > 0)
+                                {
+                                    // Duplicate with timestamp end
+                                    LyricsPhrase lastBeat = beats[^1];
+                                    lastBeat = new LyricsPhrase(lastBeat.TimestampStart, lastBeat.Text, timestampEnd);
+                                    beats[^1] = lastBeat;
+                                }
+                            }
+                            else beats.Add(new LyricsPhrase(beatStart, beatLyrics));
+                        }
+                        phrase = new LyricsPhrase(start, lyrics, beats: beats);
+                    }
+                    else
+                    {
+                        phrase = new LyricsPhrase(start, lyrics);
+
+                    }
+                    SynchronizedLyrics.Add(phrase);
                 }
+            }
+            if (hasLrcA2) Format = LyricsFormat.LRC_A2; else Format = LyricsFormat.LRC;
+            return true;
+        }
+
+        /// <summary>
+        /// Parse the given unsynchronized SRT string into synchronized lyrics
+        /// </summary>
+        private bool ParseSRT(string data)
+        {
+            List<string> lines = data.Split('\n').Select(l => l.Trim()).ToList();
+            bool insideLyric = false;
+            string start = "";
+            string end = "";
+            StringBuilder text = new StringBuilder();
+            foreach (string line in lines)
+            {
+                if (line.Contains("-->"))
+                {
+                    insideLyric = true;
+                    text.Clear();
+                    int arrowIdx = line.IndexOf("-->");
+                    start = line.Substring(0, arrowIdx - 1).Trim();
+                    end = line.Substring(arrowIdx + 3).Trim();
+                }
+                else if (0 == line.Length)
+                {
+                    insideLyric = false;
+                    SynchronizedLyrics.Add(new LyricsPhrase(start, text.ToString(), end));
+                }
+                else if (insideLyric)
+                {
+                    text.Append(line).Append('\n');
+                }
+            }
+            Format = LyricsFormat.SRT;
+            return true;
+        }
+
+        /// <summary>
+        /// Format synchronized lyrics to a string following Format
+        /// </summary>
+        public string FormatSynch()
+        {
+            switch (Format)
+            {
+                case LyricsFormat.SRT: return FormatSynchToSRT();
+                default: return FormatSynchToLRC();
             }
         }
 
         /// <summary>
-        /// Format Metadata and Synchronized lyrics to LRC block of text
+        /// Format Metadata and Synchronized lyrics to LRC / LRC A2 block of text
         /// </summary>
-        public string FormatSynchToLRC()
+        private string FormatSynchToLRC()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -350,7 +559,47 @@ namespace ATL
             // Lyrics
             foreach (var line in SynchronizedLyrics)
             {
-                sb.Append('[').Append(Utils.EncodeTimecode_ms(line.TimestampMs, true)).Append(']').Append(line.Text).Append('\n');
+                sb.Append('[').Append(Utils.EncodeTimecode_ms(line.TimestampStart, true)).Append(']');
+                if (line.Beats != null && line.Beats.Count > 0)
+                {
+                    // LRC A2
+                    foreach (var beat in line.Beats)
+                    {
+                        sb.Append('<').Append(Utils.EncodeTimecode_ms(beat.TimestampStart, true)).Append('>').Append(beat.Text);
+                        if (beat.TimestampEnd > -1) sb.Append('<').Append(Utils.EncodeTimecode_ms(beat.TimestampStart, true)).Append('>');
+                    }
+                }
+                else
+                {
+                    // Plain LRC
+                    sb.Append(line.Text);
+                }
+                sb.Append('\n');
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Format Metadata and Synchronized lyrics to SRT block of text
+        /// </summary>
+        private string FormatSynchToSRT()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            var index = 1;
+            foreach (var line in SynchronizedLyrics)
+            {
+                // Index
+                sb.Append(index++).Append('\n');
+                // Timecodes
+                sb.Append(Utils.EncodeTimecode_ms(line.TimestampStart, true).Replace('.', ','));
+                sb.Append(" --> ");
+                sb.Append(Utils.EncodeTimecode_ms(line.TimestampEnd, true).Replace('.', ','));
+                sb.Append('\n');
+                // Text
+                sb.Append(line.Text).Append('\n');
+                sb.Append('\n');
             }
 
             return sb.ToString();

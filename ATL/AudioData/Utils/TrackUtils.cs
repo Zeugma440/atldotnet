@@ -11,6 +11,15 @@ namespace ATL.AudioData
     /// </summary>
     internal static class TrackUtils
     {
+        // A number
+        private static readonly Lazy<Regex> rxNumber = new(() => new Regex("\\d+"));
+        // A number with 4 digits
+        private static readonly Lazy<Regex> rxNumber4 = new(() => new Regex("\\d{4}"));
+        // Any continuous sequence of numbers after a "/"
+        private static readonly Lazy<Regex> rxSlashNumbers = new(() => new Regex("/[\\s]*(\\d+)"));
+        // Stars
+        private static readonly Lazy<Regex> rxStars = new(() => new Regex("\\*+"));
+
         /// <summary>
         /// Extract the track number from the given string
         /// </summary>
@@ -18,8 +27,6 @@ namespace ATL.AudioData
         /// <returns>Track number, in integer form; 0 if no track number has been found</returns>
         public static ushort ExtractTrackNumber(string str)
         {
-            // == Optimizations (Regex are too damn expensive to use them lazily)
-
             // Invalid inputs
             if (null == str) return 0;
             str = str.Trim();
@@ -44,9 +51,7 @@ namespace ATL.AudioData
             // == If everything above fails...
 
             // This case covers both single track numbers and (trk/total) formatting
-            Regex regex = new Regex("\\d+");
-
-            Match match = regex.Match(str);
+            Match match = rxNumber.Value.Match(str);
             // First match is directly returned
             if (match.Success)
             {
@@ -64,8 +69,6 @@ namespace ATL.AudioData
         /// <returns>Track number, trimmed and isolated from its total; empty string if nothing found</returns>
         public static string ExtractTrackNumberStr(string str)
         {
-            // == Optimizations (Regex are too damn expensive to use them lazily)
-
             // Invalid inputs
             if (null == str) return "";
             str = str.Trim();
@@ -74,7 +77,7 @@ namespace ATL.AudioData
             // Ignore "total" part if exists
             int delimiterOffset = str.IndexOf('/');
             if (delimiterOffset > -1) str = str.Substring(0, delimiterOffset).Trim();
-            
+
             return str;
         }
 
@@ -85,8 +88,6 @@ namespace ATL.AudioData
         /// <returns>Total track number, in integer form; 0 if no total track number has been found</returns>
         public static ushort ExtractTrackTotal(string str)
         {
-            // == Optimizations (Regex are too damn expensive to use them lazily)
-
             // Invalid inputs
             if (null == str) return 0;
             str = str.Trim();
@@ -122,8 +123,7 @@ namespace ATL.AudioData
 
 
             // == If everything above fails...
-            string pattern = "/[\\s]*(\\d+)"; // Any continuous sequence of numbers after a "/"
-            Match match = Regex.Match(str, pattern);
+            Match match = rxSlashNumbers.Value.Match(str);
             if (match.Success)
             {
                 long number = long.Parse(match.Value);
@@ -156,9 +156,7 @@ namespace ATL.AudioData
             // Exceptional case : rating is stored in the form of stars
             // NB : Having just one star is embarassing, since it falls into the "one-byte-long field" case processed above
             // It won't be interpretated as a star rating, as those are very rare
-            Regex regex = new Regex("\\*+");
-
-            Match match = regex.Match(ratingString.Trim());
+            Match match = rxStars.Value.Match(ratingString.Trim());
             // First match is directly returned
             if (match.Success)
             {
@@ -306,8 +304,6 @@ namespace ATL.AudioData
 		/// <returns>Found year in string form; "" if no year has been found</returns>
 		public static string ExtractStrYear(string str)
         {
-            // == Optimizations (Regex are too damn expensive to use them lazily)
-
             // Invalid inputs
             if (null == str) return "";
             str = str.Trim();
@@ -329,9 +325,7 @@ namespace ATL.AudioData
             }
 
             // == If everything above fails...
-            Regex regex = new Regex("\\d{4}");
-
-            Match match = regex.Match(str.Trim());
+            Match match = rxNumber4.Value.Match(str.Trim());
             // First match is directly returned
             if (match.Success)
             {

@@ -551,9 +551,9 @@ namespace ATL
         }
 
         /// <inheritdoc/>
-        public LyricsInfo Lyrics
+        public IList<LyricsInfo> Lyrics
         {
-            get => tagData.Lyrics != null ? new LyricsInfo(tagData.Lyrics) : new LyricsInfo();
+            get => tagData.Lyrics != null ? new List<LyricsInfo>(tagData.Lyrics) : new List<LyricsInfo>();
             set => tagData.Lyrics = value;
         }
 

@@ -47,7 +47,7 @@ namespace ATL.AudioData.IO
             return Task.FromResult(true);
         }
         /// <inheritdoc/>
-        public bool Read(Stream source, MetaDataIO.ReadTagParams readTagParams)
+        public bool Read(Stream source, ReadTagParams readTagParams)
         {
             throw new NotImplementedException();
         }

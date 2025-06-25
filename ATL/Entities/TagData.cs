@@ -1,6 +1,7 @@
 using ATL.Logging;
 using Commons;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -236,7 +237,7 @@ namespace ATL
         /// <summary>
         /// Lyrics
         /// </summary>
-        public LyricsInfo Lyrics { get; set; }
+        public IList<LyricsInfo> Lyrics { get; set; }
 
 
         /// <summary>
@@ -299,7 +300,8 @@ namespace ATL
         /// Construct a TagData by copying the properties of the given TagData
         /// </summary>
         /// <param name="tagData">TagData to copy properties from</param>
-        public TagData(TagData tagData)
+        /// <param name="supportsSynchronizedLyrics">True if the current tagging system supports synchronized lyrics</param>
+        public TagData(TagData tagData, bool supportsSynchronizedLyrics = false)
         {
             Fields = new Dictionary<Field, string>();
             AdditionalFields = new List<MetaFieldInfo>();
@@ -307,7 +309,7 @@ namespace ATL
             TrackDigitsForLeadingZeroes = tagData.TrackDigitsForLeadingZeroes;
             DiscDigitsForLeadingZeroes = tagData.DiscDigitsForLeadingZeroes;
 
-            IntegrateValues(tagData);
+            IntegrateValues(tagData, supportsSynchronizedLyrics: supportsSynchronizedLyrics);
         }
 
         /// <summary>
@@ -316,7 +318,7 @@ namespace ATL
         public bool Exists()
         {
             if (Chapters != null && Chapters.Count > 0) return true;
-            if (Lyrics != null && Lyrics.Exists()) return true;
+            if (Lyrics != null && Lyrics.Count > 0) return true;
             if (Pictures.Count > 0) return true;
             if (Fields.Count > 0) return true;
             if (AdditionalFields.Count > 0) return true;
@@ -349,19 +351,18 @@ namespace ATL
                 {
                     case Field.LYRICS_UNSYNCH:
                         {
-                            if (null == Lyrics) Lyrics = new LyricsInfo();
-                            if (value.Contains("[0"))
+                            if (null == Lyrics) Lyrics = new List<LyricsInfo>();
+                            LyricsInfo info;
+                            if (0 == Lyrics.Count)
                             {
-                                try
-                                {
-                                    Lyrics.ParseLRC(value);
-                                }
-                                catch (Exception)
-                                {
-                                    Lyrics.UnsynchronizedLyrics = value;
-                                }
+                                info = new LyricsInfo();
+                                Lyrics.Add(info);
                             }
-                            else Lyrics.UnsynchronizedLyrics = value;
+                            else
+                            {
+                                info = Lyrics[^1];
+                            }
+                            info.Parse(value);
                             break;
                         }
                     case Field.RECORDING_DATE_OR_YEAR when 0 == value.Length:
@@ -390,10 +391,11 @@ namespace ATL
         /// <param name="targetData">TagData object to merge</param>
         /// <param name="integratePictures">Set to true to merge picture information (default : true)</param>
         /// <param name="mergeAdditionalData">Set to true to merge additional (i.e. non-TagData) fields (default : true)</param>
-        public void IntegrateValues(TagData targetData, bool integratePictures = true, bool mergeAdditionalData = true)
+        /// <param name="supportsSynchronizedLyrics">Indicate if the tagging system supports synchronized lyrics (default : false)</param>
+        public void IntegrateValues(TagData targetData, bool integratePictures = true, bool mergeAdditionalData = true, bool supportsSynchronizedLyrics = false)
         {
             // String values
-            IDictionary<Field, string> newData = targetData.ToMap();
+            IDictionary<Field, string> newData = targetData.ToMap(supportsSynchronizedLyrics);
             foreach (KeyValuePair<Field, string> kvp in newData) IntegrateValue(kvp.Key, kvp.Value);
 
             // Force to input value, if any
@@ -441,14 +443,8 @@ namespace ATL
             if (targetData.Chapters != null)
             {
                 // Sending an existing but empty chapter list counts as a "marked for deletion"
-                if (Chapters != null)
-                {
-                    Chapters.Clear();
-                }
-                else
-                {
-                    Chapters = new List<ChapterInfo>();
-                }
+                if (Chapters != null) Chapters.Clear();
+                else Chapters = new List<ChapterInfo>();
 
                 foreach (ChapterInfo chapter in targetData.Chapters)
                 {
@@ -458,8 +454,14 @@ namespace ATL
 
             if (targetData.Lyrics != null)
             {
-                if (targetData.Lyrics.IsMarkedForRemoval) Lyrics = null;
-                else Lyrics = new LyricsInfo(targetData.Lyrics);
+                // Sending an existing but empty lyrics list counts as a "marked for deletion"
+                if (Lyrics != null) Lyrics.Clear();
+                else Lyrics = new List<LyricsInfo>();
+
+                foreach (LyricsInfo lyrics in targetData.Lyrics)
+                {
+                    Lyrics.Add(new LyricsInfo(lyrics));
+                }
             }
 
             DurationMs = targetData.DurationMs;
@@ -635,9 +637,23 @@ namespace ATL
                 && index == Field.LYRICS_UNSYNCH
                 && Lyrics != null)
             {
-                // Synch lyrics override unsynch lyrics when the target format cannot support both of them
-                if (!supportsSyncLyrics && Lyrics.SynchronizedLyrics.Count > 0) result = Lyrics.FormatSynchToLRC();
-                else if (!string.IsNullOrEmpty(Lyrics.UnsynchronizedLyrics)) result = Lyrics.UnsynchronizedLyrics;
+                var unsynch = Lyrics.FirstOrDefault(l => l.Format == LyricsInfo.LyricsFormat.UNSYNCHRONIZED && !string.IsNullOrEmpty(l.UnsynchronizedLyrics));
+                if (unsynch != null)
+                {
+                    result = unsynch.UnsynchronizedLyrics;
+                }
+                else if (!supportsSyncLyrics)
+                {
+                    foreach (var l in Lyrics)
+                    {
+                        // Synch lyrics override unsynch lyrics when the target format cannot support both of them
+                        if (l.SynchronizedLyrics.Count > 0)
+                        {
+                            result = l.FormatSynch();
+                            break;
+                        }
+                    }
+                }
             }
 
             return result;
@@ -776,6 +792,14 @@ namespace ATL
                 }
                 // Calculate duration of final chapter with duration of audio
                 if (previousChapter != null && 0 == previousChapter.EndTime) previousChapter.EndTime = (uint)Math.Floor(DurationMs);
+            }
+
+            if (Lyrics != null && Lyrics.Count > 0)
+            {
+                foreach (LyricsInfo lyrics in Lyrics)
+                {
+                    lyrics.GuessFormat();
+                }
             }
         }
 

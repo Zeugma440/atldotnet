@@ -338,7 +338,7 @@ namespace ATL.AudioData
         /// <summary>
         /// Lyrics
         /// </summary>
-        LyricsInfo Lyrics
+        IList<LyricsInfo> Lyrics
         {
             get;
         }

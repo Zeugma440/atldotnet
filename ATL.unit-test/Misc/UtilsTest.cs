@@ -37,7 +37,8 @@ namespace ATL.test
             // Display m, s and ms
             Assert.AreEqual(62 * 1000 + 2, Utils.DecodeTimecodeToMs("01:02.2"));
             // Display h, m, s and ms
-            Assert.AreEqual(60 * 60 * 1000 + 60 * 1000, Utils.DecodeTimecodeToMs("01:01:00.0"));
+            Assert.AreEqual(60 * 60 * 1000 + 60 * 1000 + 16 * 1000 + 612, Utils.DecodeTimecodeToMs("01:01:16.612"));
+            Assert.AreEqual(60 * 60 * 1000 + 60 * 1000 + 16 * 1000 + 612, Utils.DecodeTimecodeToMs("01:01:16,612"));
             // Display d, h, m, s and ms
             Assert.AreEqual(48 * 60 * 60 * 1000 + 60 * 60 * 1000 + 60 * 1000, Utils.DecodeTimecodeToMs("2d 01:01:00.0"));
         }

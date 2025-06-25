@@ -1181,7 +1181,7 @@ namespace ATL.test.IO.MetaData
                 s.Seek(0, SeekOrigin.Begin);
                 Assert.IsTrue(StreamUtils.FindSequence(s, dynamicPicSegment));
             }
-            
+
 
             theTag = new TagData();
 
@@ -1294,17 +1294,18 @@ namespace ATL.test.IO.MetaData
             Assert.IsNotNull(theFile.NativeTag);
             Assert.IsTrue(theFile.NativeTag.Exists);
 
-            Assert.IsTrue(theFile.NativeTag.Lyrics.UnsynchronizedLyrics.StartsWith("JAPANESE:\r\n\r\n煙と雲\r\n\r\n世の中を"));
+            Assert.IsTrue(theFile.NativeTag.Lyrics[0].UnsynchronizedLyrics.StartsWith("JAPANESE:\r\n\r\n煙と雲\r\n\r\n世の中を"));
 
             // Write
             TagData theTag = new TagData();
-            theTag.Lyrics = new LyricsInfo();
-            theTag.Lyrics.UnsynchronizedLyrics = "Государственный гимн\r\nРоссийской Федерации";
+            theTag.Lyrics = new List<LyricsInfo>() { new LyricsInfo() };
+            theTag.Lyrics[0].UnsynchronizedLyrics = "Государственный гимн\r\nРоссийской Федерации";
 
             Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
             Assert.IsTrue(theFile.ReadFromFile(false, true));
 
-            Assert.AreEqual(theTag.Lyrics.UnsynchronizedLyrics, theFile.NativeTag.Lyrics.UnsynchronizedLyrics);
+            Assert.AreEqual(1, theFile.NativeTag.Lyrics.Count);
+            Assert.AreEqual(theTag.Lyrics[0].UnsynchronizedLyrics, theFile.NativeTag.Lyrics[0].UnsynchronizedLyrics);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -1312,22 +1313,22 @@ namespace ATL.test.IO.MetaData
 
         private void checkUnsynchLyrics(AudioDataManager theFile)
         {
-            Assert.IsTrue(0 == theFile.NativeTag.Lyrics.UnsynchronizedLyrics.Length);
+            Assert.IsTrue(0 == theFile.NativeTag.Lyrics[0].UnsynchronizedLyrics.Length);
 
-            Assert.AreEqual(5, theFile.NativeTag.Lyrics.Metadata.Count);
-            Assert.AreEqual("Chubby Checker oppure  Beatles, The", theFile.NativeTag.Lyrics.Metadata["ar"]);
-            Assert.AreEqual("Hits Of The 60's - Vol. 2 – Oldies", theFile.NativeTag.Lyrics.Metadata["al"]);
-            Assert.AreEqual("Let's Twist Again", theFile.NativeTag.Lyrics.Metadata["ti"]);
-            Assert.AreEqual("Written by Kal Mann / Dave Appell, 1961", theFile.NativeTag.Lyrics.Metadata["au"]);
-            Assert.AreEqual("2:23", theFile.NativeTag.Lyrics.Metadata["length"]);
+            Assert.AreEqual(5, theFile.NativeTag.Lyrics[0].Metadata.Count);
+            Assert.AreEqual("Chubby Checker oppure  Beatles, The", theFile.NativeTag.Lyrics[0].Metadata["ar"]);
+            Assert.AreEqual("Hits Of The 60's - Vol. 2 – Oldies", theFile.NativeTag.Lyrics[0].Metadata["al"]);
+            Assert.AreEqual("Let's Twist Again", theFile.NativeTag.Lyrics[0].Metadata["ti"]);
+            Assert.AreEqual("Written by Kal Mann / Dave Appell, 1961", theFile.NativeTag.Lyrics[0].Metadata["au"]);
+            Assert.AreEqual("2:23", theFile.NativeTag.Lyrics[0].Metadata["length"]);
 
-            Assert.AreEqual(3, theFile.NativeTag.Lyrics.SynchronizedLyrics.Count);
-            Assert.AreEqual("Naku Penda Piya-Naku Taka Piya-Mpenziwe", theFile.NativeTag.Lyrics.SynchronizedLyrics[0].Text);
-            Assert.AreEqual(12000, theFile.NativeTag.Lyrics.SynchronizedLyrics[0].TimestampMs);
-            Assert.AreEqual("Some more lyrics", theFile.NativeTag.Lyrics.SynchronizedLyrics[1].Text);
-            Assert.AreEqual(15030, theFile.NativeTag.Lyrics.SynchronizedLyrics[1].TimestampMs);
-            Assert.AreEqual("Even more lyrics", theFile.NativeTag.Lyrics.SynchronizedLyrics[2].Text);
-            Assert.AreEqual(83045, theFile.NativeTag.Lyrics.SynchronizedLyrics[2].TimestampMs);
+            Assert.AreEqual(3, theFile.NativeTag.Lyrics[0].SynchronizedLyrics.Count);
+            Assert.AreEqual("Naku Penda Piya-Naku Taka Piya-Mpenziwe", theFile.NativeTag.Lyrics[0].SynchronizedLyrics[0].Text);
+            Assert.AreEqual(12000, theFile.NativeTag.Lyrics[0].SynchronizedLyrics[0].TimestampStart);
+            Assert.AreEqual("Some more lyrics", theFile.NativeTag.Lyrics[0].SynchronizedLyrics[1].Text);
+            Assert.AreEqual(15030, theFile.NativeTag.Lyrics[0].SynchronizedLyrics[1].TimestampStart);
+            Assert.AreEqual("Even more lyrics", theFile.NativeTag.Lyrics[0].SynchronizedLyrics[2].Text);
+            Assert.AreEqual(83045, theFile.NativeTag.Lyrics[0].SynchronizedLyrics[2].TimestampStart);
         }
 
         [TestMethod]
