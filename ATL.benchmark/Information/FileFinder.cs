@@ -36,6 +36,7 @@ namespace ATL.benchmark
 
         public void FF_RecursiveExplore(string dirName, string filter)
         {
+            new ConsoleLogger();
             DirectoryInfo dirInfo = new DirectoryInfo(dirName);
 
             foreach (FileInfo f in dirInfo.EnumerateFiles(filter, SearchOption.AllDirectories))
@@ -53,7 +54,7 @@ namespace ATL.benchmark
                     if (found.Length > 0) Console.WriteLine("FOUND " + found + " IN " + f.FullName);
                 }
                 */
-                Console.WriteLine(f.Name + " : " + t.Title);
+                //Console.WriteLine(f.Name + " : " + t.Title);
             }
         }
 
