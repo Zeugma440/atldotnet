@@ -245,6 +245,23 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_ID3v2_Multiple_Lyrics()
+        {
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(TestUtils.GetResourceLocationRoot() + "MP3/id3v2.3_3lyrics_LRC_A2.mp3"));
+
+            Assert.IsTrue(theFile.ReadFromFile(false, false));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            IList<LyricsInfo.LyricsFormat> expectedLyrics = new List<LyricsInfo.LyricsFormat>() { LyricsInfo.LyricsFormat.LRC, LyricsInfo.LyricsFormat.LRC_A2, LyricsInfo.LyricsFormat.OTHER };
+            Assert.AreEqual(expectedLyrics.Count, theFile.ID3v2.Lyrics.Count);
+
+            for (int i = 0; i < expectedLyrics.Count; i++)
+                Assert.AreEqual(expectedLyrics[i], theFile.ID3v2.Lyrics[i].Format);
+        }
+
+
+        [TestMethod]
         public void TagIO_R_ID3v2_TXXX_MultipleValues()
         {
             // Source : ID3v2 with TXXX MOOD field with multiple values
