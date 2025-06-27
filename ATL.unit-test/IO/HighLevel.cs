@@ -1219,7 +1219,7 @@ namespace ATL.test.IO
             t.Save();
 
             t = new Track(testFileLocation);
-            Assert.IsTrue(0 == t.Lyrics.Count);
+            Assert.AreEqual("", t.Lyrics[0].UnsynchronizedLyrics);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
@@ -1235,7 +1235,7 @@ namespace ATL.test.IO
             t.Save();
 
             t = new Track(testFileLocation);
-            Assert.IsTrue(0 == t.Lyrics.Count);
+            Assert.AreEqual(0, t.Lyrics.Count);
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

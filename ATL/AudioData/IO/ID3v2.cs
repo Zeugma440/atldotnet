@@ -949,6 +949,7 @@ namespace ATL.AudioData.IO
                         long remainingData = dataSize - (source.Position - initPos);
 
                         LyricsInfo info = tagData.Lyrics[^1];
+                        info.Format = LyricsInfo.LyricsFormat.SYNCHRONIZED;
                         while (remainingData > 0)
                         {
                             info.SynchronizedLyrics.Add(readLyricsPhrase(source, frameEncoding));
@@ -1713,12 +1714,16 @@ namespace ATL.AudioData.IO
         {
             int result = 0;
 
-            if (lyrics.UnsynchronizedLyrics != null && lyrics.UnsynchronizedLyrics.Length > 0)
+            string unsychData = null;
+            if (lyrics.UnsynchronizedLyrics != null && lyrics.UnsynchronizedLyrics.Length > 0) unsychData = lyrics.UnsynchronizedLyrics;
+            else if (lyrics.Format != LyricsInfo.LyricsFormat.SYNCHRONIZED) unsychData = lyrics.FormatSynch();
+
+            if (unsychData != null)
             {
-                writeTextFrame(writer, "USLT", lyrics.UnsynchronizedLyrics, tagEncoding, lyrics.LanguageCode, lyrics.Description);
+                writeTextFrame(writer, "USLT", unsychData, tagEncoding, lyrics.LanguageCode, lyrics.Description);
                 result++;
             }
-            if (lyrics.SynchronizedLyrics != null && lyrics.SynchronizedLyrics.Count > 0)
+            else if (lyrics.SynchronizedLyrics != null && lyrics.SynchronizedLyrics.Count > 0)
             {
                 writeSynchedLyrics(writer, lyrics, tagEncoding);
                 result++;

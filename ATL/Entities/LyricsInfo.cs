@@ -78,6 +78,10 @@ namespace ATL
             /// </summary>
             SRT = 2,
             /// <summary>
+            /// Native synchronized
+            /// </summary>
+            SYNCHRONIZED = 97,
+            /// <summary>
             /// Unsynchronized
             /// </summary>
             UNSYNCHRONIZED = 98,
@@ -99,7 +103,7 @@ namespace ATL
             /// <summary>
             /// End timestamp of the phrase, in milliseconds
             /// </summary>
-            public int TimestampEnd { get; }
+            public int TimestampEnd { get; set; }
             /// <summary>
             /// Text
             /// </summary>
@@ -479,8 +483,15 @@ namespace ATL
                                     beats[^1] = lastBeat;
                                 }
                             }
-                            else beats.Add(new LyricsPhrase(beatStart, beatLyrics));
+                            else
+                            {
+                                var newBeat = new LyricsPhrase(beatStart, beatLyrics);
+                                // Set previous beat's timestamp end
+                                if (beats.Count > 0) beats[^1].TimestampEnd = newBeat.TimestampStart;
+                                beats.Add(newBeat);
+                            }
                         }
+                        lyrics = string.Join(' ', beats.Select(b => b.Text));
                         phrase = new LyricsPhrase(start, lyrics, beats: beats);
                     }
                     else
@@ -504,27 +515,33 @@ namespace ATL
             bool insideLyric = false;
             string start = "";
             string end = "";
+            bool isFirstLine = false;
             StringBuilder text = new StringBuilder();
             foreach (string line in lines)
             {
                 if (line.Contains("-->"))
                 {
                     insideLyric = true;
-                    text.Clear();
+                    isFirstLine = true;
                     int arrowIdx = line.IndexOf("-->");
                     start = line.Substring(0, arrowIdx - 1).Trim();
                     end = line.Substring(arrowIdx + 3).Trim();
                 }
                 else if (0 == line.Length)
                 {
+                    if (text.Length > 0) SynchronizedLyrics.Add(new LyricsPhrase(start, text.ToString(), end));
                     insideLyric = false;
-                    SynchronizedLyrics.Add(new LyricsPhrase(start, text.ToString(), end));
+                    text.Clear();
                 }
                 else if (insideLyric)
                 {
-                    text.Append(line).Append('\n');
+                    if (!isFirstLine) text.Append('\n');
+                    else isFirstLine = false;
+                    text.Append(line);
                 }
             }
+            // May happen when the stream ends without an empty line
+            if (insideLyric && text.Length > 0) SynchronizedLyrics.Add(new LyricsPhrase(start, text.ToString(), end));
             Format = LyricsFormat.SRT;
             return true;
         }
@@ -554,7 +571,7 @@ namespace ATL
                 sb.Append('[').Append(meta.Key).Append(':').Append(meta.Value).Append("]\n");
             }
 
-            sb.Append('\n');
+            if (SynchronizedLyrics.Count > 0) sb.Append('\n');
 
             // Lyrics
             foreach (var line in SynchronizedLyrics)
@@ -588,8 +605,12 @@ namespace ATL
             StringBuilder sb = new StringBuilder();
 
             var index = 1;
+            bool isFirstLine = true;
             foreach (var line in SynchronizedLyrics)
             {
+                if (!isFirstLine) sb.Append('\n');
+                else isFirstLine = false;
+
                 // Index
                 sb.Append(index++).Append('\n');
                 // Timecodes
@@ -599,7 +620,6 @@ namespace ATL
                 sb.Append('\n');
                 // Text
                 sb.Append(line.Text).Append('\n');
-                sb.Append('\n');
             }
 
             return sb.ToString();
