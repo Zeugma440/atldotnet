@@ -63,7 +63,7 @@ As a fellow audiophile and developer, I'm proudly extending and improving their 
 
 * ATL supports __[chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata)__ natively
 
-* ATL supports __lyrics__ natively
+* ATL supports __[lyrics](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-lyrics-metadata)__ natively
 
 * ATL supports BEXT, LIST (general metadata, labels and notes), CUE (cue points), SMPL (sample loops), DISP (displayable objects), XMP, CART and iXML metadata chunks in RIFF / WAV files
 
