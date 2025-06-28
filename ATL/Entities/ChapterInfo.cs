@@ -5,6 +5,9 @@
     /// </summary>
     public class ChapterInfo
     {
+        /// <summary>
+        /// Technical format
+        /// </summary>
         public enum FORMAT
         {
             /// <summary>

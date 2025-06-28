@@ -427,6 +427,13 @@ namespace ATL.AudioData.IO
             // Nothing here; the point is to override when needed
         }
 
+        /// <summary>
+        /// Format fields that require a specific format (e.g. dates, numbers)
+        /// </summary>
+        /// <param name="frameType">Frame type</param>
+        /// <param name="tag">TagData carrying formatting parameters</param>
+        /// <param name="map">Metadata values</param>
+        /// <returns></returns>
         protected string formatBeforeWriting(Field frameType, TagData tag, IDictionary<Field, string> map)
         {
             string total;
