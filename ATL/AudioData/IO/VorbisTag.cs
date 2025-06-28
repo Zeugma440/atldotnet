@@ -428,6 +428,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="s">Stream for the resource to edit</param>
         /// <param name="tag">Tag information to be added</param>
+        /// <param name="args">Writing parameters</param>
         /// <param name="writeProgress">Progress to be updated during write operations</param>
         /// <returns>true if the operation suceeded; false if not</returns>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]

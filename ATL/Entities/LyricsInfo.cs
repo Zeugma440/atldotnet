@@ -14,7 +14,7 @@ namespace ATL
     public class LyricsInfo
     {
         // LRC A2 beat pattern
-        private static readonly Lazy<Regex> rxLRCA2Beat = new(() => new Regex("<\\d+:\\d+\\.\\d+>"));
+        private static readonly Lazy<Regex> rxLRCA2Beat = new(() => new Regex("<\\d+:\\d+\\.\\d+>", RegexOptions.None, TimeSpan.FromMilliseconds(100)));
 
         /// <summary>
         /// Type (contents) of lyrics data

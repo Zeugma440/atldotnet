@@ -12,13 +12,13 @@ namespace ATL.AudioData
     internal static class TrackUtils
     {
         // A number
-        private static readonly Lazy<Regex> rxNumber = new(() => new Regex("\\d+"));
+        private static readonly Lazy<Regex> rxNumber = new(() => new Regex("\\d+", RegexOptions.None, TimeSpan.FromMilliseconds(100)));
         // A number with 4 digits
-        private static readonly Lazy<Regex> rxNumber4 = new(() => new Regex("\\d{4}"));
+        private static readonly Lazy<Regex> rxNumber4 = new(() => new Regex("\\d{4}", RegexOptions.None, TimeSpan.FromMilliseconds(100)));
         // Any continuous sequence of numbers after a "/"
-        private static readonly Lazy<Regex> rxSlashNumbers = new(() => new Regex("/[\\s]*(\\d+)"));
+        private static readonly Lazy<Regex> rxSlashNumbers = new(() => new Regex("/[\\s]*(\\d+)", RegexOptions.None, TimeSpan.FromMilliseconds(100)));
         // Stars
-        private static readonly Lazy<Regex> rxStars = new(() => new Regex("\\*+"));
+        private static readonly Lazy<Regex> rxStars = new(() => new Regex("\\*+", RegexOptions.None, TimeSpan.FromMilliseconds(100)));
 
         /// <summary>
         /// Extract the track number from the given string
