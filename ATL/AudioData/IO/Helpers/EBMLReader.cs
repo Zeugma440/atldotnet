@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Commons;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Commons;
 
 namespace ATL.AudioData
 {
@@ -167,7 +167,8 @@ namespace ATL.AudioData
                 else
                 {
                     var size = readVint();
-                    BaseStream.Seek(size, SeekOrigin.Current);
+                    var seekTo2 = Math.Min(BaseStream.Position + size, BaseStream.Length);
+                    BaseStream.Seek(seekTo2, SeekOrigin.Begin);
                 }
             }
             if (resultOffset > -1) BaseStream.Seek(resultOffset, SeekOrigin.Begin);
