@@ -162,7 +162,7 @@ Bitrate, Bit depth (bits per sample), Sample rate, Duration, VBR, Codec family, 
 
 - **Style** : Genre, Beats Per Minute (BPM)
 
-- **Miscellaneous** : Comment, Description, Long description (also known as "Podcast description"), Language, Copyright, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized Lyrics using the LRC or ID3v2 format
+- **Miscellaneous** : Comment, Description, Long description (also known as "Podcast description"), Language, Copyright, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized [lyrics](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-lyrics-metadata) using the LRC, SRT or ID3v2 format
 
 
 #### Custom metadata
