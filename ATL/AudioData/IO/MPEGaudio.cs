@@ -14,21 +14,8 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class MPEGaudio : IAudioDataIO
     {
-        // Limitation constants
-        public const int MAX_MPEG_FRAME_LENGTH = 8068;          // Max. MPEG frame length according to all extreme values
-        public const int MIN_MPEG_BIT_RATE = 8;                 // Min. bit rate value (KBit/s)
-        public const int MAX_MPEG_BIT_RATE = 448;               // Max. bit rate value (KBit/s)
-        public const double MIN_ALLOWED_DURATION = 0.1;         // Min. song duration value
-
-
-        // VBR Vendor ID strings
-        public const string VENDOR_ID_LAME = "LAME";                      // For LAME
-        public const string VENDOR_ID_GOGO_NEW = "GOGO";            // For GoGo (New)
-        public const string VENDOR_ID_GOGO_OLD = "MPGE";            // For GoGo (Old)
-
         // Table for bit rates (KBit/s)
-        public static readonly ushort[,,] MPEG_BIT_RATE = new ushort[4, 4, 16]
-        {
+        public static readonly ushort[,,] MPEG_BIT_RATE = {
 	       // For MPEG 2.5
 		    {
                 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -66,8 +53,7 @@ namespace ATL.AudioData.IO
         public const byte MPEG_SAMPLE_RATE_UNKNOWN = 3;              // Unknown value
 
         // Table for sample rates
-        public static readonly ushort[,] MPEG_SAMPLE_RATE = new ushort[4, 4]
-        {
+        public static readonly ushort[,] MPEG_SAMPLE_RATE = {
             {11025, 12000, 8000, 0},                                   // For MPEG 2.5
 		    {0, 0, 0, 0},                                                  // Reserved
 		    {22050, 24000, 16000, 0},                                    // For MPEG 2
@@ -84,9 +70,6 @@ namespace ATL.AudioData.IO
         public const byte MPEG_VERSION_2 = 2;                                // MPEG 2
         public const byte MPEG_VERSION_1 = 3;                                // MPEG 1
 
-        // MPEG version names
-        public static readonly string[] MPEG_VERSION = new string[] { "MPEG 2.5", "MPEG ?", "MPEG 2", "MPEG 1" };
-
         // MPEG layer codes
         public const byte MPEG_LAYER_UNKNOWN = 0;                     // Unknown layer
         public const byte MPEG_LAYER_III = 1;                             // Layer III
@@ -94,7 +77,7 @@ namespace ATL.AudioData.IO
         public const byte MPEG_LAYER_I = 3;                                 // Layer I
 
         // MPEG layer names
-        public static readonly string[] MPEG_LAYER = new string[] { "Layer ?", "Layer III", "Layer II", "Layer I" };
+        public static readonly string[] MPEG_LAYER = { "Layer ?", "Layer III", "Layer II", "Layer I" };
 
         // Channel mode codes
         public const byte MPEG_CM_STEREO = 0;                                // Stereo
@@ -102,9 +85,6 @@ namespace ATL.AudioData.IO
         public const byte MPEG_CM_DUAL_CHANNEL = 2;                    // Dual Channel
         public const byte MPEG_CM_MONO = 3;                                    // Mono
         public const byte MPEG_CM_UNKNOWN = 4;                         // Unknown mode
-
-        // Channel mode names
-        public static readonly string[] MPEG_CM_MODE = new string[] { "Stereo", "Joint Stereo", "Dual Channel", "Mono", "Unknown" };
 
         // Extension mode codes (for Joint Stereo)
         public const byte MPEG_CM_EXTENSION_OFF = 0;        // IS and MS modes set off
@@ -120,7 +100,7 @@ namespace ATL.AudioData.IO
         public const byte MPEG_EMPHASIS_CCIT = 3;                         // CCIT J.17
 
         // Emphasis names
-        public static readonly string[] MPEG_EMPHASIS = new string[] { "None", "50/15 ms", "Unknown", "CCIT J.17" };
+        public static readonly string[] MPEG_EMPHASIS = { "None", "50/15 ms", "Unknown", "CCIT J.17" };
 
         // Encoder codes
         public const byte MPEG_ENCODER_UNKNOWN = 0;                // Unknown encoder
@@ -133,7 +113,7 @@ namespace ATL.AudioData.IO
         public const byte MPEG_ENCODER_QDESIGN = 7;                        // QDesign
 
         // Encoder names
-        public static readonly string[] MPEG_ENCODER = new string[] { "Unknown", "Xing", "FhG", "LAME", "Blade", "GoGo", "Shine", "QDesign" };
+        public static readonly string[] MPEG_ENCODER = { "Unknown", "Xing", "FhG", "LAME", "Blade", "GoGo", "Shine", "QDesign" };
 
         // Xing/FhG VBR header data
         public sealed class VBRData
@@ -228,16 +208,15 @@ namespace ATL.AudioData.IO
             {
                 get
                 {
-                    if (m_size < 1)
+                    if (m_size >= 1) return m_size;
+
+                    if (MPEG_LAYER_I == LayerID)
                     {
-                        if (MPEG_LAYER_I == LayerID)
-                        {
-                            m_size = (int)((Math.Floor(Coefficient * BitRate * 1000.0 / SampleRate) + Padding) * 4);
-                        }
-                        else // Layers II and III
-                        {
-                            m_size = (int)Math.Floor(Coefficient * BitRate * 1000.0 / SampleRate) + Padding;
-                        }
+                        m_size = (int)((Math.Floor(Coefficient * BitRate * 1000.0 / SampleRate) + Padding) * 4);
+                    }
+                    else // Layers II and III
+                    {
+                        m_size = (int)Math.Floor(Coefficient * BitRate * 1000.0 / SampleRate) + Padding;
                     }
 
                     return m_size;
@@ -252,13 +231,13 @@ namespace ATL.AudioData.IO
             {
                 get
                 {
-                    if (MPEG_VERSION_1 == VersionID)
-                        if (MPEG_LAYER_I == LayerID) return 12;
-                        else return 144;
-                    else
-                        if (MPEG_LAYER_I == LayerID) return 12;
-                    else if (MPEG_LAYER_II == LayerID) return 144;
-                    else return 72;
+                    if (MPEG_VERSION_1 == VersionID) return MPEG_LAYER_I == LayerID ? (byte)12 : (byte)144;
+                    return LayerID switch
+                    {
+                        MPEG_LAYER_I => 12,
+                        MPEG_LAYER_II => 144,
+                        _ => 72
+                    };
                 }
             }
 
@@ -266,12 +245,8 @@ namespace ATL.AudioData.IO
             {
                 get
                 {
-                    if (MPEG_VERSION_1 == VersionID)
-                        if (ModeID != MPEG_CM_MONO) return 36;
-                        else return 21;
-                    else
-                        if (ModeID != MPEG_CM_MONO) return 21;
-                    else return 13;
+                    if (MPEG_VERSION_1 == VersionID) return ModeID != MPEG_CM_MONO ? (byte)36 : (byte)21;
+                    return ModeID != MPEG_CM_MONO ? (byte)21 : (byte)13;
                 }
             }
 
@@ -279,24 +254,24 @@ namespace ATL.AudioData.IO
             {
                 get
                 {
-                    switch (ModeID)
+                    return ModeID switch
                     {
-                        case MPEG_CM_STEREO: return STEREO;
-                        case MPEG_CM_JOINT_STEREO: return JOINT_STEREO;
-                        case MPEG_CM_DUAL_CHANNEL: return DUAL_MONO;
-                        case MPEG_CM_MONO: return MONO;
-                        default: return UNKNOWN;
-                    }
+                        MPEG_CM_STEREO => STEREO,
+                        MPEG_CM_JOINT_STEREO => JOINT_STEREO,
+                        MPEG_CM_DUAL_CHANNEL => DUAL_MONO,
+                        MPEG_CM_MONO => MONO,
+                        _ => UNKNOWN
+                    };
                 }
             }
 
             public double Duration => Size * 1.0 / BitRate * 8.0;
         }
 
-        private VBRData vbrData = new VBRData();
-        private FrameHeader FirstFrame = new FrameHeader();
+        private VBRData vbrData = new();
+        private FrameHeader FirstFrame = new();
         private readonly AudioFormat audioFormat;
-        private float avgBitrate = 0;
+        private float avgBitrate;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -363,14 +338,14 @@ namespace ATL.AudioData.IO
 
             // Check for valid frame header
             return !(
-                (data[0] != 0xFF) ||                                  // First 11 bits are set
-                ((data[1] & 0xE0) != 0xE0) ||                         // First 11 bits are set
-                (((data[1] >> 3) & 3) == MPEG_VERSION_UNKNOWN) ||     // MPEG version > 1
-                (((data[1] >> 1) & 3) == MPEG_LAYER_UNKNOWN) ||       // Layer I, II or III
-                ((data[2] & 0xF0) == 0xF0) ||                         // Bitrate index is not 'bad'
-                ((data[2] & 0xF0) == 0) ||                            // Bitrate index is not 'free'
-                (((data[2] >> 2) & 3) == MPEG_SAMPLE_RATE_UNKNOWN) || // Sampling rate is not 'reserved'
-                ((data[3] & 3) == MPEG_EMPHASIS_UNKNOWN)              // Emphasis is not 'reserved'
+                data[0] != 0xFF ||                                  // First 11 bits are set
+                (data[1] & 0xE0) != 0xE0 ||                         // First 11 bits are set
+                ((data[1] >> 3) & 3) == MPEG_VERSION_UNKNOWN ||     // MPEG version > 1
+                ((data[1] >> 1) & 3) == MPEG_LAYER_UNKNOWN ||       // Layer I, II or III
+                (data[2] & 0xF0) == 0xF0 ||                         // Bitrate index is not 'bad'
+                (data[2] & 0xF0) == 0 ||                            // Bitrate index is not 'free'
+                ((data[2] >> 2) & 3) == MPEG_SAMPLE_RATE_UNKNOWN || // Sampling rate is not 'reserved'
+                (data[3] & 3) == MPEG_EMPHASIS_UNKNOWN              // Emphasis is not 'reserved'
                 );
         }
 
@@ -379,14 +354,14 @@ namespace ATL.AudioData.IO
         /// </summary>
         private double getBitRate()
         {
-            if (vbrData.Found && (vbrData.Frames > 0))
+            if (vbrData.Found && vbrData.Frames > 0)
                 return Math.Round(
                             ((double)vbrData.Bytes / vbrData.Frames - FirstFrame.Padding) *
                             FirstFrame.SampleRate / FirstFrame.Coefficient
                             / 1000.0
                     );
-            else
-                return avgBitrate;
+
+            return avgBitrate;
         }
 
         private static VBRData getXingInfo(Stream source)
@@ -450,7 +425,6 @@ namespace ATL.AudioData.IO
 
         private static VBRData findVBR(Stream source, long position)
         {
-            VBRData result;
             byte[] data = new byte[4];
 
             // Check for VBR header at given position
@@ -459,23 +433,28 @@ namespace ATL.AudioData.IO
             if (4 == source.Read(data, 0, 4))
             {
                 string vbrId = Utils.Latin1Encoding.GetString(data);
-                if (VBR_ID_XING.Equals(vbrId)) return getXingInfo(source);
-                if (VBR_ID_FHG.Equals(vbrId)) return getFhGInfo(source);
+                switch (vbrId)
+                {
+                    case VBR_ID_XING:
+                        return getXingInfo(source);
+                    case VBR_ID_FHG:
+                        return getFhGInfo(source);
+                }
             }
 
-            result = new VBRData();
+            var result = new VBRData();
             result.Reset();
             return result;
         }
 
         private double getDuration()
         {
-            if (FirstFrame.Found)
-                if (vbrData.Found && vbrData.Frames > 0)
-                    return vbrData.Frames * FirstFrame.Coefficient * 8.0 * 1000.0 / FirstFrame.SampleRate;
-                else return AudioDataSize * 1.0 / avgBitrate * 8.0;
-            else
-                return 0;
+            if (!FirstFrame.Found) return 0;
+
+            if (vbrData.Found && vbrData.Frames > 0)
+                return vbrData.Frames * FirstFrame.Coefficient * 8.0 * 1000.0 / FirstFrame.SampleRate;
+
+            return AudioDataSize * 1.0 / avgBitrate * 8.0;
         }
 
         public static bool HasValidFrame(Stream source)
@@ -494,14 +473,11 @@ namespace ATL.AudioData.IO
             nextHeader.Reset();
 
             source.Seek(startingFrame.Offset + startingFrame.Size, SeekOrigin.Begin);
-            if (source.Read(buffer, 0, 4) < 4) return nextHeader;
+            if (source.Read(buffer, 0, 4) < 4 || !IsValidFrameHeader(buffer)) return nextHeader;
 
-            if (IsValidFrameHeader(buffer))
-            {
-                nextHeader.LoadFromByteArray(buffer);
-                nextHeader.Offset = source.Position - 4;
-                nextHeader.Found = true;
-            }
+            nextHeader.LoadFromByteArray(buffer);
+            nextHeader.Offset = source.Position - 4;
+            nextHeader.Found = true;
             return nextHeader;
         }
 
@@ -545,7 +521,7 @@ namespace ATL.AudioData.IO
                 result.Found = IsValidFrameHeader(buffer);
             }
 
-            long id3v2Size = (null == sizeInfo) ? 0 : sizeInfo.ID3v2Size;
+            long id3v2Size = sizeInfo?.ID3v2Size ?? 0;
             long limit = id3v2Size + (long)Math.Round((source.Length - id3v2Size) * 0.3);
             int iterations = 0;
             while (source.Position < limit)
@@ -583,13 +559,13 @@ namespace ATL.AudioData.IO
 
                     // Restart looking for a candidate
                     source.Seek(result.Offset + 1, SeekOrigin.Begin);
-                    result.Found = false;
                 }
                 else
                 {
                     if (source.Position < limit) source.Seek(-3, SeekOrigin.Current);
-                    result.Found = false;
                 }
+
+                result.Found = false;
                 iterations++;
             }
 
@@ -599,41 +575,39 @@ namespace ATL.AudioData.IO
                 oVBR = findVBR(source, result.Offset + result.VBRDeviation);
 
                 // If no VBR found, examine the next header to make sure mode and bitrate are consistent
-                if (!oVBR.Found)
-                {
-                    FrameHeader nextFrame = findNextFrame(source, result, buffer);
-                    if (nextFrame.Found)
-                    {
-                        bool sameBase = result.LayerID == nextFrame.LayerID && result.VersionID == nextFrame.VersionID;
-                        bool sameProperties = result.ModeID == nextFrame.ModeID && result.BitRateID == nextFrame.BitRateID;
+                if (oVBR.Found) return result;
 
-                        if (!sameBase) result.Found = false;
-                        else if (!sameProperties)
-                        {
-                            // First and second headers contradict each other => sample the first 10 headers
-                            // and get the most frequent mode and bitrate
-                            List<FrameHeader> headers = new List<FrameHeader>
-                            {
-                                result,
-                                nextFrame
-                            };
-                            for (int i = 0; i < 8; i++)
-                            {
-                                FrameHeader aFrame = findNextFrame(source, result, buffer);
-                                if (aFrame.Found) headers.Add(aFrame);
-                            }
-                            byte finalModeId = headers.GroupBy(x => x.ModeID)
-                                .Select(x => new { Mode = x.Key, Count = x.Count() })
-                                .OrderByDescending(x => x.Count)
-                                .First().Mode;
-                            ushort finalBitrateId = headers.GroupBy(x => x.BitRateID)
-                                .Select(x => new { BitRateID = x.Key, Count = x.Count() })
-                                .OrderByDescending(x => x.Count)
-                                .First().BitRateID;
-                            result.ModeID = finalModeId;
-                            result.BitRateID = finalBitrateId;
-                        }
+                FrameHeader nextFrame = findNextFrame(source, result, buffer);
+                if (!nextFrame.Found) return result;
+
+                bool sameBase = result.LayerID == nextFrame.LayerID && result.VersionID == nextFrame.VersionID;
+                bool sameProperties = result.ModeID == nextFrame.ModeID && result.BitRateID == nextFrame.BitRateID;
+
+                if (!sameBase) result.Found = false;
+                else if (!sameProperties)
+                {
+                    // First and second headers contradict each other => sample the first 10 headers
+                    // and get the most frequent mode and bitrate
+                    List<FrameHeader> headers = new List<FrameHeader>
+                    {
+                        result,
+                        nextFrame
+                    };
+                    for (int i = 0; i < 8; i++)
+                    {
+                        FrameHeader aFrame = findNextFrame(source, result, buffer);
+                        if (aFrame.Found) headers.Add(aFrame);
                     }
+                    byte finalModeId = headers.GroupBy(x => x.ModeID)
+                        .Select(x => new { Mode = x.Key, Count = x.Count() })
+                        .OrderByDescending(x => x.Count)
+                        .First().Mode;
+                    ushort finalBitrateId = headers.GroupBy(x => x.BitRateID)
+                        .Select(x => new { BitRateID = x.Key, Count = x.Count() })
+                        .OrderByDescending(x => x.Count)
+                        .First().BitRateID;
+                    result.ModeID = finalModeId;
+                    result.BitRateID = finalBitrateId;
                 }
             }
 
@@ -678,19 +652,17 @@ namespace ATL.AudioData.IO
 
             // Raw audio data size
             AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
-            if (Settings.MP3_parseExactDuration)
-            {
-                var altSize = parseExactAudioDataSize(reader, FirstFrame);
-                // If too much difference between the two, look for another MPEG stream
-                // (some files might have multiple streams, even if it's not spec-compliant)
-                if (AudioDataSize > altSize * 1.5)
-                {
-                    var nextFrame = findFirstFrame(reader, ref vbrData, sizeNfo);
-                    if (nextFrame.Found) altSize += parseExactAudioDataSize(reader, nextFrame);
-                }
-                AudioDataSize = altSize;
-            }
+            if (!Settings.MP3_parseExactDuration) return true;
 
+            var altSize = parseExactAudioDataSize(reader, FirstFrame);
+            // If too much difference between the two, look for another MPEG stream
+            // (some files might have multiple streams, even if it's not spec-compliant)
+            if (AudioDataSize > altSize * 1.5)
+            {
+                var nextFrame = findFirstFrame(reader, ref vbrData, sizeNfo);
+                if (nextFrame.Found) altSize += parseExactAudioDataSize(reader, nextFrame);
+            }
+            AudioDataSize = altSize;
 
             return true;
         }
