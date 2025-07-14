@@ -4,6 +4,7 @@ using System.IO;
 using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
 using System;
+using System.Globalization;
 using System.Text;
 
 namespace ATL.AudioData.IO
@@ -106,7 +107,7 @@ namespace ATL.AudioData.IO
         {
             if (source.Read(buffer, 0, 2) < 2) return;
             var intData = StreamUtils.DecodeInt16(buffer);
-            meta.SetMetaField(field, (intData / 100.0).ToString(), readAllFrames);
+            meta.SetMetaField(field, (intData / 100.0).ToString(CultureInfo.CurrentCulture), readAllFrames);
         }
 
         /// <summary>

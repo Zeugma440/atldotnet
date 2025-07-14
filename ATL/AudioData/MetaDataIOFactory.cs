@@ -40,9 +40,9 @@ namespace ATL.AudioData
         }
 
         // The instance of this factory
-        private static MetaDataIOFactory theFactory = null;
+        private static MetaDataIOFactory theFactory;
 
-        private static readonly object _lockable = new object();
+        private static readonly object _lockable = new();
 
 
         /// <summary>
@@ -73,8 +73,10 @@ namespace ATL.AudioData
             {
                 if (null == theFactory)
                 {
-                    theFactory = new MetaDataIOFactory();
-                    theFactory.TagPriority = new TagType[4];
+                    theFactory = new MetaDataIOFactory
+                    {
+                        TagPriority = new TagType[4]
+                    };
                     theFactory.TagPriority[0] = TagType.ID3V2;
                     theFactory.TagPriority[1] = TagType.APE;
                     theFactory.TagPriority[2] = TagType.NATIVE;
@@ -158,9 +160,7 @@ namespace ATL.AudioData
                 }
             }
 
-            if (null == theMetaReader) theMetaReader = new IO.DummyTag();
-
-            return theMetaReader;
+            return theMetaReader ?? new IO.DummyTag();
         }
     }
 }

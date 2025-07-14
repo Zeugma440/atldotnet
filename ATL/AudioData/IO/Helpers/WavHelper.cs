@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using ATL.Logging;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -124,14 +123,8 @@ namespace ATL.AudioData.IO
         /// <param name="paddingByte">Padding value to use (default : 0x00)</param>
         public static void WriteFixedFieldTextValue(string field, IDictionary<string, string> additionalFields, int length, BinaryWriter w, byte paddingByte = 0)
         {
-            if (additionalFields.TryGetValue(field, out var additionalField))
-            {
-                WriteFixedTextValue(additionalField, length, w, paddingByte);
-            }
-            else
-            {
-                WriteFixedTextValue("", length, w, paddingByte);
-            }
+            WriteFixedTextValue(additionalFields.TryGetValue(field, out var additionalField) ? additionalField : "",
+                length, w, paddingByte);
         }
 
         /// <summary>
@@ -163,35 +156,33 @@ namespace ATL.AudioData.IO
                 {
                     switch (defaultValue)
                     {
-                        case short _:
+                        case short:
                             w.Write(short.Parse(additionalFields[field]));
                             break;
-                        case ulong _:
+                        case ulong:
                             w.Write(ulong.Parse(additionalFields[field]));
                             break;
-                        case uint _:
+                        case uint:
                             w.Write(uint.Parse(additionalFields[field]));
                             break;
-                        case ushort _:
+                        case ushort:
                             w.Write(ushort.Parse(additionalFields[field]));
                             break;
-                        case int _:
+                        case int:
                             w.Write(int.Parse(additionalFields[field]));
                             break;
-                        case byte _:
+                        case byte:
                             w.Write(byte.Parse(additionalFields[field]));
                             break;
-                        case sbyte _:
+                        case sbyte:
                             w.Write(sbyte.Parse(additionalFields[field]));
                             break;
                     }
 
                     return;
                 }
-                else
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + field + "' : error writing field - integer required; " + additionalFields[field] + " found");
-                }
+
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + field + "' : error writing field - integer required; " + additionalFields[field] + " found");
             }
 
             switch (defaultValue)
@@ -261,7 +252,7 @@ namespace ATL.AudioData.IO
             if (s.Position >= maxPos) return;
 
             int b = s.ReadByte();
-            if (b > 31 && b < 255) s.Seek(-1, SeekOrigin.Current);
+            if (b is > 31 and < 255) s.Seek(-1, SeekOrigin.Current);
         }
     }
 }

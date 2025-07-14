@@ -68,8 +68,6 @@ namespace ATL.AudioData.IO
 
         private static void readDataListPurpose(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long maxPos)
         {
-            string id;
-            int size;
             int position = 0;
             byte[] data = new byte[4];
 
@@ -77,10 +75,10 @@ namespace ATL.AudioData.IO
             {
                 // Sub-chunk ID
                 if (source.Read(data, 0, 4) < 4) return;
-                id = Utils.Latin1Encoding.GetString(data, 0, 4);
+                var id = Utils.Latin1Encoding.GetString(data, 0, 4);
                 // Size
                 if (source.Read(data, 0, 4) < 4) return;
-                size = StreamUtils.DecodeInt32(data);
+                var size = StreamUtils.DecodeInt32(data);
                 if (size <= 0) continue;
 
                 meta.SetMetaField($"adtl.Labels[{position}].Type", id, readTagParams.ReadAllMetaFrames);
@@ -209,7 +207,7 @@ namespace ATL.AudioData.IO
                 if (value.Length > 0) writeSizeAndNullTerminatedString("IRTD", value, w, writtenFields);
             }
             // Track number
-            if (meta.TrackNumber != null && meta.TrackNumber != "")
+            if (!string.IsNullOrEmpty(meta.TrackNumber))
             {
                 value = meta.TrackNumber;
                 if (0 == value.Length && additionalFields.TryGetValue("info.TRCK", out var additionalField3)) value = additionalField3;
@@ -345,11 +343,10 @@ namespace ATL.AudioData.IO
                 w.Write((byte)0);
 
             string keyFull = "info." + key;
-            if (writtenFields.ContainsKey(keyFull))
+            if (!writtenFields.TryAdd(keyFull, value))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, $"'{key}' : already written");
             }
-            else writtenFields.Add(keyFull, value);
         }
     }
 }

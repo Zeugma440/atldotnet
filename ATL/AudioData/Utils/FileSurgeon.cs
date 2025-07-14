@@ -92,7 +92,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// % of total stream (~file) size under which two neighbouring Zones can be grouped into the same Region
         /// </summary>
-        private static readonly double REGION_DISTANCE_THRESHOLD = 0.2;
+        private const double REGION_DISTANCE_THRESHOLD = 0.2;
 
         private readonly FileStructureHelper structureHelper;
         private readonly IMetaDataEmbedder embedder;
@@ -401,12 +401,10 @@ namespace ATL.AudioData.IO
 
         private ProgressToken<float> initProgress(IList<ZoneRegion> zoneRegions)
         {
-            if (writeProgress != null)
-            {
-                initProgressManager(zoneRegions);
-                return writeProgress.CreateProgressToken();
-            }
-            return null;
+            if (writeProgress == null) return null;
+
+            initProgressManager(zoneRegions);
+            return writeProgress.CreateProgressToken();
         }
 
         private void incrementProgress(ref ProgressToken<float> progress)
@@ -465,29 +463,27 @@ namespace ATL.AudioData.IO
 
         private ACTION detectAction(WriteResult writeResult, long delta, long oldTagSize, long newTagSize, Zone zone)
         {
-            if (structureHelper != null && (MetaDataIOFactory.TagType.NATIVE == implementedTagType || (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2)))
-            {
-                bool isTagWritten = writeResult.WrittenFields > 0;
+            if (structureHelper == null || (MetaDataIOFactory.TagType.NATIVE != implementedTagType &&
+                                            (embedder == null ||
+                                             implementedTagType != MetaDataIOFactory.TagType.ID3V2)))
+                return ACTION.None;
 
-                if (0 == delta) return ACTION.Edit; // Zone content has not changed; headers might need to be rewritten (e.g. offset changed)
-                else
-                {
-                    if (oldTagSize == zone.CoreSignature.Length && isTagWritten) return ACTION.Add;
-                    else if (newTagSize == zone.CoreSignature.Length && !isTagWritten) return ACTION.Delete;
-                    else return ACTION.Edit;
-                }
-            }
-            return ACTION.None;
+            bool isTagWritten = writeResult.WrittenFields > 0;
+
+            if (0 == delta) return ACTION.Edit; // Zone content has not changed; headers might need to be rewritten (e.g. offset changed)
+
+            if (oldTagSize == zone.CoreSignature.Length && isTagWritten) return ACTION.Add;
+            if (newTagSize == zone.CoreSignature.Length && !isTagWritten) return ACTION.Delete;
+            return ACTION.Edit;
         }
 
         private void applyPostProcessing(Stream fullScopeWriter)
         {
             // Post-processing changes
-            if (structureHelper != null && structureHelper.ZoneNames.Any(z => z.StartsWith(POST_PROCESSING_ZONE_NAME)))
-            {
-                Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Post-processing");
-                structureHelper.PostProcessing(fullScopeWriter);
-            }
+            if (structureHelper == null || !structureHelper.ZoneNames.Any(z => z.StartsWith(POST_PROCESSING_ZONE_NAME))) return;
+
+            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Post-processing");
+            structureHelper.PostProcessing(fullScopeWriter);
         }
 
         /// <summary>
@@ -533,8 +529,10 @@ namespace ATL.AudioData.IO
                 {
                     region.IsBufferable &= region.Size < BUFFER_LIMIT;
                     result.Add(region);
-                    region = new ZoneRegion(regionId++);
-                    region.IsBufferable = zone.IsResizable;
+                    region = new ZoneRegion(regionId++)
+                    {
+                        IsBufferable = zone.IsResizable
+                    };
                 }
 
                 previousZoneEndOffset = zoneEndOffset;
@@ -559,9 +557,7 @@ namespace ATL.AudioData.IO
         private static long getLowestOffset(ICollection<Zone> zones)
         {
             long result = long.MaxValue;
-            if (zones != null)
-                foreach (Zone zone in zones)
-                    result = Math.Min(result, getLowestOffset(zone));
+            if (zones != null) result = zones.Select(getLowestOffset).Prepend(result).Min();
 
             return result;
         }
@@ -575,12 +571,10 @@ namespace ATL.AudioData.IO
         private static long getLowestOffset(Zone zone)
         {
             long result = long.MaxValue;
-            if (zone != null)
-            {
-                result = Math.Min(result, zone.Offset);
-                foreach (FrameHeader header in zone.Headers)
-                    result = Math.Min(result, header.Position);
-            }
+            if (zone == null) return result;
+
+            result = Math.Min(result, zone.Offset);
+            result = zone.Headers.Select(header => header.Position).Prepend(result).Min();
             return result;
         }
 
@@ -593,9 +587,7 @@ namespace ATL.AudioData.IO
         private static long getHighestOffset(ICollection<Zone> zones)
         {
             long result = 0;
-            if (zones != null)
-                foreach (Zone zone in zones)
-                    result = Math.Max(result, getHighestOffset(zone));
+            if (zones != null) result = zones.Select(getHighestOffset).Prepend(result).Max();
 
             return result;
         }
@@ -609,12 +601,10 @@ namespace ATL.AudioData.IO
         private static long getHighestOffset(Zone zone)
         {
             long result = 0;
-            if (zone != null)
-            {
-                result = Math.Max(result, zone.Offset + zone.Size);
-                foreach (FrameHeader header in zone.Headers)
-                    result = Math.Max(result, header.Position);
-            }
+            if (zone == null) return result;
+
+            result = Math.Max(result, zone.Offset + zone.Size);
+            result = zone.Headers.Select(header => header.Position).Prepend(result).Max();
             return result;
         }
     }

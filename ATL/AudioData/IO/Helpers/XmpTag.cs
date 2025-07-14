@@ -105,16 +105,17 @@ namespace ATL.AudioData.IO
             XmlArray xmlArray = createXmlArray();
             int result = xmlArray.ToStream(w, meta);
 
-            if (wavEmbed) // Add the extra padding byte if needed
-            {
-                long finalPos = w.Position;
-                long paddingSize = (finalPos - sizePos) % 2;
-                if (paddingSize > 0) w.WriteByte(0);
+            if (!wavEmbed) return result;
 
-                w.Seek(sizePos, SeekOrigin.Begin);
-                if (isLittleEndian) w.Write(StreamUtils.EncodeInt32((int)(finalPos - sizePos - 4)));
-                else w.Write(StreamUtils.EncodeBEInt32((int)(finalPos - sizePos - 4)));
-            }
+            // Add the extra padding byte if needed
+            long finalPos = w.Position;
+            long paddingSize = (finalPos - sizePos) % 2;
+            if (paddingSize > 0) w.WriteByte(0);
+
+            w.Seek(sizePos, SeekOrigin.Begin);
+            w.Write(isLittleEndian
+                ? StreamUtils.EncodeInt32((int)(finalPos - sizePos - 4))
+                : StreamUtils.EncodeBEInt32((int)(finalPos - sizePos - 4)));
 
             return result;
         }

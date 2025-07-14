@@ -62,21 +62,16 @@ namespace ATL.AudioData
             }
 
             // Decode buffer
-            switch (nbBytes)
+            return nbBytes switch
             {
-                case 2:
-                    return StreamUtils.DecodeBEUInt16(buffer);
-                case 3:
-                    return StreamUtils.DecodeBEUInt24(buffer);
-                case 4:
-                    return StreamUtils.DecodeBEUInt32(buffer);
-                case 5:
-                    return (long)StreamUtils.DecodeBEUInt40(buffer);
+                2 => StreamUtils.DecodeBEUInt16(buffer),
+                3 => StreamUtils.DecodeBEUInt24(buffer),
+                4 => StreamUtils.DecodeBEUInt32(buffer),
+                5 => (long)StreamUtils.DecodeBEUInt40(buffer),
                 // TODO 48 and 56 bits longs
-                case 8:
-                    return (long)StreamUtils.DecodeBEUInt64(buffer);
-                default: return buffer[0];
-            }
+                8 => (long)StreamUtils.DecodeBEUInt64(buffer),
+                _ => buffer[0]
+            };
         }
 
         public long seek(long size, SeekOrigin origin = SeekOrigin.Begin)
@@ -155,7 +150,7 @@ namespace ATL.AudioData
                             int nbFound = 0;
                             foreach (var c in criteria)
                             {
-                                var crits = new HashSet<Tuple<long, int>> { new Tuple<long, int>(c.Item1, c.Item2) };
+                                var crits = new HashSet<Tuple<long, int>> { new(c.Item1, c.Item2) };
                                 var res = seekElement(c.Item1, crits);
                                 if (res != SeekResult.FOUND_NO_MATCH) nbFound++;
                                 BaseStream.Position = loopOffset;
@@ -183,21 +178,16 @@ namespace ATL.AudioData
 
             if (BaseStream.Read(buffer, 0, (int)nbBytes) < nbBytes) return 0;
             // Decode buffer
-            switch (nbBytes)
+            return nbBytes switch
             {
-                case 2:
-                    return StreamUtils.DecodeBEUInt16(buffer);
-                case 3:
-                    return StreamUtils.DecodeBEUInt24(buffer);
-                case 4:
-                    return StreamUtils.DecodeBEUInt32(buffer);
-                case 5:
-                    return StreamUtils.DecodeBEUInt40(buffer);
+                2 => StreamUtils.DecodeBEUInt16(buffer),
+                3 => StreamUtils.DecodeBEUInt24(buffer),
+                4 => StreamUtils.DecodeBEUInt32(buffer),
+                5 => StreamUtils.DecodeBEUInt40(buffer),
                 // TODO 48 and 56 bits longs
-                case 8:
-                    return StreamUtils.DecodeBEUInt64(buffer);
-                default: return buffer[0];
-            }
+                8 => StreamUtils.DecodeBEUInt64(buffer),
+                _ => buffer[0]
+            };
         }
 
         public double readFloat()

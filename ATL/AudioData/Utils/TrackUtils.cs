@@ -53,13 +53,12 @@ namespace ATL.AudioData
             // This case covers both single track numbers and (trk/total) formatting
             Match match = rxNumber.Value.Match(str);
             // First match is directly returned
-            if (match.Success)
-            {
-                long number = long.Parse(match.Value);
-                if (number > ushort.MaxValue) number = 0;
-                return (ushort)number;
-            }
-            return 0;
+            if (!match.Success) return 0;
+
+            long number2 = long.Parse(match.Value);
+            if (number2 > ushort.MaxValue) number2 = 0;
+            return (ushort)number2;
+
         }
 
         /// <summary>
@@ -124,13 +123,11 @@ namespace ATL.AudioData
 
             // == If everything above fails...
             Match match = rxSlashNumbers.Value.Match(str);
-            if (match.Success)
-            {
-                long number = long.Parse(match.Value);
-                if (number > ushort.MaxValue) number = 0;
-                return (ushort)number; // First match is directly returned
-            }
-            return 0;
+            if (!match.Success) return 0;
+
+            long number2 = long.Parse(match.Value);
+            if (number2 > ushort.MaxValue) number2 = 0;
+            return (ushort)number2; // First match is directly returned
         }
 
         /// <summary>
@@ -174,56 +171,55 @@ namespace ATL.AudioData
         /// <returns>Rating level, in float form (0 = 0% to 1 = 100%)</returns>
         public static double DecodePopularity(double rating, int convention)
         {
-            switch (convention)
+            return convention switch
             {
-                case MetaDataIO.RC_ASF:
-
-                    if (rating < 1) return 0;
-                    else if (rating < 25) return 0.2;
-                    else if (rating < 50) return 0.4;
-                    else if (rating < 75) return 0.6;
-                    else if (rating < 99) return 0.8;
-                    else return 1;
-
-                case MetaDataIO.RC_APE:
-
-                    if (rating < 5.1) return rating / 5.0; // Stored as float
-                    else if (rating < 10) return 0;           // Stored as scale of 0..100
-                    else if (rating < 20) return 0.1;
-                    else if (rating < 30) return 0.2;
-                    else if (rating < 40) return 0.3;
-                    else if (rating < 50) return 0.4;
-                    else if (rating < 60) return 0.5;
-                    else if (rating < 70) return 0.6;
-                    else if (rating < 80) return 0.7;
-                    else if (rating < 90) return 0.8;
-                    else if (rating < 100) return 0.9;
-                    else return 1;
-
-                default:                // ID3v2 convention
-                    if (rating > 10)
+                MetaDataIO.RC_ASF => rating switch
+                {
+                    < 1 => 0,
+                    < 25 => 0.2,
+                    < 50 => 0.4,
+                    < 75 => 0.6,
+                    < 99 => 0.8,
+                    _ => 1
+                },
+                MetaDataIO.RC_APE => rating switch
+                {
+                    // Stored as float
+                    // Stored as scale of 0..100
+                    < 5.1 => rating / 5.0,
+                    < 10 => 0,
+                    < 20 => 0.1,
+                    < 30 => 0.2,
+                    < 40 => 0.3,
+                    < 50 => 0.4,
+                    < 60 => 0.5,
+                    < 70 => 0.6,
+                    < 80 => 0.7,
+                    < 90 => 0.8,
+                    < 100 => 0.9,
+                    _ => 1
+                },
+                _ => rating switch
+                {
+                    > 10 => rating switch
                     {
                         // De facto conventions (windows explorer, mediaMonkey, musicBee)
-                        if (rating < 54) return 0.1;
                         // 0.2 is value "1"; handled in two blocks
-                        else if (rating < 64) return 0.3;
-                        else if (rating < 118) return 0.4;
-                        else if (rating < 128) return 0.5;
-                        else if (rating < 186) return 0.6;
-                        else if (rating < 196) return 0.7;
-                        else if (rating < 242) return 0.8;
-                        else if (rating < 255) return 0.9;
-                        else return 1;
-                    }
-                    else if (rating > 5) // Between 5 and 10
-                    {
-                        return rating / 10.0;
-                    }
-                    else // Between 1 and 5
-                    {
-                        return rating / 5.0;
-                    }
-            }
+                        < 54 => 0.1,
+                        < 64 => 0.3,
+                        < 118 => 0.4,
+                        < 128 => 0.5,
+                        < 186 => 0.6,
+                        < 196 => 0.7,
+                        < 242 => 0.8,
+                        < 255 => 0.9,
+                        _ => 1
+                    },
+                    // Between 5 and 10
+                    > 5 => rating / 10.0,
+                    _ => rating / 5.0
+                }
+            };
         }
 
         /// <summary>
@@ -246,44 +242,48 @@ namespace ATL.AudioData
         /// <returns>Popularity encoded with the given convention</returns>
         public static int EncodePopularity(double rating, int convention)
         {
-            switch (convention)
+            return convention switch
             {
-                case MetaDataIO.RC_ASF:
-
-                    if (rating < 1) return 0;
-                    if (rating < 2) return 1;
-                    if (rating < 3) return 25;
-                    if (rating < 4) return 50;
-                    if (rating < 5) return 75;
-                    return 99;
-
-                case MetaDataIO.RC_APE:
-
-                    if (rating < 0.5) return 0;           // Stored as scale of 0..100
-                    if (rating < 1) return 10;
-                    if (rating < 1.5) return 20;
-                    if (rating < 2) return 30;
-                    if (rating < 2.5) return 40;
-                    if (rating < 3) return 50;
-                    if (rating < 3.5) return 60;
-                    if (rating < 4) return 70;
-                    if (rating < 4.5) return 80;
-                    if (rating < 5) return 90;
-                    return 100;
-
-                default:                // ID3v2 convention
-                    if (rating < 0.5) return 0;
-                    if (rating < 1) return 13;
-                    if (rating < 1.5) return 1;
-                    if (rating < 2) return 54;
-                    if (rating < 2.5) return 64;
-                    if (rating < 3) return 118;
-                    if (rating < 3.5) return 128;
-                    if (rating < 4) return 186;
-                    if (rating < 4.5) return 196;
-                    if (rating < 5) return 242;
-                    return 255;
-            }
+                MetaDataIO.RC_ASF => rating switch
+                {
+                    < 1 => 0,
+                    < 2 => 1,
+                    < 3 => 25,
+                    < 4 => 50,
+                    < 5 => 75,
+                    _ => 99
+                },
+                MetaDataIO.RC_APE =>
+                    // Stored as scale of 0..100
+                    rating switch
+                    {
+                        < 0.5 => 0,
+                        < 1 => 10,
+                        < 1.5 => 20,
+                        < 2 => 30,
+                        < 2.5 => 40,
+                        < 3 => 50,
+                        < 3.5 => 60,
+                        < 4 => 70,
+                        < 4.5 => 80,
+                        < 5 => 90,
+                        _ => 100
+                    },
+                _ => rating switch
+                {
+                    < 0.5 => 0,
+                    < 1 => 13,
+                    < 1.5 => 1,
+                    < 2 => 54,
+                    < 2.5 => 64,
+                    < 3 => 118,
+                    < 3.5 => 128,
+                    < 4 => 186,
+                    < 4.5 => 196,
+                    < 5 => 242,
+                    _ => 255
+                }
+            };
         }
 
         /// <summary>
@@ -307,31 +307,25 @@ namespace ATL.AudioData
             // Invalid inputs
             if (null == str) return "";
             str = str.Trim();
-            if (str.Length < 4) return "";
-
-            // Obvious plain year
-            if (str.Length > 3)
+            switch (str.Length)
             {
+                case < 4:
+                    return "";
+                // Obvious plain year
                 // Begins with 4 numeric chars
-                if (char.IsNumber(str[0]) && char.IsNumber(str[1]) && char.IsNumber(str[2]) && char.IsNumber(str[3]))
-                {
+                case > 3 when char.IsNumber(str[0]) && char.IsNumber(str[1]) && char.IsNumber(str[2]) && char.IsNumber(str[3]):
                     return str[..4];
-                }
                 // Ends with 4 numeric chars
-                if (char.IsNumber(str[^1]) && char.IsNumber(str[^2]) && char.IsNumber(str[^3]) && char.IsNumber(str[^4]))
-                {
+                case > 3 when char.IsNumber(str[^1]) && char.IsNumber(str[^2]) && char.IsNumber(str[^3]) && char.IsNumber(str[^4]):
                     return str.Substring(str.Length - 4, 4);
-                }
+                default:
+                    {
+                        // == If everything above fails...
+                        Match match = rxNumber4.Value.Match(str.Trim());
+                        // First match is directly returned
+                        return match.Success ? match.Value : "";
+                    }
             }
-
-            // == If everything above fails...
-            Match match = rxNumber4.Value.Match(str.Trim());
-            // First match is directly returned
-            if (match.Success)
-            {
-                return match.Value;
-            }
-            return "";
         }
 
         /// <summary>
@@ -348,12 +342,11 @@ namespace ATL.AudioData
         /// <returns>Given track or disc number(s) formatted according to the given paramaters</returns>
         public static string FormatWithLeadingZeroes(string value, bool overrideExistingFormat, int existingDigits, bool useLeadingZeroes, string total)
         {
-            if (value.Contains('/'))
-            {
-                string[] parts = value.Split('/');
-                return formatWithLeadingZeroesInternal(parts[0], overrideExistingFormat, existingDigits, useLeadingZeroes, parts[1]) + "/" + formatWithLeadingZeroesInternal(parts[1], overrideExistingFormat, existingDigits, useLeadingZeroes, parts[1]);
-            }
-            else return formatWithLeadingZeroesInternal(value, overrideExistingFormat, existingDigits, useLeadingZeroes, total);
+            if (!value.Contains('/'))
+                return formatWithLeadingZeroesInternal(value, overrideExistingFormat, existingDigits, useLeadingZeroes, total);
+            string[] parts = value.Split('/');
+            return formatWithLeadingZeroesInternal(parts[0], overrideExistingFormat, existingDigits, useLeadingZeroes, parts[1]) + "/" + formatWithLeadingZeroesInternal(parts[1], overrideExistingFormat, existingDigits, useLeadingZeroes, parts[1]);
+
         }
 
         /// <summary>
@@ -368,7 +361,7 @@ namespace ATL.AudioData
         private static string formatWithLeadingZeroesInternal(string value, bool overrideExistingFormat, int existingDigits, bool useLeadingZeroes, string total)
         {
             if (!overrideExistingFormat && existingDigits > 0) return Utils.BuildStrictLengthString(value, existingDigits, '0', false);
-            int totalLength = (total != null && total.Length > 1) ? total.Length : 2;
+            int totalLength = total is { Length: > 1 } ? total.Length : 2;
             return useLeadingZeroes ? Utils.BuildStrictLengthString(value, totalLength, '0', false) : value;
         }
 
@@ -406,24 +399,22 @@ namespace ATL.AudioData
             if (Utils.IsNumeric(dayMonth) && (4 == dayMonth.Length))
             {
                 month = dayMonth.Substring(2, 2);
-                day = dayMonth.Substring(0, 2);
+                day = dayMonth[..2];
             }
 
 
             string hour = "";
             string minutes = "";
             string seconds = "";
-            if (Utils.IsNumeric(hoursMinutesSeconds))
+            if (!Utils.IsNumeric(hoursMinutesSeconds)) return FormatISOTimestamp(year, day, month, hour, minutes, seconds);
+            if (hoursMinutesSeconds.Length >= 4)
             {
-                if (hoursMinutesSeconds.Length >= 4)
-                {
-                    hour = hoursMinutesSeconds.Substring(0, 2);
-                    minutes = hoursMinutesSeconds.Substring(2, 2);
-                }
-                if (hoursMinutesSeconds.Length >= 6)
-                {
-                    seconds = hoursMinutesSeconds.Substring(4, 2);
-                }
+                hour = hoursMinutesSeconds.Substring(0, 2);
+                minutes = hoursMinutesSeconds.Substring(2, 2);
+            }
+            if (hoursMinutesSeconds.Length >= 6)
+            {
+                seconds = hoursMinutesSeconds.Substring(4, 2);
             }
 
             return FormatISOTimestamp(year, day, month, hour, minutes, seconds);
@@ -481,12 +472,10 @@ namespace ATL.AudioData
         {
             long paddingSizeToWrite = Settings.AddNewPadding ? Settings.PaddingSize : 0;
             // Padding size is constrained by either its initial size or the max size defined in settings
-            if (initialPaddingOffset > -1)
-            {
-                if (deltaSize <= 0) paddingSizeToWrite = Math.Max(0, initialPaddingSize + deltaSize);
-                else if (initialPaddingSize >= Settings.PaddingSize) paddingSizeToWrite = initialPaddingSize;
-                else paddingSizeToWrite = Math.Min(initialPaddingSize + deltaSize, Settings.PaddingSize);
-            }
+            if (initialPaddingOffset <= -1) return paddingSizeToWrite;
+            if (deltaSize <= 0) paddingSizeToWrite = Math.Max(0, initialPaddingSize + deltaSize);
+            else if (initialPaddingSize >= Settings.PaddingSize) paddingSizeToWrite = initialPaddingSize;
+            else paddingSizeToWrite = Math.Min(initialPaddingSize + deltaSize, Settings.PaddingSize);
             return paddingSizeToWrite;
         }
     }

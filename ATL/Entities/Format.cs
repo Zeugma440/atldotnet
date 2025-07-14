@@ -12,7 +12,7 @@ namespace ATL
         /// <summary>
         /// Represents an unknown generic format
         /// </summary>
-        public static readonly Format UNKNOWN_FORMAT = new Format(0, "Unknown");
+        public static readonly Format UNKNOWN_FORMAT = new(0, "Unknown");
 
         /// <summary>
         /// Check if the given byte array matches the Format's signature (aka "magic number")

@@ -1,7 +1,6 @@
 using ATL.Logging;
 using Commons;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -317,12 +316,11 @@ namespace ATL
         /// </summary>
         public bool Exists()
         {
-            if (Chapters != null && Chapters.Count > 0) return true;
-            if (Lyrics != null && Lyrics.Count > 0) return true;
+            if (Chapters is { Count: > 0 }) return true;
+            if (Lyrics is { Count: > 0 }) return true;
             if (Pictures.Count > 0) return true;
             if (Fields.Count > 0) return true;
-            if (AdditionalFields.Count > 0) return true;
-            return false;
+            return AdditionalFields.Count > 0;
         }
 
         /// <summary>
@@ -351,7 +349,7 @@ namespace ATL
                 {
                     case Field.LYRICS_UNSYNCH:
                         {
-                            if (null == Lyrics) Lyrics = new List<LyricsInfo>();
+                            Lyrics ??= new List<LyricsInfo>();
                             LyricsInfo info;
                             if (0 == Lyrics.Count)
                             {
@@ -424,13 +422,16 @@ namespace ATL
                         }
                     }
 
-                    if (!newMetaInfo.MarkedForDeletion && !found) // New MetaFieldInfo type+streamNumber+language does not exist in current TagData
+                    switch (newMetaInfo.MarkedForDeletion)
                     {
-                        AdditionalFields.Add(newMetaInfo);
-                    }
-                    else if (newMetaInfo.MarkedForDeletion && !found) // Cannot delete a field that has not been found
-                    {
-                        LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Field code " + newMetaInfo.NativeFieldCode + " cannot be deleted because it has not been found on current TagData.");
+                        // New MetaFieldInfo type+streamNumber+language does not exist in current TagData
+                        case false when !found:
+                            AdditionalFields.Add(newMetaInfo);
+                            break;
+                        // Cannot delete a field that has not been found
+                        case true when !found:
+                            LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Field code " + newMetaInfo.NativeFieldCode + " cannot be deleted because it has not been found on current TagData.");
+                            break;
                     }
                 }
             }
@@ -507,13 +508,7 @@ namespace ATL
                 }
 
                 // Keep existing one and update description if needed
-                PictureInfo newPic = null;
-                foreach (PictureInfo tgt in targetPictures)
-                {
-                    if (!existingPic.EqualsProper(tgt)) continue;
-                    newPic = tgt;
-                    break;
-                }
+                PictureInfo newPic = targetPictures.FirstOrDefault(tgt => existingPic.EqualsProper(tgt));
 
                 if (newPic != null)
                 {
@@ -523,8 +518,10 @@ namespace ATL
                         PictureInfo addPic = existingPic;
                         if (newPic.Description != existingPic.Description)
                         {
-                            addPic = new PictureInfo(existingPic, false);
-                            addPic.Description = newPic.Description;
+                            addPic = new PictureInfo(existingPic, false)
+                            {
+                                Description = newPic.Description
+                            };
                         }
                         resultPictures.Add(addPic);
                         // Target picture has been "consumed"
@@ -538,8 +535,10 @@ namespace ATL
             // Add remaining target pictures
             foreach (PictureInfo target in targetPictures)
             {
-                var targetPic = new PictureInfo(target, false);
-                targetPic.Position = 0;
+                var targetPic = new PictureInfo(target, false)
+                {
+                    Position = 0
+                };
                 targetPic.Position = nextPosition(targetPic, picturePositions);
                 resultPictures.Add(targetPic);
             }
@@ -574,13 +573,12 @@ namespace ATL
 
             for (int i = 0; i < positions.Count; i++)
             {
-                if (positions[i].Key.Equals(picId))
-                {
-                    picPosition = positions[i].Value + 1;
-                    positions[i] = new KeyValuePair<string, int>(picId, picPosition);
-                    found = true;
-                    break;
-                }
+                if (!positions[i].Key.Equals(picId)) continue;
+
+                picPosition = positions[i].Value + 1;
+                positions[i] = new KeyValuePair<string, int>(picId, picPosition);
+                found = true;
+                break;
             }
 
             if (!found)
@@ -647,11 +645,10 @@ namespace ATL
                     foreach (var l in Lyrics)
                     {
                         // Synch lyrics override unsynch lyrics when the target format cannot support both of them
-                        if (l.SynchronizedLyrics.Count > 0)
-                        {
-                            result = l.FormatSynch();
-                            break;
-                        }
+                        if (l.SynchronizedLyrics.Count <= 0) continue;
+
+                        result = l.FormatSynch();
+                        break;
                     }
                 }
             }
@@ -771,13 +768,11 @@ namespace ATL
                 Fields[Field.DISC_NUMBER_TOTAL] = discNumberTotal;
             }
 
-            if (Chapters != null && Chapters.Count > 0)
+            if (Chapters is { Count: > 0 })
             {
                 // Sort by start offset or time
-                if (Chapters[0].UseOffset)
-                    Chapters = Chapters.OrderBy(chapter => chapter.StartOffset).ToList();
-                else
-                    Chapters = Chapters.OrderBy(chapter => chapter.StartTime).ToList();
+                Chapters = Chapters[0].UseOffset ? Chapters.OrderBy(chapter => chapter.StartOffset).ToList() :
+                    Chapters.OrderBy(chapter => chapter.StartTime).ToList();
 
                 // Auto-fill end offsets or times except for final chapter
                 ChapterInfo previousChapter = null;
@@ -791,16 +786,12 @@ namespace ATL
                     previousChapter = chapter;
                 }
                 // Calculate duration of final chapter with duration of audio
-                if (previousChapter != null && 0 == previousChapter.EndTime) previousChapter.EndTime = (uint)Math.Floor(DurationMs);
+                if (previousChapter is { EndTime: 0 }) previousChapter.EndTime = (uint)Math.Floor(DurationMs);
             }
 
-            if (Lyrics != null && Lyrics.Count > 0)
-            {
-                foreach (LyricsInfo lyrics in Lyrics)
-                {
-                    lyrics.GuessFormat();
-                }
-            }
+            if (Lyrics is not { Count: > 0 }) return;
+
+            foreach (LyricsInfo lyrics in Lyrics) lyrics.GuessFormat();
         }
 
         /// <summary>

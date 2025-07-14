@@ -1,4 +1,5 @@
-﻿using ATL.AudioData;
+﻿using System.Diagnostics.CodeAnalysis;
+using ATL.AudioData;
 using Commons;
 using HashDepot;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace ATL
         /// <summary>
         /// Origin of the field
         /// </summary>
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         public enum ORIGIN
         {
             /// <summary>

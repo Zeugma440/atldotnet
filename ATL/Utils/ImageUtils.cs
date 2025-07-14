@@ -214,20 +214,18 @@ namespace Commons
                         int nbIFDEntries = readInt16(r, isBigEndian);
 
                         long initialPos;
-                        int IFDtag, IFDValue32, IFDValue16;
-                        byte[] IFDValueBinary;
                         int photometricInterpretation = 0;
                         int bitsPerSample = 0;
                         int samplesPerPixel = 0;
 
                         for (int i = 0; i < nbIFDEntries; i++)
                         {
-                            IFDtag = readInt16(r, isBigEndian);
+                            int IFDtag = readInt16(r, isBigEndian);
                             s.Seek(2, SeekOrigin.Current); // IFD field type
                             s.Seek(4, SeekOrigin.Current); // IFD number of values
-                            IFDValueBinary = r.ReadBytes(4);
-                            IFDValue32 = isBigEndian ? StreamUtils.DecodeBEInt32(IFDValueBinary) : StreamUtils.DecodeInt32(IFDValueBinary);
-                            IFDValue16 = isBigEndian ? StreamUtils.DecodeBEInt16(IFDValueBinary) : StreamUtils.DecodeInt16(IFDValueBinary);
+                            var IFDValueBinary = r.ReadBytes(4);
+                            var IFDValue32 = isBigEndian ? StreamUtils.DecodeBEInt32(IFDValueBinary) : StreamUtils.DecodeInt32(IFDValueBinary);
+                            int IFDValue16 = isBigEndian ? StreamUtils.DecodeBEInt16(IFDValueBinary) : StreamUtils.DecodeInt16(IFDValueBinary);
 
                             switch (IFDtag)
                             {
@@ -438,29 +436,38 @@ namespace Commons
                         if (StreamUtils.FindSequence(s, WebpBaseChunkSignature, limit))
                         {
                             char c = (char)s.ReadByte();
-                            if (c == 'L') // Lossless
+                            switch (c)
                             {
-                                s.Seek(5, SeekOrigin.Current);
-                                byte[] data = r.ReadBytes(4);
-                                props.Width = 1 + StreamUtils.ReadBits(data, 0, 14); // Only read the first 14 bits
-                                props.Height = 1 + StreamUtils.ReadBits(data, 14, 14); // Only read the last 14 bits
-                            }
-                            else if (c == 'X') // Extended
-                            {
-                                s.Seek(8, SeekOrigin.Current);
-                                byte[] data = r.ReadBytes(4);
-                                props.Width = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
-                                s.Seek(-1, SeekOrigin.Current);
-                                data = r.ReadBytes(4);
-                                props.Height = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
-                            }
-                            else if (c == ' ') // Lossy
-                            {
-                                s.Seek(10, SeekOrigin.Current);
-                                byte[] data = r.ReadBytes(2);
-                                props.Width = StreamUtils.ReadBits(data, 0, 14);
-                                data = r.ReadBytes(2);
-                                props.Height = StreamUtils.ReadBits(data, 0, 14);
+                                // Lossless
+                                case 'L':
+                                {
+                                    s.Seek(5, SeekOrigin.Current);
+                                    byte[] data = r.ReadBytes(4);
+                                    props.Width = 1 + StreamUtils.ReadBits(data, 0, 14); // Only read the first 14 bits
+                                    props.Height = 1 + StreamUtils.ReadBits(data, 14, 14); // Only read the last 14 bits
+                                    break;
+                                }
+                                // Extended
+                                case 'X':
+                                {
+                                    s.Seek(8, SeekOrigin.Current);
+                                    byte[] data = r.ReadBytes(4);
+                                    props.Width = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
+                                    s.Seek(-1, SeekOrigin.Current);
+                                    data = r.ReadBytes(4);
+                                    props.Height = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
+                                    break;
+                                }
+                                // Lossy
+                                case ' ':
+                                {
+                                    s.Seek(10, SeekOrigin.Current);
+                                    byte[] data = r.ReadBytes(2);
+                                    props.Width = StreamUtils.ReadBits(data, 0, 14);
+                                    data = r.ReadBytes(2);
+                                    props.Height = StreamUtils.ReadBits(data, 0, 14);
+                                    break;
+                                }
                             }
                         }
 
@@ -475,15 +482,13 @@ namespace Commons
         private static uint findPngChunk(Stream s, byte[] chunkID, long limit)
         {
             byte[] intData = new byte[4];
-            uint chunkSize;
-            bool foundChunk;
 
             while (s.Position < limit)
             {
                 if (s.Read(intData, 0, 4) < 4) break; // Chunk Size
-                chunkSize = StreamUtils.DecodeBEUInt32(intData);
+                var chunkSize = StreamUtils.DecodeBEUInt32(intData);
                 if (s.Read(intData, 0, 4) < 4) break; // Chunk ID
-                foundChunk = intData.SequenceEqual(chunkID);
+                var foundChunk = intData.SequenceEqual(chunkID);
                 if (foundChunk) return chunkSize;
 
                 s.Seek(chunkSize + 4, SeekOrigin.Current);

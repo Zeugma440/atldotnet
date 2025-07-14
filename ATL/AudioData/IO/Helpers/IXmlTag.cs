@@ -51,8 +51,10 @@ namespace ATL.AudioData.IO
             if (paddingSize > 0) w.WriteByte(0);
 
             w.Seek(sizePos, SeekOrigin.Begin);
-            if (isLittleEndian) w.Write(StreamUtils.EncodeInt32((int)(finalPos - sizePos - 4)));
-            else w.Write(StreamUtils.EncodeBEInt32((int)(finalPos - sizePos - 4)));
+            w.Write(isLittleEndian
+                ? StreamUtils.EncodeInt32((int)(finalPos - sizePos - 4))
+                : StreamUtils.EncodeBEInt32((int)(finalPos - sizePos - 4))
+                );
 
             return result;
         }

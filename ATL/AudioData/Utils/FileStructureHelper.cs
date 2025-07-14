@@ -251,7 +251,10 @@ namespace ATL.AudioData
                 // 1. Ignore zones declared but not added
                 // 2. Ignore deleted zones
                 // 3. Sort by offset
-                return zones.Values.Where(zone => zone.Offset > -1 && !zone.IsDeleted).OrderBy(zone => zone.Offset).ThenBy(zone => zone.Name).ToList();
+                return zones.Values.Where(zone => zone.Offset > -1 && !zone.IsDeleted)
+                    .OrderBy(zone => zone.Offset)
+                    .ThenBy(zone => zone.Name)
+                    .ToList();
             }
         }
 
@@ -561,15 +564,6 @@ namespace ATL.AudioData
             long globalOffsetCorrection = 0,
             int regionId = -1)
         {
-            long delta;
-            long offsetPositionCorrection;
-            long offsetValueCorrection;
-            byte[] value;
-            object updatedValue;
-            bool passedParentZone;
-            bool passedValueZone;
-
-
             if (null == zones) return false;
             if (!zones.TryGetValue(zoneName, out Zone currentZone)) return true; // No effect
 
@@ -587,11 +581,11 @@ namespace ATL.AudioData
             foreach (FrameHeader header in currentZone.Headers)
             {
                 // === Update values
-                offsetPositionCorrection = -globalOffsetCorrection;
-                offsetValueCorrection = 0;
-                delta = 0;
-                passedParentZone = false;
-                passedValueZone = false;
+                var offsetPositionCorrection = -globalOffsetCorrection;
+                long offsetValueCorrection = 0;
+                long delta = 0;
+                var passedParentZone = false;
+                var passedValueZone = false;
 
                 foreach (ZoneInfo dynamicZone in localDynamicOffsetCorrection.Keys)
                 {
@@ -625,107 +619,109 @@ namespace ATL.AudioData
                 // If we're going to delete the zone, and the header is located inside it, don't write it !
                 if (header.ParentZone == zoneName && ACTION.Delete == action) continue;
 
-                if (FrameHeader.TYPE.Counter == header.Type || FrameHeader.TYPE.Size == header.Type)
+                byte[] value;
+                switch (header.Type)
                 {
-                    if (FrameHeader.TYPE.Counter == header.Type)
+                    case FrameHeader.TYPE.Counter:
+                    case FrameHeader.TYPE.Size:
                     {
-                        switch (action)
+                        delta = header.Type switch
                         {
-                            case ACTION.Add: delta = 1; break;
-                            case ACTION.Delete: delta = -1; break;
-                            default: delta = 0; break;
-                        }
-
-                    }
-                    else if (FrameHeader.TYPE.Size == header.Type)
-                    {
-                        delta = deltaSize;
-                    }
-
-                    s.Seek(header.Position + offsetPositionCorrection, SeekOrigin.Begin);
-
-                    value = addToValue(header.Value, delta, out updatedValue);
-
-                    if (0 == value.Length) throw new NotSupportedException("Value type not supported for " + zoneName + "@" + header.Position + " : " + header.Value.GetType());
-
-                    // The very same frame header is referenced from another frame and must be updated to its new value
-                    updateAllHeadersAtPosition(header.Position, header.Type, updatedValue);
-
-                    if (!header.IsLittleEndian) Array.Reverse(value);
-
-                    s.Write(value, 0, value.Length);
-                }
-                else if (FrameHeader.TYPE.Index == header.Type || FrameHeader.TYPE.RelativeIndex == header.Type)
-                {
-                    long headerPosition = header.Position + offsetPositionCorrection;
-                    long headerOffsetCorrection = 0;
-                    if (FrameHeader.TYPE.RelativeIndex == header.Type)
-                    {
-                        headerOffsetCorrection = header.RelativityOffset > 0 ? header.RelativityOffset : headerPosition;
-                    }
-
-                    value = null;
-                    if (action != ACTION.Delete)
-                    {
-                        value = header.Value switch
-                        {
-                            long headerValue => BitConverter.GetBytes(headerValue + offsetValueCorrection -
-                                                                      headerOffsetCorrection),
-                            int headerValue => BitConverter.GetBytes((int)(headerValue + offsetValueCorrection -
-                                                                           headerOffsetCorrection)),
-                            uint headerValue => BitConverter.GetBytes((uint)(headerValue + offsetValueCorrection -
-                                                                             headerOffsetCorrection)),
-                            ushort headerValue => BitConverter.GetBytes((ushort)(headerValue + offsetValueCorrection -
-                                                                             headerOffsetCorrection)),
-                            // WARNING : will look awful if applying deltas make the value > 255
-                            byte headerValue => new byte[] { (byte)(headerValue + offsetValueCorrection - headerOffsetCorrection) },
-                            _ => value
+                            FrameHeader.TYPE.Counter => action switch
+                            {
+                                ACTION.Add => 1,
+                                ACTION.Delete => -1,
+                                _ => 0
+                            },
+                            FrameHeader.TYPE.Size => deltaSize,
+                            _ => delta
                         };
+
+                        s.Seek(header.Position + offsetPositionCorrection, SeekOrigin.Begin);
+
+                        value = addToValue(header.Value, delta, out var updatedValue);
+
+                        if (0 == value.Length) throw new NotSupportedException("Value type not supported for " + zoneName + "@" + header.Position + " : " + header.Value.GetType());
+
+                        // The very same frame header is referenced from another frame and must be updated to its new value
+                        updateAllHeadersAtPosition(header.Position, header.Type, updatedValue);
 
                         if (!header.IsLittleEndian) Array.Reverse(value);
+
+                        s.Write(value, 0, value.Length);
+                        break;
                     }
-                    else
+                    case FrameHeader.TYPE.Index:
+                    case FrameHeader.TYPE.RelativeIndex:
                     {
-                        value = header.Value switch
+                        long headerPosition = header.Position + offsetPositionCorrection;
+                        long headerOffsetCorrection = 0;
+                        if (FrameHeader.TYPE.RelativeIndex == header.Type)
                         {
-                            long _ => BitConverter.GetBytes((long)0),
-                            int _ => BitConverter.GetBytes(0),
-                            uint _ => BitConverter.GetBytes((uint)0),
-                            ushort _ => BitConverter.GetBytes((ushort)0),
-                            byte _ => BitConverter.GetBytes((byte)0),
-                            _ => value
-                        };
+                            headerOffsetCorrection = header.RelativityOffset > 0 ? header.RelativityOffset : headerPosition;
+                        }
+
+                        value = null;
+                        if (action != ACTION.Delete)
+                        {
+                            value = header.Value switch
+                            {
+                                long headerValue => BitConverter.GetBytes(headerValue + offsetValueCorrection -
+                                                                          headerOffsetCorrection),
+                                int headerValue => BitConverter.GetBytes((int)(headerValue + offsetValueCorrection -
+                                                                               headerOffsetCorrection)),
+                                uint headerValue => BitConverter.GetBytes((uint)(headerValue + offsetValueCorrection -
+                                    headerOffsetCorrection)),
+                                ushort headerValue => BitConverter.GetBytes((ushort)(headerValue + offsetValueCorrection -
+                                    headerOffsetCorrection)),
+                                // WARNING : will look awful if applying deltas make the value > 255
+                                byte headerValue => new[] { (byte)(headerValue + offsetValueCorrection - headerOffsetCorrection) },
+                                _ => value
+                            };
+
+                            if (!header.IsLittleEndian) Array.Reverse(value);
+                        }
+                        else
+                        {
+                            value = header.Value switch
+                            {
+                                long => BitConverter.GetBytes((long)0),
+                                int => BitConverter.GetBytes(0),
+                                uint => BitConverter.GetBytes((uint)0),
+                                ushort => BitConverter.GetBytes((ushort)0),
+                                byte => BitConverter.GetBytes((byte)0),
+                                _ => value
+                            };
+                        }
+
+                        if (null == value) throw new NotSupportedException("Value type not supported for index in " + zoneName + "@" + header.Position + " : " + header.Value.GetType());
+
+                        s.Seek(headerPosition, SeekOrigin.Begin);
+                        s.Write(value, 0, value.Length); // Index & relative index types
+                        break;
                     }
-
-                    if (null == value) throw new NotSupportedException("Value type not supported for index in " + zoneName + "@" + header.Position + " : " + header.Value.GetType());
-
-                    s.Seek(headerPosition, SeekOrigin.Begin);
-                    s.Write(value, 0, value.Length);
-                } // Index & relative index types
+                }
             } // Loop through headers
 
             // Record size variations into dynamic offset corrections
-            if (deltaSize != 0)
+            if (deltaSize == 0) return true;
+
+            ZoneInfo zoneInfo = new ZoneInfo(zoneName, regionId);
+            // Update local dynamic offset correction if non-null
+            if (!localDynamicOffsetCorrection.ContainsKey(zoneInfo))
+                localDynamicOffsetCorrection.Add(zoneInfo, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
+
+            // If working with local dynamic offset correction, update global dynamic offset correction
+            if (regionId <= -1) return true;
+
+            IDictionary<ZoneInfo, KeyValuePair<long, long>> globalRegion = dynamicOffsetCorrection[-1];
+            // Add new region
+            if (!globalRegion.ContainsKey(zoneInfo))
+                globalRegion.Add(zoneInfo, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
+            else // Increment current delta to existing region
             {
-                ZoneInfo zoneInfo = new ZoneInfo(zoneName, regionId);
-                // Update local dynamic offset correction if non-null
-                if (!localDynamicOffsetCorrection.ContainsKey(zoneInfo))
-                    localDynamicOffsetCorrection.Add(zoneInfo, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
-
-                // If working with local dynamic offset correction, update global dynamic offset correction
-                if (regionId > -1)
-                {
-                    IDictionary<ZoneInfo, KeyValuePair<long, long>> globalRegion = dynamicOffsetCorrection[-1];
-                    // Add new region
-                    if (!globalRegion.ContainsKey(zoneInfo))
-                        globalRegion.Add(zoneInfo, new KeyValuePair<long, long>(currentZone.Offset + currentZone.Size, deltaSize));
-                    else // Increment current delta to existing region
-                    {
-                        KeyValuePair<long, long> currentValues = globalRegion[zoneInfo];
-                        globalRegion[zoneInfo] = new KeyValuePair<long, long>(currentValues.Key, currentValues.Value + deltaSize);
-                    }
-
-                }
+                KeyValuePair<long, long> currentValues = globalRegion[zoneInfo];
+                globalRegion[zoneInfo] = new KeyValuePair<long, long>(currentValues.Key, currentValues.Value + deltaSize);
             }
 
             return true;

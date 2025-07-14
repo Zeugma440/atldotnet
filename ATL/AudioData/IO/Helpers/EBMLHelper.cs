@@ -32,12 +32,15 @@ namespace ATL.AudioData
 
         private static byte[] encodeIntOptimized(ulong value, int nbBytes)
         {
-            if (nbBytes < 2) return new byte[] { (byte)(value & 0x00000000000000FF) };
-            if (nbBytes < 3) return StreamUtils.EncodeBEUInt16((ushort)value);
-            if (3 == nbBytes) return StreamUtils.EncodeBEUInt24((uint)value);
-            if (4 == nbBytes) return StreamUtils.EncodeBEUInt32((uint)value);
-            if (5 == nbBytes) return StreamUtils.EncodeBEUInt40(value);
-            return StreamUtils.EncodeBEUInt64(value);
+            return nbBytes switch
+            {
+                < 2 => new[] { (byte)(value & 0x00000000000000FF) },
+                < 3 => StreamUtils.EncodeBEUInt16((ushort)value),
+                3 => StreamUtils.EncodeBEUInt24((uint)value),
+                4 => StreamUtils.EncodeBEUInt32((uint)value),
+                5 => StreamUtils.EncodeBEUInt40(value),
+                _ => StreamUtils.EncodeBEUInt64(value)
+            };
         }
 
         private static int getNbBytesForInt(ulong value)

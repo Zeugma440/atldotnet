@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -175,11 +174,7 @@ namespace ATL.AudioData
 
             // Isolate all namespaces provided as input
             var nsKeys = meta.AdditionalFields.Keys.Where(k => k.Contains("xmlns:")).ToHashSet();
-            var namespaces = new Dictionary<string, string>();
-            foreach (var nsKey in nsKeys)
-            {
-                namespaces.Add(nsKey.Split(':')[^1], additionalFields[nsKey]);
-            }
+            var namespaces = nsKeys.ToDictionary(nsKey => nsKey.Split(':')[^1], nsKey => additionalFields[nsKey]);
 
             // Complete with default namespaces if there's any missing
             foreach (var defaultNs in defaultNamespaces)
@@ -192,7 +187,7 @@ namespace ATL.AudioData
             var nonNsKeys = meta.AdditionalFields.Keys.Where(k => !k.Contains("xmlns:")).ToHashSet();
             foreach (var nsKey in nonNsKeys)
             {
-                var parts = nsKey.Split('.').Where(s => s.Contains(':'));
+                var parts = nsKey.Split('.').Where(s1 => s1.Contains(':'));
                 foreach (var part in parts) usedNamespaces.Add(part.Split(':')[0]);
             }
 
@@ -210,9 +205,8 @@ namespace ATL.AudioData
             else writer.WriteStartElement(node.Prefix, node.Name, namespaces[node.Prefix]);
 
             // Namespaces explicitly attached to current element
-            ISet<string> namespacesToAnchor = null;
-            namespaceAnchors.TryGetValue(node.FullName, out namespacesToAnchor);
-            if (namespacesToAnchor != null && namespacesToAnchor.Any(e => string.IsNullOrEmpty(e)))
+            namespaceAnchors.TryGetValue(node.FullName, out var namespacesToAnchor);
+            if (namespacesToAnchor != null && namespacesToAnchor.Any(string.IsNullOrEmpty))
             {
                 namespacesToAnchor.Clear();
                 namespacesToAnchor.UnionWith(usedNamespaces);
@@ -229,7 +223,7 @@ namespace ATL.AudioData
                 if (null == namespacesToAnchor || !namespacesToAnchor.Contains(ns))
                 {
                     // Not attached to any element => Attached to root
-                    var isAnchored = namespaceAnchors.Values.Any(s => s.Any(v => string.IsNullOrEmpty(v) || v.Equals(ns, StringComparison.OrdinalIgnoreCase)));
+                    var isAnchored = namespaceAnchors.Values.Any(s2 => s2.Any(v => string.IsNullOrEmpty(v) || v.Equals(ns, StringComparison.OrdinalIgnoreCase)));
                     if (isAnchored) continue;
                 }
 
@@ -281,7 +275,7 @@ namespace ATL.AudioData
 
                     // Namespaces explicitly attached to current element
                     namespaceAnchors.TryGetValue(node.FullName, out namespacesToAnchor);
-                    if (namespacesToAnchor != null && namespacesToAnchor.Any(e => string.IsNullOrEmpty(e)))
+                    if (namespacesToAnchor != null && namespacesToAnchor.Any(string.IsNullOrEmpty))
                     {
                         namespacesToAnchor.Clear();
                         namespacesToAnchor.UnionWith(usedNamespaces);

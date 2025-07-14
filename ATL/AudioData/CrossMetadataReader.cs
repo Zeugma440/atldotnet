@@ -1,4 +1,3 @@
-using ATL.AudioData.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -142,7 +141,7 @@ namespace ATL.AudioData
                 foreach (IMetaDataIO reader in metaReaders)
                 {
                     value = reader.TrackNumber;
-                    if (value != null && value != "") break;
+                    if (!string.IsNullOrEmpty(value)) break;
                 }
                 return value;
             }
@@ -690,9 +689,9 @@ namespace ATL.AudioData
             {
                 IList<ChapterInfo> chapters = new List<ChapterInfo>();
 
-                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.Chapters != null && r.Chapters.Count > 0);
-                if (reader != null)
-                    foreach (ChapterInfo chapter in reader.Chapters) chapters.Add(chapter);
+                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.Chapters is { Count: > 0 });
+                if (reader == null) return chapters;
+                foreach (ChapterInfo chapter in reader.Chapters) chapters.Add(chapter);
 
                 return chapters;
             }
@@ -705,9 +704,9 @@ namespace ATL.AudioData
             {
                 IList<LyricsInfo> result = new List<LyricsInfo>();
 
-                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.Lyrics != null && r.Lyrics.Count > 0);
-                if (reader != null)
-                    foreach (LyricsInfo l in reader.Lyrics) result.Add(l);
+                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.Lyrics is { Count: > 0 });
+                if (reader == null) return result;
+                foreach (LyricsInfo l in reader.Lyrics) result.Add(l);
 
                 return result;
             }
@@ -720,25 +719,19 @@ namespace ATL.AudioData
             {
                 IList<PictureInfo> pictures = new List<PictureInfo>();
 
-                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.EmbeddedPictures != null && r.EmbeddedPictures.Count > 0);
-                if (reader != null)
-                    foreach (PictureInfo picture in reader.EmbeddedPictures) pictures.Add(picture);
+                IMetaDataIO reader = metaReaders.FirstOrDefault(r => r.EmbeddedPictures is { Count: > 0 });
+                if (reader == null) return pictures;
+                foreach (PictureInfo picture in reader.EmbeddedPictures) pictures.Add(picture);
 
                 return pictures;
             }
         }
 
         /// <inheritdoc/>
-        public long Size
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public long Size => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public bool Read(Stream source, MetaDataIO.ReadTagParams readTagParams) { throw new NotImplementedException(); }
+        public bool Read(Stream source, ReadTagParams readTagParams) { throw new NotImplementedException(); }
 
         /// <inheritdoc/>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]

@@ -530,33 +530,30 @@ namespace ATL
         /// </returns>
         public static bool FindSequence(Stream stream, byte[] sequence, long limit = 0)
         {
-            int BUFFER_SIZE = 512;
+            const int BUFFER_SIZE = 512;
             byte[] readBuffer = new byte[BUFFER_SIZE];
 
-            int bytesToRead;
             int iSequence = 0;
             int readBytes = 0;
-            int read;
             long initialPos = stream.Position;
 
             int remainingBytes = (int)((limit > 0) ? Math.Min(stream.Length - stream.Position, limit) : stream.Length - stream.Position);
 
             while (remainingBytes > 0)
             {
-                bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
+                var bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
 
-                read = stream.Read(readBuffer, 0, bytesToRead);
+                var read = stream.Read(readBuffer, 0, bytesToRead);
 
                 for (int i = 0; i < read; i++)
                 {
                     if (sequence[iSequence] == readBuffer[i]) iSequence++;
                     else if (iSequence > 0) iSequence = 0;
 
-                    if (sequence.Length == iSequence)
-                    {
-                        stream.Position = initialPos + readBytes + i + 1;
-                        return true;
-                    }
+                    if (sequence.Length != iSequence) continue;
+
+                    stream.Position = initialPos + readBytes + i + 1;
+                    return true;
                 }
 
                 remainingBytes -= bytesToRead;
@@ -697,29 +694,26 @@ namespace ATL
                     // Convert exponent to the appropriate one
                     e += 1023 - 16383;
 
-                    // Out of range - too large
-                    if (e > 2047) return Double.NaN;
-
-                    // Out of range - too small
-                    if (e < 0)
+                    switch (e)
                     {
+                        // Out of range - too large
+                        case > 2047:
+                            return double.NaN;
+                        // Out of range - too small
                         // See if we can get a subnormal version
-                        if (e >= -51)
-                        {
+                        case < 0 and >= -51:
                             // Put a 1 at the front of f
-                            f = f | (1 << 52);
+                            f = f | ((long)1 << 52);
                             // Now shift it appropriately
                             f = f >> (1 - e);
                             // Return a subnormal version
                             return FromComponents(s, 0, f);
-                        }
-                        else // Return an appropriate 0
-                        {
+                        // Return an appropriate 0
+                        case < 0:
                             return FromComponents(s, 0, 0);
-                        }
+                        default:
+                            return FromComponents(s, e, f);
                     }
-
-                    return FromComponents(s, e, f);
                 }
                 else
                 {
@@ -880,14 +874,14 @@ namespace ATL
         public static async Task CopyStreamAsync(Stream from, Stream to, long length = 0)
         {
             byte[] data = new byte[Settings.FileBufferSize];
-            int bytesToRead;
             int totalBytesRead = 0;
 
             while (true)
             {
+                int bytesToRead;
                 if (length > 0)
                 {
-                    if (totalBytesRead + Settings.FileBufferSize < length) bytesToRead = Settings.FileBufferSize; else bytesToRead = toInt(length - totalBytesRead);
+                    bytesToRead = totalBytesRead + Settings.FileBufferSize < length ? Settings.FileBufferSize : toInt(length - totalBytesRead);
                 }
                 else // Read everything we can
                 {
@@ -937,11 +931,11 @@ namespace ATL
             long nbIterations = (long)Math.Ceiling(length * 1f / bufferSize);
             long resolution = (long)Math.Ceiling(nbIterations / 10f);
             long iteration = 0;
-            int read;
 
             while (written < length)
             {
                 int toRead = Math.Min(bufferSize, toInt(length - written));
+                int read;
                 if (forward)
                 {
                     s.Seek(offsetFrom + length - written - toRead, SeekOrigin.Begin);

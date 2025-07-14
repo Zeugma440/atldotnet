@@ -31,6 +31,10 @@ namespace Commons
         /// </summary>
         public static readonly byte[] CR_LF = { 13, 10 };
 
+        /// <summary>
+        /// Decimal separators
+        /// </summary>
+        private static readonly char[] DECIMAL_SEPARATORS = { ',', '.' };
 
         /// <summary>
         /// Transform the given string so that is becomes non-null
@@ -131,13 +135,13 @@ namespace Commons
         public static int DecodeTimecodeToMs(string timeCode)
         {
             int result = -1;
-            if (null == timeCode || 0 == timeCode.Length) return result;
+            if (string.IsNullOrEmpty(timeCode)) return result;
 
-            DateTime dateTime;
             bool valid = false;
 
-            if (DateTime.TryParse(timeCode, out dateTime)) // Handle classic cases hh:mm, hh:mm:ss.ddd (the latter being the spec)
+            if (DateTime.TryParse(timeCode, out var dateTime))
             {
+                // Handle classic cases hh:mm, hh:mm:ss.ddd (the latter being the spec)
                 valid = true;
                 result = dateTime.Millisecond;
                 result += dateTime.Second * 1000;
@@ -148,8 +152,6 @@ namespace Commons
             {
                 int days = 0;
                 int hours = 0;
-                int minutes = 0;
-                int seconds = 0;
                 int milliseconds = 0;
 
                 if (timeCode.Contains(':'))
@@ -168,8 +170,8 @@ namespace Commons
                         parts[^1] = subPart[0];
                         milliseconds = int.Parse(subPart[1]);
                     }
-                    seconds = int.Parse(parts[^1]);
-                    minutes = int.Parse(parts[^2]);
+                    var seconds = int.Parse(parts[^1]);
+                    var minutes = int.Parse(parts[^2]);
                     if (parts.Length >= 3)
                     {
                         string[] subPart = parts[^3].Split('d');
@@ -214,9 +216,9 @@ namespace Commons
             var intVal = int.Parse(parts[0]);
             if (intVal < 1900) return false;
             intVal = int.Parse(parts[1]);
-            if (intVal < 0 || intVal > 12) return false;
+            if (intVal is < 0 or > 12) return false;
             intVal = int.Parse(parts[2]);
-            return intVal >= 0 && intVal <= 31;
+            return intVal is >= 0 and <= 31;
         }
 
         /// <summary>
@@ -234,11 +236,11 @@ namespace Commons
             if (parts[2].Length != 2 || !IsNumeric(parts[2])) return false;
             // Range checks
             var intVal = int.Parse(parts[0]);
-            if (intVal < 0 || intVal > 23) return false;
+            if (intVal is < 0 or > 23) return false;
             intVal = int.Parse(parts[1]);
-            if (intVal < 0 || intVal > 59) return false;
+            if (intVal is < 0 or > 59) return false;
             intVal = int.Parse(parts[2]);
-            return intVal >= 0 && intVal <= 59;
+            return intVal is >= 0 and <= 59;
         }
 
         /// <summary>
@@ -336,8 +338,7 @@ namespace Commons
             if (result.Length > length) result = result[..length];
             else if (result.Length < length)
             {
-                if (padRight) result = result.PadRight(length, paddingChar);
-                else result = result.PadLeft(length, paddingChar);
+                result = padRight ? result.PadRight(length, paddingChar) : result.PadLeft(length, paddingChar);
             }
 
             return result;
@@ -491,7 +492,7 @@ namespace Commons
         /// <returns>True if char is between 0..9; false instead</returns>
         public static bool IsDigit(char c)
         {
-            return c >= '0' && c <= '9';
+            return c is >= '0' and <= '9';
         }
 
         /// <summary>
@@ -581,10 +582,15 @@ namespace Commons
         {
             if (!IsNumeric(s)) return double.NaN;
 
-            string[] parts = s.Split(new char[] { ',', '.' });
+            string[] parts = s.Split(DECIMAL_SEPARATORS);
 
-            if (parts.Length > 2) return double.NaN;
-            if (1 == parts.Length) return double.Parse(s);
+            switch (parts.Length)
+            {
+                case > 2:
+                    return double.NaN;
+                case 1:
+                    return double.Parse(s);
+            }
 
             // Other possibilities : 2 == parts.Length
             double decimalDivisor = Math.Pow(10, parts[1].Length);

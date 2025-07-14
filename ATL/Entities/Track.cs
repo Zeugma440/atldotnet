@@ -240,11 +240,10 @@ namespace ATL
             {
                 if (canUseValue(value))
                 {
-                    DateTime? tmpDate = null;
-                    if (Utils.TryExtractDateTimeFromDigits(value.ToString(), out tmpDate))
+                    if (Utils.TryExtractDateTimeFromDigits(value.ToString(), out var tmpDate))
                     {
                         Date = tmpDate.Value;
-                        isYearExplicit = 1 == Date.Value.Day && 1 == Date.Value.Month;
+                        isYearExplicit = Date.Value is { Day: 1, Month: 1 };
                     }
                     else Date = DateTime.MinValue;
                 }
@@ -279,11 +278,10 @@ namespace ATL
             {
                 if (canUseValue(value))
                 {
-                    DateTime? tmpDate = null;
-                    if (Utils.TryExtractDateTimeFromDigits(value.ToString(), out tmpDate))
+                    if (Utils.TryExtractDateTimeFromDigits(value.ToString(), out var tmpDate))
                     {
                         OriginalReleaseDate = tmpDate.Value;
-                        isORYearExplicit = 1 == OriginalReleaseDate.Value.Day && 1 == OriginalReleaseDate.Value.Month;
+                        isORYearExplicit = OriginalReleaseDate.Value is { Day: 1, Month: 1 };
                     }
                     else OriginalReleaseDate = DateTime.MinValue;
                 }
@@ -305,12 +303,9 @@ namespace ATL
             get
             {
                 var result = Utils.ParseFirstIntegerPart(TrackNumberStr);
-                if (-1 == result)
-                {
-                    if (Settings.NullAbsentValues) return null;
-                    else return 0;
-                }
-                return result;
+                if (-1 != result) return result;
+                if (Settings.NullAbsentValues) return null;
+                return 0;
             }
             set
             {
@@ -443,12 +438,11 @@ namespace ATL
         // Used for pictures lazy loading
         private IList<PictureInfo> getEmbeddedPictures()
         {
-            if (null == currentEmbeddedPictures)
-            {
-                currentEmbeddedPictures = new List<PictureInfo>();
-                initialEmbeddedPictures.Clear();
-                Update(true);
-            }
+            if (null != currentEmbeddedPictures) return currentEmbeddedPictures;
+
+            currentEmbeddedPictures = new List<PictureInfo>();
+            initialEmbeddedPictures.Clear();
+            Update(true);
 
             return currentEmbeddedPictures;
         }
@@ -681,12 +675,13 @@ namespace ATL
             // Detect and tag deleted Additional fields (=those which were in initialAdditionalFields and do not appear in AdditionalFields anymore)
             foreach (string s in initialAdditionalFields)
             {
-                if (!AdditionalFields.ContainsKey(s))
+                if (AdditionalFields.ContainsKey(s)) continue;
+
+                MetaFieldInfo metaFieldToDelete = new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, s)
                 {
-                    MetaFieldInfo metaFieldToDelete = new MetaFieldInfo(MetaDataIOFactory.TagType.ANY, s, "");
-                    metaFieldToDelete.MarkedForDeletion = true;
-                    result.AdditionalFields.Add(metaFieldToDelete);
-                }
+                    MarkedForDeletion = true
+                };
+                result.AdditionalFields.Add(metaFieldToDelete);
             }
 
             result.Pictures = new List<PictureInfo>();
@@ -698,20 +693,20 @@ namespace ATL
                 {
                     PictureInfo picInfo = initialEmbeddedPictures.FirstOrDefault(pi => targetPic.EqualsProper(pi));
 
-                    if (picInfo != null)
+                    result.Pictures.Add(targetPic);
+                    if (picInfo == null) continue;
+
+                    // Compare picture contents
+                    targetPic.ComputePicHash();
+                    // A new picture content has been defined for an existing location
+                    if (targetPic.PictureHash == picInfo.PictureHash) continue;
+
+                    PictureInfo picToDelete = new PictureInfo(picInfo)
                     {
-                        result.Pictures.Add(targetPic);
-                        // Compare picture contents
-                        targetPic.ComputePicHash();
-                        // A new picture content has been defined for an existing location
-                        if (targetPic.PictureHash != picInfo.PictureHash)
-                        {
-                            PictureInfo picToDelete = new PictureInfo(picInfo);
-                            picToDelete.MarkedForDeletion = true;
-                            result.Pictures.Add(picToDelete);
-                        }
-                    }
-                    else result.Pictures.Add(targetPic); // Completely new picture
+                        MarkedForDeletion = true
+                    };
+                    result.Pictures.Add(picToDelete);
+                    // Completely new picture
                 }
 
                 // Detect and tag deleted pictures (=those which were in initialEmbeddedPictures and do not appear in embeddedPictures anymore)
@@ -719,12 +714,13 @@ namespace ATL
                 {
                     PictureInfo targetPic = currentEmbeddedPictures.FirstOrDefault(pi => picInfo.EqualsProper(pi));
 
-                    if (null == targetPic)
+                    if (null != targetPic) continue;
+
+                    PictureInfo picToDelete = new PictureInfo(picInfo)
                     {
-                        PictureInfo picToDelete = new PictureInfo(picInfo);
-                        picToDelete.MarkedForDeletion = true;
-                        result.Pictures.Add(picToDelete);
-                    }
+                        MarkedForDeletion = true
+                    };
+                    result.Pictures.Add(picToDelete);
                 }
             }
 
@@ -762,14 +758,12 @@ namespace ATL
             // Write what needs to be written
             bool result = fileIO.Save(toTagData(), null, target, null, new ProgressToken<float>(writeProgress));
             // Update internal references
-            if (result)
-            {
-                Path = target;
-                stream = null;
-                Update();
-            }
+            if (!result) return false;
+            Path = target;
+            stream = null;
+            Update();
 
-            return result;
+            return true;
         }
 
         /// <summary>
@@ -806,15 +800,14 @@ namespace ATL
             // Write what needs to be written
             bool result = fileIO.Save(toTagData(), null, null, target, new ProgressToken<float>(writeProgress));
             // Update internal references
-            if (result)
-            {
-                stream = target;
-                streamInitialPos = 0;
-                this.Path = AudioDataIOFactory.IN_MEMORY;
-                Update();
-            }
+            if (!result) return false;
 
-            return result;
+            stream = target;
+            streamInitialPos = 0;
+            Path = AudioDataIOFactory.IN_MEMORY;
+            Update();
+
+            return true;
         }
 
         /// <summary>
@@ -848,14 +841,13 @@ namespace ATL
             // Write what needs to be written
             bool result = await fileIO.SaveAsync(toTagData(), null, target, null, new ProgressToken<float>(writeProgress));
             // Update internal references
-            if (result)
-            {
-                Path = target;
-                stream = null;
-                Update();
-            }
+            if (!result) return false;
 
-            return result;
+            Path = target;
+            stream = null;
+            Update();
+
+            return true;
         }
 
         /// <summary>
@@ -892,15 +884,14 @@ namespace ATL
             // Write what needs to be written
             bool result = await fileIO.SaveAsync(toTagData(), null, null, target, new ProgressToken<float>(writeProgress));
             // Update internal references
-            if (result)
-            {
-                stream = target;
-                streamInitialPos = 0;
-                this.Path = AudioDataIOFactory.IN_MEMORY;
-                Update();
-            }
+            if (!result) return false;
 
-            return result;
+            stream = target;
+            streamInitialPos = 0;
+            Path = AudioDataIOFactory.IN_MEMORY;
+            Update();
+
+            return true;
         }
 
         /// <summary>
@@ -1069,8 +1060,9 @@ namespace ATL
 
             t.AdditionalFields ??= new Dictionary<string, string>();
             t.AdditionalFields.Clear();
-            if (AdditionalFields != null)
-                foreach (var af in AdditionalFields) t.AdditionalFields.Add(new KeyValuePair<string, string>(af.Key, af.Value));
+            if (AdditionalFields == null) return;
+
+            foreach (var af in AdditionalFields) t.AdditionalFields.Add(new KeyValuePair<string, string>(af.Key, af.Value));
         }
 
         /// FORMATTING UTILITIES

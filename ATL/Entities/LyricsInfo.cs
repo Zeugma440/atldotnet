@@ -2,6 +2,7 @@
 using Commons;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -20,6 +21,7 @@ namespace ATL
         /// Type (contents) of lyrics data
         /// NB : Directly inspired by ID3v2 format
         /// </summary>
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         public enum LyricsType
         {
             /// <summary>
@@ -353,14 +355,8 @@ namespace ATL
             UnsynchronizedLyrics = info.UnsynchronizedLyrics;
             ContentType = info.ContentType;
             Format = info.Format;
-            if (info.SynchronizedLyrics != null)
-            {
-                SynchronizedLyrics = info.SynchronizedLyrics.Select(x => new LyricsPhrase(x)).ToList();
-            }
-            else
-            {
-                SynchronizedLyrics = new List<LyricsPhrase>();
-            }
+            SynchronizedLyrics = info.SynchronizedLyrics != null ? info.SynchronizedLyrics.Select(x => new LyricsPhrase(x)).ToList()
+                : new List<LyricsPhrase>();
             Metadata = info.Metadata.ToDictionary(x => x.Key, x => x.Value);
         }
 
@@ -502,7 +498,7 @@ namespace ATL
                     SynchronizedLyrics.Add(phrase);
                 }
             }
-            if (hasLrcA2) Format = LyricsFormat.LRC_A2; else Format = LyricsFormat.LRC;
+            Format = hasLrcA2 ? LyricsFormat.LRC_A2 : LyricsFormat.LRC;
             return true;
         }
 
@@ -577,7 +573,7 @@ namespace ATL
             foreach (var line in SynchronizedLyrics)
             {
                 sb.Append('[').Append(Utils.EncodeTimecode_ms(line.TimestampStart, true)).Append(']');
-                if (line.Beats != null && line.Beats.Count > 0)
+                if (line.Beats is { Count: > 0 })
                 {
                     // LRC A2
                     foreach (var beat in line.Beats)
