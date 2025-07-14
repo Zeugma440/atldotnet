@@ -13,8 +13,9 @@ namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for OGG files manipulation. Current implementation covers :
-    ///   - Vorbis data (extensions : .OGG)
+    ///   - Vorbis data (extensions : .OGG, .OGA)
     ///   - Opus data (extensions : .OPUS)
+    ///   - Speex data (extensions : .SPX)
     ///   - Embedded FLAC data (extensions : .OGG)
     ///   
     /// Implementation notes
@@ -200,8 +201,8 @@ namespace ATL.AudioData.IO
         // Vorbis parameter header
         private sealed class VorbisHeader
         {
-            public byte[] ID;
-            public byte[] BitstreamVersion = new byte[4];  // Bitstream version number
+            private byte[] ID;
+            private byte[] BitstreamVersion = new byte[4]; // Bitstream version number
             public byte ChannelMode;                             // Number of channels
             public int SampleRate;                                 // Sample rate (hz)
             public int BitRateMaximal;                         // Bit rate upper limit
@@ -306,7 +307,7 @@ namespace ATL.AudioData.IO
         // Speex parameter header
         private sealed class SpeexHeader
         {
-            public byte[] ID;
+            private byte[] ID;
             public byte[] VersionStr;
             public int Version;
             public int HeaderSize;
@@ -569,7 +570,21 @@ namespace ATL.AudioData.IO
                     pageOffsets.Add(source.Position);
 
                     pageHeader = OggPageHeader.ReadFromStream(source);
-                    if (!pageHeader.IsValid) return false;
+                    if (!pageHeader.IsValid)
+                    {
+                        // Last chance : try to reach the next page header by searching for its marker
+                        source.Position = pageOffsets[^2] + 27;
+                        if (StreamUtils.FindSequence(source, OGG_PAGE_ID, (long)Math.Round(source.Length * 0.1)))
+                        {
+                            source.Position -= OGG_PAGE_ID.Length;
+                            pageOffsets[^1] = source.Position;
+                            pageHeader = OggPageHeader.ReadFromStream(source);
+                        }
+                    }
+                    if (!pageHeader.IsValid)
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Malformed Ogg Header");
+                    }
                     int pageSize = pageHeader.GetPageSize();
 
                     if (!pageCount.TryAdd(pageHeader.StreamId, 1))
@@ -581,6 +596,7 @@ namespace ATL.AudioData.IO
                             if (2 == newPageCount) info.CommentHeaderStart = source.Position - pageHeader.HeaderSize;
                             else if (3 == newPageCount) info.SetupHeaderEnd = source.Position - pageHeader.HeaderSize;
                         }
+
                         if (isSupported[pageHeader.StreamId] && 2 == pageCount[pageHeader.StreamId]) // Comment packet
                         {
                             // Load all Comment packet sub-pages into a MemoryStream to read them later in one go
@@ -594,6 +610,7 @@ namespace ATL.AudioData.IO
                                 stream = new MemoryStream();
                                 bitstreams[pageHeader.StreamId] = stream;
                             }
+
                             stream.Write(source.ReadBytes(pageSize), 0, pageSize);
                         }
                     }
@@ -609,8 +626,10 @@ namespace ATL.AudioData.IO
                             isValidHeader = true;
                         }
                     }
+
                     source.Seek(pageHeader.Offset + pageHeader.HeaderSize + pageSize, SeekOrigin.Begin);
-                } while (pageCount[pageHeader.StreamId] < 3); // Stop when the two first pages (containing ID, Comment and Setup packets) have been scanned
+                    // Stop when the two first pages (containing ID, Comment and Setup packets) have been scanned
+                } while (pageCount[pageHeader.StreamId] < 3);
 
                 AudioDataOffset = info.SetupHeaderEnd; // Not exactly true as audio is useless without the setup header
                 AudioDataSize = sizeInfo.FileSize - AudioDataOffset;
@@ -638,8 +657,11 @@ namespace ATL.AudioData.IO
                                         info.CommentHeaderSpanPages = i - 1;
                                         firstSetupPage = i - 1;
                                     }
-                                    if (info.SetupHeaderEnd <= pageOffsets[i]) info.SetupHeaderSpanPages = i - firstSetupPage;
+
+                                    if (info.SetupHeaderEnd <= pageOffsets[i])
+                                        info.SetupHeaderSpanPages = i - firstSetupPage;
                                 }
+
                                 // Not found yet => comment header takes up all pages, and setup header is on the end of the last page
                                 if (-1 == firstSetupPage)
                                 {
@@ -653,6 +675,7 @@ namespace ATL.AudioData.IO
                                 info.SetupHeaderSpanPages = 1;
                             }
                         }
+
                         // Case of embedded FLAC as setup header doesn't exist => end is the end of the page
                         if (0 == info.CommentHeaderEnd && StreamUtils.FindSequence(source, OGG_PAGE_ID))
                         {
