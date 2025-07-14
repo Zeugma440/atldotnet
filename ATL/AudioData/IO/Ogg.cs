@@ -112,6 +112,8 @@ namespace ATL.AudioData.IO
             public byte[] LacingValues;                     // Lacing values - segment sizes
             public long Offset;                                             // Header offset
 
+            private int forcedPageSize;                          // Page size (forced value)
+
             public OggPageHeader(int streamId = 0)
             {
                 ID = OGG_PAGE_ID;
@@ -122,6 +124,7 @@ namespace ATL.AudioData.IO
                 PageNumber = 1;
                 Checksum = 0;
                 Offset = 0;
+                forcedPageSize = -1;
             }
 
             public void ReadFromStream(Stream r)
@@ -146,6 +149,7 @@ namespace ATL.AudioData.IO
 
                 LacingValues = new byte[Segments];
                 Segments = (byte)r.Read(LacingValues, 0, Segments);
+                forcedPageSize = -1;
             }
 
             public static OggPageHeader ReadFromStream(BufferedBinaryReader r)
@@ -160,7 +164,8 @@ namespace ATL.AudioData.IO
                     StreamId = r.ReadInt32(),
                     PageNumber = r.ReadInt32(),
                     Checksum = r.ReadUInt32(),
-                    Segments = r.ReadByte()
+                    Segments = r.ReadByte(),
+                    forcedPageSize = -1
                 };
                 result.LacingValues = r.ReadBytes(result.Segments);
                 return result;
@@ -182,12 +187,16 @@ namespace ATL.AudioData.IO
 
             public int GetPageSize()
             {
+                if (forcedPageSize > -1) return forcedPageSize;
+
                 int result = 0;
-                for (int i = 0; i < Segments; i++)
-                {
-                    result += LacingValues[i];
-                }
+                for (int i = 0; i < Segments; i++) result += LacingValues[i];
                 return result;
+            }
+
+            public void ForcePageSize(int value)
+            {
+                forcedPageSize = value;
             }
 
             public int HeaderSize => 27 + LacingValues.Length;
@@ -572,23 +581,39 @@ namespace ATL.AudioData.IO
                     pageHeader = OggPageHeader.ReadFromStream(source);
                     if (!pageHeader.IsValid)
                     {
-                        // Last chance : try to reach the next page header by searching for its marker
-                        source.Position = pageOffsets[^2] + 27;
-                        if (StreamUtils.FindSequence(source, OGG_PAGE_ID, (long)Math.Round(source.Length * 0.1)))
+                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Malformed Ogg Header");
+                        return false;
+                    }
+
+                    // Make sure next byte after page end is a page header; try to auto-correct if not
+                    // NB : Only useful when reading the first two pages as page 4 doesn't need to be parsed
+                    if (pageCount.ContainsKey(pageHeader.StreamId) && pageCount[pageHeader.StreamId] < 2)
+                    {
+                        source.Position = pageHeader.Offset + pageHeader.HeaderSize + pageHeader.GetPageSize();
+                        byte[] data = source.ReadBytes(OGG_PAGE_ID.Length);
+                        if (!StreamUtils.ArrBeginsWith(data, OGG_PAGE_ID))
                         {
-                            source.Position -= OGG_PAGE_ID.Length;
-                            pageOffsets[^1] = source.Position;
-                            pageHeader = OggPageHeader.ReadFromStream(source);
+                            source.Position = pageHeader.Offset + pageHeader.HeaderSize;
+                            // Last chance : try to reach the next page header by searching for its marker
+                            if (StreamUtils.FindSequence(source, OGG_PAGE_ID, (long)Math.Round(source.Length * 0.1)))
+                            {
+                                pageHeader.ForcePageSize((int)(source.Position - OGG_PAGE_ID.Length -
+                                                               pageHeader.Offset - pageHeader.HeaderSize));
+                            }
+                            else
+                            {
+                                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Malformed Ogg Header");
+                                return false;
+                            }
                         }
                     }
-                    if (!pageHeader.IsValid)
-                    {
-                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Malformed Ogg Header");
-                    }
+
                     int pageSize = pageHeader.GetPageSize();
+                    source.Position = pageHeader.Offset + pageHeader.HeaderSize;
 
                     if (!pageCount.TryAdd(pageHeader.StreamId, 1))
                     {
+                        // Nth page of a known stream
                         if (pageHeader.IsFirstPage)
                         {
                             int newPageCount = pageCount[pageHeader.StreamId] + 1;
@@ -628,6 +653,7 @@ namespace ATL.AudioData.IO
                     }
 
                     source.Seek(pageHeader.Offset + pageHeader.HeaderSize + pageSize, SeekOrigin.Begin);
+
                     // Stop when the two first pages (containing ID, Comment and Setup packets) have been scanned
                 } while (pageCount[pageHeader.StreamId] < 3);
 

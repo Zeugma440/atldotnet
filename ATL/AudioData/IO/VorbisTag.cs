@@ -352,11 +352,10 @@ namespace ATL.AudioData.IO
                     byte[] stringData = new byte[KEY_BUFFER];
                     int equalsIndex = -1;
                     int nbBuffered = -1;
-                    int nbRead = 0;
 
                     while (-1 == equalsIndex)
                     {
-                        nbRead = reader.Read(stringData, 0, KEY_BUFFER);
+                        int nbRead = reader.Read(stringData, 0, KEY_BUFFER);
                         nbBuffered++;
 
                         for (int i = 0; i < nbRead; i++)
