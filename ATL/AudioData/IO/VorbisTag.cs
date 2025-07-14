@@ -177,7 +177,7 @@ namespace ATL.AudioData.IO
 
         private void setChapterData(string fieldName, string fieldValue)
         {
-            if (null == tagData.Chapters) tagData.Chapters = new List<ChapterInfo>();
+            tagData.Chapters ??= new List<ChapterInfo>();
 
             // Capture numeric sequence within field name
             // NB : Handled this way to retrieve badly formatted chapter indexes (e.g. CHAPTER2, CHAPTER02NAME...)
@@ -188,9 +188,11 @@ namespace ATL.AudioData.IO
             ChapterInfo info = tagData.Chapters.FirstOrDefault(c => c.UniqueNumericID == chapterId);
             if (null == info)
             {
-                info = new ChapterInfo();
-                info.UniqueID = chapterId.ToString();
-                info.UniqueNumericID = chapterId;
+                info = new ChapterInfo
+                {
+                    UniqueID = chapterId.ToString(),
+                    UniqueNumericID = chapterId
+                };
                 tagData.Chapters.Add(info);
             }
 
@@ -243,44 +245,34 @@ namespace ATL.AudioData.IO
                 const PictureInfo.PIC_TYPE picType = PictureInfo.PIC_TYPE.Generic;
                 int picturePosition = takePicturePosition(picType);
 
-                if (readTagParams.ReadPictures)
-                {
-                    size = size - 1 - PICTURE_METADATA_ID_OLD.Length;
-                    // Make sure total size is a multiple of 4
-                    size = size - size % 4;
+                if (!readTagParams.ReadPictures) return;
 
-                    using MemoryStream outStream = new MemoryStream(size);
-                    StreamUtils.CopyStream(source, outStream, size);
-                    byte[] encodedData = outStream.ToArray();
+                size = size - 1 - PICTURE_METADATA_ID_OLD.Length;
+                // Make sure total size is a multiple of 4
+                size = size - size % 4;
 
-                    PictureInfo picInfo = PictureInfo.fromBinaryData(Utils.DecodeFrom64(encodedData), picType, getImplementedTagType(), 0, picturePosition);
-                    tagData.Pictures.Add(picInfo);
-                }
+                using MemoryStream outStream = new MemoryStream(size);
+                StreamUtils.CopyStream(source, outStream, size);
+                byte[] encodedData = outStream.ToArray();
+
+                PictureInfo picInfo = PictureInfo.fromBinaryData(Utils.DecodeFrom64(encodedData), picType, getImplementedTagType(), 0, picturePosition);
+                tagData.Pictures.Add(picInfo);
             }
         }
 
         public void ReadPicture(Stream s, ReadTagParams readTagParams)
         {
-            int picturePosition;
             long initPosition = s.Position;
             VorbisMetaDataBlockPicture block = ReadMetadataBlockPicture(s);
 
-            if (block.picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
-            {
-                picturePosition = takePicturePosition(getImplementedTagType(), (byte)block.nativePicCode);
-            }
-            else
-            {
-                picturePosition = takePicturePosition(block.picType);
-            }
+            var picturePosition = block.picType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? takePicturePosition(getImplementedTagType(), (byte)block.nativePicCode) : takePicturePosition(block.picType);
 
-            if (readTagParams.ReadPictures)
-            {
-                s.Seek(initPosition + block.picDataOffset, SeekOrigin.Begin);
-                PictureInfo picInfo = PictureInfo.fromBinaryData(s, block.picDataLength, block.picType, getImplementedTagType(), block.nativePicCode, picturePosition);
-                picInfo.Description = block.description;
-                tagData.Pictures.Add(picInfo);
-            }
+            if (!readTagParams.ReadPictures) return;
+
+            s.Seek(initPosition + block.picDataOffset, SeekOrigin.Begin);
+            PictureInfo picInfo = PictureInfo.fromBinaryData(s, block.picDataLength, block.picType, getImplementedTagType(), block.nativePicCode, picturePosition);
+            picInfo.Description = block.description;
+            tagData.Pictures.Add(picInfo);
         }
 
         // FLAC-specific override to handle multiple tags being authorized (e.g. representing multiple artists with multiple ARTIST tags)
@@ -360,11 +352,9 @@ namespace ATL.AudioData.IO
 
                         for (int i = 0; i < nbRead; i++)
                         {
-                            if (stringData[i] == 0x3D) // '=' character
-                            {
-                                equalsIndex = i;
-                                break;
-                            }
+                            if (stringData[i] != 0x3D) continue; // '=' character
+                            equalsIndex = i;
+                            break;
                         }
 
                         tagIdBuilder.Append(Utils.Latin1Encoding.GetString(stringData, 0, (-1 == equalsIndex) ? nbRead : equalsIndex));
@@ -401,20 +391,19 @@ namespace ATL.AudioData.IO
 
             structureHelper.AddZone(initialTagOffset, (int)(reader.Position - initialTagOffset), hasCoreSignature ? OGG_CORE_SIGNATURE : Array.Empty<byte>());
 
-            if (readTagParams.PrepareForWriting)
-            {
-                // Skip framing bit
-                if (reader.PeekChar()) reader.Seek(1, SeekOrigin.Current);
+            if (!readTagParams.PrepareForWriting) return true;
 
-                long streamPos = reader.Position;
-                // Prod to see if there's padding after the last field
-                if (streamPos + 4 < reader.Length && 0 == reader.ReadInt32())
-                {
-                    initialPaddingOffset = streamPos;
-                    initialPaddingSize = StreamUtils.TraversePadding(reader) - initialPaddingOffset;
-                    tagData.PaddingSize = initialPaddingSize;
-                }
-            }
+            // Skip framing bit
+            if (reader.PeekChar()) reader.Seek(1, SeekOrigin.Current);
+
+            long streamPos = reader.Position;
+
+            // Prod to see if there's padding after the last field
+            if (streamPos + 4 >= reader.Length || 0 != reader.ReadInt32()) return true;
+
+            initialPaddingOffset = streamPos;
+            initialPaddingSize = StreamUtils.TraversePadding(reader) - initialPaddingOffset;
+            tagData.PaddingSize = initialPaddingSize;
 
             return true;
         }
@@ -528,34 +517,31 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields.Where(isMetaFieldWritable))
             {
-                if (!fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID)
-                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
-                    )
+                if (fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID)
+                    || writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())) continue;
+
+                string value = FormatBeforeWriting(fieldInfo.Value);
+                if (value.Contains(Settings.DisplayValueSeparator + ""))
                 {
-                    string value = FormatBeforeWriting(fieldInfo.Value);
-                    if (value.Contains(Settings.DisplayValueSeparator + ""))
-                    {
-                        // Write multiple fields when there are multiple values (specific to VorbisTag)
-                        string[] valueParts = value.Split(Settings.DisplayValueSeparator);
-                        foreach (string valuePart in valueParts) writeTextFrame(w, fieldInfo.NativeFieldCode, valuePart);
-                        nbFrames += (uint)valueParts.Length;
-                    }
-                    else
-                    {
-                        writeTextFrame(w, fieldInfo.NativeFieldCode, value);
-                        nbFrames++;
-                    }
+                    // Write multiple fields when there are multiple values (specific to VorbisTag)
+                    string[] valueParts = value.Split(Settings.DisplayValueSeparator);
+                    foreach (string valuePart in valueParts) writeTextFrame(w, fieldInfo.NativeFieldCode, valuePart);
+                    nbFrames += (uint)valueParts.Length;
+                }
+                else
+                {
+                    writeTextFrame(w, fieldInfo.NativeFieldCode, value);
+                    nbFrames++;
                 }
             }
 
             // Picture fields
-            if (writePicturesWithMetadata)
+            if (!writePicturesWithMetadata) return nbFrames;
+
+            foreach (PictureInfo picInfo in tag.Pictures.Where(isPictureWritable))
             {
-                foreach (PictureInfo picInfo in tag.Pictures.Where(isPictureWritable))
-                {
-                    writePictureFrame(w, picInfo.PictureData, picInfo.MimeType, picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), picInfo.Description);
-                    nbFrames++;
-                }
+                writePictureFrame(w, picInfo.PictureData, picInfo.MimeType, picInfo.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? picInfo.NativePicCode : ID3v2.EncodeID3v2PictureType(picInfo.PicType), picInfo.Description);
+                nbFrames++;
             }
 
             return nbFrames;
@@ -628,14 +614,9 @@ namespace ATL.AudioData.IO
             w.Write(StreamUtils.EncodeBEInt32(props.Width));
             w.Write(StreamUtils.EncodeBEInt32(props.Height));
             w.Write(StreamUtils.EncodeBEInt32(props.ColorDepth));
-            if (props.Format.Equals(ImageFormat.Gif))
-            {
-                w.Write(StreamUtils.EncodeBEInt32(props.NumColorsInPalette));    // Color num
-            }
-            else
-            {
-                w.Write(StreamUtils.EncodeBEInt32(0));
-            }
+            w.Write(props.Format.Equals(ImageFormat.Gif)
+                ? StreamUtils.EncodeBEInt32(props.NumColorsInPalette)
+                : StreamUtils.EncodeBEInt32(0)); // Color num
 
             w.Write(StreamUtils.EncodeBEInt32(pictureData.Length));
             w.Write(pictureData);

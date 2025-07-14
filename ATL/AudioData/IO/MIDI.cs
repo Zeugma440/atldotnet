@@ -26,6 +26,8 @@ using System;
 using System.IO;
 using ATL.Logging;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
 using static ATL.AudioData.AudioDataManager;
 using Commons;
@@ -54,15 +56,8 @@ namespace ATL.AudioData.IO
         /// </summary>
         private long tempo;
 
-        /// <summary>
-        /// MIDI structure type
-        ///   0 - single-track
-        ///   1 - multiple tracks, synchronous
-        ///   2 - multiple tracks, asynchronous
-        /// </summary>
-        private byte type;
 
-
+        [SuppressMessage("ReSharper", "UnusedMember.Local")]
         private static class MidiEvents
         {
             // Standard events
@@ -73,7 +68,9 @@ namespace ATL.AudioData.IO
             public const int EVT_CONTROLLER_CHANGE = 0x0B;
             public const int EVT_CHANNEL_PRESSURE = 0x0D;
             public const int EVT_PITCH_BEND = 0x0E;
+#pragma warning disable S1144
             public const int EVT_META = 0xFF;
+#pragma warning restore S1144
             public const int EVT_SYSEX = 0xF0;
 
             // Meta events
@@ -97,13 +94,13 @@ namespace ATL.AudioData.IO
 
         private sealed class MidiEvent
         {
-            public long TickOffset = 0;
-            public int Type = 0;
+            public readonly long TickOffset;
+            public readonly int Type;
             public bool isMetaEvent = false;
-            public int Channel = 0;
+            public readonly int Channel;
 
-            public int Param0 = 0;
-            public int Param1 = 0;
+            public readonly int Param0;
+            public readonly int Param1;
             public string Description;
 
             public MidiEvent(long tickOffset, int type, int channel, int param0, int param1 = 0)
@@ -124,7 +121,7 @@ namespace ATL.AudioData.IO
 
             public MidiEvent LastEvent = null;
 
-            public IList<MidiEvent> events = new List<MidiEvent>();
+            public readonly IList<MidiEvent> events = new List<MidiEvent>();
 
             public void Add(MidiEvent evt)
             {
@@ -146,7 +143,9 @@ namespace ATL.AudioData.IO
         }
 
         #region instruments
-        private static readonly string[] instrumentList = new string[] { "Piano",
+#pragma warning disable S1144
+        // ReSharper disable once UnusedMember.Local
+        private static readonly string[] instrumentList = { "Piano",
                                                               "Bright Piano",
                                                               "Electric Grand",
                                                               "Honky Tonk Piano",
@@ -274,6 +273,7 @@ namespace ATL.AudioData.IO
                                                               "Helicopter",
                                                               "Applause",
                                                               "Gunshot"};
+#pragma warning restore S1144
         #endregion
 
         private static readonly byte[] MIDI_FILE_HEADER = Utils.Latin1Encoding.GetBytes("MThd");
@@ -359,7 +359,7 @@ namespace ATL.AudioData.IO
         /// <param name="format">Audio format</param>
         public Midi(string filePath, AudioFormat format)
         {
-            this.FileName = filePath;
+            FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -369,36 +369,29 @@ namespace ATL.AudioData.IO
 
         private double getDuration()
         {
-            long maxTicks = 0;
             double maxDuration = 0; // Longest duration among all tracks
 
-            if (tracks.Count > 0)
+            if (tracks.Count <= 0) return (maxDuration / timebase / 1000.00) + 1000;
+
+            // Look for the position of the latest "significant event" of the entire song (including TrackEnd)
+            long maxTicks = tracks.Select(aTrack => aTrack.LastSignificantEventTicks).Prepend(0).Max();
+
+            long currentDuration = 0;
+            long lastTempoTicks = 0;
+            int currentTempo = DEFAULT_TEMPO;
+
+            // Build "duration chunks" using the "master tempo map" provided in track 0
+            foreach (MidiEvent evt in tracks[0].events)
             {
-                // Look for the position of the latest "significant event" of the entire song (including TrackEnd)
-                foreach (MidiTrack aTrack in tracks)
-                {
-                    maxTicks = Math.Max(maxTicks, aTrack.LastSignificantEventTicks);
-                }
+                if (MidiEvents.META_TEMPO != evt.Type) continue;
+                currentDuration += (evt.TickOffset - lastTempoTicks) * currentTempo;
 
-                long currentDuration = 0;
-                long lastTempoTicks = 0;
-                int currentTempo = DEFAULT_TEMPO;
-
-                // Build "duration chunks" using the "master tempo map" provided in track 0
-                foreach (MidiEvent evt in tracks[0].events)
-                {
-                    if (MidiEvents.META_TEMPO == evt.Type)
-                    {
-                        currentDuration += (evt.TickOffset - lastTempoTicks) * currentTempo;
-
-                        currentTempo = evt.Param0;
-                        lastTempoTicks = evt.TickOffset;
-                    }
-                }
-                // Make sure the song lasts until the latest event
-                if (maxTicks > lastTempoTicks) currentDuration += (maxTicks - lastTempoTicks) * currentTempo;
-                maxDuration = currentDuration;
+                currentTempo = evt.Param0;
+                lastTempoTicks = evt.TickOffset;
             }
+            // Make sure the song lasts until the latest event
+            if (maxTicks > lastTempoTicks) currentDuration += (maxTicks - lastTempoTicks) * currentTempo;
+            maxDuration = currentDuration;
 
             // For an obscure reason, this algorithm constantly calculates
             // a duration equals to (actual duration calculated by BASSMIDI - 1 second), hence this ugly " + 1000"
@@ -414,8 +407,7 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public bool Read(Stream source, SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
-            this.sizeInfo = sizeNfo;
-
+            sizeInfo = sizeNfo;
             return read(source, readTagParams);
         }
 
@@ -433,7 +425,6 @@ namespace ATL.AudioData.IO
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             byte[] buffer = new byte[10];
-            string trigger;
 
             resetData();
 
@@ -450,7 +441,7 @@ namespace ATL.AudioData.IO
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Wrong MIDI header");
                 return false;
             }
-            type = buffer[5];
+            byte type = buffer[5];
 
             // MIDI STRUCTURE TYPE
             // 0 - single-track 
@@ -476,7 +467,7 @@ namespace ATL.AudioData.IO
             while (source.Position < sizeInfo.FileSize - 4)
             {
                 if (source.Read(buffer, 0, 4) < 4) return false;
-                trigger = Utils.Latin1Encoding.GetString(buffer, 0, 4);
+                var trigger = Utils.Latin1Encoding.GetString(buffer, 0, 4);
 
                 if (trigger != MIDI_TRACK_HEADER)
                 {
@@ -497,7 +488,7 @@ namespace ATL.AudioData.IO
             tracks = m_tracks;
 
             if (comment.Length > 0) comment.Remove(comment.Length - 1, 1);
-            tagData.IntegrateValue(TagData.Field.COMMENT, comment.ToString());
+            tagData.IntegrateValue(Field.COMMENT, comment.ToString());
 
             Duration = getDuration();
             BitRate = sizeInfo.FileSize / Duration;
@@ -513,6 +504,7 @@ namespace ATL.AudioData.IO
         //---------------------------------------------------------------
         // returns list of drumset instrument names
         //---------------------------------------------------------------
+#pragma warning disable S125
         /* ## TO DO
         function getDrumset(){
             return array(
@@ -566,11 +558,13 @@ namespace ATL.AudioData.IO
             81=>'Open Triangle');
         }
         */
+#pragma warning restore S125
 
         //---------------------------------------------------------------
         // returns list of standard drum kit names
         //---------------------------------------------------------------
-        /* ## TO DO 
+#pragma warning disable S125
+        /* ## TO DO
         function getDrumkitList(){
             return array(
                 1   => 'Dry',
@@ -584,10 +578,12 @@ namespace ATL.AudioData.IO
             );
         }
         */
+#pragma warning restore S125
 
         //---------------------------------------------------------------
         // returns list of note names
         //---------------------------------------------------------------
+#pragma warning disable S125
         /*
         function getNoteList(){
           //note 69 (A6) = A440
@@ -607,6 +603,7 @@ namespace ATL.AudioData.IO
             'C10','Cs10','D10','Ds10','E10','F10','Fs10','G10');
         }
         */
+#pragma warning restore S125
         #endregion
 
         private MidiTrack parseTrack(byte[] data, int trackNumber)
@@ -617,17 +614,6 @@ namespace ATL.AudioData.IO
 
             int position = 0;
             long currentTicks = 0;
-            int currentDelta;
-            byte eventType;
-            int eventTypeHigh;
-            int eventTypeLow;
-            byte meta;
-            int num;
-            int len;
-            byte tmp;
-            byte c;
-            string txt;
-            MidiEvent evt;
 
             int currentTempo = 0;
             long lastTempoTicks = -1;
@@ -635,12 +621,13 @@ namespace ATL.AudioData.IO
             while (position < trackLen)
             {
                 // timedelta
-                currentDelta = readVarLen(ref data, ref position);
+                var currentDelta = readVarLen(ref data, ref position);
                 currentTicks += currentDelta;
 
-                eventType = data[position];
-                eventTypeHigh = (eventType >> 4);
-                eventTypeLow = (eventType - eventTypeHigh * 16);
+                var eventType = data[position];
+                var eventTypeHigh = eventType >> 4;
+                var eventTypeLow = eventType - eventTypeHigh * 16;
+                MidiEvent evt;
                 switch (eventTypeHigh)
                 {
                     case MidiEvents.EVT_PROGRAM_CHANGE: //PrCh = ProgramChange
@@ -693,19 +680,23 @@ namespace ATL.AudioData.IO
                         position += 3;
                         break;
                     default:
+                        int len;
                         switch (eventType)
                         {
                             case 0xFF: // Meta
-                                meta = data[position + 1];
+                                var meta = data[position + 1];
                                 switch (meta)
                                 {
                                     case MidiEvents.META_SEQUENCE_NUM: // sequence_number
-                                        tmp = data[position + 2];
+                                        var tmp = data[position + 2];
+                                        int num;
                                         if (tmp == 0x00) { num = trackNumber; position += 3; }
                                         else { num = 1; position += 5; }
 
-                                        evt = new MidiEvent(currentTicks, meta, -1, num);
-                                        evt.isMetaEvent = true;
+                                        evt = new MidiEvent(currentTicks, meta, -1, num)
+                                        {
+                                            isMetaEvent = true
+                                        };
                                         evt.Description = " Seqnr " + evt.Param0;
                                         track.Add(evt);
 
@@ -718,44 +709,61 @@ namespace ATL.AudioData.IO
                                     case MidiEvents.META_LYRICS: // Meta Lyrics
                                     case MidiEvents.META_MARKER: // Meta Marker
                                     case MidiEvents.META_CUE: // Meta Cue
-                                        string[] texttypes = new string[7] { "Text", "Copyright", "TrkName", "InstrName", "Lyric", "Marker", "Cue" };
+                                        string[] texttypes = { "Text", "Copyright", "TrkName", "InstrName", "Lyric", "Marker", "Cue" };
 
                                         string textType = texttypes[meta - 1];
                                         position += 2;
                                         len = readVarLen(ref data, ref position);
-                                        if ((len + position) > trackLen) throw new InvalidDataException($"Meta {textType} has corrupt variable length field ({len}) [track: {trackNumber} dt: {currentDelta}]");
+                                        if (len + position > trackLen) throw new InvalidDataException($"Meta {textType} has corrupt variable length field ({len}) [track: {trackNumber} dt: {currentDelta}]");
 
-                                        txt = Encoding.ASCII.GetString(data, position, len);
-                                        if (MidiEvents.META_TEXT == meta || MidiEvents.META_TRACK_NAME == meta || MidiEvents.META_MARKER == meta) comment.Append(txt).Append(Settings.InternalValueSeparator);
-                                        else if (MidiEvents.META_COPYRIGHT == meta) tagData.IntegrateValue(TagData.Field.COPYRIGHT, txt);
+                                        var txt = Encoding.ASCII.GetString(data, position, len);
+                                        switch (meta)
+                                        {
+                                            case MidiEvents.META_TEXT:
+                                            case MidiEvents.META_TRACK_NAME:
+                                            case MidiEvents.META_MARKER:
+                                                comment.Append(txt).Append(Settings.InternalValueSeparator);
+                                                break;
+                                            case MidiEvents.META_COPYRIGHT:
+                                                tagData.IntegrateValue(Field.COPYRIGHT, txt);
+                                                break;
+                                        }
 
-                                        evt = new MidiEvent(currentTicks, meta, -1, meta - 1);
-                                        evt.isMetaEvent = true;
-                                        evt.Description = $" Meta {textType} '{txt}'";
+                                        evt = new MidiEvent(currentTicks, meta, -1, meta - 1)
+                                        {
+                                            isMetaEvent = true,
+                                            Description = $" Meta {textType} '{txt}'"
+                                        };
                                         track.Add(evt);
 
                                         position += len;
                                         break;
                                     case MidiEvents.META_CHANNEL_PREFIX: // ChannelPrefix
-                                        evt = new MidiEvent(currentTicks, meta, -1, data[position + 3]);
-                                        evt.isMetaEvent = true;
+                                        evt = new MidiEvent(currentTicks, meta, -1, data[position + 3])
+                                        {
+                                            isMetaEvent = true
+                                        };
                                         evt.Description = " Meta ChannelPrefix " + evt.Param0;
                                         track.Add(evt);
 
                                         position += 4;
                                         break;
                                     case MidiEvents.META_CHANNEL_PREFIX_PORT: // ChannelPrefixOrPort
-                                        evt = new MidiEvent(currentTicks, meta, -1, data[position + 3]);
-                                        evt.isMetaEvent = true;
+                                        evt = new MidiEvent(currentTicks, meta, -1, data[position + 3])
+                                        {
+                                            isMetaEvent = true
+                                        };
                                         evt.Description = " Meta ChannelPrefixOrPort " + evt.Param0;
                                         track.Add(evt);
 
                                         position += 4;
                                         break;
                                     case MidiEvents.META_TRACK_END: // Meta TrkEnd
-                                        evt = new MidiEvent(currentTicks, meta, -1, -1);
-                                        evt.isMetaEvent = true;
-                                        evt.Description = " Meta TrkEnd";
+                                        evt = new MidiEvent(currentTicks, meta, -1, -1)
+                                        {
+                                            isMetaEvent = true,
+                                            Description = " Meta TrkEnd"
+                                        };
                                         track.Add(evt);
 
                                         track.Ticks = currentTicks;
@@ -779,8 +787,10 @@ namespace ATL.AudioData.IO
                                         currentTempo = data[position + 3] * 0x010000 + data[position + 4] * 0x0100 + data[position + 5];
                                         if (0 == currentTempo) currentTempo = DEFAULT_TEMPO;
 
-                                        evt = new MidiEvent(currentTicks, meta, -1, currentTempo);
-                                        evt.isMetaEvent = true;
+                                        evt = new MidiEvent(currentTicks, meta, -1, currentTempo)
+                                        {
+                                            isMetaEvent = true
+                                        };
                                         evt.Description = $" Meta Tempo {evt.Param0} (duration : {track.Duration})";
                                         track.Add(evt);
 
@@ -800,9 +810,11 @@ namespace ATL.AudioData.IO
                                         byte fh = data[position + 7];
 
                                         // TODO : store the arguments in a solid structure within MidiEvent
-                                        evt = new MidiEvent(currentTicks, meta, -1, -1);
-                                        evt.isMetaEvent = true;
-                                        evt.Description = $" Meta SMPTE {h} {m} {s} {f} {fh}";
+                                        evt = new MidiEvent(currentTicks, meta, -1, -1)
+                                        {
+                                            isMetaEvent = true,
+                                            Description = $" Meta SMPTE {h} {m} {s} {f} {fh}"
+                                        };
                                         track.Add(evt);
 
                                         position += 8;
@@ -811,19 +823,23 @@ namespace ATL.AudioData.IO
                                         byte z = data[position + 3];
                                         int t = 2 ^ data[position + 4];
                                         byte mc = data[position + 5];
-                                        c = data[position + 6];
+                                        var c = data[position + 6];
 
                                         // TODO : store the arguments in a solid structure within MidiEvent
-                                        evt = new MidiEvent(currentTicks, meta, -1, -1);
-                                        evt.isMetaEvent = true;
-                                        evt.Description = $" Meta TimeSig {z}/{t} {mc} {c}";
+                                        evt = new MidiEvent(currentTicks, meta, -1, -1)
+                                        {
+                                            isMetaEvent = true,
+                                            Description = $" Meta TimeSig {z}/{t} {mc} {c}"
+                                        };
                                         track.Add(evt);
 
                                         position += 7;
                                         break;
                                     case MidiEvents.META_KEY_SIGNATURE: // KeySig
-                                        evt = new MidiEvent(currentTicks, meta, -1, data[position + 3], data[position + 4]);
-                                        evt.isMetaEvent = true;
+                                        evt = new MidiEvent(currentTicks, meta, -1, data[position + 3], data[position + 4])
+                                        {
+                                            isMetaEvent = true
+                                        };
                                         evt.Description = " Meta KeySig vz=" + evt.Param0 + " " + (evt.Param1 == 0 ? "major" : "minor");
                                         track.Add(evt);
 
@@ -832,12 +848,14 @@ namespace ATL.AudioData.IO
                                     case MidiEvents.META_SEQUENCER_DATA: // Sequencer specific data
                                         position += 2;
                                         len = readVarLen(ref data, ref position);
-                                        if ((len + position) > trackLen) throw new InvalidDataException($"SeqSpec has corrupt variable length field ({len}) [track: {trackNumber} dt: {currentDelta}]");
+                                        if (len + position > trackLen) throw new InvalidDataException($"SeqSpec has corrupt variable length field ({len}) [track: {trackNumber} dt: {currentDelta}]");
                                         position -= 3;
                                         {
-                                            evt = new MidiEvent(currentTicks, meta, -1, currentTempo);
-                                            evt.isMetaEvent = true;
-                                            evt.Description = " Meta SeqSpec";
+                                            evt = new MidiEvent(currentTicks, meta, -1, currentTempo)
+                                            {
+                                                isMetaEvent = true,
+                                                Description = " Meta SeqSpec"
+                                            };
                                             track.Add(evt);
                                         }
                                         position += len + 3;
@@ -848,13 +866,15 @@ namespace ATL.AudioData.IO
                                         byte metacode = data[position + 1];
                                         position += 2;
                                         len = readVarLen(ref data, ref position);
-                                        if ((len + position) > trackLen) throw new InvalidDataException($"Meta {metacode} has corrupt variable length field ({len}) [track: {trackNumber} dt: {currentDelta}]");
+                                        if (len + position > trackLen) throw new InvalidDataException($"Meta {metacode} has corrupt variable length field ({len}) [track: {trackNumber} dt: {currentDelta}]");
                                         position -= 3;
                                         {
-                                            String str = Encoding.ASCII.GetString(data, position + 3, len);
-                                            evt = new MidiEvent(currentTicks, meta, -1, currentTempo);
-                                            evt.isMetaEvent = true;
-                                            evt.Description = $" Meta 0x{metacode} {str}";
+                                            string str = Encoding.ASCII.GetString(data, position + 3, len);
+                                            evt = new MidiEvent(currentTicks, meta, -1, currentTempo)
+                                            {
+                                                isMetaEvent = true,
+                                                Description = $" Meta 0x{metacode} {str}"
+                                            };
                                             track.Add(evt);
                                         }
                                         position += len + 3;
@@ -866,63 +886,63 @@ namespace ATL.AudioData.IO
                             case MidiEvents.EVT_SYSEX: // SysEx
                                 position += 1;
                                 len = readVarLen(ref data, ref position);
-                                if ((len + position) > trackLen) throw new InvalidDataException($"SysEx has corrupt variable length field ({len}) [track: {trackNumber} dt: {currentDelta} p: {position}]");
+                                if (len + position > trackLen) throw new InvalidDataException($"SysEx has corrupt variable length field ({len}) [track: {trackNumber} dt: {currentDelta} p: {position}]");
                                 {
-                                    evt = new MidiEvent(currentTicks, eventTypeHigh, -1, currentTempo);
-                                    evt.isMetaEvent = true;
-                                    evt.Description = " SysEx";
+                                    evt = new MidiEvent(currentTicks, eventTypeHigh, -1, currentTempo)
+                                    {
+                                        isMetaEvent = true,
+                                        Description = " SysEx"
+                                    };
                                     track.Add(evt);
                                 }
                                 position += len;
                                 break;
                             default: // Repetition of last event?
-                                if ((track.LastEvent.Type == MidiEvents.EVT_NOTE_ON) || (track.LastEvent.Type == MidiEvents.EVT_NOTE_OFF))
+                                switch (track.LastEvent.Type)
                                 {
-                                    evt = new MidiEvent(currentTicks, track.LastEvent.Type, track.LastEvent.Channel, data[position], data[position + 1]);
-                                    evt.Description = " " + (track.LastEvent.Type == MidiEvents.EVT_NOTE_ON ? "On" : "Off") + " ch=" + evt.Channel + " n=" + evt.Param0 + " v=" + evt.Param1;
-                                    track.Add(evt);
+                                    case MidiEvents.EVT_NOTE_ON:
+                                    case MidiEvents.EVT_NOTE_OFF:
+                                        evt = new MidiEvent(currentTicks, track.LastEvent.Type, track.LastEvent.Channel, data[position], data[position + 1]);
+                                        evt.Description = " " + (track.LastEvent.Type == MidiEvents.EVT_NOTE_ON ? "On" : "Off") + " ch=" + evt.Channel + " n=" + evt.Param0 + " v=" + evt.Param1;
+                                        track.Add(evt);
 
-                                    position += 2;
-                                }
-                                else if (track.LastEvent.Type == MidiEvents.EVT_PROGRAM_CHANGE)
-                                {
-                                    evt = new MidiEvent(currentTicks, track.LastEvent.Type, track.LastEvent.Channel, data[position]);
-                                    evt.Description = " PrCh ch=" + evt.Channel + " p=" + evt.Param0;
-                                    track.Add(evt);
+                                        position += 2;
+                                        break;
+                                    case MidiEvents.EVT_PROGRAM_CHANGE:
+                                        evt = new MidiEvent(currentTicks, track.LastEvent.Type, track.LastEvent.Channel, data[position]);
+                                        evt.Description = " PrCh ch=" + evt.Channel + " p=" + evt.Param0;
+                                        track.Add(evt);
 
-                                    position += 1;
-                                }
-                                else if (track.LastEvent.Type == MidiEvents.EVT_POLY_PRESSURE)
-                                {
-                                    evt = new MidiEvent(currentTicks, track.LastEvent.Type, track.LastEvent.Channel, data[position + 1], data[position + 2]);
-                                    evt.Description = " PoPr ch=" + evt.Channel + " n=" + evt.Param0 + " v=" + evt.Param1;
-                                    track.Add(evt);
+                                        position += 1;
+                                        break;
+                                    case MidiEvents.EVT_POLY_PRESSURE:
+                                        evt = new MidiEvent(currentTicks, track.LastEvent.Type, track.LastEvent.Channel, data[position + 1], data[position + 2]);
+                                        evt.Description = " PoPr ch=" + evt.Channel + " n=" + evt.Param0 + " v=" + evt.Param1;
+                                        track.Add(evt);
 
-                                    position += 2;
-                                }
-                                else if (track.LastEvent.Type == MidiEvents.EVT_CHANNEL_PRESSURE)
-                                {
-                                    evt = new MidiEvent(currentTicks, track.LastEvent.Type, track.LastEvent.Channel, data[position]);
-                                    evt.Description = " ChPr ch=" + evt.Channel + " v=" + evt.Param0;
-                                    track.Add(evt);
+                                        position += 2;
+                                        break;
+                                    case MidiEvents.EVT_CHANNEL_PRESSURE:
+                                        evt = new MidiEvent(currentTicks, track.LastEvent.Type, track.LastEvent.Channel, data[position]);
+                                        evt.Description = " ChPr ch=" + evt.Channel + " v=" + evt.Param0;
+                                        track.Add(evt);
 
-                                    position += 1;
-                                }
-                                else if (track.LastEvent.Type == MidiEvents.EVT_CONTROLLER_CHANGE)
-                                {
-                                    evt = new MidiEvent(currentTicks, track.LastEvent.Type, track.LastEvent.Channel, data[position], data[position + 1]);
-                                    evt.Description = " Par ch=" + evt.Channel + " c=" + evt.Param0 + " v=" + evt.Param1;
-                                    track.Add(evt);
+                                        position += 1;
+                                        break;
+                                    case MidiEvents.EVT_CONTROLLER_CHANGE:
+                                        evt = new MidiEvent(currentTicks, track.LastEvent.Type, track.LastEvent.Channel, data[position], data[position + 1]);
+                                        evt.Description = " Par ch=" + evt.Channel + " c=" + evt.Param0 + " v=" + evt.Param1;
+                                        track.Add(evt);
 
-                                    position += 2;
-                                }
-                                else if (track.LastEvent.Type == MidiEvents.EVT_PITCH_BEND)
-                                {
-                                    evt = new MidiEvent(currentTicks, track.LastEvent.Type, track.LastEvent.Channel, (data[position] & 0x7F) | ((data[position + 1] & 0x7F) << 7));
-                                    evt.Description = " Pb ch=" + evt.Channel + " v=" + evt.Param0;
-                                    track.Add(evt);
+                                        position += 2;
+                                        break;
+                                    case MidiEvents.EVT_PITCH_BEND:
+                                        evt = new MidiEvent(currentTicks, track.LastEvent.Type, track.LastEvent.Channel, (data[position] & 0x7F) | ((data[position + 1] & 0x7F) << 7));
+                                        evt.Description = " Pb ch=" + evt.Channel + " v=" + evt.Param0;
+                                        track.Add(evt);
 
-                                    position += 2;
+                                        position += 2;
+                                        break;
                                 }
                                 //default:
                                 // MM: ToDo: Repetition of SysEx and META-events? with <last>?? \n";
@@ -952,16 +972,14 @@ namespace ATL.AudioData.IO
         private static int readVarLen(ref byte[] data, ref int pos)
         {
             int value = data[pos++];
-            if ((value & 0x80) != 0)
+            if ((value & 0x80) == 0) return value;
+            value &= 0x7F;
+            int c;
+            do
             {
-                value &= 0x7F;
-                int c;
-                do
-                {
-                    c = data[pos++];
-                    value = (value << 7) + (c & 0x7F);
-                } while ((c & 0x80) != 0);
-            }
+                c = data[pos++];
+                value = (value << 7) + (c & 0x7F);
+            } while ((c & 0x80) != 0);
             return value;
         }
 

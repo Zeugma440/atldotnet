@@ -69,7 +69,7 @@ namespace ATL.AudioData.IO
         private bool _isLittleEndian;
 
         private long id3v2Offset;
-        private FileStructureHelper id3v2StructureHelper = new FileStructureHelper(false);
+        private FileStructureHelper id3v2StructureHelper = new(false);
 
 
         // Mapping between WAV frame codes and ATL frame codes
@@ -325,22 +325,21 @@ namespace ATL.AudioData.IO
                 else if (subChunkId.Equals(CHUNK_FORMAT, StringComparison.OrdinalIgnoreCase))
                 {
                     if (source.Read(data, 0, 2) < 2) return false;
-                    if (isLittleEndian) formatId = StreamUtils.DecodeUInt16(data); else formatId = StreamUtils.DecodeBEUInt16(data);
+                    formatId = isLittleEndian ? StreamUtils.DecodeUInt16(data) : StreamUtils.DecodeBEUInt16(data);
 
                     if (source.Read(data, 0, 2) < 2) return false;
-                    if (isLittleEndian) ChannelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeUInt16(data));
-                    else ChannelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeBEUInt16(data));
+                    ChannelsArrangement = GuessFromChannelNumber(isLittleEndian ? StreamUtils.DecodeUInt16(data) : StreamUtils.DecodeBEUInt16(data));
 
                     if (source.Read(data, 0, 4) < 4) return false;
-                    if (isLittleEndian) sampleRate = StreamUtils.DecodeUInt32(data); else sampleRate = StreamUtils.DecodeBEUInt32(data);
+                    sampleRate = isLittleEndian ? StreamUtils.DecodeUInt32(data) : StreamUtils.DecodeBEUInt32(data);
 
                     if (source.Read(data, 0, 4) < 4) return false;
-                    if (isLittleEndian) bytesPerSecond = StreamUtils.DecodeUInt32(data); else bytesPerSecond = StreamUtils.DecodeBEUInt32(data);
+                    bytesPerSecond = isLittleEndian ? StreamUtils.DecodeUInt32(data) : StreamUtils.DecodeBEUInt32(data);
 
                     source.Seek(2, SeekOrigin.Current); // BlockAlign
 
                     if (source.Read(data, 0, 2) < 2) return false;
-                    if (isLittleEndian) bitsPerSample = StreamUtils.DecodeUInt16(data); else bitsPerSample = StreamUtils.DecodeBEUInt16(data);
+                    bitsPerSample = isLittleEndian ? StreamUtils.DecodeUInt16(data) : StreamUtils.DecodeBEUInt16(data);
                 }
                 else if (subChunkId.Equals(CHUNK_DATA, StringComparison.OrdinalIgnoreCase))
                 {
@@ -354,8 +353,7 @@ namespace ATL.AudioData.IO
                 else if (subChunkId.Equals(CHUNK_FACT, StringComparison.OrdinalIgnoreCase))
                 {
                     if (source.Read(data, 0, 4) < 4) return false;
-                    uint inputSampleNumber;
-                    if (isLittleEndian) inputSampleNumber = StreamUtils.DecodeUInt32(data); else inputSampleNumber = StreamUtils.DecodeBEUInt32(data);
+                    var inputSampleNumber = isLittleEndian ? StreamUtils.DecodeUInt32(data) : StreamUtils.DecodeBEUInt32(data);
                     if (inputSampleNumber < uint.MaxValue) sampleNumber = inputSampleNumber;
                 }
                 else if (subChunkId.Equals(CHUNK_SAMPLE, StringComparison.OrdinalIgnoreCase))
