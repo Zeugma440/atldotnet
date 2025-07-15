@@ -70,7 +70,7 @@ namespace ATL.AudioData.IO
 
         private readonly AudioFormat audioFormat;
 
-        private readonly FileInfo info = new FileInfo();
+        private readonly FileInfo info = new();
 
         private int contents;
 
@@ -287,23 +287,23 @@ namespace ATL.AudioData.IO
                 Version = source.ReadByte();
                 OutputChannelCount = source.ReadByte();
                 PreSkip = source.ReadUInt16();
-                InputSampleRate = 48000; // Actual sample rate is hardware-dependent. Let's assume for now that the hardware ATL runs on supports 48KHz
+                // Actual sample rate is hardware-dependent. Let's assume for now that the hardware ATL runs on supports 48KHz
+                InputSampleRate = 48000;
 
                 source.Seek(4, SeekOrigin.Current);
                 OutputGain = source.ReadInt16();
 
                 ChannelMappingFamily = source.ReadByte();
 
-                if (ChannelMappingFamily > 0)
-                {
-                    StreamCount = source.ReadByte();
-                    CoupledStreamCount = source.ReadByte();
+                if (ChannelMappingFamily <= 0) return;
 
-                    ChannelMapping = new byte[OutputChannelCount];
-                    for (int i = 0; i < OutputChannelCount; i++)
-                    {
-                        ChannelMapping[i] = source.ReadByte();
-                    }
+                StreamCount = source.ReadByte();
+                CoupledStreamCount = source.ReadByte();
+
+                ChannelMapping = new byte[OutputChannelCount];
+                for (int i = 0; i < OutputChannelCount; i++)
+                {
+                    ChannelMapping[i] = source.ReadByte();
                 }
             }
 
@@ -381,9 +381,9 @@ namespace ATL.AudioData.IO
             public int AudioStreamId;
 
             // Following properties are mutually exclusive
-            public readonly VorbisHeader VorbisParameters = new VorbisHeader(); // Vorbis parameter header
-            public readonly OpusHeader OpusParameters = new OpusHeader();       // Opus parameter header
-            public readonly SpeexHeader SpeexParameters = new SpeexHeader();    // Speex parameter header
+            public readonly VorbisHeader VorbisParameters = new(); // Vorbis parameter header
+            public readonly OpusHeader OpusParameters = new();       // Opus parameter header
+            public readonly SpeexHeader SpeexParameters = new();    // Speex parameter header
             public FlacHeader FlacParameters;                                   // FLAC parameter header
 
             // Total number of samples
@@ -448,15 +448,25 @@ namespace ATL.AudioData.IO
             {
                 AudioFormat f = new AudioFormat(audioFormat);
                 string subformat;
-                if (contents == CONTENTS_VORBIS) subformat = "Vorbis";
-                else if (contents == CONTENTS_OPUS) subformat = "Opus";
-                else if (contents == CONTENTS_SPEEX) subformat = "Speex";
-                else if (contents == CONTENTS_FLAC)
+                switch (contents)
                 {
-                    subformat = "FLAC";
-                    f.DataFormat = AudioDataIOFactory.GetInstance().getFormat(AudioDataIOFactory.CID_FLAC);
+                    case CONTENTS_VORBIS:
+                        subformat = "Vorbis";
+                        break;
+                    case CONTENTS_OPUS:
+                        subformat = "Opus";
+                        break;
+                    case CONTENTS_SPEEX:
+                        subformat = "Speex";
+                        break;
+                    case CONTENTS_FLAC:
+                        subformat = "FLAC";
+                        f.DataFormat = AudioDataIOFactory.GetInstance().getFormat(AudioDataIOFactory.CID_FLAC);
+                        break;
+                    default:
+                        subformat = "Unsupported";
+                        break;
                 }
-                else subformat = "Unsupported";
                 f.Name = f.Name + " (" + subformat + ")";
                 f.ComputeId();
                 return f;
@@ -662,58 +672,62 @@ namespace ATL.AudioData.IO
 
                 if (readTagParams.PrepareForWriting) // Metrics to prepare writing
                 {
-                    if (CONTENTS_VORBIS == contents || CONTENTS_FLAC == contents)
+                    switch (contents)
                     {
-                        // Determine the boundaries of 3rd header (Setup header) by searching from the last-but-one page
-                        source.Position = pageOffsets.Count > 1 ? pageOffsets[^2] : pageOffsets[0];
-                        source.Position += OGG_PAGE_ID.Length;
-                        if (StreamUtils.FindSequence(source, VORBIS_SETUP_ID))
-                        {
-                            info.SetupHeaderStart = source.Position - VORBIS_SETUP_ID.Length;
-                            info.CommentHeaderEnd = info.SetupHeaderStart;
-
-                            // Determine over how many OGG pages Comment and Setup pages span
-                            if (pageOffsets.Count > 1)
+                        case CONTENTS_VORBIS or CONTENTS_FLAC:
                             {
-                                int firstSetupPage = -1;
-                                for (int i = 1; i < pageOffsets.Count; i++)
+                                // Determine the boundaries of 3rd header (Setup header) by searching from the last-but-one page
+                                source.Position = pageOffsets.Count > 1 ? pageOffsets[^2] : pageOffsets[0];
+                                source.Position += OGG_PAGE_ID.Length;
+                                if (StreamUtils.FindSequence(source, VORBIS_SETUP_ID))
                                 {
-                                    if (info.CommentHeaderEnd < pageOffsets[i])
+                                    info.SetupHeaderStart = source.Position - VORBIS_SETUP_ID.Length;
+                                    info.CommentHeaderEnd = info.SetupHeaderStart;
+
+                                    // Determine over how many OGG pages Comment and Setup pages span
+                                    if (pageOffsets.Count > 1)
                                     {
-                                        info.CommentHeaderSpanPages = i - 1;
-                                        firstSetupPage = i - 1;
+                                        int firstSetupPage = -1;
+                                        for (int i = 1; i < pageOffsets.Count; i++)
+                                        {
+                                            if (info.CommentHeaderEnd < pageOffsets[i])
+                                            {
+                                                info.CommentHeaderSpanPages = i - 1;
+                                                firstSetupPage = i - 1;
+                                            }
+
+                                            if (info.SetupHeaderEnd <= pageOffsets[i])
+                                                info.SetupHeaderSpanPages = i - firstSetupPage;
+                                        }
+
+                                        // Not found yet => comment header takes up all pages, and setup header is on the end of the last page
+                                        if (-1 == firstSetupPage)
+                                        {
+                                            info.CommentHeaderSpanPages = pageOffsets.Count;
+                                            info.SetupHeaderSpanPages = 1;
+                                        }
                                     }
-
-                                    if (info.SetupHeaderEnd <= pageOffsets[i])
-                                        info.SetupHeaderSpanPages = i - firstSetupPage;
+                                    else
+                                    {
+                                        info.CommentHeaderSpanPages = 1;
+                                        info.SetupHeaderSpanPages = 1;
+                                    }
                                 }
 
-                                // Not found yet => comment header takes up all pages, and setup header is on the end of the last page
-                                if (-1 == firstSetupPage)
+                                // Case of embedded FLAC as setup header doesn't exist => end is the end of the page
+                                if (0 == info.CommentHeaderEnd && StreamUtils.FindSequence(source, OGG_PAGE_ID))
                                 {
-                                    info.CommentHeaderSpanPages = pageOffsets.Count;
-                                    info.SetupHeaderSpanPages = 1;
+                                    info.CommentHeaderEnd = source.Position - OGG_PAGE_ID.Length;
                                 }
-                            }
-                            else
-                            {
-                                info.CommentHeaderSpanPages = 1;
-                                info.SetupHeaderSpanPages = 1;
-                            }
-                        }
 
-                        // Case of embedded FLAC as setup header doesn't exist => end is the end of the page
-                        if (0 == info.CommentHeaderEnd && StreamUtils.FindSequence(source, OGG_PAGE_ID))
-                        {
-                            info.CommentHeaderEnd = source.Position - OGG_PAGE_ID.Length;
-                        }
-                    }
-                    else if (CONTENTS_OPUS == contents || CONTENTS_SPEEX == contents)
-                    {
-                        info.SetupHeaderStart = info.SetupHeaderEnd;
-                        info.CommentHeaderEnd = info.SetupHeaderStart;
-                        info.CommentHeaderSpanPages = pageOffsets.Count;
-                        info.SetupHeaderSpanPages = 0;
+                                break;
+                            }
+                        case CONTENTS_OPUS or CONTENTS_SPEEX:
+                            info.SetupHeaderStart = info.SetupHeaderEnd;
+                            info.CommentHeaderEnd = info.SetupHeaderStart;
+                            info.CommentHeaderSpanPages = pageOffsets.Count;
+                            info.SetupHeaderSpanPages = 0;
+                            break;
                     }
                 }
 
@@ -900,44 +914,39 @@ namespace ATL.AudioData.IO
 
         public bool Read(Stream source, ReadTagParams readTagParams)
         {
-            bool result = false;
-
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
             info.Reset();
 
-            if (getInfo(reader, info, readTagParams))
+            if (!getInfo(reader, info, readTagParams)) return false;
+
+            switch (contents)
             {
-                if (contents.Equals(CONTENTS_VORBIS))
-                {
+                case CONTENTS_VORBIS:
                     ChannelsArrangement = getArrangementFromCode(info.VorbisParameters.ChannelMode);
                     SampleRate = info.VorbisParameters.SampleRate;
                     bitRateNominal = (ushort)(info.VorbisParameters.BitRateNominal / 1000); // Integer division
-                }
-                else if (contents.Equals(CONTENTS_OPUS))
-                {
+                    break;
+                case CONTENTS_OPUS:
                     ChannelsArrangement = getArrangementFromCode(info.OpusParameters.OutputChannelCount);
                     SampleRate = (int)info.OpusParameters.InputSampleRate;
                     // No nominal bitrate for OPUS
-                }
-                else if (contents.Equals(CONTENTS_SPEEX))
-                {
+                    break;
+                case CONTENTS_SPEEX:
                     ChannelsArrangement = GuessFromChannelNumber(info.SpeexParameters.NbChannels);
                     SampleRate = info.SpeexParameters.Rate;
                     bitRateNominal = (ushort)(info.SpeexParameters.Bitrate / 1000);
-                }
-                else if (contents.Equals(CONTENTS_FLAC))
-                {
+                    break;
+                case CONTENTS_FLAC:
                     ChannelsArrangement = info.FlacParameters.getChannelsArrangement();
                     SampleRate = info.FlacParameters.SampleRate;
                     BitDepth = info.FlacParameters.BitsPerSample;
                     // No nominal bitrate for FLAC
-                }
-
-                samples = info.Samples;
-
-                result = true;
+                    break;
             }
-            return result;
+
+            samples = info.Samples;
+
+            return true;
         }
 
         // Specific implementation for OGG container (multiple pages with limited size)
