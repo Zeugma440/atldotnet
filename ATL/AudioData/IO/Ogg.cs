@@ -592,7 +592,7 @@ namespace ATL.AudioData.IO
                     if (!pageHeader.IsValid)
                     {
                         LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Malformed Ogg Header");
-                        return false;
+                        break;
                     }
 
                     // Make sure next byte after page end is a page header; try to auto-correct if not
@@ -613,7 +613,7 @@ namespace ATL.AudioData.IO
                             else
                             {
                                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Malformed Ogg Header");
-                                return false;
+                                break;
                             }
                         }
                     }
