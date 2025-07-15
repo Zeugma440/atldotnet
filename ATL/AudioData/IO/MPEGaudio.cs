@@ -266,6 +266,13 @@ namespace ATL.AudioData.IO
             }
 
             public double Duration => Size * 1.0 / BitRate * 8.0;
+        } // FrameHeader class
+
+        public sealed class FrameParsingResult
+        {
+            public long AudioDataSize;
+            public float AvgBitrate;
+            public int BitrateWeight; // Number of samples the average has been calculated against
         }
 
         private VBRData vbrData = new();
@@ -450,6 +457,7 @@ namespace ATL.AudioData.IO
         private double getDuration()
         {
             if (!FirstFrame.Found) return 0;
+            if (avgBitrate < 0.1) return 0;
 
             if (vbrData.Found && vbrData.Frames > 0)
                 return vbrData.Frames * FirstFrame.Coefficient * 8.0 * 1000.0 / FirstFrame.SampleRate;
@@ -464,26 +472,25 @@ namespace ATL.AudioData.IO
         }
 
         /// <summary>
-        /// Find next MPEG frame
-        /// NB : The source need to be positioned at the end of an MPEG frame header
+        /// Find next MPEG frame starting from a given MPEG frame
         /// </summary>
         private static FrameHeader findNextFrame(Stream source, FrameHeader startingFrame, byte[] buffer)
         {
-            FrameHeader nextHeader = new FrameHeader();
-            nextHeader.Reset();
+            FrameHeader result = new FrameHeader();
+            result.Reset();
 
             source.Seek(startingFrame.Offset + startingFrame.Size, SeekOrigin.Begin);
-            if (source.Read(buffer, 0, 4) < 4 || !IsValidFrameHeader(buffer)) return nextHeader;
+            if (source.Read(buffer, 0, 4) < 4 || !IsValidFrameHeader(buffer)) return result;
 
-            nextHeader.LoadFromByteArray(buffer);
-            nextHeader.Offset = source.Position - 4;
-            nextHeader.Found = true;
-            return nextHeader;
+            result.LoadFromByteArray(buffer);
+            result.Offset = source.Position - 4;
+            result.Found = true;
+            return result;
         }
 
         /// <summary>
         /// Look for a first valid MPEG frame starting from current Stream position
-        /// Stop if nothing found after looking on 30% of audio data size
+        /// Stop if nothing found after looking on 30% of audio data size, starting from initial source position
         /// </summary>
         /// <param name="source">Stream to use</param>
         /// <param name="oVBR">VBR data, if any (may be null)</param>
@@ -493,6 +500,7 @@ namespace ATL.AudioData.IO
         {
             FrameHeader result = new FrameHeader();
             byte[] buffer = new byte[4];
+            long sourceOffset = source.Position;
 
             if (source.Read(buffer, 0, 4) < 4) return result;
             result.Found = IsValidFrameHeader(buffer);
@@ -507,7 +515,7 @@ namespace ATL.AudioData.IO
              * The most solid way to deal with all of them is to "scan" the file until proper MP3 header is found.
              * This method may not the be fastest, but ensures audio data is actually detected, whatever garbage lies before
              */
-            if (!result.Found && (buffer[0] == buffer[1]) && (buffer[1] == buffer[2]) && (buffer[2] == buffer[3]))
+            if (!result.Found && buffer[0] == buffer[1] && buffer[1] == buffer[2] && buffer[2] == buffer[3])
             {
                 // "Quick win" for files starting with padding bytes
                 // 4 identical bytes => file starts with padding bytes => Skip padding
@@ -522,7 +530,9 @@ namespace ATL.AudioData.IO
             }
 
             long id3v2Size = sizeInfo?.ID3v2Size ?? 0;
-            long limit = id3v2Size + (long)Math.Round((source.Length - id3v2Size) * 0.3);
+            long limit = (long)Math.Round((source.Length - id3v2Size) * 0.3);
+            limit += sourceOffset > 0 ? sourceOffset : id3v2Size;
+            limit = Math.Min(limit, source.Length);
             int iterations = 0;
             while (source.Position < limit)
             {
@@ -614,22 +624,26 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        private long parseExactAudioDataSize(BufferedBinaryReader reader, FrameHeader firstFrame)
+        private static FrameParsingResult parseExactAudioDataSize(BufferedBinaryReader reader, FrameHeader firstFrame)
         {
             byte[] buffer = new byte[4];
-            var bitrates = new List<float>
-            {
-                firstFrame.BitRate
-            };
+            var bitrates = new List<float> { firstFrame.BitRate };
+            long topOffset = 0;
             reader.Seek(firstFrame.Offset, SeekOrigin.Begin);
             FrameHeader nextFrame = findNextFrame(reader, firstFrame, buffer);
             while (nextFrame.Found)
             {
                 bitrates.Add(nextFrame.BitRate);
+                topOffset = nextFrame.Offset + nextFrame.Size;
                 nextFrame = findNextFrame(reader, nextFrame, buffer);
             }
-            avgBitrate = bitrates.Average();
-            return reader.Position - firstFrame.Offset;
+
+            return new FrameParsingResult
+            {
+                AudioDataSize = topOffset - firstFrame.Offset,
+                AvgBitrate = bitrates.Average(),
+                BitrateWeight = bitrates.Count
+            };
         }
 
         public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
@@ -654,18 +668,30 @@ namespace ATL.AudioData.IO
             AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
             if (!Settings.MP3_parseExactDuration) return true;
 
-            var altSize = parseExactAudioDataSize(reader, FirstFrame);
-            // If too much difference between the two, look for another MPEG stream
+            var parsingResult = parseExactAudioDataSize(reader, FirstFrame);
+            IList<FrameParsingResult> results = new List<FrameParsingResult> { parsingResult };
+            var altSize = parsingResult.AudioDataSize;
+
+            // If too much difference between rough size and precise size, look for other MPEG streams
             // (some files might have multiple streams, even if it's not spec-compliant)
-            if (AudioDataSize > altSize * 1.5)
+            var failsafe = 20;
+            while (AudioDataSize > altSize * 1.5 && failsafe-- > 0)
             {
                 var nextFrame = findFirstFrame(reader, ref vbrData, sizeNfo);
-                if (nextFrame.Found) altSize += parseExactAudioDataSize(reader, nextFrame);
+                if (!nextFrame.Found) continue;
+
+                parsingResult = parseExactAudioDataSize(reader, nextFrame);
+                altSize += parsingResult.AudioDataSize;
+                results.Add(parsingResult);
             }
+
+            var weighedAverages = results.Sum(r => r.AvgBitrate * r.BitrateWeight);
+            var allWeights = results.Sum(r => r.BitrateWeight);
+            avgBitrate = weighedAverages / allWeights;
+
             AudioDataSize = altSize;
 
             return true;
         }
-
     }
 }
