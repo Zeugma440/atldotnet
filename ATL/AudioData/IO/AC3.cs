@@ -11,13 +11,10 @@ namespace ATL.AudioData.IO
 	class AC3 : IAudioDataIO
     {
         // Standard bitrates (KBit/s)
-        private static readonly int[] BITRATES = new int[] { 32, 40, 48, 56, 64, 80, 96, 112, 128, 160,
-                                                        192, 224, 256, 320, 384, 448, 512, 576, 640 };
+        private static readonly int[] BITRATES = { 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 448, 512, 576, 640 };
 
         // Private declarations 
         private uint sampleRate;
-
-        private ChannelsArrangement channelsArrangement;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -35,11 +32,12 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public double Duration { get; private set; }
         /// <inheritdoc/>
-        public int SampleRate => (int)this.sampleRate;
+        public int SampleRate => (int)sampleRate;
         /// <inheritdoc/>
         public int BitDepth => -1; // Irrelevant for lossy formats
         /// <inheritdoc/>
-        public ChannelsArrangement ChannelsArrangement => channelsArrangement;
+        public ChannelsArrangement ChannelsArrangement { get; private set; }
+
         /// <inheritdoc/>
         public List<MetaDataIOFactory.TagType> GetSupportedMetas()
         {
@@ -66,7 +64,7 @@ namespace ATL.AudioData.IO
 
         public AC3(string filePath, AudioFormat format)
         {
-            this.FileName = filePath;
+            FileName = filePath;
             AudioFormat = format;
             resetData();
         }
@@ -77,6 +75,22 @@ namespace ATL.AudioData.IO
         public static bool IsValidHeader(byte[] data)
         {
             return 30475 == StreamUtils.DecodeUInt16(data);
+        }
+
+        private static ChannelsArrangement getChannelsArrangement(int amode, bool isLfePresent)
+        {
+            return amode switch
+            {
+                0 => DUAL_MONO,
+                0x20 => MONO,
+                0x40 => STEREO,
+                0x60 => isLfePresent ? LRCLFE : ISO_3_0_0,
+                0x80 => isLfePresent ? DVD_5 : ISO_2_1_0,
+                0xA0 => isLfePresent ? DVD_11 : LRCS,
+                0xC0 => isLfePresent ? DVD_18 : ITU_2_2,
+                0xE0 => isLfePresent ? ISO_3_2_1 : ISO_3_2_0,
+                _ => UNKNOWN
+            };
         }
 
         public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
@@ -95,6 +109,7 @@ namespace ATL.AudioData.IO
             source.Seek(2, SeekOrigin.Current);
             if (source.Read(buffer, 0, 1) < 1) return false;
 
+            // fscod
             sampleRate = (buffer[0] & 0xC0) switch
             {
                 0 => 48000,
@@ -103,23 +118,14 @@ namespace ATL.AudioData.IO
                 _ => 0
             };
 
+            // frmsizecod
             BitRate = BITRATES[(buffer[0] & 0x3F) >> 1];
 
             source.Seek(1, SeekOrigin.Current);
-            if (source.Read(buffer, 0, 1) < 1) return false;
+            if (source.Read(buffer, 0, 2) < 2) return false;
 
-            channelsArrangement = (buffer[0] & 0xE0) switch
-            {
-                0 => DUAL_MONO,
-                0x20 => MONO,
-                0x40 => STEREO,
-                0x60 => ISO_3_0_0,
-                0x80 => ISO_2_1_0,
-                0xA0 => ISO_3_1_0,
-                0xC0 => ISO_2_2_0,
-                0xE0 => ISO_3_2_0,
-                _ => UNKNOWN
-            };
+            // acmod, lfeon
+            ChannelsArrangement = getChannelsArrangement(buffer[0] & 0xE0, (buffer[1] & 0x80) > 0);
 
             Duration = sizeNfo.FileSize * 8.0 / BitRate;
 

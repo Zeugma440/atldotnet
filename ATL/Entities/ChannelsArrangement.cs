@@ -11,7 +11,7 @@
         public static readonly ChannelsArrangement ISO_2_0_0 = new(2, "Stereo (2/0.0)");
         public static readonly ChannelsArrangement STEREO = ISO_2_0_0;
         public static readonly ChannelsArrangement ISO_3_0_0 = new(3, "Center - Left - Right (3/0.0)");
-        public static readonly ChannelsArrangement ISO_3_1_0 = new(3, "Left - Right - Center - Center rear (3/1.0)");
+        public static readonly ChannelsArrangement ISO_3_1_0 = new(4, "Left - Right - Center - Center rear (3/1.0)");
         public static readonly ChannelsArrangement ISO_3_2_0 = new(5, "Center - Left - Right - Left surround - Right surround (3/2.0)");
         public static readonly ChannelsArrangement ISO_3_2_1 = new(6, "Center - Left - Right - Left surround - Right surround - Center front LFE (3/2.1) (aka 5.1)");
         public static readonly ChannelsArrangement ISO_5_2_1 = new(6, "Center - Left center - Right center - Left - Right - Left surround - Right surround - Center front LFE (5/2.1)");
