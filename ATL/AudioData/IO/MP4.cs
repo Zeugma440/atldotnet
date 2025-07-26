@@ -58,7 +58,7 @@ namespace ATL.AudioData.IO
         private const string ZONE_MP4_PHYSICAL_CHUNK = "chunk";         // Physical audio chunk referenced from stco or co64
 
         // Mapping between MP4 frame codes and ATL frame codes
-        private static readonly Dictionary<string, Field> frameMapping_mp4 = new Dictionary<string, Field>() {
+        private static readonly Dictionary<string, Field> frameMapping_mp4 = new() {
             { "©nam", Field.TITLE },
             { "titl", Field.TITLE },
             { "©alb", Field.ALBUM },
@@ -102,7 +102,7 @@ namespace ATL.AudioData.IO
 
         // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)
         // 0 = special / 21 = int8-16-24-32 / 22 = uint8-16-24-32
-        private static readonly ConcurrentDictionary<string, byte> frameClasses_mp4 = new ConcurrentDictionary<string, byte>()
+        private static readonly ConcurrentDictionary<string, byte> frameClasses_mp4 = new()
         {
             ["gnre"] = 0,
             ["trkn"] = 0,
@@ -713,16 +713,14 @@ namespace ATL.AudioData.IO
         {
             int mediaTimeScale = 1000;
 
-            uint int32Data = 0;
+            uint int32Data;
             byte[] data32 = new byte[4];
             byte[] data64 = new byte[8];
 
             bool isCurrentTrackFirstChapterTextTrack = false; // First chapter text track which should contain chapter titles (as opposed to URLs)
-            bool isCurrentTrackOtherChapterTrack = false; // Generic marker for other chapter-related text tracks
+            bool isCurrentTrackOtherChapterTrack; // Generic marker for other chapter-related text tracks
             bool isCurrentTrackFirstChapterPicturesTrack = false; // First chapter picture track which should contain chapter "covers"
             bool isCurrentTrackFirstAudioTrack = false;
-
-            string trackZoneName = "";
 
             // Read track ID
             if (0 == navigateToAtom(source, "tkhd"))
@@ -757,8 +755,7 @@ namespace ATL.AudioData.IO
                 int mdhdVersion = source.ReadByte();
                 source.Seek(3, SeekOrigin.Current); // Flags
 
-                if (0 == mdhdVersion) source.Seek(8, SeekOrigin.Current);
-                else source.Seek(16, SeekOrigin.Current); // Creation and modification date
+                source.Seek(0 == mdhdVersion ? 8 : 16, SeekOrigin.Current); // Creation and modification date
 
                 if (source.Read(data32, 0, 4) < 4) return;
                 mediaTimeScale = StreamUtils.DecodeBEInt32(data32);
@@ -793,11 +790,9 @@ namespace ATL.AudioData.IO
                     }
                     foreach (int index in list)
                     {
-                        if (trackId == index)
-                        {
-                            isCurrentTrackOtherChapterTrack = true;
-                            break;
-                        }
+                        if (trackId != index) continue;
+                        isCurrentTrackOtherChapterTrack = true;
+                        break;
                     }
                 }
             }
@@ -809,7 +804,7 @@ namespace ATL.AudioData.IO
 
             if (readTagParams.PrepareForWriting && isCurrentTrackOtherChapterTrack && !isCurrentTrackFirstChapterTextTrack)
             {
-                trackZoneName = ZONE_MP4_QT_CHAP_TXT_TRAK + "." + trackId;
+                var trackZoneName = ZONE_MP4_QT_CHAP_TXT_TRAK + "." + trackId;
                 structureHelper.AddZone(trakPosition, (int)trakSize, trackZoneName);
                 structureHelper.AddSize(moovPosition - 8, moovSize, trackZoneName);
             }
@@ -898,14 +893,7 @@ namespace ATL.AudioData.IO
                     }
                     chapterTrackIndexes.Add(trackId, thisTrackIndexes);
 
-                    foreach (int i in thisTrackIndexes)
-                    {
-                        if (i < trackId)
-                        {
-                            parsePreviousTracks = true;
-                            break;
-                        }
-                    }
+                    if (thisTrackIndexes.Any(i => i < trackId)) parsePreviousTracks = true;
                 }
 
                 // If current track has declared a chapter track located at a previous index, come back to read it
@@ -1156,8 +1144,10 @@ namespace ATL.AudioData.IO
                     var sampleDuration = StreamUtils.DecodeBEUInt32(data);
                     for (int j = 0; j < frameCount; j++)
                     {
-                        MP4Sample sample = new MP4Sample();
-                        sample.Duration = sampleDuration * 1.0 / mediaTimeScale;
+                        MP4Sample sample = new MP4Sample
+                        {
+                            Duration = sampleDuration * 1.0 / mediaTimeScale
+                        };
                         chapterTrackSamples.Add(sample);
                     }
                 }
@@ -1328,8 +1318,10 @@ namespace ATL.AudioData.IO
 
                         for (int i = 0; i < neroChapterCount; i++)
                         {
-                            var chapter = new ChapterInfo();
-                            chapter.Format = ChapterInfo.FORMAT.Nero;
+                            var chapter = new ChapterInfo
+                            {
+                                Format = ChapterInfo.FORMAT.Nero
+                            };
                             tagData.Chapters.Add(chapter);
 
                             if (source.Read(data64, 0, 8) < 8) return;
@@ -1683,15 +1675,14 @@ namespace ATL.AudioData.IO
                 setMetaField(supportedMetaID, data);
             }
 
-            if (readAllMetaFrames && ID.Length > 0) // Store it in the additional fields Dictionary
+            if (!readAllMetaFrames || ID.Length <= 0) return; // Store it in the additional fields Dictionary
+
+            MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, 0, "", "");
+            if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
             {
-                MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, 0, "", "");
-                if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
-                {
-                    tagData.AdditionalFields.Remove(fieldInfo);
-                }
-                tagData.AdditionalFields.Add(fieldInfo);
+                tagData.AdditionalFields.Remove(fieldInfo);
             }
+            tagData.AdditionalFields.Add(fieldInfo);
         }
 
         private static Uuid readUuid(Stream source)
@@ -1857,7 +1848,8 @@ namespace ATL.AudioData.IO
 
         protected override int write(TagData tag, Stream s, string zone)
         {
-            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+            using BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true);
+            return write(tag, w, zone);
         }
 
         private int write(TagData tag, BinaryWriter w, string zone)
@@ -2033,14 +2025,12 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields.Where(isMetaFieldWritable))
             {
-                if (!fieldInfo.NativeFieldCode.StartsWith("uuid.")
-                    && !fieldInfo.NativeFieldCode.StartsWith("xmp.")
-                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
-                    )
-                {
-                    writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
-                    counter++;
-                }
+                if (fieldInfo.NativeFieldCode.StartsWith("uuid.")
+                    || fieldInfo.NativeFieldCode.StartsWith("xmp.")
+                    || writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())) continue;
+
+                writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
+                counter++;
             }
 
             // Picture fields
@@ -2121,80 +2111,109 @@ namespace ATL.AudioData.IO
             writer.Write(StreamUtils.EncodeBEInt32(frameClass));
             writer.Write(frameFlags);
 
-            if (0 == frameClass) // Special cases : gnre, trkn, disk
+            switch (frameClass)
             {
-                byte[] int16data;
-                if (frameCode.Equals("trkn") || frameCode.Equals("disk"))
+                // Special cases : gnre, trkn, disk
+                case 0:
                 {
-                    int16data = new byte[2] { 0, 0 };
-                    writer.Write(int16data);
-                    int16data = StreamUtils.EncodeBEUInt16(TrackUtils.ExtractTrackNumber(text));
-                    writer.Write(int16data);
-                    int16data = StreamUtils.EncodeBEUInt16(TrackUtils.ExtractTrackTotal(text));
-                    writer.Write(int16data);
-                    if (frameCode.Equals("trkn")) writer.Write(int16data); // trkn field always has two more bytes than disk field....
-                }
-                else if (frameCode.Equals("gnre"))
-                {
-                    int16data = StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text));
-                    writer.Write(int16data);
-                }
-            }
-            else if (1 == frameClass) // UTF-8 text
-            {
-                string[] values = text.Split(Settings.InternalValueSeparator);
-                var first = true;
-                // Handle multiple values = repeat the 'data' atom
-                foreach (string value in values)
-                {
-                    if (0 == value.Length) continue;
-                    if (first) first = false;
-                    else
+                    byte[] int16data;
+                    switch (frameCode)
                     {
-                        finalFramePos = writer.BaseStream.Position;
-                        writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
-                        writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
-                        writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
-
-                        frameSizePos2 = writer.BaseStream.Position;
-                        writer.Write(0); // Frame size placeholder to be rewritten in a few lines
-                        writer.Write(Utils.Latin1Encoding.GetBytes("data"));
-                        writer.Write(StreamUtils.EncodeBEInt32(frameClass));
-                        writer.Write(frameFlags);
+                        case "trkn":
+                        case "disk":
+                        {
+                            int16data = new byte[] { 0, 0 };
+                            writer.Write(int16data);
+                            int16data = StreamUtils.EncodeBEUInt16(TrackUtils.ExtractTrackNumber(text));
+                            writer.Write(int16data);
+                            int16data = StreamUtils.EncodeBEUInt16(TrackUtils.ExtractTrackTotal(text));
+                            writer.Write(int16data);
+                            if (frameCode.Equals("trkn")) writer.Write(int16data); // trkn field always has two more bytes than disk field....
+                            break;
+                        }
+                        case "gnre":
+                            int16data = StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text));
+                            writer.Write(int16data);
+                            break;
                     }
-                    writer.Write(Encoding.UTF8.GetBytes(value));
+
+                    break;
                 }
-            }
-            else if (21 == frameClass) // int8-16-24-32, depending on the value
-            {
-                if (!Utils.IsNumeric(text, true))
+                // UTF-8 text
+                case 1:
                 {
+                    string[] values = text.Split(Settings.InternalValueSeparator);
+                    var first = true;
+                    // Handle multiple values = repeat the 'data' atom
+                    foreach (string value in values)
+                    {
+                        if (0 == value.Length) continue;
+                        if (first) first = false;
+                        else
+                        {
+                            finalFramePos = writer.BaseStream.Position;
+                            writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
+                            writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
+                            writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+
+                            frameSizePos2 = writer.BaseStream.Position;
+                            writer.Write(0); // Frame size placeholder to be rewritten in a few lines
+                            writer.Write(Utils.Latin1Encoding.GetBytes("data"));
+                            writer.Write(StreamUtils.EncodeBEInt32(frameClass));
+                            writer.Write(frameFlags);
+                        }
+                        writer.Write(Encoding.UTF8.GetBytes(value));
+                    }
+
+                    break;
+                }
+                // int8-16-24-32, depending on the value
+                case 21 when !Utils.IsNumeric(text, true):
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "value " + text + " could not be converted to integer; ignoring");
                     writer.Write(0);
-                }
-                else
+                    break;
+                case 21:
                 {
                     int value = Convert.ToInt32(text);
-                    if (value > short.MaxValue || value < short.MinValue) writer.Write(StreamUtils.EncodeBEInt32(value));
-                    // use int32 instead of int24 because Convert.ToInt24 doesn't exist
-                    else if (value > 127 || value < -127) writer.Write(StreamUtils.EncodeBEInt16(Convert.ToInt16(text)));
-                    else writer.Write(Convert.ToByte(text));
+                    switch (value)
+                    {
+                        case > short.MaxValue:
+                        case < short.MinValue:
+                            writer.Write(StreamUtils.EncodeBEInt32(value));
+                            break;
+                        // use int32 instead of int24 because Convert.ToInt24 doesn't exist
+                        case > 127:
+                        case < -127:
+                            writer.Write(StreamUtils.EncodeBEInt16(Convert.ToInt16(text)));
+                            break;
+                        default:
+                            writer.Write(Convert.ToByte(text));
+                            break;
+                    }
+                    break;
                 }
-            }
-            else if (22 == frameClass) // uint8-16-24-32, depending on the value
-            {
-                if (!Utils.IsNumeric(text, true, false))
-                {
+                // uint8-16-24-32, depending on the value
+                case 22 when !Utils.IsNumeric(text, true, false):
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "value " + text + " could not be converted to unsigned integer; ignoring");
                     writer.Write(0);
-                }
-                else
+                    break;
+                case 22:
                 {
                     uint value = Convert.ToUInt32(text);
-                    if (value > 0xffff) writer.Write(StreamUtils.EncodeBEUInt32(value));
-                    // use int32 instead of int24 because Convert.ToUInt24 doesn't exist
-                    else if (value > 0xff) writer.Write(StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text)));
-                    else writer.Write(Convert.ToByte(text));
+                    switch (value)
+                    {
+                        case > 0xffff:
+                            writer.Write(StreamUtils.EncodeBEUInt32(value));
+                            break;
+                        // use int32 instead of int24 because Convert.ToUInt24 doesn't exist
+                        case > 0xff:
+                            writer.Write(StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text)));
+                            break;
+                        default:
+                            writer.Write(Convert.ToByte(text));
+                            break;
+                    }
+                    break;
                 }
             }
 
@@ -2216,10 +2235,12 @@ namespace ATL.AudioData.IO
             writer.Write(0); // Frame size placeholder to be rewritten in a few lines
             writer.Write("data".ToCharArray());
 
-            int frameClass;
-            if (picFormat.Equals(ImageFormat.Jpeg)) frameClass = 13;
-            else if (picFormat.Equals(ImageFormat.Png)) frameClass = 14;
-            else frameClass = 0;
+            int frameClass = picFormat switch
+            {
+                ImageFormat.Jpeg => 13,
+                ImageFormat.Png => 14,
+                _ => 0
+            };
 
             writer.Write(StreamUtils.EncodeBEInt32(frameClass));
             writer.Write(frameFlags);
@@ -2258,8 +2279,7 @@ namespace ATL.AudioData.IO
                 // so that it is parsed properly by Windows
                 if ("wm/shareduserrating" == fieldInfo.NativeFieldCode.ToLower())
                 {
-                    double popularity;
-                    if (double.TryParse(value, out popularity))
+                    if (double.TryParse(value, out var popularity))
                     {
                         value = TrackUtils.EncodePopularity(popularity * 5, MetaDataIO.RC_ASF) + "";
                         isNumeric = true;
