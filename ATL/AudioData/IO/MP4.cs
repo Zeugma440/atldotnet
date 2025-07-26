@@ -40,8 +40,9 @@ namespace ATL.AudioData.IO
         private static readonly byte[] ILST_CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
 
         // https://mp4ra.org/registered-types/codecs
+        // Plus ".mp3" that is found in the wild
         private static readonly ISet<string> VALID_AUDIO_DESCRIPTORS = new HashSet<string> {
-        "a3ds","ac-3","ac-4","alac","alaw","cavs","av3a","dra1","dts+","dts-","dtsc","dtse","dtsh","dtsl","dtsx","dtsy","ec-3","ec+3","enca","fLaC","g719","g726","icpa","m4ae","mha1","mha2","mhm1","mhm2","mlpa","mp4a","Opus","raw$20","resa","samr","sawb","sawp","sevc","sevs","sqcp","ssmv","twos","ulaw","iamf","ipcm","fpcm" };
+        "a3ds","ac-3","ac-4","alac","alaw","cavs","av3a","dra1","dts+","dts-","dtsc","dtse","dtsh","dtsl","dtsx","dtsy","ec-3","ec+3","enca","fLaC","g719","g726","icpa","m4ae","mha1","mha2","mhm1","mhm2","mlpa","mp4a","Opus","raw$20","resa","samr","sawb","sawp","sevc","sevs","sqcp","ssmv","twos","ulaw","iamf","ipcm","fpcm",".mp3" };
 
         private const string ZONE_MP4_NOUDTA = "noudta";                // Placeholder for missing 'udta' atom
         private const string ZONE_MP4_NOMETA = "nometa";                // Placeholder for missing 'meta' atom
