@@ -2,6 +2,7 @@ using ATL.Logging;
 using Commons;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using static ATL.AudioData.AudioDataManager;
@@ -14,8 +15,11 @@ namespace ATL.AudioData.IO
     /// </summary>
 	class MPEGaudio : IAudioDataIO
     {
+#pragma warning disable S1144 // Unused private types or members should be removed
+        // ReSharper disable UnusedMember.Local
+
         // Table for bit rates (KBit/s)
-        public static readonly ushort[,,] MPEG_BIT_RATE = {
+        private static readonly ushort[,,] MPEG_BIT_RATE = {
 	       // For MPEG 2.5
 		    {
                 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -47,13 +51,13 @@ namespace ATL.AudioData.IO
         };
 
         // Sample rate codes
-        public const byte MPEG_SAMPLE_RATE_LEVEL_3 = 0;                    // Level 3
-        public const byte MPEG_SAMPLE_RATE_LEVEL_2 = 1;                    // Level 2
-        public const byte MPEG_SAMPLE_RATE_LEVEL_1 = 2;                    // Level 1
-        public const byte MPEG_SAMPLE_RATE_UNKNOWN = 3;              // Unknown value
+        private const byte MPEG_SAMPLE_RATE_LEVEL_3 = 0;                    // Level 3
+        private const byte MPEG_SAMPLE_RATE_LEVEL_2 = 1;                    // Level 2
+        private const byte MPEG_SAMPLE_RATE_LEVEL_1 = 2;                    // Level 1
+        private const byte MPEG_SAMPLE_RATE_UNKNOWN = 3;              // Unknown value
 
         // Table for sample rates
-        public static readonly ushort[,] MPEG_SAMPLE_RATE = {
+        private static readonly ushort[,] MPEG_SAMPLE_RATE = {
             {11025, 12000, 8000, 0},                                   // For MPEG 2.5
 		    {0, 0, 0, 0},                                                  // Reserved
 		    {22050, 24000, 16000, 0},                                    // For MPEG 2
@@ -61,59 +65,62 @@ namespace ATL.AudioData.IO
     	};
 
         // VBR header ID for Xing/FhG
-        public const string VBR_ID_XING = "Xing";                       // Xing VBR ID
-        public const string VBR_ID_FHG = "VBRI";                         // FhG VBR ID
+        private const string VBR_ID_XING = "Xing";                       // Xing VBR ID
+        private const string VBR_ID_FHG = "VBRI";                         // FhG VBR ID
 
         // MPEG version codes
-        public const byte MPEG_VERSION_2_5 = 0;                            // MPEG 2.5
-        public const byte MPEG_VERSION_UNKNOWN = 1;                 // Unknown version
-        public const byte MPEG_VERSION_2 = 2;                                // MPEG 2
-        public const byte MPEG_VERSION_1 = 3;                                // MPEG 1
+        private const byte MPEG_VERSION_2_5 = 0;                            // MPEG 2.5
+        private const byte MPEG_VERSION_UNKNOWN = 1;                 // Unknown version
+        private const byte MPEG_VERSION_2 = 2;                                // MPEG 2
+        private const byte MPEG_VERSION_1 = 3;                                // MPEG 1
 
         // MPEG layer codes
-        public const byte MPEG_LAYER_UNKNOWN = 0;                     // Unknown layer
-        public const byte MPEG_LAYER_III = 1;                             // Layer III
-        public const byte MPEG_LAYER_II = 2;                               // Layer II
-        public const byte MPEG_LAYER_I = 3;                                 // Layer I
+        private const byte MPEG_LAYER_UNKNOWN = 0;                     // Unknown layer
+        private const byte MPEG_LAYER_III = 1;                             // Layer III
+        private const byte MPEG_LAYER_II = 2;                               // Layer II
+        private const byte MPEG_LAYER_I = 3;                                 // Layer I
 
         // MPEG layer names
-        public static readonly string[] MPEG_LAYER = { "Layer ?", "Layer III", "Layer II", "Layer I" };
+        private static readonly string[] MPEG_LAYER = { "Layer ?", "Layer III", "Layer II", "Layer I" };
 
         // Channel mode codes
-        public const byte MPEG_CM_STEREO = 0;                                // Stereo
-        public const byte MPEG_CM_JOINT_STEREO = 1;                    // Joint Stereo
-        public const byte MPEG_CM_DUAL_CHANNEL = 2;                    // Dual Channel
-        public const byte MPEG_CM_MONO = 3;                                    // Mono
-        public const byte MPEG_CM_UNKNOWN = 4;                         // Unknown mode
+        private const byte MPEG_CM_STEREO = 0;                                // Stereo
+        private const byte MPEG_CM_JOINT_STEREO = 1;                    // Joint Stereo
+        private const byte MPEG_CM_DUAL_CHANNEL = 2;                    // Dual Channel
+        private const byte MPEG_CM_MONO = 3;                                    // Mono
+        private const byte MPEG_CM_UNKNOWN = 4;                         // Unknown mode
 
         // Extension mode codes (for Joint Stereo)
-        public const byte MPEG_CM_EXTENSION_OFF = 0;        // IS and MS modes set off
-        public const byte MPEG_CM_EXTENSION_IS = 1;             // Only IS mode set on
-        public const byte MPEG_CM_EXTENSION_MS = 2;             // Only MS mode set on
-        public const byte MPEG_CM_EXTENSION_ON = 3;          // IS and MS modes set on
-        public const byte MPEG_CM_EXTENSION_UNKNOWN = 4;     // Unknown extension mode
+        private const byte MPEG_CM_EXTENSION_OFF = 0;        // IS and MS modes set off
+        private const byte MPEG_CM_EXTENSION_IS = 1;             // Only IS mode set on
+        private const byte MPEG_CM_EXTENSION_MS = 2;             // Only MS mode set on
+        private const byte MPEG_CM_EXTENSION_ON = 3;          // IS and MS modes set on
+        private const byte MPEG_CM_EXTENSION_UNKNOWN = 4;     // Unknown extension mode
 
         // Emphasis mode codes
-        public const byte MPEG_EMPHASIS_NONE = 0;                              // None
-        public const byte MPEG_EMPHASIS_5015 = 1;                          // 50/15 ms
-        public const byte MPEG_EMPHASIS_UNKNOWN = 2;               // Unknown emphasis
-        public const byte MPEG_EMPHASIS_CCIT = 3;                         // CCIT J.17
+        private const byte MPEG_EMPHASIS_NONE = 0;                              // None
+        private const byte MPEG_EMPHASIS_5015 = 1;                          // 50/15 ms
+        private const byte MPEG_EMPHASIS_UNKNOWN = 2;               // Unknown emphasis
+        private const byte MPEG_EMPHASIS_CCIT = 3;                         // CCIT J.17
 
         // Emphasis names
-        public static readonly string[] MPEG_EMPHASIS = { "None", "50/15 ms", "Unknown", "CCIT J.17" };
+        private static readonly string[] MPEG_EMPHASIS = { "None", "50/15 ms", "Unknown", "CCIT J.17" };
 
         // Encoder codes
-        public const byte MPEG_ENCODER_UNKNOWN = 0;                // Unknown encoder
-        public const byte MPEG_ENCODER_XING = 1;                              // Xing
-        public const byte MPEG_ENCODER_FHG = 2;                                // FhG
-        public const byte MPEG_ENCODER_LAME = 3;                              // LAME
-        public const byte MPEG_ENCODER_BLADE = 4;                            // Blade
-        public const byte MPEG_ENCODER_GOGO = 5;                              // GoGo
-        public const byte MPEG_ENCODER_SHINE = 6;                            // Shine
-        public const byte MPEG_ENCODER_QDESIGN = 7;                        // QDesign
+        private const byte MPEG_ENCODER_UNKNOWN = 0;                // Unknown encoder
+        private const byte MPEG_ENCODER_XING = 1;                              // Xing
+        private const byte MPEG_ENCODER_FHG = 2;                                // FhG
+        private const byte MPEG_ENCODER_LAME = 3;                              // LAME
+        private const byte MPEG_ENCODER_BLADE = 4;                            // Blade
+        private const byte MPEG_ENCODER_GOGO = 5;                              // GoGo
+        private const byte MPEG_ENCODER_SHINE = 6;                            // Shine
+        private const byte MPEG_ENCODER_QDESIGN = 7;                        // QDesign
 
         // Encoder names
-        public static readonly string[] MPEG_ENCODER = { "Unknown", "Xing", "FhG", "LAME", "Blade", "GoGo", "Shine", "QDesign" };
+        private static readonly string[] MPEG_ENCODER = { "Unknown", "Xing", "FhG", "LAME", "Blade", "GoGo", "Shine", "QDesign" };
+
+#pragma warning restore S1144 // Unused private types or members should be removed
+        // ReSharper restore UnusedMember.Local
 
         // Xing/FhG VBR header data
         public sealed class VBRData
@@ -137,6 +144,9 @@ namespace ATL.AudioData.IO
         }
 
         // MPEG frame header data
+        [SuppressMessage("ReSharper", "NotAccessedField.Local")]
+#pragma warning disable S4487
+#pragma warning disable CS0414 // Field is assigned but its value is never used
         public sealed class FrameHeader
         {
             public bool Found;                                 // True if frame found
@@ -267,6 +277,8 @@ namespace ATL.AudioData.IO
 
             public double Duration => Size * 1.0 / BitRate * 8.0;
         } // FrameHeader class
+#pragma warning restore S4487
+#pragma warning restore CS0414 // Field is assigned but its value is never used
 
         public sealed class FrameParsingResult
         {
@@ -282,11 +294,6 @@ namespace ATL.AudioData.IO
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
-
-        /// <summary>
-        /// VBR header data
-        /// </summary>
-        public VBRData VBR => vbrData;
 
         public bool IsVBR => vbrData.Found;
         public double BitRate => getBitRate();
