@@ -1196,8 +1196,10 @@ namespace ATL.test.IO.MetaData
 
 
             // Write
-            TagData theTag = new TagData();
-            theTag.Lyrics = new List<LyricsInfo>() { new LyricsInfo() };
+            TagData theTag = new TagData
+            {
+                Lyrics = new List<LyricsInfo> { new() }
+            };
             theTag.Lyrics[0].ContentType = LyricsInfo.LyricsType.LYRICS;
             theTag.Lyrics[0].LanguageCode = "jap";
             theTag.Lyrics[0].Description = "song";

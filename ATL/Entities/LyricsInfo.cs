@@ -391,7 +391,7 @@ namespace ATL
             if (UnsynchronizedLyrics.Length > 0 && SynchronizedLyrics.Count == 0) Format = LyricsFormat.UNSYNCHRONIZED;
             else if (SynchronizedLyrics.Count > 0)
             {
-                if (SynchronizedLyrics.Any(sl => sl.Beats != null && sl.Beats.Count > 0)) Format = LyricsFormat.LRC_A2;
+                if (SynchronizedLyrics.Any(sl => sl.Beats is { Count: > 0 })) Format = LyricsFormat.LRC_A2;
                 else if (Metadata.Count > 0) Format = LyricsFormat.LRC;
                 else
                 {
@@ -415,6 +415,8 @@ namespace ATL
         /// <param name="data">Data to parse</param>
         public void Parse(string data)
         {
+            // Restart from scratch
+            SynchronizedLyrics.Clear();
             try
             {
                 if (data.Contains("[0") && ParseLRC(data)) return;
@@ -433,7 +435,19 @@ namespace ATL
         /// </summary>
         private bool ParseLRC(string data)
         {
-            List<string> lines = data.Split('\n').Select(l => l.Trim()).ToList();
+            IList<string> rawLines = data.Split('\n').Select(l => l.Trim()).ToList();
+
+            // Preprocess : add any line without any timestamp to the line that precedes it
+            IList<string> lines = new List<string>();
+            foreach (string line in rawLines)
+            {
+                if (0 == line.Length) continue;
+                if (line.StartsWith('[')) lines.Add(line);
+                else if (lines.Count > 0) lines[^1] += line;
+            }
+            rawLines.Clear();
+
+            // Parse preprocessed string
             bool hasLrcA2 = false;
             foreach (string line in lines)
             {
@@ -452,7 +466,7 @@ namespace ATL
                 {
                     // Regular lyrics
                     string start = line.Substring(1, endIndex - 1);
-                    string lyrics = line.Substring(endIndex + 1).Trim();
+                    string lyrics = line[(endIndex + 1)..].Trim();
                     LyricsPhrase phrase;
 
                     // Look for beats (LRC A2)
@@ -466,7 +480,7 @@ namespace ATL
                             int endIdx = part.IndexOf('>');
                             if (endIdx < 0) continue;
                             string beatStart = part.Substring(1, endIdx - 1);
-                            string beatLyrics = part.Substring(endIdx + 1).Trim();
+                            string beatLyrics = part[(endIdx + 1)..].Trim();
                             if (0 == beatLyrics.Length)
                             {
                                 // Timestamp end of last beat
@@ -519,9 +533,9 @@ namespace ATL
                 {
                     insideLyric = true;
                     isFirstLine = true;
-                    int arrowIdx = line.IndexOf("-->");
-                    start = line.Substring(0, arrowIdx - 1).Trim();
-                    end = line.Substring(arrowIdx + 3).Trim();
+                    int arrowIdx = line.IndexOf("-->", StringComparison.Ordinal);
+                    start = line[..(arrowIdx - 1)].Trim();
+                    end = line[(arrowIdx + 3)..].Trim();
                 }
                 else if (0 == line.Length)
                 {
@@ -547,11 +561,11 @@ namespace ATL
         /// </summary>
         public string FormatSynch()
         {
-            switch (Format)
+            return Format switch
             {
-                case LyricsFormat.SRT: return FormatSynchToSRT();
-                default: return FormatSynchToLRC();
-            }
+                LyricsFormat.SRT => FormatSynchToSRT(),
+                _ => FormatSynchToLRC()
+            };
         }
 
         /// <summary>

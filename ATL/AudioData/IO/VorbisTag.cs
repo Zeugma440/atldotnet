@@ -285,9 +285,17 @@ namespace ATL.AudioData.IO
             if (supportedMetaID != Field.NO_FIELD)
             {
                 string targetData = data;
-                if (tagData.hasKey(supportedMetaID)) // If the value already exists, concatenate it with the new one
+                // If the value already exists, concatenate it with the new one
+                if (tagData.hasKey(supportedMetaID))
                 {
-                    targetData = tagData[supportedMetaID] + Settings.InternalValueSeparator + data;
+                    if (supportedMetaID != Field.LYRICS_UNSYNCH)
+                    {
+                        targetData = tagData[supportedMetaID] + Settings.InternalValueSeparator + data;
+                    }
+                    else // Simply concatenate values if it's lyrics
+                    {
+                        targetData = tagData[supportedMetaID] + data;
+                    }
                 }
                 base.SetMetaField(ID, targetData, readAllMetaFrames, zone, tagVersion, streamNumber, language);
             }
