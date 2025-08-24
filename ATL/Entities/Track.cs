@@ -83,10 +83,12 @@ namespace ATL
 		public string Title { get; set; }
         /// <summary>
 		/// Artist
+		/// Tip : Use ATL.Settings.InternalValueSeparator as a separator for multiple values
 		/// </summary>
 		public string Artist { get; set; }
         /// <summary>
         /// Composer
+        /// Tip : Use ATL.Settings.InternalValueSeparator as a separator for multiple values
         /// </summary>
         public string Composer { get; set; }
         /// <summary>
@@ -95,6 +97,7 @@ namespace ATL
         public string Comment { get; set; }
         /// <summary>
 		/// Genre
+		/// Tip : Use ATL.Settings.InternalValueSeparator as a separator for multiple values
 		/// </summary>
 		public string Genre { get; set; }
         /// <summary>
@@ -107,6 +110,7 @@ namespace ATL
         public string OriginalAlbum { get; set; }
         /// <summary>
         /// Original artist
+        /// Tip : Use ATL.Settings.InternalValueSeparator as a separator for multiple values
         /// </summary>
         public string OriginalArtist { get; set; }
         /// <summary>
@@ -127,6 +131,7 @@ namespace ATL
         public DateTime? PublishingDate { get; set; }
         /// <summary>
         /// Album Artist
+        /// Tip : Use ATL.Settings.InternalValueSeparator as a separator for multiple values
         /// </summary>
         public string AlbumArtist { get; set; }
         /// <summary>
@@ -135,6 +140,7 @@ namespace ATL
         public string Conductor { get; set; }
         /// <summary>
         /// Lyricist
+        /// Tip : Use ATL.Settings.InternalValueSeparator as a separator for multiple values
         /// </summary>
         public string Lyricist { get; set; }
         /// <summary>
@@ -198,6 +204,7 @@ namespace ATL
         public string LongDescription { get; set; }
         /// <summary>
         /// Language
+        /// Tip : Use ATL.Settings.InternalValueSeparator as a separator for multiple values
         /// </summary>
         public string Language { get; set; }
         /// <summary>
@@ -291,8 +298,8 @@ namespace ATL
         }
         /// <summary>
 		/// Track number in string form
-        /// Useful for storing LP tracks (e.g. A1, A2...)
-        /// NB : Does not include total notation (e.g. 01/12); only the track number itself
+		/// NB1 : Stored in string to allow storing LP tracks (e.g. A1, A2...)
+        /// NB2 : Does not include total notation (e.g. 01/12); only the track number itself
 		/// </summary>
         public string TrackNumberStr { get; set; }
         /// <summary>
