@@ -56,7 +56,7 @@ namespace ATL.test.CodeSnippets
             // Load audio file information into memory
             Track theTrack = new Track(audioFilePath);
 
-            // Display classic 'supported' fields
+            // Display standard fields
             System.Console.WriteLine("Title : " + theTrack.Title);
             System.Console.WriteLine("Artist : " + theTrack.Artist);
             System.Console.WriteLine("Album : " + theTrack.Album);
@@ -65,6 +65,10 @@ namespace ATL.test.CodeSnippets
             System.Console.WriteLine("Disc number : " + theTrack.DiscNumber);
             System.Console.WriteLine("Genre : " + theTrack.Genre);
             System.Console.WriteLine("Comment : " + theTrack.Comment);
+
+            // Display standard fields (multiple values)
+            var artists = theTrack.Artist.Split(ATL.Settings.DisplayValueSeparator);
+            foreach (var artist in artists) System.Console.WriteLine("Artist : " + artist);
 
             System.Console.WriteLine("Duration (s) : " + theTrack.Duration);
             System.Console.WriteLine("Bitrate (KBps) : " + theTrack.Bitrate);
@@ -106,9 +110,15 @@ namespace ATL.test.CodeSnippets
             // Load audio file information into memory
             Track theTrack = new Track(audioFilePath);
 
+
             // Modify metadata
+
+            // Set standard values
             theTrack.Artist = "Hey ho";
             theTrack.Composer = "Oscar Wilde";
+            // Set multiple standard values
+            theTrack.Genre = "Country" + ATL.Settings.DisplayValueSeparator + "Disco";
+            // Set non-standard values
             theTrack.AdditionalFields["customField"] = "fancyValue";
 
 
