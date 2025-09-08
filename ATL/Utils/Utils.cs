@@ -37,6 +37,11 @@ namespace Commons
         private static readonly char[] DECIMAL_SEPARATORS = { ',', '.' };
 
         /// <summary>
+        /// 0-9 digits as arabic characters
+        /// </summary>
+        private static readonly string[] ARABIC_DIGITS = { "٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩" };
+
+        /// <summary>
         /// Transform the given string so that is becomes non-null
         /// </summary>
         /// <param name="value">String to protect</param>
@@ -258,6 +263,7 @@ namespace Commons
             date = null;
             if (!IsNumeric(str, true, false)) return false;
 
+            str = convertArabicDigits(str);
             switch (str.Length)
             {
                 case 4:
@@ -292,6 +298,21 @@ namespace Commons
         }
 
         /// <summary>
+        /// Converts arabic digits [٠-٩] of the given string into numeral digits [0-9]
+        /// </summary>
+        private static string convertArabicDigits(string s)
+        {
+            string result = s;
+
+            for (int i = 0; i <= 9; i++)
+            {
+                result = result.Replace(ARABIC_DIGITS[i], i.ToString());
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Strip the given string from all ending null '\0' characters
         /// </summary>
         /// <param name="iStr">String to process</param>
@@ -302,7 +323,7 @@ namespace Commons
             int i = iStr.Length;
             while (i > 0 && '\0' == iStr[i - 1]) i--;
 
-            return iStr.Substring(0, i);
+            return iStr[..i];
         }
 
         /// <summary>
@@ -378,7 +399,7 @@ namespace Commons
                 else
                 {
                     Array.Copy(data, 0, result, result.Length - data.Length, data.Length);
-                    for (int i = 0; i < (result.Length - data.Length); i++) result[i] = paddingByte;
+                    for (int i = 0; i < result.Length - data.Length; i++) result[i] = paddingByte;
                 }
             }
             else
@@ -438,7 +459,7 @@ namespace Commons
         {
             // Each 3 byte sequence in the source data becomes a 4 byte
             // sequence in the character array. 
-            long arrayLength = (long)((4.0d / 3.0d) * data.Length);
+            long arrayLength = (long)(4.0d / 3.0d * data.Length);
 
             // If array length is not divisible by 4, go up to the next
             // multiple of 4.
@@ -451,7 +472,7 @@ namespace Commons
 
             Convert.ToBase64CharArray(data, 0, data.Length, dataChar, 0);
 
-            return Utils.Latin1Encoding.GetBytes(dataChar);
+            return Latin1Encoding.GetBytes(dataChar);
         }
 
         /// <summary>
@@ -472,7 +493,7 @@ namespace Commons
             for (int i = 0; i < s.Length; i++)
             {
                 char t = s[i];
-                if (t == '.' || t == ',')
+                if (t is '.' or ',')
                 {
                     if (allowsOnlyIntegers) return false;
                 }
