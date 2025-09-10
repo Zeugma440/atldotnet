@@ -3,6 +3,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using ATL.Logging;
 
 namespace Commons
@@ -263,9 +264,10 @@ namespace Commons
 		public static bool TryExtractDateTimeFromDigits(string str, out DateTime? date)
         {
             date = null;
-            if (!IsNumeric(str, true, false)) return false;
-
+            if (string.IsNullOrEmpty(str)) return false;
             str = convertDigits(str);
+            if (str.Any(t => !IsDigit(t))) return false;
+
             switch (str.Length)
             {
                 case 4:

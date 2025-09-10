@@ -92,6 +92,20 @@ namespace ATL.test
             Assert.AreEqual(date.Value.Day, 1);
 
             date = null;
+            Assert.IsTrue(Utils.TryExtractDateTimeFromDigits("١٩٣٠", out date));
+            Assert.IsTrue(date.HasValue);
+            Assert.AreEqual(date.Value.Year, 1930);
+            Assert.AreEqual(date.Value.Month, 1);
+            Assert.AreEqual(date.Value.Day, 1);
+
+            date = null;
+            Assert.IsTrue(Utils.TryExtractDateTimeFromDigits("۱۹۳۰", out date));
+            Assert.IsTrue(date.HasValue);
+            Assert.AreEqual(date.Value.Year, 1930);
+            Assert.AreEqual(date.Value.Month, 1);
+            Assert.AreEqual(date.Value.Day, 1);
+
+            date = null;
             Assert.IsTrue(Utils.TryExtractDateTimeFromDigits("193008", out date));
             Assert.IsTrue(date.HasValue);
             Assert.AreEqual(date.Value.Year, 1930);
@@ -106,6 +120,8 @@ namespace ATL.test
             Assert.AreEqual(date.Value.Day, 12);
 
             // KO cases
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("אבדד", out date));
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("〇一三五", out date));
             Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("sds", out date));
             Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("12sds12", out date));
             Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("123456789", out date));
