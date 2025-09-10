@@ -37,9 +37,11 @@ namespace Commons
         private static readonly char[] DECIMAL_SEPARATORS = { ',', '.' };
 
         /// <summary>
-        /// 0-9 digits as arabic characters
+        /// 0-9 digits as arabic and farsi characters
         /// </summary>
+        private static readonly string[] NUMERAL_DIGITS = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
         private static readonly string[] ARABIC_DIGITS = { "٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩" };
+        private static readonly string[] FARSI_DIGITS = { "۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹" };
 
         /// <summary>
         /// Transform the given string so that is becomes non-null
@@ -263,7 +265,7 @@ namespace Commons
             date = null;
             if (!IsNumeric(str, true, false)) return false;
 
-            str = convertArabicDigits(str);
+            str = convertDigits(str);
             switch (str.Length)
             {
                 case 4:
@@ -298,15 +300,15 @@ namespace Commons
         }
 
         /// <summary>
-        /// Converts arabic digits [٠-٩] of the given string into numeral digits [0-9]
+        /// Converts arabic [٠-٩] and Farsi digits [۰-۹] of the given string into numeral digits [0-9]
         /// </summary>
-        private static string convertArabicDigits(string s)
+        private static string convertDigits(string s)
         {
             string result = s;
 
             for (int i = 0; i <= 9; i++)
             {
-                result = result.Replace(ARABIC_DIGITS[i], i.ToString());
+                result = result.Replace(ARABIC_DIGITS[i], NUMERAL_DIGITS[i]).Replace(FARSI_DIGITS[i], NUMERAL_DIGITS[i]);
             }
 
             return result;
@@ -507,7 +509,7 @@ namespace Commons
         }
 
         /// <summary>
-        /// Indicate if the given character represents a non-decimal digit (0..9)
+        /// Indicate if the given character represents a non-decimal numeral digit (0..9)
         /// </summary>
         /// <param name="c">Character to analyze</param>
         /// <returns>True if char is between 0..9; false instead</returns>
