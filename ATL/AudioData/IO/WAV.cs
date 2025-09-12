@@ -1,13 +1,13 @@
-using System;
-using System.IO;
-using static ATL.AudioData.AudioDataManager;
 using Commons;
+using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
+using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
-using System.Text;
-using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -54,6 +54,7 @@ namespace ATL.AudioData.IO
         private const string CHUNK_XMP = XmpTag.CHUNK_XMP;
         private const string CHUNK_CART = CartTag.CHUNK_CART;
         private const string CHUNK_ID3 = "id3 ";
+        private const string CHUNK_ILLEGAL_ID3 = "id3_remove";
 
 
         private ushort formatId;
@@ -171,6 +172,8 @@ namespace ATL.AudioData.IO
 
         public FileStructureHelper.Zone Id3v2Zone => id3v2StructureHelper.GetZone(CHUNK_ID3);
 
+        public FileStructureHelper.Zone Id3v2OldZone => id3v2StructureHelper.GetZone(CHUNK_ILLEGAL_ID3);
+
 
         // ---------- CONSTRUCTORS & INITIALIZERS
 
@@ -217,7 +220,8 @@ namespace ATL.AudioData.IO
             byte[] data = new byte[4];
             byte[] data64 = new byte[8];
 
-            source.Seek(0, SeekOrigin.Begin);
+            long offset = sizeInfo.IsID3v2Embedded ? 0 : sizeInfo.ID3v2Size;
+            source.Seek(offset, SeekOrigin.Begin);
 
             // Read header
             if (source.Read(data, 0, 4) < 4) return false;
@@ -280,7 +284,7 @@ namespace ATL.AudioData.IO
                         source.Seek(-1, SeekOrigin.Current);
 
                         // Update zone size (remove and replace zone with updated size), if it exists
-                        FileStructureHelper sHelper = (subChunkId == CHUNK_ID3) ? id3v2StructureHelper : structureHelper;
+                        FileStructureHelper sHelper = subChunkId == CHUNK_ID3 ? id3v2StructureHelper : structureHelper;
                         FileStructureHelper.Zone previousZone = sHelper.GetZone(subChunkId);
                         if (previousZone != null)
                         {
@@ -497,12 +501,19 @@ namespace ATL.AudioData.IO
             // ID3 zone should be set as the very last one for Windows to be able to read the LIST INFO zone properly
             if (-1 == id3v2Offset)
             {
-                id3v2Offset = 0; // Switch status to "tried to read, but nothing found"
-
+                // Switch status to "tried to read, but nothing found"
+                id3v2Offset = 0;
                 if (readTagParams.PrepareForWriting)
                 {
+                    // Add zone placeholder
                     id3v2StructureHelper.AddZone(eof, 0, CHUNK_ID3);
                     id3v2StructureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_ID3);
+
+                    // Remove illegal tagging, if it exists
+                    if (!sizeInfo.IsID3v2Embedded && sizeInfo.ID3v2Size > 0)
+                    {
+                        id3v2StructureHelper.AddZone(0, sizeInfo.ID3v2Size, CHUNK_ILLEGAL_ID3);
+                    }
                 }
             }
 
@@ -557,10 +568,7 @@ namespace ATL.AudioData.IO
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             resetData();
-
-            if (!readWAV(source, readTagParams)) return false;
-
-            return true;
+            return readWAV(source, readTagParams);
         }
 
         protected override int write(TagData tag, Stream s, string zone)

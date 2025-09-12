@@ -62,6 +62,8 @@ namespace ATL.AudioData
                 TagSizes[type] = size;
             }
 
+            public bool IsID3v2Embedded { get; set; } = false;
+
             /// <summary>
             /// Size of the ID3v1 tag (bytes)
             /// </summary>
@@ -101,7 +103,7 @@ namespace ATL.AudioData
                 get
                 {
                     if (audioDataSize <= 0) return FileSize - TotalTagSize;
-                    else return audioDataSize;
+                    return audioDataSize;
                 }
                 set => audioDataSize = value;
             }
@@ -292,11 +294,14 @@ namespace ATL.AudioData
         /// <returns>Metadata I/O for the given tag type</returns>
         public IMetaDataIO getMeta(TagType type)
         {
-            if (type.Equals(TagType.ID3V1)) return ID3v1;
-            if (type.Equals(TagType.ID3V2)) return ID3v2;
-            if (type.Equals(TagType.APE)) return APEtag;
-            if (type.Equals(TagType.NATIVE) && NativeTag != null) return NativeTag;
-            return new DummyTag();
+            return type switch
+            {
+                TagType.ID3V1 => ID3v1,
+                TagType.ID3V2 => ID3v2,
+                TagType.APE => APEtag,
+                TagType.NATIVE when NativeTag != null => NativeTag,
+                _ => new DummyTag()
+            };
         }
 
         /// <summary>
@@ -404,7 +409,7 @@ namespace ATL.AudioData
                         handleEmbedder(s, theMetaIO);
 
                         ProgressToken<float> progress = writeProgress?.CreateProgressToken();
-                        var args = new WriteTagParams()
+                        var args = new WriteTagParams
                         {
                             ExtraID3v2PaddingDetection = isMetaSupported(TagType.ID3V2)
                         };
@@ -439,8 +444,10 @@ namespace ATL.AudioData
                 PrepareForWriting = true
             };
 
-            audioDataIO.Read(r, sizeInfo, readTagParams);
+            read(r, readTagParams);
             theMetaIO.SetEmbedder(embedder);
+
+            sizeInfo.IsID3v2Embedded = embedder.HasEmbeddedID3v2 > 0;
         }
 
         /// <summary>
@@ -463,7 +470,7 @@ namespace ATL.AudioData
                     result = read(s, false, false, true);
 
                     IMetaDataIO metaIO = getMeta(tagType);
-                    var args = new WriteTagParams()
+                    var args = new WriteTagParams
                     {
                         ExtraID3v2PaddingDetection = isMetaSupported(TagType.ID3V2)
                     };
@@ -485,9 +492,6 @@ namespace ATL.AudioData
 
         private bool read(Stream source, bool readEmbeddedPictures = false, bool readAllMetaFrames = false, bool prepareForWriting = false)
         {
-            sizeInfo.ResetData();
-
-            sizeInfo.FileSize = source.Length;
             ReadTagParams readTagParams = new ReadTagParams(readEmbeddedPictures, readAllMetaFrames)
             {
                 PrepareForWriting = prepareForWriting
@@ -498,26 +502,28 @@ namespace ATL.AudioData
 
         private bool read(Stream source, ReadTagParams readTagParams)
         {
+            sizeInfo.ResetData();
+            sizeInfo.FileSize = source.Length;
+
             if (isMetaSupported(TagType.ID3V1) && ID3v1.Read(source, readTagParams))
             {
                 sizeInfo.SetSize(TagType.ID3V1, ID3v1.Size);
             }
-            // No embedded ID3v2 tag => supported tag is the standard version of ID3v2
-            if (audioDataIO is not IMetaDataEmbedder)
+
+            // Try to read ID3v2 everywhere, as any file can be 'illegally' tagged with it
+            // Reset data from ID3v2 tag structure
+            ID3v2.Clear();
+            // Test for ID3v2 regardless of it being supported, to properly handle files with illegal ID3v2 tags
+            source.Position = 0;
+            byte[] data = new byte[32];
+            if (32 == source.Read(data, 0, 32) && IO.ID3v2.IsValidHeader(data))
             {
-                // Reset data from ID3v2 tag structure
-                ID3v2.Clear();
-                // Test for ID3v2 regardless of it being supported, to properly handle files with illegal ID3v2 tags
                 source.Position = 0;
-                byte[] data = new byte[32];
-                if (32 == source.Read(data, 0, 32) && IO.ID3v2.IsValidHeader(data))
-                {
-                    source.Position = 0;
-                    readTagParams.ExtraID3v2PaddingDetection = isMetaSupported(TagType.ID3V2);
-                    if (ID3v2.Read(source, readTagParams)) sizeInfo.SetSize(TagType.ID3V2, ID3v2.Size);
-                }
-                source.Position = 0;
+                readTagParams.ExtraID3v2PaddingDetection = isMetaSupported(TagType.ID3V2);
+                if (ID3v2.Read(source, readTagParams)) sizeInfo.SetSize(TagType.ID3V2, ID3v2.Size);
             }
+            source.Position = 0;
+
             if (isMetaSupported(TagType.APE) && APEtag.Read(source, readTagParams))
             {
                 sizeInfo.SetSize(TagType.APE, APEtag.Size);
@@ -537,17 +543,11 @@ namespace ATL.AudioData
                 result = audioDataIO.Read(source, sizeInfo, readTagParams);
             }
 
-            if (audioDataIO is IMetaDataEmbedder embedder) // Embedded ID3v2 tag detected while reading
+            if (audioDataIO is IMetaDataEmbedder { HasEmbeddedID3v2: > 0 } embedder)
             {
-                if (embedder.HasEmbeddedID3v2 > 0)
-                {
-                    readTagParams.Offset = embedder.HasEmbeddedID3v2;
-                    if (ID3v2.Read(source, readTagParams)) sizeInfo.SetSize(TagType.ID3V2, ID3v2.Size);
-                }
-                else
-                {
-                    ID3v2.Clear();
-                }
+                // Embedded ID3v2 tag detected while reading
+                readTagParams.Offset = embedder.HasEmbeddedID3v2;
+                if (ID3v2.Read(source, readTagParams)) sizeInfo.SetSize(TagType.ID3V2, ID3v2.Size);
             }
 
             sizeInfo.AudioDataOffset = audioDataIO.AudioDataOffset;

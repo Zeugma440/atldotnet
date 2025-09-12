@@ -38,5 +38,7 @@ namespace ATL.AudioData.IO
 
         public long PaddingSize => ((IMetaDataIO)vorbisTag).PaddingSize;
         public long Size => ((IMetaDataIO)vorbisTag).Size;
+
+        public bool IsEmbedded => ((IMetaDataIO)vorbisTag).IsEmbedded;
     }
 }

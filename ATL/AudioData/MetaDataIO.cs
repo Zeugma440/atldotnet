@@ -148,6 +148,9 @@ namespace ATL.AudioData.IO
         // ------ READ-ONLY "PHYSICAL" TAG INFO FIELDS ACCESSORS -----------------------------------------------------
 
         /// <inheritdoc/>
+        public bool IsEmbedded { get; set; }
+
+        /// <inheritdoc/>
         public bool Exists => tagData.Exists();
 
         /// <inheritdoc/>
@@ -332,6 +335,7 @@ namespace ATL.AudioData.IO
         protected void ResetData()
         {
             m_tagVersion = 0;
+            IsEmbedded = false;
 
             tagData.Clear();
             if (null == picturePositions) picturePositions = new List<KeyValuePair<string, int>>(); else picturePositions.Clear();
@@ -565,7 +569,7 @@ namespace ATL.AudioData.IO
             structureHelper.Clear();
             tagData.Pictures.Clear();
 
-            // Constraint-check on non-supported values
+            // Constraint check on non-supported values
             if (FieldCodeFixedLength > 0)
             {
                 ISet<MetaFieldInfo> infoToRemove = new HashSet<MetaFieldInfo>();
@@ -598,10 +602,13 @@ namespace ATL.AudioData.IO
 
             read(r, readTagParams);
 
-            if (m_embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
+            // ID3v2 embedder
+            if (m_embedder is { Id3v2Zone: not null } && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
             {
                 structureHelper.Clear();
                 structureHelper.AddZone(m_embedder.Id3v2Zone);
+                var removeZone = m_embedder.Id3v2OldZone;
+                if (removeZone != null) structureHelper.AddZone(removeZone);
             }
 
             // Give engine something to work with if the tag is really empty

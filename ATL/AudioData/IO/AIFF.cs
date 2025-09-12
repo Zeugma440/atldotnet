@@ -151,6 +151,7 @@ namespace ATL.AudioData.IO
         public uint ID3v2EmbeddingHeaderSize => 8;
 
         public FileStructureHelper.Zone Id3v2Zone => id3v2StructureHelper.GetZone(CHUNKTYPE_ID3TAG);
+        public FileStructureHelper.Zone Id3v2OldZone => id3v2StructureHelper.GetZone("id3_remove");
 
 
         // ---------- CONSTRUCTORS & INITIALIZERS

@@ -731,6 +731,9 @@ namespace ATL.AudioData
         public long Size => throw new NotImplementedException();
 
         /// <inheritdoc/>
+        public bool IsEmbedded => throw new NotImplementedException();
+
+        /// <inheritdoc/>
         public bool Read(Stream source, ReadTagParams readTagParams) { throw new NotImplementedException(); }
 
         /// <inheritdoc/>

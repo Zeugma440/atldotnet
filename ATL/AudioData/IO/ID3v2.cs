@@ -1263,6 +1263,8 @@ namespace ATL.AudioData.IO
         /// <returns>True if writing operation succeeded; false if not</returns>
         protected override int write(TagData tag, Stream s, string zone)
         {
+            if (zone == "id3_remove") return 0;
+
             using BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true);
             return write(tag, w);
         }

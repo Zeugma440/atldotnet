@@ -34,6 +34,16 @@ namespace ATL.AudioData
         }
 
         /// <summary>
+        /// Is the metadata embedded
+        /// true : Embedded
+        /// false : Default location
+        /// </summary>
+        bool IsEmbedded
+        {
+            get;
+        }
+
+        /// <summary>
         /// Set metadata to be written using the given embedder
         /// </summary>
         /// <param name="embedder">Metadata embedder to be used to write current metadata</param>

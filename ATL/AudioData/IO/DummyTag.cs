@@ -38,6 +38,9 @@ namespace ATL.AudioData.IO
         public long Size => 0;
 
         /// <inheritdoc/>
+        public bool IsEmbedded => false;
+
+        /// <inheritdoc/>
         public long PaddingSize => 0;
 
         /// <inheritdoc/>

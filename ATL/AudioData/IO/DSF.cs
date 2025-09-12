@@ -59,6 +59,7 @@ namespace ATL.AudioData.IO
         public long HasEmbeddedID3v2 => id3v2Offset;
         public uint ID3v2EmbeddingHeaderSize => 0;
         public FileStructureHelper.Zone Id3v2Zone => id3v2StructureHelper.GetZone(FileStructureHelper.DEFAULT_ZONE_NAME);
+        public FileStructureHelper.Zone Id3v2OldZone => id3v2StructureHelper.GetZone("id3_remove");
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
 

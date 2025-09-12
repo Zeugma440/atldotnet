@@ -241,7 +241,7 @@ namespace ATL.AudioData.IO
                                     {
                                         newTagSize = memStream.Length;
 
-                                        if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2)
+                                        if (embedder is { Id3v2Zone: not null } && implementedTagType == MetaDataIOFactory.TagType.ID3V2)
                                         {
                                             // Insert header before the written metadata
                                             if (embedder.ID3v2EmbeddingHeaderSize > 0)
@@ -431,7 +431,7 @@ namespace ATL.AudioData.IO
             }
             else // A brand new tag has been added to the file
             {
-                if (embedder != null && implementedTagType == MetaDataIOFactory.TagType.ID3V2)
+                if (embedder is { Id3v2Zone: not null } && implementedTagType == MetaDataIOFactory.TagType.ID3V2)
                 {
                     tagBeginOffset = embedder.Id3v2Zone.Offset;
                 }
@@ -511,7 +511,7 @@ namespace ATL.AudioData.IO
                 long zoneBeginOffset = getLowestOffset(zone);
                 long zoneEndOffset = getHighestOffset(zone);
 
-                if (embedder != null && !embedderProcessed && implementedTagType == MetaDataIOFactory.TagType.ID3V2)
+                if (embedder is { Id3v2Zone: not null } && !embedderProcessed && implementedTagType == MetaDataIOFactory.TagType.ID3V2)
                 {
                     zoneBeginOffset = Math.Min(zoneBeginOffset, embedder.Id3v2Zone.Offset);
                     zoneEndOffset = Math.Max(zoneEndOffset, embedder.Id3v2Zone.Offset + embedder.Id3v2Zone.Size);
