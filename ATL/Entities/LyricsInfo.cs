@@ -148,8 +148,8 @@ namespace ATL
                 string timestampEnd = "",
                 List<LyricsPhrase> beats = null)
             {
-                TimestampStart = Utils.DecodeTimecodeToMs(timestampStart);
-                TimestampEnd = Utils.DecodeTimecodeToMs(timestampEnd);
+                TimestampStart = Utils.DecodeTimecodeToMs(timestampStart, true);
+                TimestampEnd = Utils.DecodeTimecodeToMs(timestampEnd, true);
                 Text = text;
                 if (beats != null) Beats = beats.Select(b => new LyricsPhrase(b)).ToList();
             }
@@ -484,7 +484,7 @@ namespace ATL
                             if (0 == beatLyrics.Length)
                             {
                                 // Timestamp end of last beat
-                                int timestampEnd = Utils.DecodeTimecodeToMs(beatStart);
+                                int timestampEnd = Utils.DecodeTimecodeToMs(beatStart, true);
                                 if (timestampEnd > 0)
                                 {
                                     // Duplicate with timestamp end
@@ -586,14 +586,14 @@ namespace ATL
             // Lyrics
             foreach (var line in SynchronizedLyrics)
             {
-                sb.Append('[').Append(Utils.EncodeTimecode_ms(line.TimestampStart, true)).Append(']');
+                sb.Append('[').Append(Utils.EncodeTimecode_ms(line.TimestampStart, Utils.TimecodeEncodeFormat.MM_SS_XX)).Append(']');
                 if (line.Beats is { Count: > 0 })
                 {
                     // LRC A2
                     foreach (var beat in line.Beats)
                     {
-                        sb.Append('<').Append(Utils.EncodeTimecode_ms(beat.TimestampStart, true)).Append('>').Append(beat.Text);
-                        if (beat.TimestampEnd > -1) sb.Append('<').Append(Utils.EncodeTimecode_ms(beat.TimestampStart, true)).Append('>');
+                        sb.Append('<').Append(Utils.EncodeTimecode_ms(beat.TimestampStart, Utils.TimecodeEncodeFormat.MM_SS_XX)).Append('>').Append(beat.Text);
+                        if (beat.TimestampEnd > -1) sb.Append('<').Append(Utils.EncodeTimecode_ms(beat.TimestampStart, Utils.TimecodeEncodeFormat.MM_SS_XX)).Append('>');
                     }
                 }
                 else
@@ -624,9 +624,9 @@ namespace ATL
                 // Index
                 sb.Append(index++).Append('\n');
                 // Timecodes
-                sb.Append(Utils.EncodeTimecode_ms(line.TimestampStart, true).Replace('.', ','));
+                sb.Append(Utils.EncodeTimecode_ms(line.TimestampStart, Utils.TimecodeEncodeFormat.MM_SS_UUUU).Replace('.', ','));
                 sb.Append(" --> ");
-                sb.Append(Utils.EncodeTimecode_ms(line.TimestampEnd, true).Replace('.', ','));
+                sb.Append(Utils.EncodeTimecode_ms(line.TimestampEnd, Utils.TimecodeEncodeFormat.MM_SS_UUUU).Replace('.', ','));
                 sb.Append('\n');
                 // Text
                 sb.Append(line.Text).Append('\n');

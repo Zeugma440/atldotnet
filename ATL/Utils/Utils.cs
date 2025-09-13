@@ -43,6 +43,11 @@ namespace Commons
         private static readonly string[] NUMERAL_DIGITS = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
         private static readonly string[] ARABIC_DIGITS = { "٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩" };
         private static readonly string[] FARSI_DIGITS = { "۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹" };
+        
+        private static long RoundToNearest10(long number)
+        {
+            return (number + 5) / 10;
+        }
 
         /// <summary>
         /// Transform the given string so that is becomes non-null
@@ -53,12 +58,21 @@ namespace Commons
         {
             return value ?? "";
         }
+        
+        public enum TimecodeEncodeFormat
+        {
+            DD_HH_MM_SS_UUUU,
+            MM_SS_UUUU,
+            MM_SS_XX
+        }
 
         /// <summary>
         /// Format the given duration using the following format
         ///     DDdHH:MM:SS.UUUU
         ///     OR
         ///     MM:SS.UUUU
+        ///     OR
+        ///     MM:SS.XX(XX will always have 2 digits)
         ///     
         ///  Where
         ///     DD is the number of days, if applicable (i.e. durations of less than 1 day won't display the "DDd" part)
@@ -66,17 +80,19 @@ namespace Commons
         ///     MM is the number of minutes, when using MMSS format, this will extend beyond two digits if necessary
         ///     SS is the number of seconds
         ///     UUUU is the number of milliseconds
+        ///     XX is the number of centiseconds (i.e. milliseconds rounded to the nearest 10, or hundredths of a second). LRC formats use this convention
         /// </summary>
         /// <param name="milliseconds">Duration to format (in milliseconds)</param>
-        /// <param name="useMmSsFormat">Format in MM:SS.UUUU format. Default is false</param>
+        /// <param name="format">Format in MM:SS.UUUU format. Default is false</param>
         /// <returns>Formatted duration according to the abovementioned convention</returns>
-        public static string EncodeTimecode_ms(long milliseconds, bool useMmSsFormat = false)
+        public static string EncodeTimecode_ms(long milliseconds, TimecodeEncodeFormat format = TimecodeEncodeFormat.DD_HH_MM_SS_UUUU)
         {
             long seconds = Convert.ToInt64(Math.Floor(milliseconds / 1000.00));
 
-            var encodedString = useMmSsFormat ? EncodeMmSsTimecode_s(seconds) : EncodeTimecode_s(seconds);
+            var encodedString = format != TimecodeEncodeFormat.DD_HH_MM_SS_UUUU ? EncodeMmSsTimecode_s(seconds) : EncodeTimecode_s(seconds);
 
-            return encodedString + "." + (milliseconds - seconds * 1000);
+            return format == TimecodeEncodeFormat.MM_SS_XX ? encodedString + "." + RoundToNearest10(milliseconds - seconds * 1000).ToString("D2")
+                : encodedString + "." + (milliseconds - seconds * 1000);
         }
 
         /// <summary>
@@ -139,15 +155,16 @@ namespace Commons
         /// Supported formats : hh:mm, hh:mm:ss.ddd, mm:ss, hh:mm:ss and mm:ss.ddd
         /// </summary>
         /// <param name="timeCode">Timecode to convert</param>
+        /// <param name="timecodeIn10Ms">Set to true if the given timecode is expressed in 10ms units like the lrc format. Default is false</param>
         /// <returns>Duration of the given timecode expressed in milliseconds if succeeded; -1 if failed</returns>
-        public static int DecodeTimecodeToMs(string timeCode)
+        public static int DecodeTimecodeToMs(string timeCode, bool timecodeIn10Ms = false)
         {
             int result = -1;
             if (string.IsNullOrEmpty(timeCode)) return result;
 
             bool valid = false;
 
-            if (DateTime.TryParse(timeCode, out var dateTime))
+            if (!timecodeIn10Ms && DateTime.TryParse(timeCode, out var dateTime))
             {
                 // Handle classic cases hh:mm, hh:mm:ss.ddd (the latter being the spec)
                 valid = true;
@@ -195,6 +212,10 @@ namespace Commons
                     }
 
                     result = milliseconds;
+                    if (timecodeIn10Ms)
+                    {
+                        result *= 10;
+                    }
                     result += seconds * 1000;
                     result += minutes * 60 * 1000;
                     result += hours * 60 * 60 * 1000;
