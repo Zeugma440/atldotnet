@@ -62,6 +62,9 @@ namespace ATL.AudioData
                 TagSizes[type] = size;
             }
 
+            /// <summary>
+            /// True if the ID3v2 tag is embedded; false if on its default location (beginning of file)
+            /// </summary>
             public bool IsID3v2Embedded { get; set; } = false;
 
             /// <summary>
