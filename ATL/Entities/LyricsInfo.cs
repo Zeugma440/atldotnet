@@ -148,8 +148,8 @@ namespace ATL
                 string timestampEnd = "",
                 List<LyricsPhrase> beats = null)
             {
-                TimestampStart = Utils.DecodeTimecodeToMs(timestampStart, true);
-                TimestampEnd = Utils.DecodeTimecodeToMs(timestampEnd, true);
+                TimestampStart = Utils.DecodeTimecodeToMs(timestampStart);
+                TimestampEnd = Utils.DecodeTimecodeToMs(timestampEnd);
                 Text = text;
                 if (beats != null) Beats = beats.Select(b => new LyricsPhrase(b)).ToList();
             }
@@ -479,12 +479,12 @@ namespace ATL
                         {
                             int endIdx = part.IndexOf('>');
                             if (endIdx < 0) continue;
-                            string beatStart = part.Substring(1, endIdx - 1);
+                            string beatStart = part[1..endIdx];
                             string beatLyrics = part[(endIdx + 1)..].Trim();
                             if (0 == beatLyrics.Length)
                             {
                                 // Timestamp end of last beat
-                                int timestampEnd = Utils.DecodeTimecodeToMs(beatStart, true);
+                                int timestampEnd = Utils.DecodeTimecodeToMs(beatStart);
                                 if (timestampEnd > 0)
                                 {
                                     // Duplicate with timestamp end

@@ -1230,7 +1230,7 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             TagData theTag = new TagData();
-            theTag.Lyrics = new List<LyricsInfo>() { new LyricsInfo() };
+            theTag.Lyrics = new List<LyricsInfo> { new() };
             theTag.Lyrics[0].UnsynchronizedLyrics = "[00:28.581]<00:28.581>I'm <00:28.981>wishing <00:29.797>on <00:30.190>a <00:30.629>star<00:31.575>\r\n[00:31.877]<00:31.877>And <00:32.245>trying <00:33.109>to <00:33.525>believe<00:34.845>\r\n";
 
             Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());

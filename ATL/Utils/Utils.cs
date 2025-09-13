@@ -152,75 +152,63 @@ namespace Commons
 
         /// <summary>
         /// Convert the duration of the given timecode to milliseconds
-        /// Supported formats : hh:mm, hh:mm:ss.ddd, mm:ss, hh:mm:ss and mm:ss.ddd
+        /// Supported formats : hh:mm, hh:mm:ss.dd, hh:mm:ss.ddd, mm:ss, hh:mm:ss, mm:ss.dd and mm:ss.ddd
         /// </summary>
         /// <param name="timeCode">Timecode to convert</param>
-        /// <param name="timecodeIn10Ms">Set to true if the given timecode is expressed in 10ms units like the lrc format. Default is false</param>
         /// <returns>Duration of the given timecode expressed in milliseconds if succeeded; -1 if failed</returns>
-        public static int DecodeTimecodeToMs(string timeCode, bool timecodeIn10Ms = false)
+        public static int DecodeTimecodeToMs(string timeCode)
         {
             int result = -1;
             if (string.IsNullOrEmpty(timeCode)) return result;
 
             bool valid = false;
 
-            if (!timecodeIn10Ms && DateTime.TryParse(timeCode, out var dateTime))
+        
+            int days = 0;
+            int hours = 0;
+            int milliseconds = 0;
+
+            if (timeCode.Contains(':'))
             {
-                // Handle classic cases hh:mm, hh:mm:ss.ddd (the latter being the spec)
                 valid = true;
-                result = dateTime.Millisecond;
-                result += dateTime.Second * 1000;
-                result += dateTime.Minute * 60 * 1000;
-                result += dateTime.Hour * 60 * 60 * 1000;
-            }
-            else // Handle mm:ss, hh:mm:ss and mm:ss.ddd
-            {
-                int days = 0;
-                int hours = 0;
-                int milliseconds = 0;
-
-                if (timeCode.Contains(':'))
+                string[] parts = timeCode.Split(':');
+                if (parts[^1].Contains('.'))
                 {
-                    valid = true;
-                    string[] parts = timeCode.Split(':');
-                    if (parts[^1].Contains('.'))
-                    {
-                        string[] subPart = parts[^1].Split('.');
-                        parts[^1] = subPart[0];
-                        milliseconds = int.Parse(subPart[1]);
-                    }
-                    else if (parts[^1].Contains(','))
-                    {
-                        string[] subPart = parts[^1].Split(',');
-                        parts[^1] = subPart[0];
-                        milliseconds = int.Parse(subPart[1]);
-                    }
-                    var seconds = int.Parse(parts[^1]);
-                    var minutes = int.Parse(parts[^2]);
-                    if (parts.Length >= 3)
-                    {
-                        string[] subPart = parts[^3].Split('d');
-                        if (subPart.Length > 1)
-                        {
-                            days = int.Parse(subPart[0].Trim());
-                            hours = int.Parse(subPart[1].Trim());
-                        }
-                        else
-                        {
-                            hours = int.Parse(subPart[0]);
-                        }
-                    }
-
-                    result = milliseconds;
-                    if (timecodeIn10Ms)
-                    {
-                        result *= 10;
-                    }
-                    result += seconds * 1000;
-                    result += minutes * 60 * 1000;
-                    result += hours * 60 * 60 * 1000;
-                    result += days * 24 * 60 * 60 * 1000;
+                    string[] subPart = parts[^1].Split('.');
+                    parts[^1] = subPart[0];
+                    milliseconds = int.Parse(subPart[1]);
+                    // Handle centiseconds notation (2 digits after second)
+                    if (2 == subPart[1].Length) milliseconds *= 10;
                 }
+                else if (parts[^1].Contains(','))
+                {
+                    string[] subPart = parts[^1].Split(',');
+                    parts[^1] = subPart[0];
+                    milliseconds = int.Parse(subPart[1]);
+                    // Handle centiseconds notation (2 digits after second)
+                    if (2 == subPart[1].Length) milliseconds *= 10;
+                }
+                var seconds = int.Parse(parts[^1]);
+                var minutes = int.Parse(parts[^2]);
+                if (parts.Length >= 3)
+                {
+                    string[] subPart = parts[^3].Split('d');
+                    if (subPart.Length > 1)
+                    {
+                        days = int.Parse(subPart[0].Trim());
+                        hours = int.Parse(subPart[1].Trim());
+                    }
+                    else
+                    {
+                        hours = int.Parse(subPart[0]);
+                    }
+                }
+
+                result = milliseconds;
+                result += seconds * 1000;
+                result += minutes * 60 * 1000;
+                result += hours * 60 * 60 * 1000;
+                result += days * 24 * 60 * 60 * 1000;
             }
 
             if (!valid) result = -1;

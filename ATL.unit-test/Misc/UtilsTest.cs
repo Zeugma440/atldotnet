@@ -42,9 +42,9 @@ namespace ATL.test
             // Display m, s and ms
             Assert.AreEqual(62 * 1000 + 2, Utils.DecodeTimecodeToMs("01:02.2"));
             // Correctly parse lrc specific time code
-            Assert.AreEqual(21 * 1000 + 5 * 10, Utils.DecodeTimecodeToMs("00:21.05", true));
-            Assert.AreEqual(25 * 1000, Utils.DecodeTimecodeToMs("00:25.00", true));
-            Assert.AreEqual(29 * 1000 + 67 * 10, Utils.DecodeTimecodeToMs("00:29.67", true));
+            Assert.AreEqual(21 * 1000 + 5 * 10, Utils.DecodeTimecodeToMs("00:21.05"));
+            Assert.AreEqual(25 * 1000, Utils.DecodeTimecodeToMs("00:25.00"));
+            Assert.AreEqual(29 * 1000 + 67 * 10, Utils.DecodeTimecodeToMs("00:29.67"));
             // Display h, m, s and ms
             Assert.AreEqual(60 * 60 * 1000 + 60 * 1000 + 16 * 1000 + 612, Utils.DecodeTimecodeToMs("01:01:16.612"));
             Assert.AreEqual(60 * 60 * 1000 + 60 * 1000 + 16 * 1000 + 612, Utils.DecodeTimecodeToMs("01:01:16,612"));

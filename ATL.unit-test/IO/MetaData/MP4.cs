@@ -1326,9 +1326,9 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual("Naku Penda Piya-Naku Taka Piya-Mpenziwe", theFile.NativeTag.Lyrics[0].SynchronizedLyrics[0].Text);
             Assert.AreEqual(12000, theFile.NativeTag.Lyrics[0].SynchronizedLyrics[0].TimestampStart);
             Assert.AreEqual("Some more lyrics", theFile.NativeTag.Lyrics[0].SynchronizedLyrics[1].Text);
-            Assert.AreEqual(15030, theFile.NativeTag.Lyrics[0].SynchronizedLyrics[1].TimestampStart);
+            Assert.AreEqual(15300, theFile.NativeTag.Lyrics[0].SynchronizedLyrics[1].TimestampStart);
             Assert.AreEqual("Even more lyrics", theFile.NativeTag.Lyrics[0].SynchronizedLyrics[2].Text);
-            Assert.AreEqual(83045, theFile.NativeTag.Lyrics[0].SynchronizedLyrics[2].TimestampStart);
+            Assert.AreEqual(83450, theFile.NativeTag.Lyrics[0].SynchronizedLyrics[2].TimestampStart);
         }
 
         [TestMethod]
