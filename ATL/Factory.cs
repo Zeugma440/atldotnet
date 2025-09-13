@@ -88,7 +88,7 @@ namespace ATL
             IList<T> result = null;
             string mime = mimeType.ToLower();
 
-            if (formatListByMime.TryGetValue(mime, out var formats) && formats != null && formats.Count > 0)
+            if (formatListByMime.TryGetValue(mime, out var formats) && formats is { Count: > 0 })
             {
                 result = formats;
             }
