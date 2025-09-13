@@ -5,6 +5,7 @@ using System.Diagnostics.Metrics;
 using System.IO;
 using ATL.Playlist;
 using ATL.AudioData;
+using ATL.AudioData.IO;
 
 namespace ATL.benchmark
 {
@@ -26,15 +27,9 @@ namespace ATL.benchmark
 
             //compareInfo(@"E:\Music\VGM");
 
-            //browseFor(@"E:\Music\", "*.mp3");
+            //browseFor(@"D:\Music\", "*.mp3");
 
-            //info(@"D:\temp\wav\74\empty_tagged_audacity.wav");
-
-            //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
-
-            info(@"D:\temp\m4a-mp4\327\327.mp4");
-
-            //reduce(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a");
+            info(@"D:\temp\m4a-mp4\356\356.mp3");
 
             //displayVersionInfo();
         }
@@ -109,7 +104,7 @@ namespace ATL.benchmark
                 //Settings.FileBufferSize = 512;
                 //                Settings.ID3v2_tagSubVersion = 3;
 
-                //ConsoleLogger logger = new ConsoleLogger();
+                new ConsoleLogger();
                 Console.WriteLine(">>> WRITE : BEGIN @ " + testFileLocation);
 
                 Writing w = new Writing();
@@ -135,20 +130,31 @@ namespace ATL.benchmark
         {
             new ConsoleLogger();
             Console.WriteLine(">>> INFO : BEGIN @ " + filePath);
+            //Settings.MP3_parseExactDuration = true;
 
-            Track t = new Track(filePath);
-
-            Console.WriteLine(t.AudioFormat.ID);
-
-            Console.WriteLine(t.Path + "......." + t.AudioFormat.Name + " | " + Utils.EncodeTimecode_s(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")" + " " + t.ChannelsArrangement));
-            Console.WriteLine(Utils.BuildStrictLengthString("", t.Path.Length, '.') + ".......disc " + t.DiscNumber + " | track " + t.TrackNumber + " | title " + t.Title + " | artist " + t.Artist + " | album " + t.Album + " | year " + t.Year);
-
-            Console.WriteLine("images : " + t.EmbeddedPictures.Count);
-
-            Console.WriteLine("AdditionalFields");
-            foreach (var field in t.AdditionalFields)
+            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                Console.WriteLine("  " + field.Key + " = " + field.Value);
+                //IAudioDataIO reader = AudioDataIOFactory.GetInstance().GetFromStream(fs);
+                //ID3v2 tag = new ID3v2();
+                //tag.Read(fs, new AudioData.IO.MetaDataIO.ReadTagParams());
+
+
+                //Track t = new Track(filePath);
+                Track t = new Track(fs);
+
+                Console.WriteLine(t.Path + "......." + t.AudioFormat.Name 
+                                  + " | " + Utils.EncodeTimecode_s(t.Duration) 
+                                  + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")") 
+                                  + " | Channels : " + t.ChannelsArrangement);
+                Console.WriteLine(Utils.BuildStrictLengthString("", t.Path.Length, '.') + ".......disc " + t.DiscNumber + " | track " + t.TrackNumber + " | title " + t.Title + " | artist " + t.Artist + " | album " + t.Album + " | year " + t.Year);
+
+                Console.WriteLine("images : " + t.EmbeddedPictures.Count);
+
+                Console.WriteLine("AdditionalFields");
+                foreach (var field in t.AdditionalFields)
+                {
+                    Console.WriteLine("  " + field.Key + " = " + field.Value);
+                }
             }
 
             Console.WriteLine(">>> INFO : END");
