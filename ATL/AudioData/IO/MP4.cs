@@ -1766,7 +1766,9 @@ namespace ATL.AudioData.IO
                 }
 
                 if (first) first = false;
-                if (++iterations > 100) return new Tuple<uint, int>(0, atomHeaderSize);
+                // MDAT atoms don't count towards iterations as there can me _many_ of them on certain files
+                if (!atomHeader.Equals("mdat", StringComparison.OrdinalIgnoreCase)) iterations++;
+                if (iterations > 100) return new Tuple<uint, int>(0, atomHeaderSize);
             } while (!atomKey.Equals(atomHeader) && source.Position + atomSize - atomHeaderSize < source.Length);
 
             if (source.Position + atomSize - atomHeaderSize > source.Length)
