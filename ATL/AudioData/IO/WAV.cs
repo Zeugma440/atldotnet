@@ -450,50 +450,52 @@ namespace ATL.AudioData.IO
             }
 
             // Add zone placeholders for future tag writing
-            long eof = source.Length;
+            // NB : As per ITU-R BS.2088-1 recommendations, any metadata subchunk should be located _before_ the data subchunk
+            // to be compatible with very large files ((>4GB; RF64)
+            var newChunkOffset = AudioDataOffset - 8;
             if (readTagParams.PrepareForWriting)
             {
                 if (!foundSample)
                 {
-                    structureHelper.AddZone(eof, 0, CHUNK_SAMPLE);
+                    structureHelper.AddZone(newChunkOffset, 0, CHUNK_SAMPLE);
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_SAMPLE);
                 }
                 if (!foundCue)
                 {
-                    structureHelper.AddZone(eof, 0, CHUNK_CUE);
+                    structureHelper.AddZone(newChunkOffset, 0, CHUNK_CUE);
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_CUE);
                 }
                 if (!foundList)
                 {
-                    structureHelper.AddZone(eof, 0, CHUNK_LIST + "." + List.PURPOSE_INFO);
+                    structureHelper.AddZone(newChunkOffset, 0, CHUNK_LIST + "." + List.PURPOSE_INFO);
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_LIST + "." + List.PURPOSE_INFO);
 
-                    structureHelper.AddZone(eof, 0, CHUNK_LIST + "." + List.PURPOSE_ADTL);
+                    structureHelper.AddZone(newChunkOffset, 0, CHUNK_LIST + "." + List.PURPOSE_ADTL);
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_LIST + "." + List.PURPOSE_ADTL);
                 }
                 if (!foundDisp)
                 {
-                    structureHelper.AddZone(eof, 0, CHUNK_DISP + ".0");
+                    structureHelper.AddZone(newChunkOffset, 0, CHUNK_DISP + ".0");
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_DISP + ".0");
                 }
                 if (!foundBext)
                 {
-                    structureHelper.AddZone(eof, 0, CHUNK_BEXT);
+                    structureHelper.AddZone(newChunkOffset, 0, CHUNK_BEXT);
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_BEXT);
                 }
                 if (!foundIXml)
                 {
-                    structureHelper.AddZone(eof, 0, CHUNK_IXML);
+                    structureHelper.AddZone(newChunkOffset, 0, CHUNK_IXML);
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_IXML);
                 }
                 if (!foundXmp)
                 {
-                    structureHelper.AddZone(eof, 0, CHUNK_XMP);
+                    structureHelper.AddZone(newChunkOffset, 0, CHUNK_XMP);
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_XMP);
                 }
                 if (!foundCart)
                 {
-                    structureHelper.AddZone(eof, 0, CHUNK_CART);
+                    structureHelper.AddZone(newChunkOffset, 0, CHUNK_CART);
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_CART);
                 }
             }
@@ -506,7 +508,7 @@ namespace ATL.AudioData.IO
                 if (readTagParams.PrepareForWriting)
                 {
                     // Add zone placeholder
-                    id3v2StructureHelper.AddZone(eof, 0, CHUNK_ID3);
+                    id3v2StructureHelper.AddZone(newChunkOffset, 0, CHUNK_ID3);
                     id3v2StructureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, CHUNK_ID3);
 
                     // Remove illegal tagging, if it exists
