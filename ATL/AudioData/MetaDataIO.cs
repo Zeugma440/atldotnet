@@ -84,6 +84,11 @@ namespace ATL.AudioData.IO
             public bool PrepareForWriting { get; set; }
 
             /// <summary>
+            /// True : read all data that will be useful for removing metadata; False : only read metadata values
+            /// </summary>
+            public bool PrepareForRemoving { get; set; }
+
+            /// <summary>
             /// True : read extra padding bytes at the end of ID3v2 block
             /// </summary>
             public bool ExtraID3v2PaddingDetection { get; set; }

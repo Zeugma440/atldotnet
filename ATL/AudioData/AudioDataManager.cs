@@ -470,7 +470,7 @@ namespace ATL.AudioData
                 var s = stream ?? new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize, fileOptions | FileOptions.Asynchronous);
                 try
                 {
-                    result = read(s, false, false, true);
+                    result = read(s, prepareForWriting: true, prepareForRemoving: true);
 
                     IMetaDataIO metaIO = getMeta(tagType);
                     var args = new WriteTagParams
@@ -493,11 +493,17 @@ namespace ATL.AudioData
             return result;
         }
 
-        private bool read(Stream source, bool readEmbeddedPictures = false, bool readAllMetaFrames = false, bool prepareForWriting = false)
+        private bool read(
+            Stream source,
+            bool readEmbeddedPictures = false,
+            bool readAllMetaFrames = false,
+            bool prepareForWriting = false,
+            bool prepareForRemoving = false)
         {
             ReadTagParams readTagParams = new ReadTagParams(readEmbeddedPictures, readAllMetaFrames)
             {
-                PrepareForWriting = prepareForWriting
+                PrepareForWriting = prepareForWriting,
+                PrepareForRemoving = prepareForRemoving
             };
 
             return read(source, readTagParams);
