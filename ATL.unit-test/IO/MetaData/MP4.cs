@@ -1237,6 +1237,7 @@ namespace ATL.test.IO.MetaData
             int initialChapRead = ATL.Settings.MP4_readChaptersFormat;
             ATL.Settings.MP4_capNeroChapters = true;
             ATL.Settings.MP4_readChaptersFormat = 0;
+            ATL.Settings.MP4_disableNeroChecks= true;
             try
             {
                 Assert.IsTrue(theFile.ReadFromFile());
@@ -1275,6 +1276,7 @@ namespace ATL.test.IO.MetaData
             {
                 ATL.Settings.MP4_capNeroChapters = initialCap;
                 ATL.Settings.MP4_readChaptersFormat = initialChapRead;
+                ATL.Settings.MP4_disableNeroChecks = false;
             }
 
             // Get rid of the working copy

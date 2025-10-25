@@ -203,6 +203,12 @@ namespace ATL
         public static bool MP4_capNeroChapters = true;
 
         /// <summary>
+        /// MP4 : Set to true to disable Nero chapters consistency checks (_not recommended_)
+        /// Default : false
+        /// </summary>
+        public static bool MP4_disableNeroChecks = false;
+
+        /// <summary>
         /// MP4 : Set to true to always create chapters in Quicktime format (chap)
         /// Default : true
         /// </summary>

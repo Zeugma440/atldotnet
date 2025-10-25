@@ -421,7 +421,7 @@ namespace ATL.AudioData.IO
                 uint trakSize = navigateToAtom(source, "trak");
                 if (0 == trakSize)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "total tracks found : " + (currentTrakIndex - 1));
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "total tracks found : " + currentTrakIndex);
                     break;
                 }
                 long trakPosition = source.Position - 8;
@@ -890,17 +890,19 @@ namespace ATL.AudioData.IO
                     for (int i = 0; i < (chapSize - 8) / 4; i++)
                     {
                         if (source.Read(data32, 0, 4) < 4) return;
-                        thisTrackIndexes.Add(StreamUtils.DecodeBEInt32(data32));
+                        var index = StreamUtils.DecodeBEInt32(data32);
+                        if (index > 0) thisTrackIndexes.Add(StreamUtils.DecodeBEInt32(data32));
+                        else LogDelegator.GetLogDelegate()(Log.LV_INFO, "Track " + trackId + " : detected illegal chapter track ID : " + index);
                     }
-                    chapterTrackIndexes.Add(trackId, thisTrackIndexes);
 
+                    chapterTrackIndexes.Add(trackId, thisTrackIndexes);
                     if (thisTrackIndexes.Any(i => i < trackId)) parsePreviousTracks = true;
                 }
 
                 // If current track has declared a chapter track located at a previous index, come back to read it
                 if (parsePreviousTracks)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_INFO, "detected chapter track located before read cursor; restarting reading tracks from track 1");
+                    LogDelegator.GetLogDelegate()(Log.LV_INFO, "Track " + trackId + " : detected chapter track located before read cursor; restarting reading tracks from track 1");
                     return;
                 }
             }
@@ -1317,24 +1319,41 @@ namespace ATL.AudioData.IO
                         tagData.Chapters.Clear();
                         ChapterInfo previousChapter = null;
 
+                        var trackEndTime = Convert.ToUInt32(Math.Floor(calculatedDurationMs));
                         for (int i = 0; i < neroChapterCount; i++)
                         {
                             var chapter = new ChapterInfo
                             {
                                 Format = ChapterInfo.FORMAT.Nero
                             };
-                            tagData.Chapters.Add(chapter);
 
                             if (source.Read(data64, 0, 8) < 8) return;
                             chapter.StartTime = (uint)Math.Round(StreamUtils.DecodeBEInt64(data64) / 10000.0);
-                            if (previousChapter != null) previousChapter.EndTime = chapter.StartTime;
+
+                            if (!Settings.MP4_disableNeroChecks && chapter.StartTime >= trackEndTime)
+                            {
+                                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Ignoring Nero chapter starting after track duration");
+                                continue;
+                            }
+                            if (previousChapter != null)
+                            {
+                                if (!Settings.MP4_disableNeroChecks && chapter.StartTime <= previousChapter.StartTime)
+                                {
+                                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Ignoring Nero chapter starting before previous chapter");
+                                    continue;
+                                }
+                                // Nero chapters don't have an explicit end time -> make all chapters contiguous
+                                previousChapter.EndTime = chapter.StartTime;
+                            }
                             var stringSize = source.ReadByte();
                             byte[] strData = new byte[stringSize];
                             if (source.Read(strData, 0, stringSize) < stringSize) return;
                             chapter.Title = Encoding.UTF8.GetString(strData);
+
                             previousChapter = chapter;
+                            tagData.Chapters.Add(chapter);
                         }
-                        if (previousChapter != null) previousChapter.EndTime = Convert.ToUInt32(Math.Floor(calculatedDurationMs));
+                        if (previousChapter != null) previousChapter.EndTime = trackEndTime;
                     }
                 }
             }
@@ -2118,106 +2137,106 @@ namespace ATL.AudioData.IO
             {
                 // Special cases : gnre, trkn, disk
                 case 0:
-                {
-                    byte[] int16data;
-                    switch (frameCode)
                     {
-                        case "trkn":
-                        case "disk":
+                        byte[] int16data;
+                        switch (frameCode)
                         {
-                            int16data = new byte[] { 0, 0 };
-                            writer.Write(int16data);
-                            int16data = StreamUtils.EncodeBEUInt16(TrackUtils.ExtractTrackNumber(text));
-                            writer.Write(int16data);
-                            int16data = StreamUtils.EncodeBEUInt16(TrackUtils.ExtractTrackTotal(text));
-                            writer.Write(int16data);
-                            if (frameCode.Equals("trkn")) writer.Write(int16data); // trkn field always has two more bytes than disk field....
-                            break;
+                            case "trkn":
+                            case "disk":
+                                {
+                                    int16data = new byte[] { 0, 0 };
+                                    writer.Write(int16data);
+                                    int16data = StreamUtils.EncodeBEUInt16(TrackUtils.ExtractTrackNumber(text));
+                                    writer.Write(int16data);
+                                    int16data = StreamUtils.EncodeBEUInt16(TrackUtils.ExtractTrackTotal(text));
+                                    writer.Write(int16data);
+                                    if (frameCode.Equals("trkn")) writer.Write(int16data); // trkn field always has two more bytes than disk field....
+                                    break;
+                                }
+                            case "gnre":
+                                int16data = StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text));
+                                writer.Write(int16data);
+                                break;
                         }
-                        case "gnre":
-                            int16data = StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text));
-                            writer.Write(int16data);
-                            break;
-                    }
 
-                    break;
-                }
+                        break;
+                    }
                 // UTF-8 text
                 case 1:
-                {
-                    string[] values = text.Split(Settings.InternalValueSeparator);
-                    var first = true;
-                    // Handle multiple values = repeat the 'data' atom
-                    foreach (string value in values)
                     {
-                        if (0 == value.Length) continue;
-                        if (first) first = false;
-                        else
+                        string[] values = text.Split(Settings.InternalValueSeparator);
+                        var first = true;
+                        // Handle multiple values = repeat the 'data' atom
+                        foreach (string value in values)
                         {
-                            finalFramePos = writer.BaseStream.Position;
-                            writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
-                            writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
-                            writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+                            if (0 == value.Length) continue;
+                            if (first) first = false;
+                            else
+                            {
+                                finalFramePos = writer.BaseStream.Position;
+                                writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
+                                writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
+                                writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
 
-                            frameSizePos2 = writer.BaseStream.Position;
-                            writer.Write(0); // Frame size placeholder to be rewritten in a few lines
-                            writer.Write(Utils.Latin1Encoding.GetBytes("data"));
-                            writer.Write(StreamUtils.EncodeBEInt32(frameClass));
-                            writer.Write(frameFlags);
+                                frameSizePos2 = writer.BaseStream.Position;
+                                writer.Write(0); // Frame size placeholder to be rewritten in a few lines
+                                writer.Write(Utils.Latin1Encoding.GetBytes("data"));
+                                writer.Write(StreamUtils.EncodeBEInt32(frameClass));
+                                writer.Write(frameFlags);
+                            }
+                            writer.Write(Encoding.UTF8.GetBytes(value));
                         }
-                        writer.Write(Encoding.UTF8.GetBytes(value));
-                    }
 
-                    break;
-                }
+                        break;
+                    }
                 // int8-16-24-32, depending on the value
                 case 21 when !Utils.IsNumeric(text, true):
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "value " + text + " could not be converted to integer; ignoring");
                     writer.Write(0);
                     break;
                 case 21:
-                {
-                    int value = Convert.ToInt32(text);
-                    switch (value)
                     {
-                        case > short.MaxValue:
-                        case < short.MinValue:
-                            writer.Write(StreamUtils.EncodeBEInt32(value));
-                            break;
-                        // use int32 instead of int24 because Convert.ToInt24 doesn't exist
-                        case > 127:
-                        case < -127:
-                            writer.Write(StreamUtils.EncodeBEInt16(Convert.ToInt16(text)));
-                            break;
-                        default:
-                            writer.Write(Convert.ToByte(text));
-                            break;
+                        int value = Convert.ToInt32(text);
+                        switch (value)
+                        {
+                            case > short.MaxValue:
+                            case < short.MinValue:
+                                writer.Write(StreamUtils.EncodeBEInt32(value));
+                                break;
+                            // use int32 instead of int24 because Convert.ToInt24 doesn't exist
+                            case > 127:
+                            case < -127:
+                                writer.Write(StreamUtils.EncodeBEInt16(Convert.ToInt16(text)));
+                                break;
+                            default:
+                                writer.Write(Convert.ToByte(text));
+                                break;
+                        }
+                        break;
                     }
-                    break;
-                }
                 // uint8-16-24-32, depending on the value
                 case 22 when !Utils.IsNumeric(text, true, false):
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "value " + text + " could not be converted to unsigned integer; ignoring");
                     writer.Write(0);
                     break;
                 case 22:
-                {
-                    uint value = Convert.ToUInt32(text);
-                    switch (value)
                     {
-                        case > 0xffff:
-                            writer.Write(StreamUtils.EncodeBEUInt32(value));
-                            break;
-                        // use int32 instead of int24 because Convert.ToUInt24 doesn't exist
-                        case > 0xff:
-                            writer.Write(StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text)));
-                            break;
-                        default:
-                            writer.Write(Convert.ToByte(text));
-                            break;
+                        uint value = Convert.ToUInt32(text);
+                        switch (value)
+                        {
+                            case > 0xffff:
+                                writer.Write(StreamUtils.EncodeBEUInt32(value));
+                                break;
+                            // use int32 instead of int24 because Convert.ToUInt24 doesn't exist
+                            case > 0xff:
+                                writer.Write(StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text)));
+                                break;
+                            default:
+                                writer.Write(Convert.ToByte(text));
+                                break;
+                        }
+                        break;
                     }
-                    break;
-                }
             }
 
 
