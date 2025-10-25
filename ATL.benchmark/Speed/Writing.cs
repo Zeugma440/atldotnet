@@ -101,17 +101,18 @@ namespace ATL.benchmark
         */
         }
 
-        public void performRemove(String filePath)
+        public void performRemove(String filePath, int times)
         {
             Track theFile = new Track(filePath);
+            System.Console.WriteLine("=====REMOVE START");
+            for (int i = 0; i < times; i++)
+            {
+                theFile.Remove(MetaDataIOFactory.TagType.NATIVE);
 
-            theFile.Remove();
-
-            theFile.Save();
-
-            System.Console.WriteLine("=====REMOVE OK");
-
-            theFile = new Track(filePath);
+                theFile.Save();
+                System.Console.WriteLine("=====REMOVE" + i + " OK");
+                theFile = new Track(filePath);
+            }
 
             System.Console.WriteLine(theFile.Title);
         }

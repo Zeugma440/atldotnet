@@ -32,7 +32,7 @@ namespace ATL.benchmark
 
             //info(@"D:\temp\mp3\360\360.mp3");
 
-            writeAt(@"D:\temp\wav\359\359.WAV");
+            //writeAt(@"D:\temp\wav\359\359.WAV");
 
             removeAt(@"D:\temp\wav\359\359.WAV");
 
@@ -138,7 +138,7 @@ namespace ATL.benchmark
                 Console.WriteLine(">>> REMOVE: BEGIN @ " + testFileLocation);
 
                 Writing w = new Writing();
-                w.performRemove(testFileLocation);
+                w.performRemove(testFileLocation, 2);
                 Console.WriteLine(">>> REMOVE : END");
 
                 Console.ReadLine();
