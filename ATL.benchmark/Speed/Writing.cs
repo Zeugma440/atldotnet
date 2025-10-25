@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Running;
 using System.Collections;
 using ATL.AudioData;
+using Commons;
 
 namespace ATL.benchmark
 {
     public class Writing
     {
         //static string LOCATION = TestUtils.GetResourceLocationRoot()+"MP3/01 - Title Screen_pic.mp3";
-        [Params(@"FLAC/flac.flac")]
-        public string initialFileLocation;
+        [Params(@"FLAC/flac.flac")] public string initialFileLocation;
 
         private IList<string> tempFiles = new List<string>();
 
@@ -57,28 +57,27 @@ namespace ATL.benchmark
 
         public void performWrite(String filePath)
         {
-            new ConsoleLogger();
-            Track theFile = new Track(filePath);
+            Track theFile;
 
-            /*
-            PictureInfo pic = PictureInfo.fromBinaryData(File.ReadAllBytes(@"D:\temp\flac\272\cover.jpg"),
-                PictureInfo.PIC_TYPE.Front,
-                MetaDataIOFactory.TagType.RECOMMENDED
-            );
-            */
-            PictureInfo pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"));
-            theFile.EmbeddedPictures.Add(pic);
-
-            theFile.Save();
 
             theFile = new Track(filePath);
 
-            theFile.EmbeddedPictures.Add(pic);
+
+            //PictureInfo pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"));
+            //var bigData = new byte[3500];
+            //theFile.AdditionalFields["booh"] = Utils.Latin1Encoding.GetString(bigData);
+
+            //theFile.Remove();
+            //            theFile.Save();
+
+            //theFile = new Track(filePath);
+            //theFile.EmbeddedPictures.Add(pic);
+            theFile.Title = "flash! a-hah!!";
 
             theFile.Save();
 
-            System.Console.WriteLine("=====WRITE2 OK");
 
+            System.Console.WriteLine("=====WRITE2 OK");
             theFile = new Track(filePath);
             /*
             theFile.Chapters[0].Picture.ComputePicHash();
@@ -91,8 +90,30 @@ namespace ATL.benchmark
             theFile.Save();
             *
             */
-            System.Console.WriteLine(theFile.Album);
+            System.Console.WriteLine(theFile.Title);
+
+            /*
+            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
+            {
+                theFile = new Track(fs);
+                //theFile = new Track(filePath);
+            }
+        */
         }
 
+        public void performRemove(String filePath)
+        {
+            Track theFile = new Track(filePath);
+
+            theFile.Remove();
+
+            theFile.Save();
+
+            System.Console.WriteLine("=====REMOVE OK");
+
+            theFile = new Track(filePath);
+
+            System.Console.WriteLine(theFile.Title);
+        }
     }
 }

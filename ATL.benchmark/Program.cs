@@ -6,6 +6,7 @@ using System.IO;
 using ATL.Playlist;
 using ATL.AudioData;
 using ATL.AudioData.IO;
+using ATL.Logging;
 
 namespace ATL.benchmark
 {
@@ -29,7 +30,11 @@ namespace ATL.benchmark
 
             //browseFor(@"D:\Music\", "*.mp3");
 
-            info(@"D:\temp\m4a-mp4\356\356.mp3");
+            //info(@"D:\temp\mp3\360\360.mp3");
+
+            writeAt(@"D:\temp\wav\359\359.WAV");
+
+            removeAt(@"D:\temp\wav\359\359.WAV");
 
             //displayVersionInfo();
         }
@@ -110,6 +115,31 @@ namespace ATL.benchmark
                 Writing w = new Writing();
                 w.performWrite(testFileLocation);
                 Console.WriteLine(">>> WRITE : END");
+
+                Console.ReadLine();
+            }
+            finally
+            {
+                File.Delete(testFileLocation);
+            }
+        }
+
+        static private void removeAt(string filePath)
+        {
+            string testFileLocation = TestUtils.GenerateTempTestFile(filePath);
+            try
+            {
+                //Settings.ForceDiskIO = true;
+                Settings.FileBufferSize = 2 * 1024 * 1024;
+                //Settings.FileBufferSize = 512;
+                //                Settings.ID3v2_tagSubVersion = 3;
+
+                new ConsoleLogger();
+                Console.WriteLine(">>> REMOVE: BEGIN @ " + testFileLocation);
+
+                Writing w = new Writing();
+                w.performRemove(testFileLocation);
+                Console.WriteLine(">>> REMOVE : END");
 
                 Console.ReadLine();
             }
