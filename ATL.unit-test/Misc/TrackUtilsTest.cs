@@ -29,6 +29,7 @@ namespace ATL.test
             Assert.AreEqual(0, TrackUtils.ExtractTrackNumber(null));
             Assert.AreEqual(0, TrackUtils.ExtractTrackNumber("aaa"));
             Assert.AreEqual(0, TrackUtils.ExtractTrackNumber("99999999"));
+            Assert.AreEqual(0, TrackUtils.ExtractTrackNumber("0912458947909354089479"));
         }
 
         [TestMethod]
@@ -58,6 +59,7 @@ namespace ATL.test
             Assert.AreEqual("", TrackUtils.ExtractTrackNumberStr(""));
             Assert.AreEqual("", TrackUtils.ExtractTrackNumberStr(null));
             Assert.AreEqual("99999999", TrackUtils.ExtractTrackNumberStr("99999999"));
+            Assert.AreEqual("0912458947909354089479", TrackUtils.ExtractTrackNumberStr("0912458947909354089479"));
         }
 
         [TestMethod]
@@ -82,6 +84,7 @@ namespace ATL.test
             Assert.AreEqual(0, TrackUtils.ExtractTrackTotal(null));
             Assert.AreEqual(0, TrackUtils.ExtractTrackTotal("15/aaa"));
             Assert.AreEqual(0, TrackUtils.ExtractTrackTotal("15/99999999"));
+            Assert.AreEqual(0, TrackUtils.ExtractTrackTotal("15/0912458947909354089479"));
         }
 
         [TestMethod]

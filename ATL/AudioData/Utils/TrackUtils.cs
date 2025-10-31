@@ -19,6 +19,8 @@ namespace ATL.AudioData
         private static readonly Lazy<Regex> rxSlashNumbers = new(() => new Regex("/[\\s]*(\\d+)", RegexOptions.None, TimeSpan.FromMilliseconds(100)));
         // Stars
         private static readonly Lazy<Regex> rxStars = new(() => new Regex("\\*+", RegexOptions.None, TimeSpan.FromMilliseconds(100)));
+        // Max string length for parsing a long
+        private static readonly int maxLongLength = long.MaxValue.ToString().Length;
 
         /// <summary>
         /// Extract the track number from the given string
@@ -40,7 +42,7 @@ namespace ATL.AudioData
                 if (str.Length == i) break;
             }
 
-            if (i > 0)
+            if (i > 0 && i < maxLongLength)
             {
                 long number = long.Parse(str.Substring(0, i));
                 if (number > ushort.MaxValue) number = 0;
@@ -54,6 +56,7 @@ namespace ATL.AudioData
             Match match = rxNumber.Value.Match(str);
             // First match is directly returned
             if (!match.Success) return 0;
+            if (match.Value.Length >= maxLongLength) return 0;
 
             long number2 = long.Parse(match.Value);
             if (number2 > ushort.MaxValue) number2 = 0;
@@ -113,9 +116,10 @@ namespace ATL.AudioData
             }
             if (!Utils.IsDigit(str[i])) i--;
 
-            if (i > delimiterOffset)
+            var strLen = i - delimiterEnd + 1;
+            if (i > delimiterOffset && strLen < maxLongLength)
             {
-                long number = long.Parse(str.Substring(delimiterEnd, i - delimiterEnd + 1));
+                long number = long.Parse(str.Substring(delimiterEnd, strLen));
                 if (number > ushort.MaxValue) number = 0;
                 return (ushort)number;
             }
@@ -124,6 +128,7 @@ namespace ATL.AudioData
             // == If everything above fails...
             Match match = rxSlashNumbers.Value.Match(str);
             if (!match.Success) return 0;
+            if (match.Value.Length >= maxLongLength) return 0;
 
             long number2 = long.Parse(match.Value);
             if (number2 > ushort.MaxValue) number2 = 0;
