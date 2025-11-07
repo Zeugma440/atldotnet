@@ -1486,6 +1486,9 @@ namespace ATL.AudioData.IO
                 }
                 atomHeader = newAtomHeader;
 
+                // Some files have parasite 'hdlr' single atoms here; ATL should skip them
+                if (atomHeader == "hdlr") continue;
+
                 // Having a 'data' header here means we're still on the same field, with a 2nd value
                 // (e.g. multiple embedded pictures)
                 if (!"data".Equals(atomHeader))
