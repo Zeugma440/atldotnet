@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace ATL
@@ -14,7 +15,7 @@ namespace ATL
         protected IDictionary<string, IList<T>> formatListByExt;
 
         /// <summary>
-        /// List of all formats supported by this kind of data reader 
+        /// List of all formats supported by this kind of data reader
         /// They are indexed by MIME-type to speed up matching
         /// </summary>
         protected IDictionary<string, IList<T>> formatListByMime;
@@ -62,12 +63,13 @@ namespace ATL
         /// Gets the valid formats from the given file path, using the file extension as key
         /// </summary>
         /// <param name="path">Path of the file which format to recognize</param>
-        /// <returns>List of the valid formats matching the extension of the given file, 
+        /// <returns>List of the valid formats matching the extension of the given file,
         /// or null if none recognized or the file does not exist</returns>
         public IList<T> getFormatsFromPath(string path)
         {
             IList<T> result = null;
-            string extension = path.Contains('.') ? path.Substring(path.LastIndexOf('.'), path.Length - path.LastIndexOf('.')).ToLower() : path;
+            int index = path.LastIndexOf('.');
+            string extension = -1 == index ? path : path[index..].ToLower();
 
             if (formatListByExt.TryGetValue(extension, out var formats) && formats != null && formats.Count > 0)
             {
@@ -81,7 +83,7 @@ namespace ATL
         /// Gets the valid formats from the given MIME-type
         /// </summary>
         /// <param name="mimeType">MIME-type to recognize</param>
-        /// <returns>List of the valid formats matching the MIME-type of the given file, 
+        /// <returns>List of the valid formats matching the MIME-type of the given file,
         /// or null if none recognized</returns>
         public IList<T> getFormatsFromMimeType(string mimeType)
         {

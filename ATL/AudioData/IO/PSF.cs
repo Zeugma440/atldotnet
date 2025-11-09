@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace ATL.AudioData.IO
 {
     /// <summary>
-    /// Class for Portable Sound Format files manipulation (extensions : .PSF, .PSF1, .PSF2, 
+    /// Class for Portable Sound Format files manipulation (extensions : .PSF, .PSF1, .PSF2,
     /// .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINISQF)
     /// According to Neil Corlett's specifications v. 1.6
     /// </summary>
@@ -244,8 +244,8 @@ namespace ATL.AudioData.IO
             long initialPosition = source.Position;
             Encoding encoding = Utils.Latin1Encoding;
 
-            byte[] buffer = new byte[5];
-            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return false;
+            Span<byte> buffer = stackalloc byte[5];
+            if (source.Read(buffer) < buffer.Length) return false;
             tag.TagHeader = Utils.Latin1Encoding.GetString(buffer);
 
             if (TAG_HEADER == tag.TagHeader)
@@ -287,7 +287,7 @@ namespace ATL.AudioData.IO
                     }
 
                     s = readPSFLine(source, encoding);
-                } // Metadata lines 
+                } // Metadata lines
                 SetMetaField(lastKey, lastValue, readTagParams.ReadAllMetaFrames);
 
                 // PSF files without any 'length' tag take default duration, regardless of 'fade' value
