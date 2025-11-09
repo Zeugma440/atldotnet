@@ -379,7 +379,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <summary>
-        /// Set a new metadata field with the given information 
+        /// Set a new metadata field with the given information
         /// </summary>
         /// <param name="ID">ID of the metadata field</param>
         /// <param name="dataIn">Metadata</param>
@@ -526,7 +526,7 @@ namespace ATL.AudioData.IO
         {
             if (Settings.AutoFormatAdditionalDates && value.StartsWith(DATETIME_PREFIX, StringComparison.OrdinalIgnoreCase))
             {
-                return EncodeDate(DateTime.FromFileTime(long.Parse(value[DATETIME_PREFIX.Length..])));
+                return EncodeDate(DateTime.FromFileTime(long.Parse(value.AsSpan()[DATETIME_PREFIX.Length..])));
             }
             return value;
         }

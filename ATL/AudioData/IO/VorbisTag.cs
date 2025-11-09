@@ -12,9 +12,9 @@ namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for Vorbis tags (VorbisComment) manipulation
-    /// 
+    ///
     /// TODO - Rewrite as "pure" helper, with Ogg and FLAC inheriting MetaDataIO
-    /// 
+    ///
     /// </summary>
     partial class VorbisTag : MetaDataIO
     {
@@ -183,7 +183,7 @@ namespace ATL.AudioData.IO
             // NB : Handled this way to retrieve badly formatted chapter indexes (e.g. CHAPTER2, CHAPTER02NAME...)
             int i = 7;
             while (i < fieldName.Length && char.IsDigit(fieldName[i])) i++;
-            uint chapterId = uint.Parse(fieldName.Substring(7, i - 7));
+            uint chapterId = uint.Parse(fieldName.AsSpan(7, i - 7));
 
             ChapterInfo info = tagData.Chapters.FirstOrDefault(c => c.UniqueNumericID == chapterId);
             if (null == info)
@@ -582,7 +582,7 @@ namespace ATL.AudioData.IO
             w.Write(Utils.Latin1Encoding.GetBytes(frameCode + "="));
             w.Write(Encoding.UTF8.GetBytes(text));
 
-            // Go back to frame size location to write its actual size 
+            // Go back to frame size location to write its actual size
             var finalFramePos = w.Position;
             w.Seek(frameSizePos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeUInt32((uint)(finalFramePos - frameSizePos - 4)));
@@ -602,7 +602,7 @@ namespace ATL.AudioData.IO
                 w.Write(Utils.EncodeTo64(picStream.ToArray()));
             }
 
-            // Go back to frame size location to write its actual size 
+            // Go back to frame size location to write its actual size
             var finalFramePos = w.Position;
             w.Seek(frameSizePos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeUInt32((uint)(finalFramePos - frameSizePos - 4)));

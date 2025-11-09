@@ -332,7 +332,8 @@ namespace ATL.AudioData
         {
             string pfx = null;
             string name = key;
-            if (name.Contains('[')) name = name[..name.IndexOf('[')]; // Remove [x]'s
+            int index = name.IndexOf('[');
+            if (index > -1) name = name[..index]; // Remove [x]'s
             int pfxIdfx = name.IndexOf(':');
             if (pfxIdfx > -1)
             {

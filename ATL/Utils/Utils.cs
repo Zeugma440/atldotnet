@@ -43,7 +43,7 @@ namespace Commons
         private static readonly string[] NUMERAL_DIGITS = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
         private static readonly string[] ARABIC_DIGITS = { "٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩" };
         private static readonly string[] FARSI_DIGITS = { "۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹" };
-        
+
         private static long RoundToNearest10(long number)
         {
             return (number + 5) / 10;
@@ -58,7 +58,7 @@ namespace Commons
         {
             return value ?? "";
         }
-        
+
         public enum TimecodeEncodeFormat
         {
             DD_HH_MM_SS_UUUU,
@@ -73,7 +73,7 @@ namespace Commons
         ///     MM:SS.UUUU
         ///     OR
         ///     MM:SS.XX(XX will always have 2 digits)
-        ///     
+        ///
         ///  Where
         ///     DD is the number of days, if applicable (i.e. durations of less than 1 day won't display the "DDd" part)
         ///     HH is the number of hours, if applicable (i.e. durations of less than 1 hour won't display the "HH:" part)
@@ -98,7 +98,7 @@ namespace Commons
         /// <summary>
         /// Format the given duration using the following format
         ///     DDdHH:MM:SS
-        ///     
+        ///
         ///  Where
         ///     DD is the number of days, if applicable (i.e. durations of less than 1 day won't display the "DDd" part)
         ///     HH is the number of hours, if applicable (i.e. durations of less than 1 hour won't display the "HH:" part)
@@ -130,7 +130,7 @@ namespace Commons
         /// <summary>
         /// Format the given duration using the following format
         ///     MM:SS
-        ///     
+        ///
         ///  Where
         ///     MM is the number of minutes, this will extend beyond two digits if necessary
         ///     SS is the number of seconds
@@ -163,7 +163,7 @@ namespace Commons
 
             bool valid = false;
 
-        
+
             int days = 0;
             int hours = 0;
             int milliseconds = 0;
@@ -195,8 +195,8 @@ namespace Commons
                     string[] subPart = parts[^3].Split('d');
                     if (subPart.Length > 1)
                     {
-                        days = int.Parse(subPart[0].Trim());
-                        hours = int.Parse(subPart[1].Trim());
+                        days = int.Parse(subPart[0].AsSpan().Trim());
+                        hours = int.Parse(subPart[1].AsSpan().Trim());
                     }
                     else
                     {
@@ -288,8 +288,8 @@ namespace Commons
                     }
                     break;
                 case 6:
-                    year = int.Parse(str.Substring(0, 4));
-                    int month = int.Parse(str.Substring(4, 2));
+                    year = int.Parse(str.AsSpan(0, 4));
+                    int month = int.Parse(str.AsSpan(4, 2));
                     if (year >= DateTime.MinValue.Year && year <= DateTime.MaxValue.Year && month <= DateTime.MaxValue.Month)
                     {
                         date = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -297,9 +297,9 @@ namespace Commons
                     }
                     break;
                 case 8:
-                    year = int.Parse(str.Substring(0, 4));
-                    month = int.Parse(str.Substring(4, 2));
-                    int day = int.Parse(str.Substring(6, 2));
+                    year = int.Parse(str.AsSpan(0, 4));
+                    month = int.Parse(str.AsSpan(4, 2));
+                    int day = int.Parse(str.AsSpan(6, 2));
                     if (year >= DateTime.MinValue.Year && year <= DateTime.MaxValue.Year && month <= DateTime.MaxValue.Month && day <= DateTime.MaxValue.Day)
                     {
                         date = new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc);
@@ -347,7 +347,7 @@ namespace Commons
         /// <param name="value">Value to transform</param>
         /// <param name="length">Target length of the final string</param>
         /// <param name="paddingChar">Character to use if padding is needed</param>
-        /// <param name="padRight">True if the padding has to be done on the right-side of the target string; 
+        /// <param name="padRight">True if the padding has to be done on the right-side of the target string;
         /// false if the padding has to be done on the left-side (optional; default value = true)</param>
         /// <returns>Reprocessed string of given length, according to rules documented in the method description</returns>
         public static string BuildStrictLengthString(int value, int length, char paddingChar, bool padRight = true)
@@ -362,7 +362,7 @@ namespace Commons
         /// <param name="value">Value to transform</param>
         /// <param name="length">Target length of the final string</param>
         /// <param name="paddingChar">Character to use if padding is needed</param>
-        /// <param name="padRight">True if the padding has to be done on the right-side of the target string; 
+        /// <param name="padRight">True if the padding has to be done on the right-side of the target string;
         /// false if the padding has to be done on the left-side (optional; default value = true)</param>
         /// <returns>Reprocessed string of given length, according to rules documented in the method description</returns>
         public static string BuildStrictLengthString(string value, int length, char paddingChar, bool padRight = true)
@@ -387,7 +387,7 @@ namespace Commons
         /// <param name="targetLength">Target length of the final string</param>
         /// <param name="paddingByte">Byte to use if padding is needed</param>
         /// <param name="encoding">Encoding to use to represent the given string in binary format</param>
-        /// <param name="padRight">True if the padding has to be done on the right-side of the target string; 
+        /// <param name="padRight">True if the padding has to be done on the right-side of the target string;
         /// false if the padding has to be done on the left-side (optional; default value = true)</param>
         /// <returns>Reprocessed string of given length, in binary format, according to rules documented in the method description</returns>
         public static byte[] BuildStrictLengthStringBytes(string value, int targetLength, byte paddingByte, Encoding encoding, bool padRight = true)
@@ -427,7 +427,7 @@ namespace Commons
         /// Covert given string value to boolean.
         ///   - Returns true if string represents a non-null numeric value or the word "true"
         ///   - Returns false if not
-        ///   
+        ///
         /// NB : This implementation exists because default .NET implementation has a different convention as for parsing numbers
         /// </summary>
         /// <param name="value">Value to be converted</param>
@@ -471,7 +471,7 @@ namespace Commons
         public static byte[] EncodeTo64(byte[] data)
         {
             // Each 3 byte sequence in the source data becomes a 4 byte
-            // sequence in the character array. 
+            // sequence in the character array.
             long arrayLength = (long)(4.0d / 3.0d * data.Length);
 
             // If array length is not divisible by 4, go up to the next
@@ -490,7 +490,7 @@ namespace Commons
 
         /// <summary>
         /// Indicate if the given string is exclusively composed of digital characters
-        /// 
+        ///
         /// NB1 : decimal separators '.' and ',' are tolerated except if allowsOnlyIntegers argument is set to True
         /// NB2 : whitespaces ' ' are not tolerated
         /// NB3 : any alternate notation (e.g. exponent, hex) is not tolerated
@@ -539,24 +539,23 @@ namespace Commons
         {
             if (string.IsNullOrEmpty(s)) return -1;
 
-            bool insideInt = false;
-            StringBuilder sb = new StringBuilder();
-            foreach (var t in s)
+            int startIndex = -1;
+            int i = 0;
+            for (; i < s.Length; i++)
             {
-                if (IsDigit(t))
+                if (IsDigit(s[i]))
                 {
-                    if (!insideInt) insideInt = true;
-                    sb.Append(t);
+                    if (startIndex == -1) startIndex = i;
                 }
                 else
                 {
-                    if (insideInt) break;
+                    if (startIndex != -1) break;
                 }
             }
 
-            if (sb.Length > 0)
+            if (startIndex != -1)
             {
-                long number = long.Parse(sb.ToString());
+                long number = long.Parse(s[startIndex..i]);
                 if (number > int.MaxValue) number = 0;
                 return (int)number;
             }
@@ -634,7 +633,7 @@ namespace Commons
         }
 
         /// <summary>
-        /// Return the human-readable file size for an arbitrary, 64-bit file size 
+        /// Return the human-readable file size for an arbitrary, 64-bit file size
         /// The default format is "0.### XB", e.g. "4.2 KB" or "1.434 GB"
         /// Source : https://www.somacon.com/p576.php
         /// </summary>
@@ -708,8 +707,8 @@ namespace Commons
         }
 
         /// <summary>
-        /// Trace the given Exception 
-        /// - To the ATL logger 
+        /// Trace the given Exception
+        /// - To the ATL logger
         /// - To the Console, if Settings.OutputStacktracesToConsole is true
         /// </summary>
         /// <param name="e">Exception to trace</param>

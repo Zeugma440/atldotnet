@@ -13,14 +13,14 @@ namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for Matroska Audio files manipulation (extension : .MKA)
-    /// 
+    ///
     /// Implementation notes
     /// - Padding Elements are not supported
     /// - Chapters : Multiple EditionEntries are not supported; only 1st default, non-hidden is used
     /// - Chapters : Nested ChapterAtoms are not supported; only 1st level enabled, non-hidden are used
     /// - Cues : CuePoints are not part of readable not writable metadata
     /// - Tags : Nested tags are not supported
-    /// 
+    ///
     /// </summary>
     internal partial class MKA : MetaDataIO, IAudioDataIO
     {
@@ -200,7 +200,7 @@ namespace ATL.AudioData.IO
         private const string ZONE_CHAPTERS = "chapters";
 
 
-        // == Private declarations 
+        // == Private declarations
 
         // Metadata
         private AudioFormat audioFormat;
