@@ -230,6 +230,7 @@ namespace ATL.AudioData
                 tempFmt.AddMimeType("audio/x-dsd");
                 tempFmt.AddExtension(".dsf");
                 tempFmt.AddExtension(".dsd");
+                tempFmt.AddExtension(".dff");
                 tempFmt.CheckHeader = DSF.IsValidHeader;
                 theFactory.addFormat(tempFmt);
 
