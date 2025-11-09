@@ -101,7 +101,7 @@ Apple Core Audio | .CAF |  |  |  | (5)
 Audible | .AAX, .AA | R/W | R/W | R/W | R/W
 Audio Interchange File Format | .AIF, .AIFF, .AIFC |  | R/W |  | R/W
 Digital Theatre System | .DTS |  |  |  | 
-Direct Stream Digital | .DSD, .DSF |  | R/W |  | 
+Direct Stream Digital | .DSD, .DSF, .DFF |  | R/W |  | 
 Dolby Digital | .AC3 |  |  | R/W | 
 Extended Module | .XM |  |  |  | R/W (2)
 Free Lossless Audio Codec | .FLAC |  | R/W |  | R/W

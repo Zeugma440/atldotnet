@@ -44,7 +44,7 @@ namespace ATL.AudioData
 
             if (i > 0 && i < maxLongLength)
             {
-                long number = long.Parse(str.Substring(0, i));
+                long number = long.Parse(str.AsSpan(0, i));
                 if (number > ushort.MaxValue) number = 0;
                 return (ushort)number;
             }
@@ -119,7 +119,7 @@ namespace ATL.AudioData
             var strLen = i - delimiterEnd + 1;
             if (i > delimiterOffset && strLen < maxLongLength)
             {
-                long number = long.Parse(str.Substring(delimiterEnd, strLen));
+                long number = long.Parse(str.AsSpan(delimiterEnd, strLen));
                 if (number > ushort.MaxValue) number = 0;
                 return (ushort)number;
             }
