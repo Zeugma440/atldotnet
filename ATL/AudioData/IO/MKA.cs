@@ -1,11 +1,11 @@
-﻿using System;
+﻿using ATL.Logging;
+using Commons;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ATL.Logging;
-using Commons;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
 
@@ -201,6 +201,8 @@ namespace ATL.AudioData.IO
 
 
         // == Private declarations
+
+        private AudioDataManager.SizeInfo sizeInfo;
 
         // Metadata
         private AudioFormat audioFormat;
@@ -834,6 +836,7 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public bool Read(Stream source, AudioDataManager.SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
+            sizeInfo = sizeNfo;
             return read(source, readTagParams);
         }
 
@@ -841,7 +844,9 @@ namespace ATL.AudioData.IO
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             ResetData();
-            source.Seek(0, SeekOrigin.Begin);
+
+            // ID3v2 isn't supported but some files can contain it anyway (illegal tagging)
+            source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             EBMLReader reader = new EBMLReader(source);
 
