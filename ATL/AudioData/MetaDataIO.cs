@@ -617,7 +617,7 @@ namespace ATL.AudioData.IO
                 if (removeZone != null) structureHelper.AddZone(removeZone);
             }
 
-            // Give engine something to work with if the tag is really empty
+            // Give the engine something to work with if the tag is really empty
             if (!Exists && 0 == Zones.Count) structureHelper.AddZone(0, 0);
 
             // Merge existing information + new tag information
