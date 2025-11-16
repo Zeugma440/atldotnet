@@ -46,7 +46,7 @@ namespace ATL.AudioData.IO
         private const string CHUNK_DATA = "data";
         private const string CHUNK_SAMPLE = SampleTag.CHUNK_SAMPLE;
         private const string CHUNK_CUE = CueTag.CHUNK_CUE;
-        private const string CHUNK_LIST = List.CHUNK_LIST;
+        private const string CHUNK_LIST = List.CHUNK_LIST; // That's the one Windows Explorer looks into
         private const string CHUNK_DISP = DispTag.CHUNK_DISP;
 
         // Broadcast Wave metadata sub-chunk
@@ -57,6 +57,7 @@ namespace ATL.AudioData.IO
         private const string CHUNK_ID3 = "id3 ";
         private const string CHUNK_ILLEGAL_ID3 = "id3_remove";
 
+        // List of supported metadata chunks
         public static readonly ISet<string> metadataChunks = new HashSet<string>
         {
             CHUNK_SAMPLE, CHUNK_CUE, CHUNK_LIST, CHUNK_DISP, CHUNK_BEXT, CHUNK_IXML, CHUNK_XMP, CHUNK_CART, CHUNK_ID3
@@ -221,7 +222,6 @@ namespace ATL.AudioData.IO
         private bool readWAV(Stream source, ReadTagParams readTagParams)
         {
             bool isRf64 = false;
-            long riffChunkSize;
             object formattedRiffChunkSize = 0;
             byte[] data = new byte[4];
             byte[] data64 = new byte[8];
@@ -253,7 +253,7 @@ namespace ATL.AudioData.IO
 
             var riffChunkSizePos = source.Position;
             if (source.Read(data, 0, 4) < 4) return false;
-            if (isLittleEndian) riffChunkSize = StreamUtils.DecodeUInt32(data); else riffChunkSize = StreamUtils.DecodeBEUInt32(data);
+            long riffChunkSize = isLittleEndian ? StreamUtils.DecodeUInt32(data) : StreamUtils.DecodeBEUInt32(data);
             if (riffChunkSize < uint.MaxValue) formattedRiffChunkSize = getFormattedRiffChunkSize(riffChunkSize, isRf64);
 
             // Format code
@@ -485,7 +485,7 @@ namespace ATL.AudioData.IO
 
             // Add zone placeholders for future tag writing
             // NB : As per ITU-R BS.2088-1 recommendations, any metadata subchunk should be located _before_ the data subchunk
-            // to be compatible with very large files ((>4GB; RF64)
+            // to be compatible with very large files (>4GB; RF64)
             var newChunkOffset = AudioDataOffset - 8;
             if (readTagParams.PrepareForWriting && !readTagParams.PrepareForRemoving)
             {
