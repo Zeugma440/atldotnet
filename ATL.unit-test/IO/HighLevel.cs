@@ -1668,6 +1668,7 @@ namespace ATL.test.IO
             }
             finally
             {
+                if (File.Exists(testFileLocation)) File.Delete(testFileLocation);
                 if (File.Exists(testFileLocation2)) File.Delete(testFileLocation2);
                 if (File.Exists(testFileLocation3)) File.Delete(testFileLocation3);
             }
