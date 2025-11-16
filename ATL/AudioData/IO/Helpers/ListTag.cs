@@ -121,21 +121,28 @@ namespace ATL.AudioData.IO
             meta.SetMetaField($"adtl.Labels[{position}].Text", value, readTagParams.ReadAllMetaFrames);
         }
 
-        public static bool IsDataEligible(MetaDataHolder meta)
+        public static bool IsDataEligible(MetaDataHolder meta, string purpose)
         {
-            if (meta.Title.Length > 0) return true;
-            if (meta.Album.Length > 0) return true;
-            if (meta.Artist.Length > 0) return true;
-            if (meta.Comment.Length > 0) return true;
-            if (meta.Genre.Length > 0) return true;
-            if (meta.Date > DateTime.MinValue) return true;
-            if (meta.Copyright.Length > 0) return true;
-            if (meta.Popularity > 0) return true;
-            if (meta.EncodedBy.Length > 0) return true;
-            if (meta.Encoder.Length > 0) return true;
-            if (meta.Language.Length > 0) return true;
+            bool isPurposeInfo = purpose.Equals(PURPOSE_INFO, StringComparison.InvariantCultureIgnoreCase);
 
-            return WavHelper.IsDataEligible(meta, "info.") || WavHelper.IsDataEligible(meta, "adtl.");
+            if (isPurposeInfo || 0 == purpose.Length)
+            {
+                if (meta.Title.Length > 0) return true;
+                if (meta.Album.Length > 0) return true;
+                if (meta.Artist.Length > 0) return true;
+                if (meta.Comment.Length > 0) return true;
+                if (meta.Genre.Length > 0) return true;
+                if (meta.Date > DateTime.MinValue) return true;
+                if (meta.Copyright.Length > 0) return true;
+                if (meta.Popularity > 0) return true;
+                if (meta.EncodedBy.Length > 0) return true;
+                if (meta.Encoder.Length > 0) return true;
+                if (meta.Language.Length > 0) return true;
+            }
+
+            if (isPurposeInfo) return WavHelper.IsDataEligible(meta, "info.");
+
+            return purpose.Equals(PURPOSE_ADTL, StringComparison.InvariantCultureIgnoreCase) && WavHelper.IsDataEligible(meta, "adtl.");
         }
 
         public static int ToStream(BinaryWriter w, bool isLittleEndian, string purpose, MetaDataHolder tag, MetaDataIO metaIO)
