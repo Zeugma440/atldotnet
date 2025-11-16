@@ -178,13 +178,17 @@ namespace ATL.AudioData
             ISet<TagType> supportedMetas = audioManager.getSupportedMetas();
             Lazy<IList<TagType>> detectedMetas = new Lazy<IList<TagType>>(detectAvailableMetas);
 
-            if (null == tagType || TagType.ANY == tagType) metasToWrite = detectedMetas.Value;
+            if (tagType is null or TagType.ANY) metasToWrite = detectedMetas.Value;
             else
             {
                 foreach (var att in detectedMetas.Value) metasToWrite.Add(att);
                 if (supportedMetas.Contains(tagType.Value)) metasToWrite.Add(tagType.Value);
                 else LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Cannot create " + tagType + " tag type inside a " + AudioFormat.ShortName + " file, as it is not supported");
             }
+
+            // Force writing native metadata if AdditionalFields explicitly contain native keys
+            if (data.AdditionalFields.Any(f => f.TagType == TagType.NATIVE) && !metasToWrite.Contains(TagType.NATIVE))
+                metasToWrite.Add(TagType.NATIVE);
 
             bool result = true;
             ProgressManager progressManager = null;
