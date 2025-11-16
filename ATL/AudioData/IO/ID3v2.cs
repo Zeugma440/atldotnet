@@ -66,6 +66,11 @@ namespace ATL.AudioData.IO
         /// </summary>
         public const byte TAG_VERSION_2_4 = 4;
 
+        /// <summary>
+        /// Default zone identifier for ID3v2 data
+        /// </summary>
+        public const string ZONE_ID3V2 = "id3v2_default";
+
         private TagInfo tagHeader;
 
         // Technical 'shortcut' data
@@ -1242,7 +1247,7 @@ namespace ATL.AudioData.IO
                 if (TAG_VERSION_2_2 <= m_tagVersion && m_tagVersion <= TAG_VERSION_2_4 && tagHeader.GetSize() > 0)
                 {
                     readFrames(reader, tagHeader, offset, readTagParams);
-                    structureHelper.AddZone(offset, (int)(tagHeader.ActualEnd - offset));
+                    structureHelper.AddZone(offset, (int)(tagHeader.ActualEnd - offset), ZONE_ID3V2);
                 }
                 else
                 {

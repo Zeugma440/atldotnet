@@ -610,7 +610,8 @@ namespace ATL.AudioData.IO
             // ID3v2 embedder
             if (m_embedder is { Id3v2Zone: not null } && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
             {
-                structureHelper.Clear();
+                // Remove default zone created by the ID3v2 reader
+                structureHelper.RemoveZone(ID3v2.ZONE_ID3V2);
                 structureHelper.AddZone(m_embedder.Id3v2Zone);
                 var removeZone = m_embedder.Id3v2OldZone;
                 if (removeZone != null) structureHelper.AddZone(removeZone);
@@ -666,8 +667,9 @@ namespace ATL.AudioData.IO
 
         private void handleEmbedder()
         {
-            if (m_embedder == null || getImplementedTagType() != MetaDataIOFactory.TagType.ID3V2) return;
-            structureHelper.Clear();
+            if (m_embedder == null || getImplementedTagType() != MetaDataIOFactory.TagType.ID3V2 || m_embedder.HasEmbeddedID3v2 < 1) return;
+            // Remove default zone created by the ID3v2 reader
+            structureHelper.RemoveZone(ID3v2.ZONE_ID3V2);
             structureHelper.AddZone(m_embedder.Id3v2Zone);
         }
 

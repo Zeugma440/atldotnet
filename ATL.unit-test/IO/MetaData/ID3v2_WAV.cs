@@ -38,6 +38,29 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_WAV_ID3v2_Delete()
+        {
+            new ConsoleLogger();
+
+            // Source : file with embedded ID3v2 ('id3 ' chunk)
+            string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Remove the ID3v2 tag
+            Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TagType.ID3V2));
+
+            // Check if the 'id3 ' chunk has been removed
+            using (FileStream s = new FileStream(testFileLocation, FileMode.Open))
+            using (BinaryReader r = new BinaryReader(s))
+            {
+                Assert.IsFalse(StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("id3 ")));
+            }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_RW_WAV_ID3v2_Empty()
         {
             test_RW_Empty(emptyFile, true, true, true, true);
@@ -48,13 +71,9 @@ namespace ATL.test.IO.MetaData
         {
             new ConsoleLogger();
 
-            // Source : totally metadata-free file
-            string location = TestUtils.GetResourceLocationRoot() + "WAV/illegal_id3v2.wav";
+            // Source : file illegally tagged with ID3v2 tag (slapped at offset 0 instead of being embedded with an 'id3 ' chunk)
             string testFileLocation = TestUtils.CopyAsTempTestFile("WAV/illegal_id3v2.wav");
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-
-
-            // Check that it is indeed metadata-free
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsNotNull(theFile.getMeta(MetaDataIOFactory.TagType.ID3V2));
@@ -73,13 +92,9 @@ namespace ATL.test.IO.MetaData
         {
             new ConsoleLogger();
 
-            // Source : totally metadata-free file
-            string location = TestUtils.GetResourceLocationRoot() + "WAV/illegal_id3v2.wav";
+            // Source : file illegally tagged with ID3v2 tag (slapped at offset 0 instead of being embedded with an 'id3 ' chunk)
             string testFileLocation = TestUtils.CopyAsTempTestFile("WAV/illegal_id3v2.wav");
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-
-
-            // Check that it is indeed metadata-free
             Assert.IsTrue(theFile.ReadFromFile());
 
             var tag = new TagHolder();
@@ -107,13 +122,10 @@ namespace ATL.test.IO.MetaData
         {
             new ConsoleLogger();
 
-            // Source : totally metadata-free file
+            // Source : file illegally tagged with ID3v2 tag (slapped at offset 0 instead of being embedded with an 'id3 ' chunk)
             string location = TestUtils.GetResourceLocationRoot() + "WAV/illegal_id3v2.wav";
             string testFileLocation = TestUtils.CopyAsTempTestFile("WAV/illegal_id3v2.wav");
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
-
-
-            // Check that it is indeed metadata-free
             Assert.IsTrue(theFile.ReadFromFile());
 
             Assert.IsTrue(theFile.RemoveTagFromFile(MetaDataIOFactory.TagType.ID3V2));
