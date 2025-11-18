@@ -2197,9 +2197,9 @@ namespace ATL.AudioData.IO
             result.Size = 1;
             result.Encoding = Encoding.Unicode;
 
-            byte[] b = new byte[1];
+            Span<byte> b = stackalloc byte[1];
 
-            if (source.Read(b, 0, 1) < 1) return result;
+            if (source.Read(b) < 1) return result;
             bool first = true;
             bool foundFE = false;
             bool foundFF = false;
@@ -2225,7 +2225,7 @@ namespace ATL.AudioData.IO
                     first = false;
                 }
 
-                if (source.Read(b, 0, 1) < 1) return result;
+                if (source.Read(b) < 1) return result;
                 result.Size++;
             }
 

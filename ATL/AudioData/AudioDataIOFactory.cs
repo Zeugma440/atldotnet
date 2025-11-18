@@ -78,7 +78,7 @@ namespace ATL.AudioData
         // ------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Gets the instance of this factory (Singleton pattern) 
+        /// Gets the instance of this factory (Singleton pattern)
         /// </summary>
         /// <returns>Instance of the AudioReaderFactory of the application</returns>
         public static AudioDataIOFactory GetInstance()
@@ -414,8 +414,8 @@ namespace ATL.AudioData
             if (ID3v2.IsValidHeader(data))
             {
                 hasID3v2 = true;
-                byte[] data2 = new byte[4];
-                Array.Copy(data, 6, data2, 0, 4); // bytes 6-9 only
+
+                var data2 = data.AsSpan()[6..10]; // bytes 6-9 only
                 int id3v2Size = StreamUtils.DecodeSynchSafeInt32(data2) + 10;  // 10 being the size of the header
                 s.Seek(id3v2Size, SeekOrigin.Begin);
                 offset = s.Position;
