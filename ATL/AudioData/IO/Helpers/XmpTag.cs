@@ -83,10 +83,15 @@ namespace ATL.AudioData.IO
             return result;
         }
 
-        public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize)
+        public static void FromStream(
+            Stream source,
+            MetaDataIO meta,
+            ReadTagParams readTagParams,
+            IDictionary<string, string> customNamespaces,
+            long chunkSize)
         {
             XmlArray xmlArray = createXmlArray();
-            xmlArray.FromStream(source, meta, readTagParams, chunkSize);
+            xmlArray.FromStream(source, meta, readTagParams, customNamespaces, chunkSize);
         }
 
         public static bool IsDataEligible(MetaDataHolder meta)
@@ -94,7 +99,12 @@ namespace ATL.AudioData.IO
             return WavHelper.IsDataEligible(meta, "xmp.");
         }
 
-        public static int ToStream(Stream w, MetaDataHolder meta, bool isLittleEndian = false, bool wavEmbed = false)
+        public static int ToStream(
+            Stream w,
+            MetaDataHolder meta,
+            IDictionary<string, string> customNamespaces = null,
+            bool isLittleEndian = false,
+            bool wavEmbed = false)
         {
             if (wavEmbed) w.Write(Utils.Latin1Encoding.GetBytes(CHUNK_XMP));
 
@@ -103,7 +113,7 @@ namespace ATL.AudioData.IO
             if (wavEmbed) w.Write(StreamUtils.EncodeInt32(0));
 
             XmlArray xmlArray = createXmlArray();
-            int result = xmlArray.ToStream(w, meta);
+            int result = xmlArray.ToStream(w, meta, customNamespaces);
 
             if (!wavEmbed) return result;
 

@@ -73,6 +73,7 @@ namespace ATL.AudioData.IO
 
         private SizeInfo sizeInfo;
         private readonly AudioFormat audioFormat;
+        private readonly IDictionary<string, string> customNamespaces = new Dictionary<string, string>();
 
         private bool _isLittleEndian;
 
@@ -195,6 +196,7 @@ namespace ATL.AudioData.IO
 
             id3v2Offset = -1;
             id3v2StructureHelper.Clear();
+            customNamespaces.Clear();
 
             AudioDataOffset = -1;
             AudioDataSize = 0;
@@ -417,7 +419,7 @@ namespace ATL.AudioData.IO
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, subChunkId);
                     foundSubChunks.Add(CHUNK_XMP);
 
-                    XmpTag.FromStream(source, this, readTagParams, chunkSize);
+                    XmpTag.FromStream(source, this, readTagParams, customNamespaces, chunkSize);
                 }
                 else if (subChunkId.Equals(CHUNK_CART, StringComparison.OrdinalIgnoreCase))
                 {
@@ -641,7 +643,7 @@ namespace ATL.AudioData.IO
                         else if (zone.Equals(CHUNK_DISP + ".0") && DispTag.IsDataEligible(tag)) result += DispTag.ToStream(w, isLittleEndian, tag);
                         else if (zone.Equals(CHUNK_BEXT) && BextTag.IsDataEligible(tag)) result += BextTag.ToStream(w, isLittleEndian, tag);
                         else if (zone.Equals(CHUNK_IXML) && IXmlTag.IsDataEligible(tag)) result += IXmlTag.ToStream(w.BaseStream, isLittleEndian, tag);
-                        else if (zone.Equals(CHUNK_XMP) && XmpTag.IsDataEligible(tag)) result += XmpTag.ToStream(w.BaseStream, tag, isLittleEndian, true);
+                        else if (zone.Equals(CHUNK_XMP) && XmpTag.IsDataEligible(tag)) result += XmpTag.ToStream(w.BaseStream, tag, customNamespaces, isLittleEndian, true);
                         else if (zone.Equals(CHUNK_CART) && CartTag.IsDataEligible(tag)) result += CartTag.ToStream(w, isLittleEndian, tag);
 
                         break;

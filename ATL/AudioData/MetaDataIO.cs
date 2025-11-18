@@ -3,6 +3,7 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using static ATL.AudioData.FileStructureHelper;
 using static ATL.TagData;
@@ -184,11 +185,7 @@ namespace ATL.AudioData.IO
         {
             get
             {
-                long result = 0;
-
-                foreach (Zone zone in Zones) result += zone.Size;
-
-                return result;
+                return Zones.Sum(zone => zone.Size);
             }
         }
         /// <summary>

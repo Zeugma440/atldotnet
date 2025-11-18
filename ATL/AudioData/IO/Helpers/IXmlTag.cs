@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Commons;
 using System.IO;
 using static ATL.AudioData.IO.MetaDataIO;
@@ -26,7 +27,7 @@ namespace ATL.AudioData.IO
         public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize)
         {
             XmlArray xmlArray = createXmlArray();
-            xmlArray.FromStream(source, meta, readTagParams, chunkSize);
+            xmlArray.FromStream(source, meta, readTagParams, new Dictionary<string, string>(), chunkSize);
         }
 
         public static bool IsDataEligible(MetaDataHolder meta)

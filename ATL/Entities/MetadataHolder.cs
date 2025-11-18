@@ -263,8 +263,7 @@ namespace ATL
         {
             get
             {
-                DateTime result;
-                if (!DateTime.TryParse(tagData[Field.PUBLISHING_DATE], out result))
+                if (!DateTime.TryParse(tagData[Field.PUBLISHING_DATE], out var result))
                     result = DateTime.MinValue;
                 return result;
             }
@@ -281,12 +280,9 @@ namespace ATL
         {
             get
             {
-                if (!float.TryParse(tagData[Field.RATING], out var result))
-                {
-                    if (Settings.NullAbsentValues) return null;
-                    return 0f;
-                }
-                return result;
+                if (float.TryParse(tagData[Field.RATING], out var result)) return result;
+                if (Settings.NullAbsentValues) return null;
+                return 0f;
             }
             set => tagData.IntegrateValue(Field.RATING, (null == value) ? null : value.ToString());
         }

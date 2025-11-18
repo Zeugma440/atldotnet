@@ -11,6 +11,7 @@ namespace ATL.test.IO.MetaData
         private readonly string notEmptyFile_info = "WAV/broadcastwave_bext_info.wav";
         private readonly string notEmptyFile_ixml = "WAV/broadcastwave_bext_iXML.wav";
         private readonly string notEmptyFile_xmp = "WAV/xmp_partial.wav";
+        private readonly string notEmptyFile_xmp_custom = "WAV/xmp_custom.wav";
         private readonly string notEmptyFile_sample = "WAV/broadcastwave_bext_iXML.wav";
         private readonly string notEmptyFile_cue = "WAV/cue.wav";
         private readonly string notEmptyFile_cart = "WAV/cart.wav";
@@ -497,6 +498,21 @@ namespace ATL.test.IO.MetaData
         {
             initXmpTestData();
             test_RW_Existing(notEmptyFile, 0, true, false, false); // length-check impossible because of parasite end-of-line characters and padding
+        }
+
+        [TestMethod]
+        public void TagIO_RW_WAV_XMP_Custom()
+        {
+            new ConsoleLogger();
+
+            // Source : file with existing XMP data including a custom namespace
+            string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile_xmp_custom);
+
+            Track theTrack = new Track(testFileLocation);
+            Assert.IsTrue(theTrack.Save());
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]

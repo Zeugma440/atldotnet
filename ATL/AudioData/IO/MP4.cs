@@ -446,7 +446,7 @@ namespace ATL.AudioData.IO
                     if (XmpTag.UUID_XMP == uuid.key)
                     {
                         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(uuid.value));
-                        XmpTag.FromStream(stream, this, readTagParams, stream.Length);
+                        XmpTag.FromStream(stream, this, readTagParams, new  Dictionary<string, string>(), stream.Length);
                     }
                     else
                     {
