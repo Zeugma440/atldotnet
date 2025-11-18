@@ -1,6 +1,7 @@
 using ATL.Logging;
 using Commons;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,14 +18,14 @@ namespace ATL.AudioData.IO
     ///   - Opus data (extensions : .OPUS)
     ///   - Speex data (extensions : .SPX)
     ///   - Embedded FLAC data (extensions : .OGG)
-    ///   
+    ///
     /// Implementation notes
-    /// 
+    ///
     ///   1. CRC's : Current implementation does not test OGG page header CRC's
     ///   2. Page numbers : Current implementation does not test page numbers consistency
-    ///   3. When the file has multiple bitstreams, only those whose headers 
+    ///   3. When the file has multiple bitstreams, only those whose headers
     ///   are positioned at the beginning of the file are detected
-    /// 
+    ///
     /// </summary>
 	partial class Ogg : VorbisTagHolder, IMetaDataIO, IAudioDataIO
     {
@@ -137,13 +138,13 @@ namespace ATL.AudioData.IO
                 StreamVersion = buffer[0];
                 TypeFlag = buffer[1];
                 if (r.Read(buffer, 0, 8) < 8) return;
-                AbsolutePosition = StreamUtils.DecodeUInt64(buffer);
+                AbsolutePosition = BinaryPrimitives.ReadUInt64LittleEndian(buffer);
                 if (r.Read(buffer, 0, 4) < 4) return;
-                StreamId = StreamUtils.DecodeInt32(buffer);
+                StreamId = BinaryPrimitives.ReadInt32LittleEndian(buffer);
                 if (r.Read(buffer, 0, 4) < 4) return;
-                PageNumber = StreamUtils.DecodeInt32(buffer);
+                PageNumber = BinaryPrimitives.ReadInt32LittleEndian(buffer);
                 if (r.Read(buffer, 0, 4) < 4) return;
-                Checksum = StreamUtils.DecodeUInt32(buffer);
+                Checksum = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
                 if (r.Read(buffer, 0, 1) < 1) return;
                 Segments = buffer[0];
 
@@ -248,7 +249,7 @@ namespace ATL.AudioData.IO
 
             public bool IsValid()
             {
-                return StreamUtils.ArrBeginsWith(ID, VORBIS_HEADER_ID);
+                return ID.AsSpan().StartsWith(VORBIS_HEADER_ID);
             }
         }
 
@@ -309,7 +310,7 @@ namespace ATL.AudioData.IO
 
             public bool IsValid()
             {
-                return StreamUtils.ArrBeginsWith(ID, OPUS_HEADER_ID);
+                return ID.AsSpan().StartsWith(OPUS_HEADER_ID);
             }
         }
 
@@ -368,7 +369,7 @@ namespace ATL.AudioData.IO
 
             public bool IsValid()
             {
-                return StreamUtils.ArrBeginsWith(ID, SPEEX_HEADER_ID);
+                return ID.AsSpan().StartsWith(SPEEX_HEADER_ID);
             }
         }
 #pragma warning restore S4487 // Unread "private" fields should be removed
@@ -601,7 +602,7 @@ namespace ATL.AudioData.IO
                     {
                         source.Position = pageHeader.Offset + pageHeader.HeaderSize + pageHeader.GetPageSize();
                         byte[] data = source.ReadBytes(OGG_PAGE_ID.Length);
-                        if (!StreamUtils.ArrBeginsWith(data, OGG_PAGE_ID))
+                        if (!data.AsSpan().StartsWith(OGG_PAGE_ID))
                         {
                             source.Position = pageHeader.Offset + pageHeader.HeaderSize;
                             // Last chance : try to reach the next page header by searching for its marker
@@ -752,9 +753,9 @@ namespace ATL.AudioData.IO
             return isValidHeader;
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, OGG_PAGE_ID);
+            return data.StartsWith(OGG_PAGE_ID);
         }
 
         private bool readIdentificationPacket(BufferedBinaryReader source)
@@ -765,34 +766,34 @@ namespace ATL.AudioData.IO
             byte[] headerStart = source.ReadBytes(3);
             source.Seek(initialOffset, SeekOrigin.Begin);
 
-            if (StreamUtils.ArrBeginsWith(VORBIS_HEADER_ID, headerStart))
+            if (VORBIS_HEADER_ID.AsSpan().StartsWith(headerStart))
             {
                 contents = CONTENTS_VORBIS;
                 info.VorbisParameters.FromStream(source);
                 isSupportedHeader = info.VorbisParameters.IsValid();
             }
-            else if (StreamUtils.ArrBeginsWith(OPUS_HEADER_ID, headerStart))
+            else if (OPUS_HEADER_ID.AsSpan().StartsWith(headerStart))
             {
                 contents = CONTENTS_OPUS;
                 info.OpusParameters.FromStream(source);
                 isSupportedHeader = info.OpusParameters.IsValid();
             }
-            else if (StreamUtils.ArrBeginsWith(FLAC_HEADER_ID, headerStart))
+            else if (FLAC_HEADER_ID.AsSpan().StartsWith(headerStart))
             {
                 contents = CONTENTS_FLAC;
                 source.Seek(FLAC_HEADER_ID.Length, SeekOrigin.Current); // Skip the entire FLAC segment header
                 source.Seek(2, SeekOrigin.Current); // FLAC-to-Ogg mapping version
-                short nbHeaderPackets = StreamUtils.DecodeBEInt16(source.ReadBytes(2));
+                short nbHeaderPackets = BinaryPrimitives.ReadInt16BigEndian(source.ReadBytes(2));
                 info.FlacParameters = FlacHelper.ReadHeader(source);
                 isSupportedHeader = info.FlacParameters.IsValid();
             }
-            else if (StreamUtils.ArrBeginsWith(SPEEX_HEADER_ID, headerStart))
+            else if (SPEEX_HEADER_ID.AsSpan().StartsWith(headerStart))
             {
                 contents = CONTENTS_SPEEX;
                 info.SpeexParameters.FromStream(source);
                 isSupportedHeader = info.SpeexParameters.IsValid();
             }
-            else if (StreamUtils.ArrBeginsWith(THEORA_HEADER_ID, headerStart))
+            else if (THEORA_HEADER_ID.AsSpan().StartsWith(headerStart))
             {
                 // ATL doesn't support video data; don't examine this bitstream
             }
@@ -806,12 +807,12 @@ namespace ATL.AudioData.IO
             if (contentType.Equals(CONTENTS_VORBIS))
             {
                 if (source.Read(buffer, 0, 7) < 7) return;
-                isValidTagHeader = StreamUtils.ArrBeginsWith(buffer, VORBIS_COMMENT_ID);
+                isValidTagHeader = buffer.AsSpan().StartsWith(VORBIS_COMMENT_ID);
             }
             else if (contentType.Equals(CONTENTS_OPUS))
             {
                 if (source.Read(buffer, 0, 8) < 8) return;
-                isValidTagHeader = StreamUtils.ArrBeginsWith(buffer, OPUS_TAG_ID);
+                isValidTagHeader = buffer.AsSpan().StartsWith(OPUS_TAG_ID);
             }
             else if (contentType.Equals(CONTENTS_SPEEX))
             {

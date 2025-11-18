@@ -6,6 +6,7 @@ using static ATL.AudioData.IO.MetaDataIO;
 using System;
 using System.Globalization;
 using System.Text;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -47,12 +48,12 @@ namespace ATL.AudioData.IO
 
             // TimeReference
             if (source.Read(data, 0, 8) < 8) return;
-            ulong timeReference = StreamUtils.DecodeUInt64(data);
+            ulong timeReference = BinaryPrimitives.ReadUInt64LittleEndian(data);
             meta.SetMetaField("bext.timeReference", timeReference.ToString(), readTagParams.ReadAllMetaFrames);
 
             // BEXT version
             if (source.Read(data, 0, 2) < 2) return;
-            int intData = StreamUtils.DecodeUInt16(data);
+            int intData = BinaryPrimitives.ReadUInt16LittleEndian(data);
             meta.SetMetaField("bext.version", intData.ToString(), readTagParams.ReadAllMetaFrames);
 
             // UMID
@@ -106,7 +107,7 @@ namespace ATL.AudioData.IO
             bool readAllFrames)
         {
             if (source.Read(buffer, 0, 2) < 2) return;
-            var intData = StreamUtils.DecodeInt16(buffer);
+            var intData = BinaryPrimitives.ReadInt16LittleEndian(buffer);
             meta.SetMetaField(field, (intData / 100.0).ToString(CultureInfo.CurrentCulture), readAllFrames);
         }
 

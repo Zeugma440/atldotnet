@@ -1,5 +1,6 @@
 using Commons;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
@@ -32,10 +33,10 @@ namespace ATL.AudioData.IO
             public readonly byte[] ByteArray = new byte[32];               // Data as byte array
             public readonly int[] IntegerArray = new int[8];            // Data as integer array
 
-            public static int GetVersion(byte[] data)
+            public static int GetVersion(ReadOnlySpan<byte> data)
             {
                 if (data.Length < 4) return 0;
-                int dataAsInt = StreamUtils.DecodeBEInt32(data);
+                int dataAsInt = BinaryPrimitives.ReadInt32BigEndian(data);
 
                 // Get MPEGplus stream version
                 if (STREAM_VERSION_7_ID == dataAsInt) return 70;
@@ -113,7 +114,7 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
             return HeaderRecord.GetVersion(data) > 60; // <v7 not auto-detected (no specs available)
         }
@@ -131,7 +132,7 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < header.IntegerArray.Length; i++)
             {
                 Array.Copy(header.ByteArray, i * 4, temp, 0, 4);
-                header.IntegerArray[i] = StreamUtils.DecodeInt32(temp);
+                header.IntegerArray[i] = BinaryPrimitives.ReadInt32LittleEndian(temp);
             }
             header.computeVersion();
 

@@ -33,6 +33,7 @@ using static ATL.AudioData.AudioDataManager;
 using Commons;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -411,9 +412,9 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, MIDI_FILE_HEADER);
+            return data.StartsWith(MIDI_FILE_HEADER);
         }
 
         public static bool FindValidHeader(Stream source)
@@ -444,7 +445,7 @@ namespace ATL.AudioData.IO
             byte type = buffer[5];
 
             // MIDI STRUCTURE TYPE
-            // 0 - single-track 
+            // 0 - single-track
             // 1 - multiple tracks, synchronous
             // 2 - multiple tracks, asynchronous
             if (type > 1)
@@ -477,7 +478,7 @@ namespace ATL.AudioData.IO
 
                 // trackSize is stored in big endian -> needs inverting
                 if (source.Read(buffer, 0, 4) < 4) return false;
-                var trackSize = StreamUtils.DecodeBEInt32(buffer);
+                var trackSize = BinaryPrimitives.ReadInt32BigEndian(buffer);
 
                 byte[] trackData = new byte[trackSize];
                 if (source.Read(trackData, 0, trackSize) < trackSize) return false;

@@ -8,6 +8,7 @@ using Commons;
 using static ATL.ChannelsArrangements;
 using System.Linq;
 using static ATL.TagData;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -410,11 +411,11 @@ namespace ATL.AudioData.IO
                 sample.Name = StreamUtils.ReadNullTerminatedStringFixed(reader, Encoding.ASCII, 22).Trim();
                 sample.Name = sample.Name.Replace("\0", "");
                 sample.Name = sample.Name.Replace(charOne, "");
-                sample.Size = StreamUtils.DecodeBEUInt16(reader.ReadBytes(2)) * 2;
+                sample.Size = BinaryPrimitives.ReadUInt16BigEndian(reader.ReadBytes(2)) * 2;
                 sample.Finetune = reader.ReadSByte();
                 sample.Volume = reader.ReadByte();
-                sample.RepeatOffset = StreamUtils.DecodeBEUInt16(reader.ReadBytes(2)) * 2;
-                sample.RepeatLength = StreamUtils.DecodeBEUInt16(reader.ReadBytes(2)) * 2;
+                sample.RepeatOffset = BinaryPrimitives.ReadUInt16BigEndian(reader.ReadBytes(2)) * 2;
+                sample.RepeatLength = BinaryPrimitives.ReadUInt16BigEndian(reader.ReadBytes(2)) * 2;
                 FSamples.Add(sample);
             }
 
@@ -462,7 +463,7 @@ namespace ATL.AudioData.IO
                     row = pattern[pattern.Count - 1];
                     for (int c = 0; c < nbChannels; c++) // Channels loop
                     {
-                        row.Add(StreamUtils.DecodeBEInt32(reader.ReadBytes(4)));
+                        row.Add(BinaryPrimitives.ReadInt32BigEndian(reader.ReadBytes(4)));
                     } // end channels loop
                 } // end rows loop
             } // end patterns loop

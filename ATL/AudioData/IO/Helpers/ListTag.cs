@@ -6,6 +6,7 @@ using static ATL.AudioData.IO.MetaDataIO;
 using System.Linq;
 using System;
 using System.Text;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -51,7 +52,7 @@ namespace ATL.AudioData.IO
                 var key = Utils.Latin1Encoding.GetString(data, 0, 4);
                 // Size
                 if (source.Read(data, 0, 4) < 4) return;
-                var size = StreamUtils.DecodeInt32(data);
+                var size = BinaryPrimitives.ReadInt32LittleEndian(data);
                 // Do _NOT_ use StreamUtils.ReadNullTerminatedString because non-textual fields may be found here (e.g. NITR)
                 if (size > 0)
                 {
@@ -78,7 +79,7 @@ namespace ATL.AudioData.IO
                 var id = Utils.Latin1Encoding.GetString(data, 0, 4);
                 // Size
                 if (source.Read(data, 0, 4) < 4) return;
-                var size = StreamUtils.DecodeInt32(data);
+                var size = BinaryPrimitives.ReadInt32LittleEndian(data);
                 if (size <= 0) continue;
 
                 meta.SetMetaField($"adtl.Labels[{position}].Type", id, readTagParams.ReadAllMetaFrames);

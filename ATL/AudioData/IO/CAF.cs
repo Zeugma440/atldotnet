@@ -1,5 +1,6 @@
 ﻿using Commons;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -10,15 +11,15 @@ namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for Apple Core Audio files manipulation (extension : .CAF)
-    /// 
+    ///
     /// Implementation notes
-    /// 
+    ///
     ///     1. "Functional" metadata reading and writing
-    /// 
+    ///
     ///     Due to the rarity of CAF files with actual metadata (i.e. strg or info chunks) :
     ///       - the implementation of metadata reading is experimental, as in "theroretically working, but untested"
     ///       - there is no implementation for metadata writing
-    ///       
+    ///
     ///     Anyone who wants these features and has "rich" CAF files is welcome to open a new github issue about it.
     /// </summary>
     class CAF : MetaDataIO, IAudioDataIO
@@ -118,7 +119,7 @@ namespace ATL.AudioData.IO
         };
 
 
-        // Private declarations 
+        // Private declarations
         private AudioFormat audioFormat;
 
         private uint sampleRate;
@@ -207,9 +208,9 @@ namespace ATL.AudioData.IO
             resetData();
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return CAF_MAGIC_NUMBER == StreamUtils.DecodeBEUInt32(data);
+            return CAF_MAGIC_NUMBER == BinaryPrimitives.ReadUInt32BigEndian(data);
         }
 
 
@@ -227,13 +228,13 @@ namespace ATL.AudioData.IO
 
         private void readAudioDescriptionChunk(BufferedBinaryReader source)
         {
-            double m_sampleRate = StreamUtils.DecodeBEDouble(source.ReadBytes(8)); // aka frames per second
+            double m_sampleRate = BinaryPrimitives.ReadDoubleBigEndian(source.ReadBytes(8)); // aka frames per second
             string formatId = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
             source.Seek(4, SeekOrigin.Current); // format flags
-            uint bytesPerPacket = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            uint framesPerPacket = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            channelsPerFrame = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            bitsPerChannel = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            uint bytesPerPacket = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+            uint framesPerPacket = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+            channelsPerFrame = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+            bitsPerChannel = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
 
             sampleRate = (uint)Math.Round(m_sampleRate);
 
@@ -276,7 +277,7 @@ namespace ATL.AudioData.IO
 
         private void readChannelLayoutChunk(BufferedBinaryReader source)
         {
-            uint channelLayout = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            uint channelLayout = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
             // we don't need anything else
 
             if (channelsMapping.TryGetValue(channelLayout, out var value)) ChannelsArrangement = value;
@@ -292,13 +293,13 @@ namespace ATL.AudioData.IO
         // WARNING : EXPERIMENTAL / UNTESTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
         private void readStringsChunk(BufferedBinaryReader source)
         {
-            uint nbEntries = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            uint nbEntries = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
 
             Dictionary<uint, long> stringIds = new Dictionary<uint, long>();
             for (int i = 0; i < nbEntries; i++)
             {
-                uint stringId = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                long stringOffset = StreamUtils.DecodeBEInt64(source.ReadBytes(8));
+                uint stringId = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+                long stringOffset = BinaryPrimitives.ReadInt64BigEndian(source.ReadBytes(8));
                 stringIds.Add(stringId, stringOffset);
             }
             long initialPos = source.Position;
@@ -315,7 +316,7 @@ namespace ATL.AudioData.IO
         // WARNING : EXPERIMENTAL / UNTESTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES
         private void readInfoChunk(BufferedBinaryReader source, bool readAllMetaFrames)
         {
-            uint nbEntries = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            uint nbEntries = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
             for (int i = 0; i < nbEntries; i++)
             {
                 string infoKey = StreamUtils.ReadNullTerminatedString(source, Encoding.UTF8);
@@ -327,7 +328,7 @@ namespace ATL.AudioData.IO
         private void readPaktChunk(BufferedBinaryReader source)
         {
             source.Seek(8, SeekOrigin.Current); // nbPackets
-            long nbFrames = StreamUtils.DecodeBEInt64(source.ReadBytes(8));
+            long nbFrames = BinaryPrimitives.ReadInt64BigEndian(source.ReadBytes(8));
 
             Duration = nbFrames * 1000d / sampleRate;
         }
@@ -353,7 +354,7 @@ namespace ATL.AudioData.IO
             while (cursorPos < reader.Length)
             {
                 string chunkType = Utils.Latin1Encoding.GetString(reader.ReadBytes(4));
-                long chunkSize = StreamUtils.DecodeBEInt64(reader.ReadBytes(8));
+                long chunkSize = BinaryPrimitives.ReadInt64BigEndian(reader.ReadBytes(8));
 
                 if (readTagParams.PrepareForWriting) structureHelper.AddZone(cursorPos, chunkSize + 12, chunkType);
 

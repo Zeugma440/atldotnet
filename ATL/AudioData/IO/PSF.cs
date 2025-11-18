@@ -8,6 +8,7 @@ using System.Text;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
 using System.Threading.Tasks;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -188,9 +189,9 @@ namespace ATL.AudioData.IO
             }
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, PSF_FORMAT_TAG);
+            return data.StartsWith(PSF_FORMAT_TAG);
         }
 
         private static bool readHeader(Stream source, ref PSFHeader header)
@@ -202,9 +203,9 @@ namespace ATL.AudioData.IO
                 if (source.Read(buffer, 0, 1) < 1) return false;
                 header.VersionByte = buffer[0];
                 if (source.Read(buffer, 0, 4) < 4) return false;
-                header.ReservedAreaLength = StreamUtils.DecodeUInt32(buffer);
+                header.ReservedAreaLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
                 if (source.Read(buffer, 0, 4) < 4) return false;
-                header.CompressedProgramLength = StreamUtils.DecodeUInt32(buffer);
+                header.CompressedProgramLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
                 return true;
             }
             else

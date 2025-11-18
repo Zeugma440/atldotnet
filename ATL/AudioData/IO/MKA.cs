@@ -1,6 +1,7 @@
 ﻿using ATL.Logging;
 using Commons;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -328,7 +329,7 @@ namespace ATL.AudioData.IO
             seekHeads.Clear();
         }
 
-        public static bool IsValidHeader(byte[] data) => EBML_MAGIC_NUMBER == StreamUtils.DecodeBEUInt32(data);
+        public static bool IsValidHeader(ReadOnlySpan<byte> data) => EBML_MAGIC_NUMBER == BinaryPrimitives.ReadUInt32BigEndian(data);
 
 
         // ---------- SUPPORT METHODS
@@ -442,7 +443,7 @@ namespace ATL.AudioData.IO
                         var blockSize = reader.readVint(); // size
                         var blockOffset = reader.Position;
                         reader.readVint(); // trackId
-                        if (0 == StreamUtils.DecodeBEUInt16(reader.readBytes(2))) // Timestamp zero
+                        if (0 == BinaryPrimitives.ReadUInt16BigEndian(reader.readBytes(2))) // Timestamp zero
                         {
                             AudioDataOffset = reader.Position + 1; // Ignore flags
                             blockAudioSize = blockSize - AudioDataOffset + blockOffset;
@@ -463,7 +464,7 @@ namespace ATL.AudioData.IO
                     var blockSize = reader.readVint(); // size
                     var blockOffset = reader.Position;
                     reader.readVint(); // trackId
-                    if (0 == StreamUtils.DecodeBEUInt16(reader.readBytes(2))) // Timestamp zero
+                    if (0 == BinaryPrimitives.ReadUInt16BigEndian(reader.readBytes(2))) // Timestamp zero
                     {
                         AudioDataOffset = reader.Position + 1; // Ignore flags
                         // TODO adjust offset according to lacing mode
@@ -562,7 +563,7 @@ namespace ATL.AudioData.IO
                     {
                         reader.readVint(); // size
                         reader.readVint(); // trackId
-                        Duration = StreamUtils.DecodeBEUInt16(reader.readBytes(2)) * trackScale / 1000000.0;
+                        Duration = BinaryPrimitives.ReadUInt16BigEndian(reader.readBytes(2)) * trackScale / 1000000.0;
                     }
                 }
             }
@@ -580,7 +581,7 @@ namespace ATL.AudioData.IO
                     reader.seek(lastSbOffset);
                     reader.readVint(); // size
                     reader.readVint(); // trackId
-                    Duration = StreamUtils.DecodeBEUInt16(reader.readBytes(2)) * trackScale / 1000000.0;
+                    Duration = BinaryPrimitives.ReadUInt16BigEndian(reader.readBytes(2)) * trackScale / 1000000.0;
                 }
             }
 
@@ -1216,7 +1217,7 @@ namespace ATL.AudioData.IO
             EBMLHelper.WriteElt(memStream, ID_FILENAME, Encoding.UTF8.GetBytes(name));
             if (description.Length > 0) EBMLHelper.WriteElt(memStream, ID_FILEDESCRIPTION, Encoding.UTF8.GetBytes(description));
             EBMLHelper.WriteElt(memStream, ID_FILEMEDIATYPE, Utils.Latin1Encoding.GetBytes(mimeType));
-            EBMLHelper.WriteElt(memStream, ID_FILEUID, Utils.LongRandom(new Random())); // Spec does say "as random as possible" <.<
+            EBMLHelper.WriteElt(memStream, ID_FILEUID, Utils.LongRandom()); // Spec does say "as random as possible" <.<
             EBMLHelper.WriteElt(memStream, ID_FILEDATA, data);
 
             memStream.Position = 0;
@@ -1244,7 +1245,9 @@ namespace ATL.AudioData.IO
 
         private void writeEditionEntry(Stream w, TagData data)
         {
-            w.Write(StreamUtils.EncodeBEUInt16(ID_EDITIONENTRY));
+            Span<byte> shortBuffer = stackalloc byte[sizeof(short)];
+            BinaryPrimitives.WriteUInt16BigEndian(shortBuffer, ID_EDITIONENTRY);
+            w.Write(shortBuffer);
             var sizeOffset = w.Position;
             // Use 8 bytes to represent size (yes, I am lazy)
             w.Write(StreamUtils.EncodeBEUInt64(0)); // Will be rewritten later
@@ -1252,8 +1255,7 @@ namespace ATL.AudioData.IO
             // Generate a new ID if non-existent
             if (0 == editionEntryUid)
             {
-                Random randomGenerator = new Random();
-                editionEntryUid = Utils.LongRandom(randomGenerator);
+                editionEntryUid = Utils.LongRandom();
             }
             EBMLHelper.WriteElt(w, ID_EDITIONUID, editionEntryUid);
             EBMLHelper.WriteElt(w, ID_EDITIONFLAGHIDDEN, 0);
@@ -1283,8 +1285,7 @@ namespace ATL.AudioData.IO
             // Generate a new ID if non-existent
             if (0 == data.UniqueNumericID)
             {
-                Random randomGenerator = new Random();
-                data.UniqueNumericID = (uint)Utils.LongRandom(randomGenerator, 0, uint.MaxValue);
+                data.UniqueNumericID = (uint)Utils.LongRandom(0, uint.MaxValue);
             }
             EBMLHelper.WriteElt(w, ID_CHAPTERUID, data.UniqueNumericID);
             if (data.UniqueID.Length > 0)

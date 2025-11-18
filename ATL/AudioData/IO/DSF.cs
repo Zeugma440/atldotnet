@@ -5,6 +5,7 @@ using static ATL.AudioData.AudioDataManager;
 using Commons;
 using static ATL.ChannelsArrangements;
 using System.Collections.Generic;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -18,7 +19,7 @@ namespace ATL.AudioData.IO
         private static readonly byte[] FMT_ID = Utils.Latin1Encoding.GetBytes("fmt ");
 
 
-        // Private declarations 
+        // Private declarations
         private ChannelsArrangement channelsArrangement;
         private uint bits;
         private uint sampleRate;
@@ -31,7 +32,7 @@ namespace ATL.AudioData.IO
         private readonly FileStructureHelper id3v2StructureHelper = new FileStructureHelper();
 
 
-        // Public declarations 
+        // Public declarations
         public double CompressionRatio => getCompressionRatio();
 
 
@@ -92,16 +93,16 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        // Get compression ratio 
+        // Get compression ratio
         private double getCompressionRatio()
         {
             if (isValid) return sizeInfo.FileSize / (Duration / 1000.0 * sampleRate * (channelsArrangement.NbChannels * bits / 8.0) + 44) * 100;
             return 0;
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, DSD_ID);
+            return data.StartsWith(DSD_ID);
         }
 
         /// <inheritdoc/>
@@ -115,19 +116,19 @@ namespace ATL.AudioData.IO
 
             source.Seek(0, SeekOrigin.Begin);
             if (source.Read(buffer, 0, 4) < 4) return false;
-            if (StreamUtils.ArrBeginsWith(buffer, DSD_ID))
+            if (buffer.AsSpan().StartsWith(DSD_ID))
             {
                 source.Seek(16, SeekOrigin.Current); // Chunk size and file size
                 if (source.Read(buffer, 0, 8) < 8) return false;
-                id3v2Offset = StreamUtils.DecodeInt64(buffer);
+                id3v2Offset = BinaryPrimitives.ReadInt64LittleEndian(buffer);
 
                 if (source.Read(buffer, 0, 4) < 4) return false;
-                if (StreamUtils.ArrBeginsWith(buffer, FMT_ID))
+                if (buffer.AsSpan().StartsWith(FMT_ID))
                 {
                     source.Seek(8, SeekOrigin.Current); // Chunk size
 
                     if (source.Read(buffer, 0, 4) < 4) return false;
-                    int formatVersion = StreamUtils.DecodeInt32(buffer);
+                    int formatVersion = BinaryPrimitives.ReadInt32LittleEndian(buffer);
 
                     if (formatVersion > 1)
                     {
@@ -140,7 +141,7 @@ namespace ATL.AudioData.IO
                     source.Seek(8, SeekOrigin.Current); // Format ID (4), Channel type (4)
 
                     if (source.Read(buffer, 0, 4) < 4) return false;
-                    uint channels = StreamUtils.DecodeUInt32(buffer);
+                    uint channels = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
                     channelsArrangement = channels switch
                     {
                         1 => MONO,
@@ -154,12 +155,12 @@ namespace ATL.AudioData.IO
                     };
 
                     if (source.Read(buffer, 0, 4) < 4) return false;
-                    sampleRate = StreamUtils.DecodeUInt32(buffer);
+                    sampleRate = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
                     if (source.Read(buffer, 0, 4) < 4) return false;
-                    bits = StreamUtils.DecodeUInt32(buffer);
+                    bits = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
 
                     if (source.Read(buffer, 0, 8) < 8) return false;
-                    ulong sampleCount = StreamUtils.DecodeUInt64(buffer);
+                    ulong sampleCount = BinaryPrimitives.ReadUInt64LittleEndian(buffer);
 
                     Duration = sampleCount * 1000.0 / sampleRate;
                     BitRate = Math.Round(((double)(sizeNfo.FileSize - source.Position)) * 8 / Duration); //time to calculate average bitrate

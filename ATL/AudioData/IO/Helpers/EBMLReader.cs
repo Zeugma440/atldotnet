@@ -1,5 +1,6 @@
 ﻿using Commons;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -64,12 +65,12 @@ namespace ATL.AudioData
             // Decode buffer
             return nbBytes switch
             {
-                2 => StreamUtils.DecodeBEUInt16(buffer),
+                2 => BinaryPrimitives.ReadUInt16BigEndian(buffer),
                 3 => StreamUtils.DecodeBEUInt24(buffer),
-                4 => StreamUtils.DecodeBEUInt32(buffer),
+                4 => BinaryPrimitives.ReadUInt32BigEndian(buffer),
                 5 => (long)StreamUtils.DecodeBEUInt40(buffer),
                 // TODO 48 and 56 bits longs
-                8 => (long)StreamUtils.DecodeBEUInt64(buffer),
+                8 => (long)BinaryPrimitives.ReadUInt64BigEndian(buffer),
                 _ => buffer[0]
             };
         }
@@ -180,12 +181,12 @@ namespace ATL.AudioData
             // Decode buffer
             return nbBytes switch
             {
-                2 => StreamUtils.DecodeBEUInt16(buffer),
+                2 => BinaryPrimitives.ReadUInt16BigEndian(buffer),
                 3 => StreamUtils.DecodeBEUInt24(buffer),
-                4 => StreamUtils.DecodeBEUInt32(buffer),
+                4 => BinaryPrimitives.ReadUInt32BigEndian(buffer),
                 5 => StreamUtils.DecodeBEUInt40(buffer),
                 // TODO 48 and 56 bits longs
-                8 => StreamUtils.DecodeBEUInt64(buffer),
+                8 => BinaryPrimitives.ReadUInt64BigEndian(buffer),
                 _ => buffer[0]
             };
         }

@@ -7,6 +7,7 @@ using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
 using static ATL.TagData;
 using System.Threading.Tasks;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -158,17 +159,17 @@ namespace ATL.AudioData.IO
             VorbisMetaDataBlockPicture result = new VorbisMetaDataBlockPicture();
 
             BinaryReader r = new BinaryReader(s);
-            result.nativePicCode = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
+            result.nativePicCode = BinaryPrimitives.ReadInt32BigEndian(r.ReadBytes(4));
             result.picType = ID3v2.DecodeID3v2PictureType(result.nativePicCode);
-            var stringLen = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
+            var stringLen = BinaryPrimitives.ReadInt32BigEndian(r.ReadBytes(4));
             result.mimeType = Utils.Latin1Encoding.GetString(r.ReadBytes(stringLen));
-            stringLen = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
+            stringLen = BinaryPrimitives.ReadInt32BigEndian(r.ReadBytes(4));
             result.description = Encoding.UTF8.GetString(r.ReadBytes(stringLen));
-            result.width = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
-            result.height = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
-            result.colorDepth = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
-            result.colorNum = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
-            result.picDataLength = StreamUtils.DecodeBEInt32(r.ReadBytes(4));
+            result.width = BinaryPrimitives.ReadInt32BigEndian(r.ReadBytes(4));
+            result.height = BinaryPrimitives.ReadInt32BigEndian(r.ReadBytes(4));
+            result.colorDepth = BinaryPrimitives.ReadInt32BigEndian(r.ReadBytes(4));
+            result.colorNum = BinaryPrimitives.ReadInt32BigEndian(r.ReadBytes(4));
+            result.picDataLength = BinaryPrimitives.ReadInt32BigEndian(r.ReadBytes(4));
 
             result.picDataOffset = 4 + 4 + result.mimeType.Length + 4 + result.description.Length + 4 + 4 + 4 + 4 + 4;
 

@@ -1,3 +1,5 @@
+using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
@@ -13,7 +15,7 @@ namespace ATL.AudioData.IO
         // Standard bitrates (KBit/s)
         private static readonly int[] BITRATES = { 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 448, 512, 576, 640 };
 
-        // Private declarations 
+        // Private declarations
         private uint sampleRate;
 
 
@@ -72,9 +74,9 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return 30475 == StreamUtils.DecodeUInt16(data);
+            return 30475 == BinaryPrimitives.ReadUInt16LittleEndian(data);
         }
 
         private static ChannelsArrangement getChannelsArrangement(int amode, bool isLfePresent)

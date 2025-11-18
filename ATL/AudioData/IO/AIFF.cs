@@ -8,19 +8,20 @@ using static ATL.AudioData.AudioDataManager;
 using static ATL.ChannelsArrangements;
 using System.Linq;
 using static ATL.TagData;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for Audio Interchange File Format files manipulation (extension : .AIF, .AIFF, .AIFC)
-    /// 
+    ///
     /// Implementation notes
-    /// 
+    ///
     ///  1/ Annotations being somehow deprecated (Cf. specs "Use of this chunk is discouraged within FORM AIFC. The more refined Comments Chunk should be used instead"),
     ///  any data read from an ANNO chunk will be written as a COMT chunk when updating the file (ANNO chunks will be deleted in the process).
-    /// 
+    ///
     ///  2/ Embedded MIDI detection, parsing and writing is not supported
-    ///  
+    ///
     ///  3/ Instrument detection, parsing and writing is not supported
     /// </summary>
 	class AIFF : MetaDataIO, IAudioDataIO, IMetaDataEmbedder
@@ -65,7 +66,7 @@ namespace ATL.AudioData.IO
             public int Size;
         }
 
-        // Private declarations 
+        // Private declarations
         private int bits;
 
         private string compression;
@@ -228,7 +229,7 @@ namespace ATL.AudioData.IO
                 // Chunk ID
                 header.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
                 // Chunk size
-                header.Size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+                header.Size = BinaryPrimitives.ReadInt32BigEndian(source.ReadBytes(4));
             }
             else
             {
@@ -238,9 +239,9 @@ namespace ATL.AudioData.IO
             return header;
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, AIFF_CONTAINER_ID);
+            return data.StartsWith(AIFF_CONTAINER_ID);
         }
 
         public bool Read(Stream source, SizeInfo sizeNfo, ReadTagParams readTagParams)
@@ -259,7 +260,7 @@ namespace ATL.AudioData.IO
 
             // Container chunk size
             long containerChunkPos = reader.Position;
-            int containerChunkSize = StreamUtils.DecodeBEInt32(reader.ReadBytes(4));
+            int containerChunkSize = BinaryPrimitives.ReadInt32BigEndian(reader.ReadBytes(4));
 
             if (containerChunkPos + containerChunkSize + 4 != reader.Length)
             {
@@ -296,7 +297,7 @@ namespace ATL.AudioData.IO
                 {
                     case CHUNKTYPE_COMMON:
                         {
-                            short channels = StreamUtils.DecodeBEInt16(reader.ReadBytes(2));
+                            short channels = BinaryPrimitives.ReadInt16BigEndian(reader.ReadBytes(2));
                             ChannelsArrangement = channels switch
                             {
                                 1 => MONO,
@@ -307,8 +308,8 @@ namespace ATL.AudioData.IO
                                 _ => UNKNOWN
                             };
 
-                            uint numSampleFrames = StreamUtils.DecodeBEUInt32(reader.ReadBytes(4));
-                            bits = StreamUtils.DecodeBEInt16(reader.ReadBytes(2)); // This sample size is for uncompressed data only
+                            uint numSampleFrames = BinaryPrimitives.ReadUInt32BigEndian(reader.ReadBytes(4));
+                            bits = BinaryPrimitives.ReadInt16BigEndian(reader.ReadBytes(2)); // This sample size is for uncompressed data only
                             byte[] byteArray = reader.ReadBytes(10);
                             Array.Reverse(byteArray);
                             double aSampleRate = StreamUtils.ExtendedToDouble(byteArray);
@@ -396,18 +397,18 @@ namespace ATL.AudioData.IO
 
                             commentsFound = true;
 
-                            ushort numComs = StreamUtils.DecodeBEUInt16(reader.ReadBytes(2));
+                            ushort numComs = BinaryPrimitives.ReadUInt16BigEndian(reader.ReadBytes(2));
 
                             for (int i = 0; i < numComs; i++)
                             {
                                 CommentData cmtData = new CommentData
                                 {
-                                    Timestamp = StreamUtils.DecodeBEUInt32(reader.ReadBytes(4)),
-                                    MarkerId = StreamUtils.DecodeBEInt16(reader.ReadBytes(2))
+                                    Timestamp = BinaryPrimitives.ReadUInt32BigEndian(reader.ReadBytes(4)),
+                                    MarkerId = BinaryPrimitives.ReadInt16BigEndian(reader.ReadBytes(2))
                                 };
 
                                 // Comments length
-                                ushort comLength = StreamUtils.DecodeBEUInt16(reader.ReadBytes(2));
+                                ushort comLength = BinaryPrimitives.ReadUInt16BigEndian(reader.ReadBytes(2));
                                 MetaFieldInfo comment = new MetaFieldInfo(getImplementedTagType(), header.ID + commentIndex)
                                 {
                                     Value = Utils.Latin1Encoding.GetString(reader.ReadBytes(comLength)),

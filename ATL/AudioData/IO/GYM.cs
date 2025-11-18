@@ -12,16 +12,16 @@ namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for Genesis YM2612 files manipulation (extensions : .GYM)
-    /// 
+    ///
     /// Implementation notes
-    /// 
+    ///
     ///     1/ Looping : I have yet to find a GYM file that actually contains a loop.
     ///     All archives I found so far are direct recording of game audio instructions
     ///     that actually repeat the same pattern twice (looping data is not used at all)
-    ///     
+    ///
     ///     2/ Gzipped stream : I have yet to find a GYM file that contains gzipped data.
     ///     => Rather than to make a theoretical implementation, there is no implementation at all.
-    /// 
+    ///
     /// </summary>
     class GYM : MetaDataIO, IAudioDataIO
     {
@@ -110,9 +110,9 @@ namespace ATL.AudioData.IO
             resetData();
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, GYM_SIGNATURE);
+            return data.StartsWith(GYM_SIGNATURE);
         }
 
 

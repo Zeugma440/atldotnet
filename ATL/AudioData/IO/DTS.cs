@@ -1,3 +1,5 @@
+using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
@@ -96,19 +98,19 @@ namespace ATL.AudioData.IO
             };
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return 0x7FFE8001 == StreamUtils.DecodeBEUInt32(data);
+            return 0x7FFE8001 == BinaryPrimitives.ReadUInt32BigEndian(data);
         }
 
         /// <inheritdoc/>
         public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
-            byte[] buffer = new byte[4];
+            Span<byte> buffer = stackalloc byte[4];
 
             resetData();
 
-            if (source.Read(buffer, 0, 4) < 4) return false;
+            if (source.Read(buffer) < 4) return false;
             if (!IsValidHeader(buffer)) return false;
 
             AudioDataOffset = source.Position - 4;

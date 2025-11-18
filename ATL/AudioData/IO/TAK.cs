@@ -4,6 +4,7 @@ using static ATL.AudioData.AudioDataManager;
 using Commons;
 using static ATL.ChannelsArrangements;
 using System.Collections.Generic;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -14,7 +15,7 @@ namespace ATL.AudioData.IO
     {
         public static readonly byte[] TAK_ID = Utils.Latin1Encoding.GetBytes("tBaK");
 
-        // Private declarations 
+        // Private declarations
         private uint bits;
         private uint sampleRate;
 
@@ -69,9 +70,9 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, TAK_ID);
+            return data.StartsWith(TAK_ID);
         }
 
         public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
@@ -79,12 +80,12 @@ namespace ATL.AudioData.IO
             bool result = false;
             bool doLoop = true;
 
-            byte[] buffer = new byte[4];
+            Span<byte> buffer = stackalloc byte[4];
 
             resetData();
             source.Seek(sizeNfo.ID3v2Size, SeekOrigin.Begin);
 
-            if (source.Read(buffer, 0, 4) < 4) return false;
+            if (source.Read(buffer[..4]) < 4) return false;
             if (IsValidHeader(buffer))
             {
                 result = true;
@@ -93,8 +94,8 @@ namespace ATL.AudioData.IO
 
                 do // Loop metadata
                 {
-                    if (source.Read(buffer, 0, 4) < 4) return false;
-                    var readData32 = StreamUtils.DecodeUInt32(buffer);
+                    if (source.Read(buffer[..4]) < 4) return false;
+                    var readData32 = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
 
                     var metaType = readData32 & 0x7F;
                     var metaSize = readData32 >> 8;
@@ -104,12 +105,12 @@ namespace ATL.AudioData.IO
                     if (0 == metaType) doLoop = false; // End of metadata
                     else if (0x01 == metaType) // Stream info
                     {
-                        if (source.Read(buffer, 0, 2) < 2) return false;
-                        var readData16 = StreamUtils.DecodeUInt16(buffer);
-                        if (source.Read(buffer, 0, 4) < 4) return false;
-                        readData32 = StreamUtils.DecodeUInt32(buffer);
-                        if (source.Read(buffer, 0, 4) < 4) return false;
-                        uint restOfData = StreamUtils.DecodeUInt32(buffer);
+                        if (source.Read(buffer[..2]) < 2) return false;
+                        var readData16 = BinaryPrimitives.ReadUInt16LittleEndian(buffer);
+                        if (source.Read(buffer[..4]) < 4) return false;
+                        readData32 = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
+                        if (source.Read(buffer[..4]) < 4) return false;
+                        uint restOfData = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
 
                         var sampleCount = (readData16 >> 14) + (readData32 << 2) + ((restOfData & 0x00000080) << 34);
 
@@ -125,8 +126,8 @@ namespace ATL.AudioData.IO
                     }
                     else if (0x04 == metaType) // Encoder info
                     {
-                        if (source.Read(buffer, 0, 4) < 4) return false;
-                        readData32 = StreamUtils.DecodeUInt32(buffer);
+                        if (source.Read(buffer[..4]) < 4) return false;
+                        readData32 = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
                     }
 
                     source.Seek(position + metaSize, SeekOrigin.Begin);

@@ -16,7 +16,7 @@ namespace ATL.AudioData.IO
         // ReSharper disable UnusedMember.Global
         public const int MONKEY_COMPRESSION_FAST = 1000;  // Fast (poor)
         public const int MONKEY_COMPRESSION_NORMAL = 2000;  // Normal (good)
-        public const int MONKEY_COMPRESSION_HIGH = 3000;  // High (very good)	
+        public const int MONKEY_COMPRESSION_HIGH = 3000;  // High (very good)
         public const int MONKEY_COMPRESSION_EXTRA_HIGH = 4000;  // Extra high (best)
         public const int MONKEY_COMPRESSION_INSANE = 5000;  // Insane
         public const int MONKEY_COMPRESSION_BRAINDEAD = 6000;  // BrainDead
@@ -188,9 +188,9 @@ namespace ATL.AudioData.IO
             header.nVersion = source.ReadUInt16();
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, FILE_HEADER);
+            return data.StartsWith(FILE_HEADER);
         }
 
         public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
@@ -279,7 +279,7 @@ namespace ATL.AudioData.IO
                 }
                 else
                 {
-                    // Old Monkey <= 3.97               
+                    // Old Monkey <= 3.97
 
                     APE_OLD.nCompressionLevel = 0;
                     APE_OLD.nFormatFlags = 0;

@@ -16,10 +16,10 @@ namespace ATL.AudioData.IO
     /// <summary>
     /// Class for Video Game Music files (Master System, Game Gear, SG1000, Genesis) manipulation (extensions : .VGM)
     /// According to file format v1.70
-    /// 
+    ///
     /// Implementation notes :
     ///   1/ GD3 tag format is directly implemented in here, since it is not a "real" standard and is only used for VGM files
-    ///   
+    ///
     ///   2/ Gzipped files are currently supported in read-only mode (i.e. ATL cannot write metadata to a GYM file containing gzipped data)
     /// </summary>
     class VGM : MetaDataIO, IAudioDataIO
@@ -99,7 +99,7 @@ namespace ATL.AudioData.IO
         private void resetData()
         {
             // Reset variables
-            SampleRate = 44100; // Default value for all VGM files, according to v1.70 spec 
+            SampleRate = 44100; // Default value for all VGM files, according to v1.70 spec
             BitRate = 0;
             Duration = 0;
 
@@ -117,9 +117,9 @@ namespace ATL.AudioData.IO
             resetData();
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, VGM_SIGNATURE);
+            return data.StartsWith(VGM_SIGNATURE);
         }
 
 
