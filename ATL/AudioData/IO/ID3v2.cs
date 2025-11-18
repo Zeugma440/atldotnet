@@ -449,9 +449,9 @@ namespace ATL.AudioData.IO
         // Unicode BOM properties
         private sealed class BomProperties
         {
-            public bool Found = false;          // BOM found
-            public int Size = 0;                // Size of BOM
-            public Encoding Encoding;           // Corresponding encoding
+            public bool Found;          // BOM found
+            public int Size;            // Size of BOM
+            public Encoding Encoding;   // Corresponding encoding
         }
 
         private sealed class RichStructure
@@ -627,7 +627,7 @@ namespace ATL.AudioData.IO
 
             // Content description
             Encoding contentDescriptionEncoding = encoding;
-            if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode || 2 == encodingCode))
+            if (tagVersion > TAG_VERSION_2_2 && encodingCode is 1 or 2)
             {
                 BomProperties bom = readBOM(source);
                 if (bom.Found) contentDescriptionEncoding = bom.Encoding;
@@ -636,12 +636,11 @@ namespace ATL.AudioData.IO
             result.Size = (int)(source.Position - initialPos);
 
             // Ignore malformed comment
-            if (result.Size >= dataSize)
-            {
-                // Get to the physical end of the frame
-                source.Position = initialPos + dataSize;
-                result.Size = dataSize;
-            }
+            if (result.Size < dataSize) return result;
+
+            // Get to the physical end of the frame
+            source.Position = initialPos + dataSize;
+            result.Size = dataSize;
 
             return result;
         }
@@ -1020,12 +1019,12 @@ namespace ATL.AudioData.IO
                             string[] parts = null;
                             if (TAG_VERSION_2_4 == m_tagVersion) // All text information frames may contain multiple values on ID3v2.4
                             {
-                                parts = strData.Trim().Split(new char[] { VALUE_SEPARATOR_24 }, StringSplitOptions.RemoveEmptyEntries);
+                                parts = strData.Trim().Split(new[] { VALUE_SEPARATOR_24 }, StringSplitOptions.RemoveEmptyEntries);
                             }
                             // Only specific text information frames may contain multiple values on ID3v2.2-3
                             else if (multipleValuev23Fields.Contains(frame.ID) && Settings.ID3v2_separatev2v3Values)
                             {
-                                parts = strData.Trim().Split(new char[] { VALUE_SEPARATOR_22 }, StringSplitOptions.RemoveEmptyEntries);
+                                parts = strData.Trim().Split(new[] { VALUE_SEPARATOR_22 }, StringSplitOptions.RemoveEmptyEntries);
                             }
                             if (parts != null) strData = string.Join(Settings.InternalValueSeparator + "", parts);
                         }
@@ -2154,7 +2153,7 @@ namespace ATL.AudioData.IO
 
             // Handle ID3v2.4 separators and ID3v2.2-3 parenthesis
             // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character before each genre
-            string[] parts = iGenre.Trim().Replace(Utils.UNICODE_INVISIBLE_EMPTY, "").Split(new char[] { '\0', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = iGenre.Trim().Replace(Utils.UNICODE_INVISIBLE_EMPTY, "").Split(new[] { '\0', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string part in parts)
             {
                 // Handle numerical index of the genre, as per ID3v1 convention
@@ -2200,7 +2199,7 @@ namespace ATL.AudioData.IO
 
             byte[] b = new byte[1];
 
-            source.Read(b, 0, 1);
+            if (source.Read(b, 0, 1) < 1) return result;
             bool first = true;
             bool foundFE = false;
             bool foundFF = false;
@@ -2226,7 +2225,7 @@ namespace ATL.AudioData.IO
                     first = false;
                 }
 
-                source.Read(b, 0, 1);
+                if (source.Read(b, 0, 1) < 1) return result;
                 result.Size++;
             }
 
@@ -2330,7 +2329,7 @@ namespace ATL.AudioData.IO
                 var written = 0;
                 var bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
 
-                from.Read(readBuffer, 0, bytesToRead);
+                if (from.Read(readBuffer, 0, bytesToRead) < bytesToRead) return result;
 
                 for (int i = 0; i < bytesToRead; i++)
                 {
@@ -2369,12 +2368,12 @@ namespace ATL.AudioData.IO
             long streamLength = from.Length;
             long position = from.Position;
 
-            from.Read(data, 0, 1);
+            if (from.Read(data, 0, 1) < 1) return;
             position++;
 
             while (position < streamLength)
             {
-                from.Read(data, 1, 1);
+                if (from.Read(data, 1, 1) < 1) return;
                 position++;
 
                 to.Write(data[0]);
