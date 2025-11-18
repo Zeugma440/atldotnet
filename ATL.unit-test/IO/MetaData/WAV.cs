@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+﻿using System.Buffers.Binary;
 using ATL.AudioData;
 using ATL.AudioData.IO;
 

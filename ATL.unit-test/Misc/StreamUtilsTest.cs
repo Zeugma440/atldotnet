@@ -1,8 +1,5 @@
 ﻿using Commons;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Buffers.Binary;
 
 namespace ATL.test
 {
@@ -221,7 +218,7 @@ namespace ATL.test
         {
             try
             {
-                StreamUtils.DecodeBEUInt16(new byte[1]);
+                BinaryPrimitives.ReadUInt16BigEndian(new byte[1]);
                 Assert.Fail();
             }
             catch
