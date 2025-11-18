@@ -84,7 +84,7 @@ namespace ATL.AudioData.IO
 
         // Mapping between WMA frame codes and ATL frame codes
         // NB : WM/TITLE, WM/AUTHOR, WM/COPYRIGHT, WM/DESCRIPTION and WM/RATING are not WMA extended fields; therefore
-        // their ID will not appear as is in the WMA header. 
+        // their ID will not appear as is in the WMA header.
         // Their info is contained in the standard Content Description block at the very beginning of the file
         public static readonly IDictionary<string, Field> frameMapping = new Dictionary<string, Field>
         {
@@ -474,7 +474,7 @@ namespace ATL.AudioData.IO
                 case 1 when fieldName.ToUpper().Equals("WM/PICTURE"):
                     {
                         byte picCode = source.ReadByte();
-                        // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
+                        // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ?
                         PictureInfo.PIC_TYPE picType = ID3v2.DecodeID3v2PictureType(picCode);
 
                         int picturePosition;
@@ -533,9 +533,9 @@ namespace ATL.AudioData.IO
             if (setMeta) SetMetaField(fieldName.Trim(), fieldValue, readTagParams.ReadAllMetaFrames, zoneCode, 0, streamNumber, decodeLanguage(source, languageIndex));
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, WMA_HEADER_ID);
+            return data.StartsWith(WMA_HEADER_ID);
         }
 
         private bool readData(Stream source, ReadTagParams readTagParams)
@@ -778,7 +778,7 @@ namespace ATL.AudioData.IO
             if (comment.Length > 0) w.Write(Encoding.Unicode.GetBytes(comment + '\0'));
             if (rating.Length > 0) w.Write(Encoding.Unicode.GetBytes(rating + '\0'));
 
-            // Go back to frame size locations to write their actual size 
+            // Go back to frame size locations to write their actual size
             var finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
             w.Write(Convert.ToUInt64(finalFramePos - beginPos));
@@ -843,7 +843,7 @@ namespace ATL.AudioData.IO
             }
 
 
-            // Go back to frame size locations to write their actual size 
+            // Go back to frame size locations to write their actual size
             var finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
             w.Write(Convert.ToUInt64(finalFramePos - beginPos));
@@ -865,7 +865,7 @@ namespace ATL.AudioData.IO
 
             var counter = writeExtendedMeta(tag, w);
 
-            // Go back to frame size locations to write their actual size 
+            // Go back to frame size locations to write their actual size
             var finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
             w.Write(Convert.ToUInt64(finalFramePos - beginPos));
@@ -887,7 +887,7 @@ namespace ATL.AudioData.IO
 
             var counter = writeExtendedMeta(tag, w, true);
 
-            // Go back to frame size locations to write their actual size 
+            // Go back to frame size locations to write their actual size
             var finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
             w.Write(Convert.ToUInt64(finalFramePos - beginPos));
@@ -994,7 +994,7 @@ namespace ATL.AudioData.IO
                     break;
             }
 
-            // Go back to frame size locations to write their actual size 
+            // Go back to frame size locations to write their actual size
             var finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(dataSizePos, SeekOrigin.Begin);
             if (!isExtendedHeader)
@@ -1051,7 +1051,7 @@ namespace ATL.AudioData.IO
 
             writer.Write(pictureData);
 
-            // Go back to frame size locations to write their actual size 
+            // Go back to frame size locations to write their actual size
             var finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(dataSizePos, SeekOrigin.Begin);
             if (isExtendedHeader)

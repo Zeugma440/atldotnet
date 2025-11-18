@@ -117,9 +117,9 @@ namespace ATL.AudioData
             public long NbSamples => Info[14] << 24 | Info[15] << 16 | Info[16] << 8 | Info[17];
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, FLAC.FLAC_ID);
+            return data.StartsWith(FLAC.FLAC_ID);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace ATL.AudioData
         /// <returns>FLAC headers</returns>
         public static FlacHeader ReadHeader(Stream source)
         {
-            // Read header data    
+            // Read header data
             FlacHeader flacHeader = new FlacHeader();
             flacHeader.FromStream(source);
             return flacHeader;

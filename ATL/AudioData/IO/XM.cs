@@ -349,9 +349,9 @@ namespace ATL.AudioData.IO
 
         // === PUBLIC METHODS ===
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, XM_SIGNATURE);
+            return data.StartsWith(XM_SIGNATURE);
         }
 
         public bool Read(Stream source, SizeInfo sizeNfo, ReadTagParams readTagParams)
@@ -364,7 +364,6 @@ namespace ATL.AudioData.IO
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             bool result = true;
-            ushort trackerVersion;
             StringBuilder comment = new StringBuilder("");
 
             resetData();

@@ -181,9 +181,9 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, WAVPACK_HEADER); // No auto-detection for V3
+            return data.StartsWith(WAVPACK_HEADER); // No auto-detection for V3
         }
 
         public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)

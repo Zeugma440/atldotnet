@@ -5,6 +5,7 @@ using ATL.Logging;
 using System;
 using System.Linq;
 using System.Text;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -54,7 +55,7 @@ namespace ATL.AudioData.IO
         public static int ReadInt32(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
         {
             if (source.Read(buffer, 0, 4) < 4) return 0;
-            int value = StreamUtils.DecodeInt32(buffer);
+            int value = BinaryPrimitives.ReadInt32LittleEndian(buffer);
             meta.SetMetaField(fieldName, value.ToString(), readAllMetaFrames);
             return value;
         }
@@ -71,7 +72,7 @@ namespace ATL.AudioData.IO
         public static void ReadInt16(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
         {
             if (source.Read(buffer, 0, 2) < 2) return;
-            int value = StreamUtils.DecodeInt16(buffer);
+            int value = BinaryPrimitives.ReadInt16LittleEndian(buffer);
             meta.SetMetaField(fieldName, value.ToString(), readAllMetaFrames);
         }
 
@@ -239,9 +240,9 @@ namespace ATL.AudioData.IO
         }
 
         /// <summary>
-        /// Skips WAV padding byte in the given Stream, if it exists, 
+        /// Skips WAV padding byte in the given Stream, if it exists,
         /// while not crossing the given maximum position
-        /// 
+        ///
         /// NB : WAV specs say padding should only be zeroes, but other values can be found in the wild
         /// => expects a _displayable_ character as part of next header ID
         /// </summary>

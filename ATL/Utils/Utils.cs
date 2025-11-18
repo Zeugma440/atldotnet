@@ -755,13 +755,14 @@ namespace Commons
         /// </summary>
         /// <param name="min">Lower limit (included; must be positive) - default : 0</param>
         /// <param name="max">Higher limit (included; must be positive) - default : long.MaxValue</param>
-        /// <param name="rand"></param>
+        /// <param name="rand">The generator to use, <c>Random.Shared</c> if null.</param>
         /// <returns></returns>
-        public static ulong LongRandom(Random rand, long min = 0, long max = long.MaxValue)
+        public static ulong LongRandom(long min = 0, long max = long.MaxValue, Random rand = null)
         {
-            byte[] buf = new byte[8];
+            rand ??= Random.Shared;
+            Span<byte> buf = stackalloc byte[8];
             rand.NextBytes(buf);
-            long longRand = BitConverter.ToInt64(buf, 0);
+            long longRand = BitConverter.ToInt64(buf);
 
             return (ulong)(Math.Abs(longRand % (max - min)) + min);
         }

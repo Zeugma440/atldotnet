@@ -1,5 +1,6 @@
 ﻿using ATL.AudioData.IO;
 using Commons;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -29,23 +30,23 @@ namespace ATL.AudioData
             while (pos < initialPos + atomDataSize)
             {
                 if (source.Read(buffer, 0, 4) < 4) return result;
-                int fieldSize = StreamUtils.DecodeBEInt32(buffer);
+                int fieldSize = BinaryPrimitives.ReadInt32BigEndian(buffer);
                 if (source.Read(buffer, 0, 4) < 4) return result;
-                int stringDataSize = StreamUtils.DecodeBEInt32(buffer);
+                int stringDataSize = BinaryPrimitives.ReadInt32BigEndian(buffer);
                 byte[] data = new byte[stringDataSize];
                 if (source.Read(data, 0, stringDataSize) < stringDataSize) return result;
                 string fieldName = Utils.Latin1Encoding.GetString(data);
                 source.Seek(4, SeekOrigin.Current);
                 if (source.Read(buffer, 0, 4) < 4) return result;
-                stringDataSize = StreamUtils.DecodeBEInt32(buffer);
+                stringDataSize = BinaryPrimitives.ReadInt32BigEndian(buffer);
 
                 string fieldValue;
                 if (source.Read(buffer, 0, 2) < 2) return result;
-                int fieldType = StreamUtils.DecodeBEInt16(buffer);
+                int fieldType = BinaryPrimitives.ReadInt16BigEndian(buffer);
                 if (19 == fieldType) // Numeric
                 {
                     if (source.Read(buffer, 0, 8) < 8) return result;
-                    fieldValue = StreamUtils.DecodeInt64(buffer) + "";
+                    fieldValue = BinaryPrimitives.ReadInt64LittleEndian(buffer) + "";
                 }
                 else
                 {
@@ -93,7 +94,7 @@ namespace ATL.AudioData
             }
 
             var finalFramePos = w.BaseStream.Position;
-            // Go back to frame size locations to write their actual size 
+            // Go back to frame size locations to write their actual size
             w.BaseStream.Seek(midSizePos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - midSizePos)));
 

@@ -61,13 +61,13 @@ namespace ATL.test
             Assert.AreEqual(1, stream.ReadByte());
             Assert.AreEqual(1, stream.ReadByte());
             stream.Read(data, 0, 2);
-            Assert.AreEqual(1, StreamUtils.DecodeInt16(data));
+            Assert.AreEqual(1, BinaryPrimitives.ReadInt16LittleEndian(data));
             stream.Read(data, 0, 2);
-            Assert.AreEqual(1, StreamUtils.DecodeUInt16(data));
+            Assert.AreEqual(1, BinaryPrimitives.ReadUInt16LittleEndian(data));
             stream.Read(data, 0, 4);
-            Assert.AreEqual(1, StreamUtils.DecodeInt32(data));
+            Assert.AreEqual(1, BinaryPrimitives.ReadInt32LittleEndian(data));
             stream.Read(data, 0, 8);
-            Assert.AreEqual((ulong)1, StreamUtils.DecodeUInt64(data));
+            Assert.AreEqual((ulong)1, BinaryPrimitives.ReadUInt64LittleEndian(data));
 
             for (long i = stream.Position; i < 20; i++) Assert.AreEqual(0, stream.ReadByte());
         }
@@ -94,9 +94,9 @@ namespace ATL.test
                 stream.Seek(0, SeekOrigin.Begin);
                 byte[] data = new byte[8];
                 stream.Read(data, 0, 2);
-                Assert.AreEqual(252, StreamUtils.DecodeInt16(data));
+                Assert.AreEqual(252, BinaryPrimitives.ReadInt16LittleEndian(data));
                 stream.Read(data, 0, 2);
-                Assert.AreEqual(1, StreamUtils.DecodeUInt16(data));
+                Assert.AreEqual(1, BinaryPrimitives.ReadUInt16LittleEndian(data));
 
                 for (long i = stream.Position; i < 20; i++) Assert.AreEqual(0, stream.ReadByte());
             }

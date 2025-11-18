@@ -346,7 +346,7 @@ namespace ATL.AudioData.IO
 
         // ********************* Auxiliary functions & voids ********************
 
-        public static bool IsValidFrameHeader(byte[] data)
+        public static bool IsValidFrameHeader(ReadOnlySpan<byte> data)
         {
             if (data.Length < 4) return false;
 
@@ -518,7 +518,7 @@ namespace ATL.AudioData.IO
              *    - RIFF header declaring either MP3 or WAVE data
              *    - Xing encoder-specific frame
              *    - One of the above with a few "parasite" bytes before their own header
-             * 
+             *
              * The most solid way to deal with all of them is to "scan" the file until proper MP3 header is found.
              * This method may not the be fastest, but ensures audio data is actually detected, whatever garbage lies before
              */

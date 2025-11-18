@@ -198,10 +198,10 @@ namespace ATL.test
         {
             short intValue = 0x3529;
 
-            Assert.AreEqual((short)0x00FF, StreamUtils.DecodeBEInt16(new byte[2] { 0x00, 0xFF }));
+            Assert.AreEqual((short)0x00FF, BinaryPrimitives.ReadInt16BigEndian(new byte[2] { 0x00, 0xFF }));
 
             byte[] byteValue = StreamUtils.EncodeBEInt16(intValue);
-            Assert.AreEqual(intValue, StreamUtils.DecodeBEInt16(byteValue));
+            Assert.AreEqual(intValue, BinaryPrimitives.ReadInt16BigEndian(byteValue));
         }
 
         [TestMethod]
@@ -210,10 +210,10 @@ namespace ATL.test
             ulong longValue = 0x45976248;
 
             byte[] byteValue = BitConverter.GetBytes(longValue);
-            Assert.AreEqual(longValue, StreamUtils.DecodeUInt64(byteValue));
+            Assert.AreEqual(longValue, BinaryPrimitives.ReadUInt64LittleEndian(byteValue));
 
             byteValue = StreamUtils.EncodeBEUInt64(longValue);
-            Assert.AreEqual((long)longValue, StreamUtils.DecodeBEInt64(byteValue));
+            Assert.AreEqual((long)longValue, BinaryPrimitives.ReadInt64BigEndian(byteValue));
         }
 
         [TestMethod]
@@ -231,7 +231,7 @@ namespace ATL.test
 
             try
             {
-                StreamUtils.DecodeUInt16(new byte[1]);
+                BinaryPrimitives.ReadUInt16LittleEndian(new byte[1]);
                 Assert.Fail();
             }
             catch
@@ -241,7 +241,7 @@ namespace ATL.test
 
             try
             {
-                StreamUtils.DecodeInt16(new byte[1]);
+                BinaryPrimitives.ReadInt16LittleEndian(new byte[1]);
                 Assert.Fail();
             }
             catch
@@ -251,7 +251,7 @@ namespace ATL.test
 
             try
             {
-                StreamUtils.DecodeBEInt16(new byte[1]);
+                BinaryPrimitives.ReadInt16BigEndian(new byte[1]);
                 Assert.Fail();
             }
             catch
@@ -293,7 +293,7 @@ namespace ATL.test
 
             try
             {
-                StreamUtils.DecodeBEUInt32(new byte[3]);
+                BinaryPrimitives.ReadUInt32BigEndian(new byte[3]);
                 Assert.Fail();
             }
             catch
@@ -303,7 +303,7 @@ namespace ATL.test
 
             try
             {
-                StreamUtils.DecodeUInt32(new byte[3]);
+                BinaryPrimitives.ReadUInt32LittleEndian(new byte[3]);
                 Assert.Fail();
             }
             catch
@@ -313,7 +313,7 @@ namespace ATL.test
 
             try
             {
-                StreamUtils.DecodeBEInt32(new byte[3]);
+                BinaryPrimitives.ReadInt32BigEndian(new byte[3]);
                 Assert.Fail();
             }
             catch
@@ -323,7 +323,7 @@ namespace ATL.test
 
             try
             {
-                StreamUtils.DecodeInt32(new byte[3]);
+                BinaryPrimitives.ReadInt32LittleEndian(new byte[3]);
                 Assert.Fail();
             }
             catch
@@ -334,7 +334,7 @@ namespace ATL.test
 
             try
             {
-                StreamUtils.DecodeUInt64(new byte[7]);
+                BinaryPrimitives.ReadUInt64LittleEndian(new byte[7]);
                 Assert.Fail();
             }
             catch
@@ -344,7 +344,7 @@ namespace ATL.test
 
             try
             {
-                StreamUtils.DecodeBEInt64(new byte[7]);
+                BinaryPrimitives.ReadInt64BigEndian(new byte[7]);
                 Assert.Fail();
             }
             catch

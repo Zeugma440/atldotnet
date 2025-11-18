@@ -1,6 +1,7 @@
 ﻿using ATL;
 using ATL.Logging;
 using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Linq;
 
@@ -77,7 +78,7 @@ namespace Commons
     /// <summary>
     /// Helper methods for reading basic image properties without System.Drawing
     /// This class has been created to reach .NET Core 2.0 compatibility
-    /// 
+    ///
     /// Implementation notes :
     ///   - If a TIFF file has multiple images, only the properties of the 1st image will be read
     ///   - BMPs with color palettes are not supported
@@ -224,8 +225,8 @@ namespace Commons
                             s.Seek(2, SeekOrigin.Current); // IFD field type
                             s.Seek(4, SeekOrigin.Current); // IFD number of values
                             var IFDValueBinary = r.ReadBytes(4);
-                            var IFDValue32 = isBigEndian ? StreamUtils.DecodeBEInt32(IFDValueBinary) : StreamUtils.DecodeInt32(IFDValueBinary);
-                            int IFDValue16 = isBigEndian ? StreamUtils.DecodeBEInt16(IFDValueBinary) : StreamUtils.DecodeInt16(IFDValueBinary);
+                            var IFDValue32 = isBigEndian ? BinaryPrimitives.ReadInt32BigEndian(IFDValueBinary) : BinaryPrimitives.ReadInt32LittleEndian(IFDValueBinary);
+                            int IFDValue16 = isBigEndian ? BinaryPrimitives.ReadInt16BigEndian(IFDValueBinary) : BinaryPrimitives.ReadInt16LittleEndian(IFDValueBinary);
 
                             switch (IFDtag)
                             {
@@ -292,8 +293,8 @@ namespace Commons
                         /*
                          * v89a means that the first image block should follow the first graphic control extension block
                          * (which may in turn be located after an application extension block if the GIF is animated)
-                         * 
-                         * => The simplest way to get to the 1st image block is to look for the 1st 
+                         *
+                         * => The simplest way to get to the 1st image block is to look for the 1st
                          * graphic control extension block, and to skip it
                          */
                         if ("89a".Equals(version))
@@ -366,9 +367,9 @@ namespace Commons
                         {
                             // Read IHDR chunk
                             if (s.Read(intData, 0, 4) < 4) break;
-                            props.Width = StreamUtils.DecodeBEInt32(intData);
+                            props.Width = BinaryPrimitives.ReadInt32BigEndian(intData);
                             if (s.Read(intData, 0, 4) < 4) break;
-                            props.Height = StreamUtils.DecodeBEInt32(intData);
+                            props.Height = BinaryPrimitives.ReadInt32BigEndian(intData);
                             props.ColorDepth = r.ReadByte();
                             int colorType = r.ReadByte();
                             if (3 == colorType) // PNG file uses a palette
@@ -397,7 +398,7 @@ namespace Commons
 
                         /*
                          * We just need to reach the SOF0 frame descripting the actual picture
-                         * 
+                         *
                          * In order to handle JPEG files that contain multiple SOF0 frames (see test suite),
                          * the simplest way of proceeding is to look for all SOF0 frames in the first 25% of the file,
                          * and then read the very last one
@@ -419,9 +420,9 @@ namespace Commons
                             s.Seek(2, SeekOrigin.Current);
                             bitsPerSample = r.ReadByte();
                             if (s.Read(shortData, 0, 2) < 2) break;
-                            props.Height = StreamUtils.DecodeBEUInt16(shortData);
+                            props.Height = BinaryPrimitives.ReadInt16BigEndian(shortData);
                             if (s.Read(shortData, 0, 2) < 2) break;
-                            props.Width = StreamUtils.DecodeBEUInt16(shortData);
+                            props.Width = BinaryPrimitives.ReadInt16BigEndian(shortData);
                             byte nbComponents = r.ReadByte();
                             props.ColorDepth = bitsPerSample * nbComponents;
                         }
@@ -481,13 +482,13 @@ namespace Commons
 
         private static uint findPngChunk(Stream s, byte[] chunkID, long limit)
         {
-            byte[] intData = new byte[4];
+            Span<byte> intData = stackalloc byte[4];
 
             while (s.Position < limit)
             {
-                if (s.Read(intData, 0, 4) < 4) break; // Chunk Size
-                var chunkSize = StreamUtils.DecodeBEUInt32(intData);
-                if (s.Read(intData, 0, 4) < 4) break; // Chunk ID
+                if (s.Read(intData) < 4) break; // Chunk Size
+                var chunkSize = BinaryPrimitives.ReadUInt32BigEndian(intData);
+                if (s.Read(intData) < 4) break; // Chunk ID
                 var foundChunk = intData.SequenceEqual(chunkID);
                 if (foundChunk) return chunkSize;
 
@@ -501,12 +502,16 @@ namespace Commons
 
         private static short readInt16(BinaryReader r, bool isBigEndian)
         {
-            return isBigEndian ? StreamUtils.DecodeBEInt16(r.ReadBytes(2)) : r.ReadInt16();
+            Span<byte> buffer = stackalloc byte[2];
+            r.Read(buffer);
+            return isBigEndian ? BinaryPrimitives.ReadInt16BigEndian(buffer) : BinaryPrimitives.ReadInt16LittleEndian(buffer);
         }
 
         private static int readInt32(BinaryReader r, bool isBigEndian)
         {
-            return isBigEndian ? StreamUtils.DecodeBEInt32(r.ReadBytes(4)) : r.ReadInt32();
+            Span<byte> buffer = stackalloc byte[4];
+            r.Read(buffer);
+            return isBigEndian ? BinaryPrimitives.ReadInt32BigEndian(buffer) : BinaryPrimitives.ReadInt32LittleEndian(buffer);
         }
 
     }

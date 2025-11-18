@@ -9,17 +9,18 @@ using System.Threading.Tasks;
 using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
 using Commons;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for Audible Formats 2 to 4 files manipulation (extensions : .AA)
-    /// 
+    ///
     /// Implementation notes
-    /// 
+    ///
     ///   - Only the editing of existing zones has been tested, not the adding of new zones (e.g. tagging a tagless AA, adding a picture to a pictureless AA)
     ///   due to the lack of empty test files
-    ///   
+    ///
     /// </summary>
 	partial class AA : MetaDataIO, IAudioDataIO
     {
@@ -207,13 +208,9 @@ namespace ATL.AudioData.IO
             resetData();
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            // Bytes 4 to 7
-            byte[] usefulData = new byte[4];
-            Array.Copy(data, 4, usefulData, 0, 4);
-
-            return AA_MAGIC_NUMBER == StreamUtils.DecodeBEInt32(usefulData);
+            return AA_MAGIC_NUMBER == BinaryPrimitives.ReadInt32BigEndian(data[4..8]);
         }
 
         // ********************** Private functions & procedures *********************
@@ -232,7 +229,7 @@ namespace ATL.AudioData.IO
             if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return false;
             if (!IsValidHeader(buffer)) return false;
 
-            uint fileSize = StreamUtils.DecodeBEUInt32(buffer);
+            uint fileSize = BinaryPrimitives.ReadUInt32BigEndian(buffer);
 
             AudioDataOffset = source.Position - 4;
             tocOffset = source.Position;
@@ -268,14 +265,14 @@ namespace ATL.AudioData.IO
         private static IDictionary<int, TocEntry> readToc(BufferedBinaryReader s)
         {
             IDictionary<int, TocEntry> result = new Dictionary<int, TocEntry>();
-            int nbTocEntries = StreamUtils.DecodeBEInt32(s.ReadBytes(4));
+            int nbTocEntries = BinaryPrimitives.ReadInt32BigEndian(s.ReadBytes(4));
             s.Seek(4, SeekOrigin.Current); // Even FFMPeg doesn't know what this integer is
             for (int i = 0; i < nbTocEntries; i++)
             {
                 long offset = s.Position;
-                int section = StreamUtils.DecodeBEInt32(s.ReadBytes(4));
-                uint tocEntryOffset = StreamUtils.DecodeBEUInt32(s.ReadBytes(4));
-                uint tocEntrySize = StreamUtils.DecodeBEUInt32(s.ReadBytes(4));
+                int section = BinaryPrimitives.ReadInt32BigEndian(s.ReadBytes(4));
+                uint tocEntryOffset = BinaryPrimitives.ReadUInt32BigEndian(s.ReadBytes(4));
+                uint tocEntrySize = BinaryPrimitives.ReadUInt32BigEndian(s.ReadBytes(4));
                 result[section] = new TocEntry(offset, section, tocEntryOffset, tocEntrySize);
             }
             return result;
@@ -289,12 +286,12 @@ namespace ATL.AudioData.IO
         private void readTags(BufferedBinaryReader source, long offset, ReadTagParams readTagParams)
         {
             source.Seek(offset, SeekOrigin.Begin);
-            int nbTags = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+            int nbTags = BinaryPrimitives.ReadInt32BigEndian(source.ReadBytes(4));
             for (int i = 0; i < nbTags; i++)
             {
                 source.Seek(1, SeekOrigin.Current); // No idea what this byte is
-                int keyLength = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-                int valueLength = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+                int keyLength = BinaryPrimitives.ReadInt32BigEndian(source.ReadBytes(4));
+                int valueLength = BinaryPrimitives.ReadInt32BigEndian(source.ReadBytes(4));
                 string key = Encoding.UTF8.GetString(source.ReadBytes(keyLength));
                 string value = Encoding.UTF8.GetString(source.ReadBytes(valueLength)).Trim();
                 SetMetaField(key, value, readTagParams.ReadAllMetaFrames);
@@ -305,8 +302,8 @@ namespace ATL.AudioData.IO
         private void readCover(BufferedBinaryReader source, long offset, PictureInfo.PIC_TYPE pictureType)
         {
             source.Seek(offset, SeekOrigin.Begin);
-            int pictureSize = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
-            int picOffset = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+            int pictureSize = BinaryPrimitives.ReadInt32BigEndian(source.ReadBytes(4));
+            int picOffset = BinaryPrimitives.ReadInt32BigEndian(source.ReadBytes(4));
             structureHelper.AddIndex(source.Position - 4, (uint)picOffset, false, ZONE_IMAGE);
             source.Seek(picOffset, SeekOrigin.Begin);
 
@@ -322,8 +319,8 @@ namespace ATL.AudioData.IO
             int idx = 1;
             while (source.Position < offset + size && source.Position < source.Length)
             {
-                uint chapterSize = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                uint chapterOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                uint chapterSize = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+                uint chapterOffset = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
                 structureHelper.AddZone(chapterOffset, (int)chapterSize, "chp" + idx, false); // AA chapters are embedded into the audio chunk; they are _not_ deletable
                 structureHelper.AddIndex(source.Position - 4, chapterOffset, false, "chp" + idx);
 

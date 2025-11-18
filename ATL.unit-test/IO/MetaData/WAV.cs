@@ -597,7 +597,7 @@ namespace ATL.test.IO.MetaData
                 StreamUtils.FindSequence(s, Commons.Utils.Latin1Encoding.GetBytes("id3 "));
                 byte[] intBytes = new byte[4];
                 s.Read(intBytes, 0, intBytes.Length);
-                int chunkSize = StreamUtils.DecodeInt32(intBytes);
+                int chunkSize = BinaryPrimitives.ReadInt32LittleEndian(intBytes);
                 Assert.IsTrue(chunkSize % 2 > 0); // Odd declared chunk size...
                 s.Seek(chunkSize, SeekOrigin.Current);
                 Assert.IsTrue(0 == s.ReadByte()); // ...word-aligned with the spec-compliant padding byte
