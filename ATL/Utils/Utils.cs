@@ -392,30 +392,32 @@ namespace Commons
         /// <returns>Reprocessed string of given length, in binary format, according to rules documented in the method description</returns>
         public static byte[] BuildStrictLengthStringBytes(string value, int targetLength, byte paddingByte, Encoding encoding, bool padRight = true)
         {
-            byte[] result = new byte[targetLength];
-
             var str = value.AsSpan();
             var byteCount = encoding.GetByteCount(str);
+
+            // Remove chars one by one until byte count is as expected
             while (byteCount > targetLength)
             {
-                str = str[..(str.Length - 1)];
+                str = str[..^1];
                 byteCount = encoding.GetByteCount(str);
             }
 
+            byte[] result = new byte[targetLength];
             if (byteCount < targetLength)
             {
-                var diff = targetLength - byteCount;
-                var left = result.AsSpan()[..diff];
-                var right = result.AsSpan()[diff..];
+                // Add necessary padding
+                int diff = targetLength - byteCount;
                 if (padRight)
                 {
-                    encoding.GetBytes(str, left);
-                    right.Fill(paddingByte);
+                    encoding.GetBytes(str, result);
+                    Array.Fill(result, paddingByte, byteCount, diff);
                 }
                 else
                 {
-                    encoding.GetBytes(str, right);
-                    left.Fill(paddingByte);
+                    byte[] strAsBytes = new byte[byteCount];
+                    encoding.GetBytes(str, strAsBytes);
+                    Array.Fill(result, paddingByte, 0, diff);
+                    Array.ConstrainedCopy(strAsBytes, 0, result, diff, byteCount);
                 }
             }
             else

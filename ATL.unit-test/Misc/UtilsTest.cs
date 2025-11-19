@@ -157,11 +157,8 @@ namespace ATL.test
         [TestMethod]
         public void Utils_StrictLengthStringBytes()
         {
-            byte[] data;
-            byte[] testData;
-
-            testData = new byte[] { 32, 32, 0, 0 };
-            data = Utils.BuildStrictLengthStringBytes("  ", 4, 0, Encoding.UTF8);
+            var testData = new byte[] { 32, 32, 0, 0 };
+            var data = Utils.BuildStrictLengthStringBytes("  ", 4, 0, Encoding.UTF8);
             Assert.IsTrue(testData.SequenceEqual(data));
 
             testData = new byte[] { 0, 0, 32, 32 };
