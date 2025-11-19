@@ -225,8 +225,8 @@ namespace ATL.AudioData.IO
         // Read header data
         private bool readHeader(BufferedBinaryReader source)
         {
-            byte[] buffer = new byte[8];
-            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return false;
+            Span<byte> buffer = stackalloc byte[8];
+            if (source.Read(buffer) < buffer.Length) return false;
             if (!IsValidHeader(buffer)) return false;
 
             uint fileSize = BinaryPrimitives.ReadUInt32BigEndian(buffer);
@@ -446,7 +446,7 @@ namespace ATL.AudioData.IO
         private int writeCoreToc(Stream s)
         {
             s.Seek(tocOffset, SeekOrigin.Begin);
-            var span = new Span<byte>(new byte[4]);
+            Span<byte> span = stackalloc byte[4];
             BufferedBinaryReader br = new BufferedBinaryReader(s);
 
             IDictionary<int, TocEntry> newToc = readToc(br);

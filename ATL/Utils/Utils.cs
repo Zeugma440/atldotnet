@@ -392,32 +392,35 @@ namespace Commons
         /// <returns>Reprocessed string of given length, in binary format, according to rules documented in the method description</returns>
         public static byte[] BuildStrictLengthStringBytes(string value, int targetLength, byte paddingByte, Encoding encoding, bool padRight = true)
         {
-            byte[] result;
+            byte[] result = new byte[targetLength];
 
-            byte[] data = encoding.GetBytes(value);
-            while (data.Length > targetLength)
+            var str = value.AsSpan();
+            var byteCount = encoding.GetByteCount(str);
+            while (byteCount > targetLength)
             {
-                value = value.Remove(value.Length - 1);
-                data = encoding.GetBytes(value);
+                str = str[..(str.Length - 1)];
+                byteCount = encoding.GetByteCount(str);
             }
 
-            if (data.Length < targetLength)
+            if (byteCount < targetLength)
             {
-                result = new byte[targetLength];
+                var diff = targetLength - byteCount;
+                var left = result.AsSpan()[..diff];
+                var right = result.AsSpan()[diff..];
                 if (padRight)
                 {
-                    Array.Copy(data, result, data.Length);
-                    for (int i = data.Length; i < result.Length; i++) result[i] = paddingByte;
+                    encoding.GetBytes(str, left);
+                    right.Fill(paddingByte);
                 }
                 else
                 {
-                    Array.Copy(data, 0, result, result.Length - data.Length, data.Length);
-                    for (int i = 0; i < result.Length - data.Length; i++) result[i] = paddingByte;
+                    encoding.GetBytes(str, right);
+                    left.Fill(paddingByte);
                 }
             }
             else
             {
-                result = data;
+                encoding.GetBytes(str, result);
             }
 
             return result;

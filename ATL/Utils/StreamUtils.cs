@@ -63,7 +63,7 @@ namespace ATL
         /// <param name="data">Array of bytes to read value from</param>
         /// <param name="offset">Offset to read value from (default : 0)</param>
         /// <returns>Decoded value</returns>
-        public static uint DecodeBEUInt24(byte[] data, int offset = 0)
+        public static uint DecodeBEUInt24(ReadOnlySpan<byte> data, int offset = 0)
         {
             if (data.Length - offset < 3) throw new InvalidDataException($"Value should at least contain 3 bytes after offset; actual size={data.Length - offset} bytes");
             return (uint)(data[offset] << 16 | data[offset + 1] << 8 | data[offset + 2]);
@@ -306,7 +306,7 @@ namespace ATL
         /// </summary>
         /// <param name="data">4-byte array containing to convert</param>
         /// <returns>Decoded Int32</returns>
-        public static int DecodeSynchSafeInt32(byte[] data)
+        public static int DecodeSynchSafeInt32(ReadOnlySpan<byte> data)
         {
             if (data.Length < 4) throw new ArgumentException($"Array length has to be at least 4 bytes; found : {data.Length} bytes");
 

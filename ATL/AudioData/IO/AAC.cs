@@ -165,10 +165,10 @@ namespace ATL.AudioData.IO
         // Get header type of the file
         private byte recognizeHeaderType(Stream source)
         {
-            byte[] header = new byte[4];
+            Span<byte> header = stackalloc byte[4];
 
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            if (source.Read(header, 0, header.Length) < header.Length) return AAC_HEADER_TYPE_UNKNOWN;
+            if (source.Read(header) < header.Length) return AAC_HEADER_TYPE_UNKNOWN;
 
             byte result = recognizeHeaderType(header);
             if (result != AAC_BITRATE_TYPE_UNKNOWN)
