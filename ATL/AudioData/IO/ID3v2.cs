@@ -1433,13 +1433,14 @@ namespace ATL.AudioData.IO
             else if (3 == Settings.ID3v2_tagSubVersion && recordingDate.Length > 3 && 0 == recordingYear.Length)
             {
                 // Recording date valued for ID3v2.3 (possibly a migration from ID3v2.4 to ID3v2.3)
-                map[Field.RECORDING_YEAR] = recordingDate[..4];
+                var dateSpan = recordingDate.AsSpan();
+                map[Field.RECORDING_YEAR] = dateSpan[..4].ToString();
                 if (recordingDate.Length > 9)
                 {
-                    map[Field.RECORDING_DAYMONTH] = recordingDate.Substring(8, 2) + recordingDate.Substring(5, 2);
+                    map[Field.RECORDING_DAYMONTH] = string.Concat(dateSpan.Slice(8, 2), dateSpan.Slice(5, 2));
                     if (recordingDate.Length > 15)
                     {
-                        map[Field.RECORDING_TIME] = recordingDate.Substring(11, 2) + recordingDate.Substring(14, 2);
+                        map[Field.RECORDING_TIME] = string.Concat(dateSpan.Slice(11, 2), dateSpan.Slice(14, 2));
                     }
                 }
                 map.Remove(Field.RECORDING_DATE);

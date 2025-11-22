@@ -23,6 +23,8 @@ namespace ATL.AudioData.IO
         private const string PICTURE_METADATA_ID_OLD = "COVERART";
         public const string VENDOR_METADATA_ID = "VORBIS-VENDOR";
 
+        public const string CHAPTER_ID = "CHAPTER";
+
         // empty vendor with zero fields, plus final framing bit
         private static readonly byte[] OGG_CORE_SIGNATURE = { 0, 0, 0, 0, 0, 0, 0, 0, 1 };
 
@@ -381,7 +383,7 @@ namespace ATL.AudioData.IO
                     {
                         strData = Encoding.UTF8.GetString(reader.ReadBytes(size - equalsIndex - 1)).Trim();
 
-                        if (tagId.StartsWith("CHAPTER", StringComparison.OrdinalIgnoreCase)) // Chapter description
+                        if (tagId.StartsWith(CHAPTER_ID, StringComparison.OrdinalIgnoreCase)) // Chapter description
                         {
                             setChapterData(tagId, strData);
                         }
@@ -567,10 +569,10 @@ namespace ATL.AudioData.IO
                     : (int)chapterInfo.UniqueNumericID;
                 // Specs says chapter index if formatted over 3 chars
                 var formattedIndex = Utils.BuildStrictLengthString(chapterIndex, 3, '0', false);
-                writeTextFrame(w, "CHAPTER" + formattedIndex, Utils.EncodeTimecode_ms(chapterInfo.StartTime));
-                if (chapterInfo.Title.Length > 0) writeTextFrame(w, "CHAPTER" + formattedIndex + "NAME", chapterInfo.Title);
+                writeTextFrame(w, CHAPTER_ID + formattedIndex, Utils.EncodeTimecode_ms(chapterInfo.StartTime));
+                if (chapterInfo.Title.Length > 0) writeTextFrame(w, CHAPTER_ID + formattedIndex + "NAME", chapterInfo.Title);
                 if (chapterInfo.Url != null && chapterInfo.Url.Url.Length > 0)
-                    writeTextFrame(w, "CHAPTER" + formattedIndex + "URL", chapterInfo.Url.Url);
+                    writeTextFrame(w, CHAPTER_ID + formattedIndex + "URL", chapterInfo.Url.Url);
             }
         }
 

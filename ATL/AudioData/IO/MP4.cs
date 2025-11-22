@@ -36,6 +36,8 @@ namespace ATL.AudioData.IO
         // de facto default namespace for custom fields
         private const string DEFAULT_NAMESPACE = "com.apple.iTunes";
 
+        private const string UUID_PREFIX = "uuid.";
+
         private static readonly byte[] FILE_HEADER = Utils.Latin1Encoding.GetBytes("ftyp");
 
         private static readonly byte[] ILST_CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
@@ -450,12 +452,12 @@ namespace ATL.AudioData.IO
                     }
                     else
                     {
-                        SetMetaField("uuid." + uuid.key, uuid.value, readTagParams.ReadAllMetaFrames);
+                        SetMetaField(UUID_PREFIX + uuid.key, uuid.value, readTagParams.ReadAllMetaFrames);
                     }
 
                     if (readTagParams.PrepareForWriting)
                     {
-                        structureHelper.AddZone(uuid.position, uuid.size, "uuid." + uuid.key);
+                        structureHelper.AddZone(uuid.position, uuid.size, UUID_PREFIX + uuid.key);
                     }
                 }
             } while (uuid.size > 0);
@@ -1960,7 +1962,7 @@ namespace ATL.AudioData.IO
             {
                 result = writeQTChaptersData(w, tag.Chapters);
             }
-            else if (zone.StartsWith("uuid.")) // Existing UUID atoms
+            else if (zone.StartsWith(UUID_PREFIX)) // Existing UUID atoms
             {
                 result = writeUuidFrame(tag, zone[5..], w);
             }
@@ -2050,7 +2052,7 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields.Where(isMetaFieldWritable))
             {
-                if (fieldInfo.NativeFieldCode.StartsWith("uuid.")
+                if (fieldInfo.NativeFieldCode.StartsWith(UUID_PREFIX)
                     || fieldInfo.NativeFieldCode.StartsWith("xmp.")
                     || writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())) continue;
 
@@ -2801,7 +2803,7 @@ namespace ATL.AudioData.IO
             else
             {
                 var info = tag.AdditionalFields.FirstOrDefault(f =>
-                    "uuid." + keyNominal == f.NativeFieldCode && !f.MarkedForDeletion);
+                    UUID_PREFIX + keyNominal == f.NativeFieldCode && !f.MarkedForDeletion);
                 if (null == info)
                 {
                     LogDelegator.GetLogDelegate()(Log.LV_ERROR,
@@ -2824,13 +2826,13 @@ namespace ATL.AudioData.IO
         {
             var existingUuids =
                 structureHelper.ZoneNames
-                    .Where(n => n.StartsWith("uuid.", StringComparison.OrdinalIgnoreCase))
+                    .Where(n => n.StartsWith(UUID_PREFIX, StringComparison.OrdinalIgnoreCase))
                     .Select(n => n[5..].Replace(" ", "").ToUpper());
 
             var extraUuids = tag.AdditionalFields
                 .Where(f => f.TagType.Equals(MetaDataIOFactory.TagType.ANY) || f.TagType.Equals(getImplementedTagType()))
                 .Where(f => !f.MarkedForDeletion)
-                .Where(f => f.NativeFieldCode.StartsWith("uuid.", StringComparison.OrdinalIgnoreCase))
+                .Where(f => f.NativeFieldCode.StartsWith(UUID_PREFIX, StringComparison.OrdinalIgnoreCase))
                 .Where(f => !existingUuids.Contains(f.NativeFieldCode[5..].Replace(" ", "").ToUpper()));
 
             var written = 0;
