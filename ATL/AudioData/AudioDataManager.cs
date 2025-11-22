@@ -532,8 +532,8 @@ namespace ATL.AudioData
             ID3v2.Clear();
             // Test for ID3v2 regardless of it being supported, to properly handle files with illegal ID3v2 tags
             source.Position = 0;
-            byte[] data = new byte[32];
-            if (32 == source.Read(data, 0, 32) && IO.ID3v2.IsValidHeader(data))
+            Span<byte> data = stackalloc byte[32];
+            if (32 == source.Read(data) && IO.ID3v2.IsValidHeader(data))
             {
                 source.Position = 0;
                 readTagParams.ExtraID3v2PaddingDetection = isMetaSupported(TagType.ID3V2);

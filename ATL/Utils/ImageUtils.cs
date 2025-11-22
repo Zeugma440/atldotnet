@@ -3,7 +3,6 @@ using ATL.Logging;
 using System;
 using System.Buffers.Binary;
 using System.IO;
-using System.Linq;
 
 namespace Commons
 {
@@ -171,14 +170,25 @@ namespace Commons
         {
             if (header.Length < 12) throw new FormatException("Header length must be at least 12");
 
-            if (0xFF == header[0] && 0xD8 == header[1] && 0xFF == header[2]) return ImageFormat.Jpeg;
-            else if (0x42 == header[0] && 0x4D == header[1]) return ImageFormat.Bmp;
-            else if (0x47 == header[0] && 0x49 == header[1] && 0x46 == header[2]) return ImageFormat.Gif;
-            else if (0x89 == header[0] && 0x50 == header[1] && 0x4E == header[2]) return ImageFormat.Png;
-            else if (0x49 == header[0] && 0x49 == header[1] && 0x2A == header[2]) return ImageFormat.Tiff; // Little Endian TIFF
-            else if (0x4D == header[0] && 0x4D == header[1] && 0x00 == header[2]) return ImageFormat.Tiff; // Big Endian TIFF
-            else if (0x52 == header[0] && 0x49 == header[1] && 0x46 == header[2] && 0x46 == header[3] && 0x57 == header[8] && 0x45 == header[9] && 0x42 == header[10] && 0x50 == header[11]) return ImageFormat.Webp;
-            else return ImageFormat.Unsupported;
+            switch (header[0])
+            {
+                case 0xFF when 0xD8 == header[1] && 0xFF == header[2]:
+                    return ImageFormat.Jpeg;
+                case 0x42 when 0x4D == header[1]:
+                    return ImageFormat.Bmp;
+                case 0x47 when 0x49 == header[1] && 0x46 == header[2]:
+                    return ImageFormat.Gif;
+                case 0x89 when 0x50 == header[1] && 0x4E == header[2]:
+                    return ImageFormat.Png;
+                case 0x49 when 0x49 == header[1] && 0x2A == header[2]: // Big Endian TIFF
+
+                case 0x4D when 0x4D == header[1] && 0x00 == header[2]: // Little Endian TIFF
+                    return ImageFormat.Tiff;
+                case 0x52 when 0x49 == header[1] && 0x46 == header[2] && 0x46 == header[3] && 0x57 == header[8] && 0x45 == header[9] && 0x42 == header[10] && 0x50 == header[11]:
+                    return ImageFormat.Webp;
+                default:
+                    return ImageFormat.Unsupported;
+            }
         }
 
         /// <summary>
@@ -274,7 +284,7 @@ namespace Commons
 
                         break;
                     case ImageFormat.Gif:
-                        byte[] GraphicControlExtensionBlockSignature = new byte[] { 0x21, 0xf9 };
+                        byte[] GraphicControlExtensionBlockSignature = { 0x21, 0xf9 };
 
                         props.ColorDepth = 24; // 1 byte for each component
 
@@ -285,7 +295,7 @@ namespace Commons
                         s.Seek(4, SeekOrigin.Current); // Skip logical screen descriptors
 
                         byte globalPaletteUse = r.ReadByte();
-                        if (((globalPaletteUse & 0x80) >> 7) > 0) // File uses a global color palette
+                        if ((globalPaletteUse & 0x80) >> 7 > 0) // File uses a global color palette
                         {
                             props.NumColorsInPalette = 2 << (globalPaletteUse & 0x07);
                         }
@@ -351,7 +361,7 @@ namespace Commons
                         break;
 
                     case ImageFormat.Png:
-                        byte[] intData = new byte[4];
+                        Span<byte> intData = stackalloc byte[4];
                         byte[] IHDRChunkSignature = Utils.Latin1Encoding.GetBytes("IHDR");
                         byte[] PaletteChunkSignature = Utils.Latin1Encoding.GetBytes("PLTE");
 
@@ -366,9 +376,9 @@ namespace Commons
                         else
                         {
                             // Read IHDR chunk
-                            if (s.Read(intData, 0, 4) < 4) break;
+                            if (s.Read(intData) < 4) break;
                             props.Width = BinaryPrimitives.ReadInt32BigEndian(intData);
-                            if (s.Read(intData, 0, 4) < 4) break;
+                            if (s.Read(intData) < 4) break;
                             props.Height = BinaryPrimitives.ReadInt32BigEndian(intData);
                             props.ColorDepth = r.ReadByte();
                             int colorType = r.ReadByte();
@@ -393,8 +403,8 @@ namespace Commons
 
                         break;
                     case ImageFormat.Jpeg:
-                        byte[] shortData = new byte[2];
-                        byte[] SOF0FrameSignature = new byte[] { 0xFF, 0xC0 };
+                        Span<byte> shortData = stackalloc byte[2];
+                        byte[] SOF0FrameSignature = { 0xFF, 0xC0 };
 
                         /*
                          * We just need to reach the SOF0 frame descripting the actual picture
@@ -419,9 +429,9 @@ namespace Commons
                             // Skip frame length
                             s.Seek(2, SeekOrigin.Current);
                             bitsPerSample = r.ReadByte();
-                            if (s.Read(shortData, 0, 2) < 2) break;
+                            if (s.Read(shortData) < 2) break;
                             props.Height = BinaryPrimitives.ReadInt16BigEndian(shortData);
-                            if (s.Read(shortData, 0, 2) < 2) break;
+                            if (s.Read(shortData) < 2) break;
                             props.Width = BinaryPrimitives.ReadInt16BigEndian(shortData);
                             byte nbComponents = r.ReadByte();
                             props.ColorDepth = bitsPerSample * nbComponents;
@@ -441,34 +451,34 @@ namespace Commons
                             {
                                 // Lossless
                                 case 'L':
-                                {
-                                    s.Seek(5, SeekOrigin.Current);
-                                    byte[] data = r.ReadBytes(4);
-                                    props.Width = 1 + StreamUtils.ReadBits(data, 0, 14); // Only read the first 14 bits
-                                    props.Height = 1 + StreamUtils.ReadBits(data, 14, 14); // Only read the last 14 bits
-                                    break;
-                                }
+                                    {
+                                        s.Seek(5, SeekOrigin.Current);
+                                        byte[] data = r.ReadBytes(4);
+                                        props.Width = 1 + StreamUtils.ReadBits(data, 0, 14); // Only read the first 14 bits
+                                        props.Height = 1 + StreamUtils.ReadBits(data, 14, 14); // Only read the last 14 bits
+                                        break;
+                                    }
                                 // Extended
                                 case 'X':
-                                {
-                                    s.Seek(8, SeekOrigin.Current);
-                                    byte[] data = r.ReadBytes(4);
-                                    props.Width = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
-                                    s.Seek(-1, SeekOrigin.Current);
-                                    data = r.ReadBytes(4);
-                                    props.Height = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
-                                    break;
-                                }
+                                    {
+                                        s.Seek(8, SeekOrigin.Current);
+                                        byte[] data = r.ReadBytes(4);
+                                        props.Width = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
+                                        s.Seek(-1, SeekOrigin.Current);
+                                        data = r.ReadBytes(4);
+                                        props.Height = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
+                                        break;
+                                    }
                                 // Lossy
                                 case ' ':
-                                {
-                                    s.Seek(10, SeekOrigin.Current);
-                                    byte[] data = r.ReadBytes(2);
-                                    props.Width = StreamUtils.ReadBits(data, 0, 14);
-                                    data = r.ReadBytes(2);
-                                    props.Height = StreamUtils.ReadBits(data, 0, 14);
-                                    break;
-                                }
+                                    {
+                                        s.Seek(10, SeekOrigin.Current);
+                                        byte[] data = r.ReadBytes(2);
+                                        props.Width = StreamUtils.ReadBits(data, 0, 14);
+                                        data = r.ReadBytes(2);
+                                        props.Height = StreamUtils.ReadBits(data, 0, 14);
+                                        break;
+                                    }
                             }
                         }
 
@@ -503,14 +513,14 @@ namespace Commons
         private static short readInt16(BinaryReader r, bool isBigEndian)
         {
             Span<byte> buffer = stackalloc byte[2];
-            r.Read(buffer);
+            if (r.Read(buffer) < buffer.Length) return 0;
             return isBigEndian ? BinaryPrimitives.ReadInt16BigEndian(buffer) : BinaryPrimitives.ReadInt16LittleEndian(buffer);
         }
 
         private static int readInt32(BinaryReader r, bool isBigEndian)
         {
             Span<byte> buffer = stackalloc byte[4];
-            r.Read(buffer);
+            if (r.Read(buffer) < buffer.Length) return 0;
             return isBigEndian ? BinaryPrimitives.ReadInt32BigEndian(buffer) : BinaryPrimitives.ReadInt32LittleEndian(buffer);
         }
 

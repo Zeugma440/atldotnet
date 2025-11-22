@@ -198,20 +198,16 @@ namespace ATL.AudioData.IO
         {
             byte[] buffer = new byte[4];
             if (source.Read(header.FormatTag, 0, 3) < 3) return false;
-            if (IsValidHeader(header.FormatTag))
-            {
-                if (source.Read(buffer, 0, 1) < 1) return false;
-                header.VersionByte = buffer[0];
-                if (source.Read(buffer, 0, 4) < 4) return false;
-                header.ReservedAreaLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
-                if (source.Read(buffer, 0, 4) < 4) return false;
-                header.CompressedProgramLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            if (!IsValidHeader(header.FormatTag)) return false;
+
+            if (source.Read(buffer, 0, 1) < 1) return false;
+            header.VersionByte = buffer[0];
+            if (source.Read(buffer, 0, 4) < 4) return false;
+            header.ReservedAreaLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
+            if (source.Read(buffer, 0, 4) < 4) return false;
+            header.CompressedProgramLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
+            return true;
+
         }
 
         private static string readPSFLine(Stream source, Encoding encoding)
@@ -220,7 +216,7 @@ namespace ATL.AudioData.IO
             long lineEnd;
             bool hasEOL = true;
 
-            if (StreamUtils.FindSequence(source, new byte[] { LINE_FEED }))
+            if (StreamUtils.FindSequence(source, new[] { LINE_FEED }))
             {
                 lineEnd = source.Position;
             }
@@ -311,7 +307,6 @@ namespace ATL.AudioData.IO
         {
             string hStr = "";
             string mStr = "";
-            string sStr = "";
             string dStr = "";
             double result = 0;
 
@@ -331,7 +326,7 @@ namespace ATL.AudioData.IO
             sepIndex = durationStr.LastIndexOf(':');
 
             sepIndex++;
-            sStr = durationStr.Substring(sepIndex, durationStr.Length - sepIndex);
+            var sStr = durationStr.Substring(sepIndex, durationStr.Length - sepIndex);
 
             durationStr = durationStr[..Math.Max(0, sepIndex - 1)];
 
@@ -387,7 +382,7 @@ namespace ATL.AudioData.IO
 
             if (source.Length > HEADER_LENGTH + header.CompressedProgramLength + header.ReservedAreaLength)
             {
-                source.Seek((long)(4 + header.CompressedProgramLength + header.ReservedAreaLength), SeekOrigin.Current);
+                source.Seek(4 + header.CompressedProgramLength + header.ReservedAreaLength, SeekOrigin.Current);
 
                 if (!readTag(source, ref tag, readTagParams)) throw new InvalidDataException("Not a PSF tag");
             }
@@ -402,7 +397,8 @@ namespace ATL.AudioData.IO
 
         protected override int write(TagData tag, Stream s, string zone)
         {
-            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w);
+            using BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true);
+            return write(tag, w);
         }
 
         private int write(TagData tag, BinaryWriter w)
@@ -457,16 +453,9 @@ namespace ATL.AudioData.IO
 
         private static void writeTextFrame(BinaryWriter writer, string frameCode, string text)
         {
-            string[] textLines;
-            if (text.Contains(Environment.NewLine))
-            {
-                // Split a multiple-line value into multiple frames with the same code
-                textLines = text.Split(Environment.NewLine.ToCharArray());
-            }
-            else
-            {
-                textLines = new[] { text };
-            }
+            // Split a multiple-line value into multiple frames with the same code
+            var textLines =
+                text.Contains(Environment.NewLine) ? text.Split(Environment.NewLine.ToCharArray()) : new[] { text };
 
             foreach (string s in textLines)
             {
@@ -500,12 +489,13 @@ namespace ATL.AudioData.IO
             foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
                 var fieldCode = fieldInfo.NativeFieldCode.ToLower();
-                if (!fieldCode.StartsWith('_') && !playbackFrames.Contains(fieldCode))
+                if (fieldCode.StartsWith('_') || playbackFrames.Contains(fieldCode)) continue;
+
+                MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo)
                 {
-                    MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
-                    emptyFieldInfo.MarkedForDeletion = true;
-                    result.AdditionalFields.Add(emptyFieldInfo);
-                }
+                    MarkedForDeletion = true
+                };
+                result.AdditionalFields.Add(emptyFieldInfo);
             }
 
             return result;

@@ -29,9 +29,9 @@ namespace ATL.AudioData.IO
             long initialPos = position;
 
             // Purpose
-            byte[] data = new byte[4];
-            if (source.Read(data, 0, 4) < 4) return "";
-            string typeId = Utils.Latin1Encoding.GetString(data, 0, 4);
+            Span<byte> data = stackalloc byte[4];
+            if (source.Read(data) < 4) return "";
+            string typeId = Utils.Latin1Encoding.GetString(data);
 
             long maxPos = initialPos + chunkSize - 4; // 4 being the purpose 32bits tag that belongs to the chunk
 
@@ -70,15 +70,15 @@ namespace ATL.AudioData.IO
         private static void readDataListPurpose(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long maxPos)
         {
             int position = 0;
-            byte[] data = new byte[4];
+            Span<byte> data = stackalloc byte[4];
 
             while (source.Position < maxPos)
             {
                 // Sub-chunk ID
-                if (source.Read(data, 0, 4) < 4) return;
-                var id = Utils.Latin1Encoding.GetString(data, 0, 4);
+                if (source.Read(data) < 4) return;
+                var id = Utils.Latin1Encoding.GetString(data);
                 // Size
-                if (source.Read(data, 0, 4) < 4) return;
+                if (source.Read(data) < 4) return;
                 var size = BinaryPrimitives.ReadInt32LittleEndian(data);
                 if (size <= 0) continue;
 

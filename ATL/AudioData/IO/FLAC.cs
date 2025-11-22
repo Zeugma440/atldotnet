@@ -380,7 +380,7 @@ namespace ATL.AudioData.IO
         {
             byte toWrite = META_VORBIS_COMMENT;
             if (isLastMetaBlock) toWrite |= FLAG_LAST_METADATA_BLOCK;
-            w.Write(new byte[] { toWrite }, 0, 1);
+            w.Write(new[] { toWrite }, 0, 1);
             var sizePos = w.Position;
             w.Write(new byte[] { 0, 0, 0 }, 0, 3); // Placeholder for 24-bit integer that will be rewritten at the end of the method
 

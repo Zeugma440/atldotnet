@@ -297,38 +297,39 @@ namespace ATL.AudioData.IO
             double cumulatedDuration = 0;
 
             // Text chapters are "master data"; picture chapters get attached to them
+            Span<byte> data = stackalloc byte[2];
             for (int i = 0; i < chapterTextTrackSamples.Count; i++)
             {
                 MP4Sample textSample = chapterTextTrackSamples[i];
                 MP4Sample pictureSample = i < chapterPictureTrackSamples.Count ? chapterPictureTrackSamples[i] : null;
-                if (textSample.ChunkOffset > 0)
+                if (textSample.ChunkOffset <= 0) continue;
+
+                ChapterInfo chapter = new ChapterInfo
                 {
-                    ChapterInfo chapter = new ChapterInfo();
-                    chapter.Format = ChapterInfo.FORMAT.QT;
+                    Format = ChapterInfo.FORMAT.QT
+                };
 
-                    source.Seek(textSample.ChunkOffset + textSample.RelativeOffset, SeekOrigin.Begin);
-                    byte[] data = new byte[2];
-                    if (source.Read(data, 0, 2) < 2) return;
-                    ushort strDataSize = BinaryPrimitives.ReadUInt16BigEndian(data);
+                source.Seek(textSample.ChunkOffset + textSample.RelativeOffset, SeekOrigin.Begin);
+                if (source.Read(data) < 2) return;
+                ushort strDataSize = BinaryPrimitives.ReadUInt16BigEndian(data);
 
-                    byte[] strData = new byte[strDataSize];
-                    if (source.Read(strData, 0, strDataSize) < strDataSize) return;
-                    chapter.Title = Encoding.UTF8.GetString(strData);
-                    chapter.StartTime = (uint)Math.Round(cumulatedDuration);
-                    cumulatedDuration += textSample.Duration * 1000;
-                    chapter.EndTime = (uint)Math.Round(cumulatedDuration);
+                byte[] strData = new byte[strDataSize];
+                if (source.Read(strData, 0, strDataSize) < strDataSize) return;
+                chapter.Title = Encoding.UTF8.GetString(strData);
+                chapter.StartTime = (uint)Math.Round(cumulatedDuration);
+                cumulatedDuration += textSample.Duration * 1000;
+                chapter.EndTime = (uint)Math.Round(cumulatedDuration);
 
-                    if (pictureSample != null && pictureSample.ChunkOffset > 0 && pictureSample.Size > 0)
-                    {
-                        source.Seek(pictureSample.ChunkOffset + pictureSample.RelativeOffset, SeekOrigin.Begin);
-                        int localSize = (int)pictureSample.Size;
-                        byte[] localData = new byte[localSize];
-                        if (source.Read(localData, 0, localSize) < localSize) return;
-                        chapter.Picture = PictureInfo.fromBinaryData(localData, PictureInfo.PIC_TYPE.Generic, getImplementedTagType());
-                    }
-
-                    tagData.Chapters.Add(chapter);
+                if (pictureSample is { ChunkOffset: > 0, Size: > 0 })
+                {
+                    source.Seek(pictureSample.ChunkOffset + pictureSample.RelativeOffset, SeekOrigin.Begin);
+                    int localSize = (int)pictureSample.Size;
+                    byte[] localData = new byte[localSize];
+                    if (source.Read(localData, 0, localSize) < localSize) return;
+                    chapter.Picture = PictureInfo.fromBinaryData(localData, PictureInfo.PIC_TYPE.Generic, getImplementedTagType());
                 }
+
+                tagData.Chapters.Add(chapter);
             }
         }
 
@@ -625,6 +626,7 @@ namespace ATL.AudioData.IO
 
             uint moofSize = navigateToAtom(s, "moof");
             isFragmented = moofSize > 0;
+            byte[] data = new byte[4];
             while (moofSize > 0)
             {
                 var moofOffset = s.Position;
@@ -633,7 +635,6 @@ namespace ATL.AudioData.IO
                 if (0 == navigateToAtom(s, "tfhd")) break;
                 s.Seek(1, SeekOrigin.Current); // Version
 
-                byte[] data = new byte[4];
                 if (s.Read(data, 0, 3) < 3) break;
                 int flags = StreamUtils.DecodeBEInt24(data);
                 if (0 == (flags & 0x00000008)) break;
@@ -1716,7 +1717,7 @@ namespace ATL.AudioData.IO
             };
             if (result.size >= 16 + 8)
             {
-                Span<byte> key = new byte[16];
+                Span<byte> key = stackalloc byte[16];
                 if (source.Read(key) < key.Length) return result;
                 // Convert key to hex value
                 StringBuilder sbr = new StringBuilder();

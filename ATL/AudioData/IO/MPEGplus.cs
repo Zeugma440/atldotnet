@@ -139,7 +139,6 @@ namespace ATL.AudioData.IO
             // If VS8 file, looks for the (mandatory) stream header packet
             if (80 == header.Version)
             {
-                string packetKey;
                 bool headerFound = false;
 
                 // Let's go back right after the 32-bit version marker
@@ -150,7 +149,7 @@ namespace ATL.AudioData.IO
                 {
                     long initialPos = source.Position;
                     if (source.Read(buffer, 0, 2) < 2) break;
-                    packetKey = Utils.Latin1Encoding.GetString(buffer);
+                    var packetKey = Utils.Latin1Encoding.GetString(buffer);
 
                     readVariableSizeInteger(source); // Packet size (unused)
 
@@ -300,12 +299,12 @@ namespace ATL.AudioData.IO
         {
             long result = 0;
             byte b = 128;
-            byte[] buffer = new byte[1];
+            Span<byte> buffer = stackalloc byte[1];
 
             // Data is coded with a Big-endian, 7-byte variable-length record
             while ((b & 128) > 0)
             {
-                if (source.Read(buffer, 0, 1) < 1) break;
+                if (source.Read(buffer) < 1) break;
                 b = buffer[0];
                 result = (result << 7) + (b & 127); // Big-endian
             }

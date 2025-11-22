@@ -201,8 +201,7 @@ namespace ATL.AudioData
             switch (nbBytes)
             {
                 case 4:
-                    byte[] tmpBuf = new byte[4];
-                    Array.Copy(buffer, tmpBuf, 4);
+                    Span<byte> tmpBuf = new Span<byte>(buffer, 0,4);
                     return ToSingle(tmpBuf);
                 case 8:
                     return ToDouble(buffer);
@@ -210,10 +209,10 @@ namespace ATL.AudioData
             }
         }
 
-        private static float ToSingle(byte[] bytes, int startIndex = 0)
+        private static float ToSingle(Span<byte> bytes)
         {
-            if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
-            return BitConverter.ToSingle(bytes, startIndex);
+            if (BitConverter.IsLittleEndian) bytes.Reverse();
+            return BitConverter.ToSingle(bytes);
         }
         private static double ToDouble(byte[] bytes, int startIndex = 0)
         {

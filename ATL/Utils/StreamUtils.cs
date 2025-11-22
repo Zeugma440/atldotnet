@@ -177,8 +177,8 @@ namespace ATL
         public static Encoding GetEncodingFromFileBOM(FileStream file)
         {
             Encoding result;
-            byte[] bom = new byte[4]; // Get the byte-order mark, if there is one
-            if (file.Read(bom, 0, 4) < 4) return Settings.DefaultTextEncoding;
+            Span<byte> bom = stackalloc byte[4]; // Get the byte-order mark, if there is one
+            if (file.Read(bom) < 4) return Settings.DefaultTextEncoding;
             if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf) // utf-8
             {
                 result = Encoding.UTF8;
@@ -244,7 +244,7 @@ namespace ATL
         {
             int nbChars = encoding.Equals(Encoding.BigEndianUnicode) || encoding.Equals(Encoding.Unicode) ? 2 : 1;
             byte[] readBytes = new byte[limit > 0 ? limit : 100];
-            byte[] buffer = new byte[2];
+            Span<byte> buffer = stackalloc byte[nbChars];
             int nbRead = 0;
             long streamLength = r.Length;
             long initialPos = r.Position;
@@ -253,7 +253,7 @@ namespace ATL
             while (streamPos < streamLength && (0 == limit || nbRead < limit))
             {
                 // Read the size of a character
-                if (r.Read(buffer, 0, nbChars) < nbChars) break;
+                if (r.Read(buffer) < nbChars) break;
 
                 if (1 == nbChars && 0 == buffer[0]) // Null character read for single-char encodings
                 {
@@ -326,7 +326,7 @@ namespace ATL
         /// <returns>Encoded array of bytes</returns>
         public static byte[] EncodeSynchSafeInt(int value, int nbBytes)
         {
-            if (nbBytes < 1 || nbBytes > 5) throw new ArgumentException("nbBytes has to be 1 to 5; found : " + nbBytes);
+            if (nbBytes is < 1 or > 5) throw new ArgumentException("nbBytes has to be 1 to 5; found : " + nbBytes);
             byte[] result = new byte[nbBytes];
 
             for (int i = 0; i < nbBytes; i++)
@@ -416,11 +416,11 @@ namespace ATL
         /// <returns>Unsigned int32 formed from read bits, according to big-endian convention</returns>
         public static uint ReadBEBits(Stream source, int bitPosition, int bitCount)
         {
-            if (bitCount < 1 || bitCount > 32) throw new NotSupportedException("Bit count must be between 1 and 32");
-            byte[] buffer = new byte[4];
+            if (bitCount is < 1 or > 32) throw new NotSupportedException("Bit count must be between 1 and 32");
+            Span<byte> buffer = stackalloc byte[4];
 
             source.Seek(bitPosition / 8, SeekOrigin.Begin); // integer division =^ div
-            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return 0;
+            if (source.Read(buffer) < buffer.Length) return 0;
             uint result = BinaryPrimitives.ReadUInt32BigEndian(buffer);
             result = (result << (bitPosition % 8)) >> (32 - bitCount);
 
@@ -596,7 +596,7 @@ namespace ATL
         /// <returns>Converted double</returns>
         private static double FromComponents(int s, int e, long f)
         {
-            byte[] data = new byte[8];
+            Span<byte> data = stackalloc byte[8];
 
             // Put the data into appropriate slots based on endianness.
             if (BitConverter.IsLittleEndian)
@@ -622,7 +622,7 @@ namespace ATL
                 data[7] = (byte)(f & 0xff);
             }
 
-            return BitConverter.ToDouble(data, 0);
+            return BitConverter.ToDouble(data);
         }
 
         /// <summary>

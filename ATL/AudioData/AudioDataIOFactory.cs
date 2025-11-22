@@ -405,21 +405,21 @@ namespace ATL.AudioData
         {
             // TODO : memorize initial offset?
             s.Seek(0, SeekOrigin.Begin);
-            byte[] data = new byte[32];
+            Span<byte> data = stackalloc byte[32];
             long offset = 0;
             bool hasID3v2 = false;
-            if (s.Read(data, 0, 32) < 32) return GetFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));
+            if (s.Read(data) < 32) return GetFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));
             // Hardcoded case of ID3v2 as it is the sole standard metadata system to appear at the beginning of file
             // NB : useful to detect files tagged with ID3v2 even though their format isn't compatible (e.g. MP4/M4A)
             if (ID3v2.IsValidHeader(data))
             {
                 hasID3v2 = true;
 
-                var data2 = data.AsSpan()[6..10]; // bytes 6-9 only
+                var data2 = data[6..10]; // bytes 6-9 only
                 int id3v2Size = StreamUtils.DecodeSynchSafeInt32(data2) + 10;  // 10 being the size of the header
                 s.Seek(id3v2Size, SeekOrigin.Begin);
                 offset = s.Position;
-                if (s.Read(data, 0, 32) < 32) return GetFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));
+                if (s.Read(data) < 32) return GetFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));
             }
             try
             {

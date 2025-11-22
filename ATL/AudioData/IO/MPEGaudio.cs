@@ -188,7 +188,7 @@ namespace ATL.AudioData.IO
                 EmphasisID = MPEG_EMPHASIS_UNKNOWN;
             }
 
-            public void LoadFromByteArray(byte[] data)
+            public void LoadFromByteArray(ReadOnlySpan<byte> data)
             {
                 VersionID = (byte)((data[1] >> 3) & 3);
                 LayerID = (byte)((data[1] >> 1) & 3);
@@ -412,13 +412,13 @@ namespace ATL.AudioData.IO
         private static VBRData getFhGInfo(Stream source)
         {
             VBRData result = new VBRData();
-            byte[] data = new byte[9];
+            Span<byte> data = stackalloc byte[9];
 
             // Extract FhG VBR info at given position
             result.Found = true;
             result.ID = VBR_ID_FHG.ToCharArray();
             source.Seek(5, SeekOrigin.Current);
-            if (source.Read(data, 0, 9) < 9) return result;
+            if (source.Read(data) < 9) return result;
 
             result.Scale = data[0];
             result.Bytes =
@@ -439,12 +439,12 @@ namespace ATL.AudioData.IO
 
         private static VBRData findVBR(Stream source, long position)
         {
-            byte[] data = new byte[4];
+            Span<byte> data = stackalloc byte[4];
 
             // Check for VBR header at given position
             source.Seek(position, SeekOrigin.Begin);
 
-            if (4 == source.Read(data, 0, 4))
+            if (4 == source.Read(data))
             {
                 string vbrId = Utils.Latin1Encoding.GetString(data);
                 switch (vbrId)
@@ -481,13 +481,13 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Find next MPEG frame starting from a given MPEG frame
         /// </summary>
-        private static FrameHeader findNextFrame(Stream source, FrameHeader startingFrame, byte[] buffer)
+        private static FrameHeader findNextFrame(Stream source, FrameHeader startingFrame, Span<byte> buffer)
         {
             FrameHeader result = new FrameHeader();
             result.Reset();
 
             source.Seek(startingFrame.Offset + startingFrame.Size, SeekOrigin.Begin);
-            if (source.Read(buffer, 0, 4) < 4 || !IsValidFrameHeader(buffer)) return result;
+            if (source.Read(buffer) < 4 || !IsValidFrameHeader(buffer)) return result;
 
             result.LoadFromByteArray(buffer);
             result.Offset = source.Position - 4;
@@ -506,10 +506,10 @@ namespace ATL.AudioData.IO
         private static FrameHeader findFirstFrame(Stream source, ref VBRData oVBR, SizeInfo sizeInfo)
         {
             FrameHeader result = new FrameHeader();
-            byte[] buffer = new byte[4];
+            Span<byte> buffer = stackalloc byte[4];
             long sourceOffset = source.Position;
 
-            if (source.Read(buffer, 0, 4) < 4) return result;
+            if (source.Read(buffer) < 4) return result;
             result.Found = IsValidFrameHeader(buffer);
 
             /*
@@ -532,7 +532,7 @@ namespace ATL.AudioData.IO
                 // If padding uses 0xFF bytes, take one step back in case header lies there
                 if (0xFF == buffer[0]) source.Seek(-1, SeekOrigin.Current);
 
-                if (source.Read(buffer, 0, 4) < 4) return result;
+                if (source.Read(buffer) < 4) return result;
                 result.Found = IsValidFrameHeader(buffer);
             }
 
@@ -550,7 +550,7 @@ namespace ATL.AudioData.IO
                     while (0xFF != source.ReadByte() && source.Position < limit) { /* just advance the stream */ }
 
                     source.Seek(-1, SeekOrigin.Current);
-                    if (source.Read(buffer, 0, 4) < 4) break;
+                    if (source.Read(buffer) < 4) break;
                     result.Found = IsValidFrameHeader(buffer);
                 }
 
@@ -633,7 +633,7 @@ namespace ATL.AudioData.IO
 
         private static FrameParsingResult parseExactAudioDataSize(BufferedBinaryReader reader, FrameHeader firstFrame)
         {
-            byte[] buffer = new byte[4];
+            Span<byte> buffer = stackalloc byte[4];
             var bitrates = new List<float> { firstFrame.BitRate };
             long topOffset = 0;
             reader.Seek(firstFrame.Offset, SeekOrigin.Begin);
