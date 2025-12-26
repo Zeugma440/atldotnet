@@ -365,13 +365,7 @@ namespace ATL.AudioData.IO
                         for (int i = 0; i < nbRead; i++)
                         {
                             if (stringData[i] != 0x3D) continue; // '=' character
-
-                            equalsIndex = i;
-                            if (equalsIndex >= size)
-                            {
-                                equalsIndex = -1; // Value without key
-                                tagIdBuilder.Clear();
-                            }
+                            if (nbBuffered + equalsIndex < size) equalsIndex = i;
 
                             break;
                         }
