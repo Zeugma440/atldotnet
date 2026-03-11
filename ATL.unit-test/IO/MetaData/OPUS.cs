@@ -29,6 +29,25 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_OPUS_malformedOggHeader()
+        {
+            new ConsoleLogger();
+
+            string location = TestUtils.GetResourceLocationRoot() + "OPUS/malformedOggPage.opus";
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+            IMetaDataIO meta = theFile.getMeta(tagType);
+            Assert.IsNotNull(meta);
+            Assert.IsTrue(meta.Exists);
+
+            // Supported fields
+            Assert.AreEqual("Union", meta.Title);
+            Assert.AreEqual("Vindata", meta.Artist);
+        }
+
+        [TestMethod]
         public void TagIO_RW_OPUS_Empty()
         {
             test_RW_Empty(emptyFile, true, true, true, false);

@@ -103,7 +103,7 @@ namespace ATL.AudioData
             if (result.DiscTotal > 0 && result.DiscNumber > result.DiscTotal)
                 LogDelegator.GetLogDelegate()(Log.LV_INFO, "Disc number (" + result.DiscNumber + ") is > total discs (" + result.DiscTotal + ")");
 
-            if (result.Chapters != null && result.Chapters.Count > 0)
+            if (result.Chapters is { Count: > 0 })
             {
                 foreach (ChapterInfo chapter in result.Chapters)
                 {
@@ -148,8 +148,7 @@ namespace ATL.AudioData
             ISet<TagType> supportedMetas = audioManager.getSupportedMetas();
             ISet<TagType> recommendedMetas = audioManager.getRecommendedMetas();
 
-            bool hasNothing = 0 == result.Count;
-            if (Settings.EnrichID3v1 && 1 == result.Count && result.First() == TagType.ID3V1) hasNothing = true;
+            bool hasNothing = 0 == result.Count || Settings.EnrichID3v1 && 1 == result.Count && result.First() == TagType.ID3V1;
 
             if (!hasNothing) return result.ToList();
 
@@ -179,7 +178,7 @@ namespace ATL.AudioData
             ISet<TagType> supportedMetas = audioManager.getSupportedMetas();
             Lazy<IList<TagType>> detectedMetas = new Lazy<IList<TagType>>(detectAvailableMetas);
 
-            if (null == tagType || TagType.ANY == tagType) metasToWrite = detectedMetas.Value;
+            if (tagType is null or TagType.ANY) metasToWrite = detectedMetas.Value;
             else
             {
                 foreach (var att in detectedMetas.Value) metasToWrite.Add(att);
@@ -187,12 +186,18 @@ namespace ATL.AudioData
                 else LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Cannot create " + tagType + " tag type inside a " + AudioFormat.ShortName + " file, as it is not supported");
             }
 
+            // Force writing native metadata if AdditionalFields explicitly contain native keys
+            if (data.AdditionalFields.Any(f => f.TagType == TagType.NATIVE) && !metasToWrite.Contains(TagType.NATIVE))
+                metasToWrite.Add(TagType.NATIVE);
+
             bool result = true;
             ProgressManager progressManager = null;
             if (writeProgress != null)
             {
-                progressManager = new ProgressManager(writeProgress, "AudioFileIO");
-                progressManager.MaxSections = metasToWrite.Count;
+                progressManager = new ProgressManager(writeProgress, "AudioFileIO")
+                {
+                    MaxSections = metasToWrite.Count
+                };
             }
             foreach (var meta in metasToWrite)
             {
@@ -211,8 +216,10 @@ namespace ATL.AudioData
             ProgressManager progressManager = null;
             if (writeProgress != null)
             {
-                progressManager = new ProgressManager(writeProgress, "AudioFileIO");
-                progressManager.MaxSections = metasToRemove.Count;
+                progressManager = new ProgressManager(writeProgress, "AudioFileIO")
+                {
+                    MaxSections = metasToRemove.Count
+                };
             }
             foreach (var meta in metasToRemove)
             {
@@ -236,10 +243,7 @@ namespace ATL.AudioData
 
         /// <inheritdoc/>
         public string FileName => audioData.FileName;
-        /// <summary>
-        /// Track duration (seconds), rounded
-        /// </summary>
-        public int IntDuration => (int)Math.Round(audioData.Duration);
+
         /// <summary>
         /// Track bitrate (KBit/s), rounded
         /// </summary>

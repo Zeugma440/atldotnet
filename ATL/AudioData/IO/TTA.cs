@@ -3,12 +3,14 @@ using static ATL.AudioData.AudioDataManager;
 using Commons;
 using static ATL.ChannelsArrangements;
 using System.Collections.Generic;
+using System;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for True Audio files manipulation (extensions : .TTA)
-    /// 
+    ///
     /// NB : Only supports TTA1
     /// </summary>
 	class TTA : IAudioDataIO
@@ -21,7 +23,7 @@ namespace ATL.AudioData.IO
         private uint samplesSize;
 
 
-        // Public declarations    
+        // Public declarations
         public uint Samples => samplesSize;
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -76,9 +78,9 @@ namespace ATL.AudioData.IO
 
         // ---------- SUPPORT METHODS
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, TTA_SIGNATURE);
+            return data.StartsWith(TTA_SIGNATURE);
         }
 
         public bool Read(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
@@ -97,13 +99,13 @@ namespace ATL.AudioData.IO
 
                 source.Seek(2, SeekOrigin.Current); // audio format
                 if (source.Read(buffer, 0, 2) < 2) return false;
-                ChannelsArrangement = GuessFromChannelNumber(StreamUtils.DecodeUInt16(buffer));
+                ChannelsArrangement = GuessFromChannelNumber(BinaryPrimitives.ReadUInt16LittleEndian(buffer));
                 if (source.Read(buffer, 0, 2) < 2) return false;
-                bitsPerSample = StreamUtils.DecodeUInt16(buffer);
+                bitsPerSample = BinaryPrimitives.ReadUInt16LittleEndian(buffer);
                 if (source.Read(buffer, 0, 4) < 4) return false;
-                sampleRate = StreamUtils.DecodeUInt32(buffer);
+                sampleRate = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
                 if (source.Read(buffer, 0, 4) < 4) return false;
-                samplesSize = StreamUtils.DecodeUInt32(buffer);
+                samplesSize = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
                 source.Seek(4, SeekOrigin.Current); // CRC
 
                 BitRate = (sizeNfo.FileSize - sizeNfo.TotalTagSize) * 8.0 / (samplesSize * 1000.0 / sampleRate);

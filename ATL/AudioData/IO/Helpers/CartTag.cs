@@ -5,6 +5,7 @@ using ATL.Logging;
 using static ATL.AudioData.IO.MetaDataIO;
 using System;
 using System.Linq;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -84,7 +85,7 @@ namespace ATL.AudioData.IO
 
             // Sample value for 0 dB reference
             if (source.Read(data, 0, 4) < 4) return;
-            var value = StreamUtils.DecodeInt32(data);
+            var value = BinaryPrimitives.ReadInt32LittleEndian(data);
             meta.SetMetaField("cart.dwLevelReference", value.ToString(), readTagParams.ReadAllMetaFrames);
 
             // Timer usage ID
@@ -97,7 +98,7 @@ namespace ATL.AudioData.IO
 
                 // Timer value in samples from head
                 if (source.Read(data, 0, 4) < 4) return;
-                var uValue = StreamUtils.DecodeUInt32(data);
+                var uValue = BinaryPrimitives.ReadUInt32LittleEndian(data);
                 meta.SetMetaField("cart.postTimerValue[" + (i + 1) + "]", uValue.ToString(), readTagParams.ReadAllMetaFrames);
             }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +13,7 @@ namespace ATL
         /// <summary>
         /// Represents an unknown generic format
         /// </summary>
-        public static readonly Format UNKNOWN_FORMAT = new Format(0, "Unknown");
+        public static readonly Format UNKNOWN_FORMAT = new(0, "Unknown");
 
         /// <summary>
         /// Check if the given byte array matches the Format's signature (aka "magic number")
@@ -20,7 +21,7 @@ namespace ATL
         /// </summary>
         /// <param name="data">byte array to check</param>
         /// <returns>True if the given byte array matches the Format's signature</returns>
-        public delegate bool CheckHeaderDelegate(byte[] data);
+        public delegate bool CheckHeaderDelegate(ReadOnlySpan<byte> data);
 
         /// <summary>
         /// Search the Format's signature inside the given Stream
@@ -144,7 +145,7 @@ namespace ATL
 
         #region Code for IEnumerable implementation
 
-        // NB : Same principle as in Collection		
+        // NB : Same principle as in Collection
 
         /// <inheritdoc/>
         public IEnumerator GetEnumerator()

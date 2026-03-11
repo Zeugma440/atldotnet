@@ -8,6 +8,7 @@ using static ATL.ChannelsArrangements;
 using static ATL.TagData;
 using System.Threading.Tasks;
 using static System.Int32;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -244,9 +245,9 @@ namespace ATL.AudioData.IO
 
         // === PRIVATE METHODS ===
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, SPC_FORMAT_TAG);
+            return data.StartsWith(SPC_FORMAT_TAG);
         }
 
         private static bool readHeader(Stream source, ref SpcHeader header)
@@ -380,13 +381,13 @@ namespace ATL.AudioData.IO
         private void readExtendedData(Stream source, ref SpcExTags footer, ReadTagParams readTagParams)
         {
             long initialPosition = source.Position;
-            byte[] buffer = new byte[4];
-            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return;
+            Span<byte> buffer = stackalloc byte[4];
+            if (source.Read(buffer) < buffer.Length) return;
             footer.FormatTag = Utils.Latin1Encoding.GetString(buffer);
             if (XTENDED_TAG == footer.FormatTag)
             {
-                if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return;
-                footer.Size = StreamUtils.DecodeUInt32(buffer);
+                if (source.Read(buffer) < buffer.Length) return;
+                footer.Size = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
 
                 string strData = "";
                 int intData = 0;
@@ -395,11 +396,11 @@ namespace ATL.AudioData.IO
                 long dataPosition = source.Position;
                 while (source.Position < dataPosition + footer.Size - 4)
                 {
-                    if (source.Read(buffer, 0, 2) < 2) break;
+                    if (source.Read(buffer[..2]) < 2) break;
                     var ID = buffer[0];
                     var type = buffer[1];
-                    if (source.Read(buffer, 0, 2) < 2) break;
-                    var size = StreamUtils.DecodeUInt16(buffer);
+                    if (source.Read(buffer[..2]) < 2) break;
+                    var size = BinaryPrimitives.ReadUInt16LittleEndian(buffer);
 
                     switch (type)
                     {
@@ -431,8 +432,8 @@ namespace ATL.AudioData.IO
                             if (source.Position < source.Length) source.Seek(-1, SeekOrigin.Current);
                             break;
                         case XID6_TINT:
-                            if (source.Read(buffer, 0, 4) < 4) break;
-                            intData = StreamUtils.DecodeInt32(buffer);
+                            if (source.Read(buffer[..4]) < 4) break;
+                            intData = BinaryPrimitives.ReadInt32LittleEndian(buffer);
                             strData = intData.ToString();
                             break;
                     }

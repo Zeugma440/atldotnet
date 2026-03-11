@@ -8,6 +8,7 @@ using System.Text;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
 using System.Threading.Tasks;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -156,13 +157,13 @@ namespace ATL.AudioData.IO
             // Read header and get file size
             Header.ID = source.ReadBytes(4);
             Header.Version = Utils.Latin1Encoding.GetString(source.ReadBytes(8)).ToCharArray();
-            Header.Size = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            Header.Size = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
             Header.Common.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-            Header.Common.Size = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            Header.ChannelMode = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            Header.BitRate = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            Header.SampleRate = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-            Header.SecurityLevel = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+            Header.Common.Size = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+            Header.ChannelMode = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+            Header.BitRate = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+            Header.SampleRate = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+            Header.SecurityLevel = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
 
             return true;
         }
@@ -222,7 +223,7 @@ namespace ATL.AudioData.IO
             {
                 // Read chunk header (length : 8 bytes)
                 chunk.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-                chunk.Size = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                chunk.Size = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
 
                 // Read chunk data and set tag item if chunk header valid
                 if (headerEndReached(chunk)) break;
@@ -265,9 +266,9 @@ namespace ATL.AudioData.IO
             return read(source, readTagParams);
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, TWIN_ID);
+            return data.StartsWith(TWIN_ID);
         }
 
         protected override bool read(Stream source, ReadTagParams readTagParams)

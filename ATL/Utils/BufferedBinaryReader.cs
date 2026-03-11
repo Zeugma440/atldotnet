@@ -129,11 +129,12 @@ namespace ATL
                 delta = streamSize + offset - Position;
             }
 
-            if (0 == delta) return Position;
-            else if (delta < 0)
+            switch (delta)
             {
+                case 0:
+                    break;
                 // Jump inside buffer
-                if ((cursorPosition + delta < bufferSize) && (cursorPosition + delta >= 0))
+                case < 0 when (cursorPosition + delta < bufferSize) && (cursorPosition + delta >= 0):
                 {
                     cursorPosition += (int)delta;
                     // Reset stream position to the end of the buffer if it ever got further (read beyond)
@@ -142,23 +143,30 @@ namespace ATL
                         streamPosition = bufferOffset + bufferSize;
                         stream.Position = streamPosition;
                     }
+
+                    break;
                 }
-                else // Jump outside buffer : move the whole buffer at the beginning of the zone to read
-                {
+                // Jump outside buffer : move the whole buffer at the beginning of the zone to read
+                case < 0:
                     streamPosition = bufferOffset + cursorPosition + delta;
                     stream.Position = streamPosition;
                     fillBuffer();
+                    break;
+                default:
+                {
+                    if (cursorPosition + delta < bufferSize) // Jump inside buffer
+                    {
+                        cursorPosition += (int)delta;
+                    }
+                    else // Jump outside buffer: move the whole buffer at the beginning of the zone to read
+                    {
+                        streamPosition = Math.Min(bufferOffset + cursorPosition + delta, streamSize);
+                        stream.Position = streamPosition;
+                        fillBuffer();
+                    }
+
+                    break;
                 }
-            }
-            else if (cursorPosition + delta < bufferSize) // Jump inside buffer
-            {
-                cursorPosition += (int)delta;
-            }
-            else // Jump outside buffer: move the whole buffer at the beginning of the zone to read
-            {
-                streamPosition = Math.Min(bufferOffset + cursorPosition + delta, streamSize);
-                stream.Position = streamPosition;
-                fillBuffer();
             }
             return Position;
         }

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using ATL.Logging;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -55,7 +55,7 @@ namespace ATL.AudioData.IO
         public static int ReadInt32(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
         {
             if (source.Read(buffer, 0, 4) < 4) return 0;
-            int value = StreamUtils.DecodeInt32(buffer);
+            int value = BinaryPrimitives.ReadInt32LittleEndian(buffer);
             meta.SetMetaField(fieldName, value.ToString(), readAllMetaFrames);
             return value;
         }
@@ -72,7 +72,7 @@ namespace ATL.AudioData.IO
         public static void ReadInt16(Stream source, MetaDataIO meta, string fieldName, byte[] buffer, bool readAllMetaFrames)
         {
             if (source.Read(buffer, 0, 2) < 2) return;
-            int value = StreamUtils.DecodeInt16(buffer);
+            int value = BinaryPrimitives.ReadInt16LittleEndian(buffer);
             meta.SetMetaField(fieldName, value.ToString(), readAllMetaFrames);
         }
 
@@ -124,14 +124,8 @@ namespace ATL.AudioData.IO
         /// <param name="paddingByte">Padding value to use (default : 0x00)</param>
         public static void WriteFixedFieldTextValue(string field, IDictionary<string, string> additionalFields, int length, BinaryWriter w, byte paddingByte = 0)
         {
-            if (additionalFields.TryGetValue(field, out var additionalField))
-            {
-                WriteFixedTextValue(additionalField, length, w, paddingByte);
-            }
-            else
-            {
-                WriteFixedTextValue("", length, w, paddingByte);
-            }
+            WriteFixedTextValue(additionalFields.TryGetValue(field, out var additionalField) ? additionalField : "",
+                length, w, paddingByte);
         }
 
         /// <summary>
@@ -163,35 +157,33 @@ namespace ATL.AudioData.IO
                 {
                     switch (defaultValue)
                     {
-                        case short _:
+                        case short:
                             w.Write(short.Parse(additionalFields[field]));
                             break;
-                        case ulong _:
+                        case ulong:
                             w.Write(ulong.Parse(additionalFields[field]));
                             break;
-                        case uint _:
+                        case uint:
                             w.Write(uint.Parse(additionalFields[field]));
                             break;
-                        case ushort _:
+                        case ushort:
                             w.Write(ushort.Parse(additionalFields[field]));
                             break;
-                        case int _:
+                        case int:
                             w.Write(int.Parse(additionalFields[field]));
                             break;
-                        case byte _:
+                        case byte:
                             w.Write(byte.Parse(additionalFields[field]));
                             break;
-                        case sbyte _:
+                        case sbyte:
                             w.Write(sbyte.Parse(additionalFields[field]));
                             break;
                     }
 
                     return;
                 }
-                else
-                {
-                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + field + "' : error writing field - integer required; " + additionalFields[field] + " found");
-                }
+
+                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "'" + field + "' : error writing field - integer required; " + additionalFields[field] + " found");
             }
 
             switch (defaultValue)
@@ -248,9 +240,9 @@ namespace ATL.AudioData.IO
         }
 
         /// <summary>
-        /// Skips WAV padding byte in the given Stream, if it exists, 
+        /// Skips WAV padding byte in the given Stream, if it exists,
         /// while not crossing the given maximum position
-        /// 
+        ///
         /// NB : WAV specs say padding should only be zeroes, but other values can be found in the wild
         /// => expects a _displayable_ character as part of next header ID
         /// </summary>
@@ -261,7 +253,7 @@ namespace ATL.AudioData.IO
             if (s.Position >= maxPos) return;
 
             int b = s.ReadByte();
-            if (b > 31 && b < 255) s.Seek(-1, SeekOrigin.Current);
+            if (b is > 31 and < 255) s.Seek(-1, SeekOrigin.Current);
         }
     }
 }

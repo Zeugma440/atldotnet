@@ -8,11 +8,11 @@ namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for Advanced Audio Coding files manipulation (extensions : .AAC)
-    /// 
+    ///
     /// Implementation notes
-    /// 
+    ///
     ///     1. LATM and LOAS/LATM support is missing
-    /// 
+    ///
     /// </summary>
 	class AAC : IAudioDataIO
     {
@@ -133,7 +133,7 @@ namespace ATL.AudioData.IO
             return 8.0 * (sizeInfo.FileSize - sizeInfo.TotalTagSize) * 1000 / bitrate;
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
             var headerTypeID = recognizeHeaderType(data);
             // Read header data
@@ -148,11 +148,11 @@ namespace ATL.AudioData.IO
             else return false;
         }
 
-        private static byte recognizeHeaderType(byte[] data)
+        private static byte recognizeHeaderType(ReadOnlySpan<byte> data)
         {
             if (data.Length < 4) return AAC_BITRATE_TYPE_UNKNOWN;
 
-            if ("ADIF".Equals(Utils.Latin1Encoding.GetString(data, 0, 4)))
+            if ("ADIF".Equals(Utils.Latin1Encoding.GetString(data[..4])))
             {
                 return AAC_HEADER_TYPE_ADIF;
             }
@@ -165,10 +165,10 @@ namespace ATL.AudioData.IO
         // Get header type of the file
         private byte recognizeHeaderType(Stream source)
         {
-            byte[] header = new byte[4];
+            Span<byte> header = stackalloc byte[4];
 
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            if (source.Read(header, 0, header.Length) < header.Length) return AAC_HEADER_TYPE_UNKNOWN;
+            if (source.Read(header) < header.Length) return AAC_HEADER_TYPE_UNKNOWN;
 
             byte result = recognizeHeaderType(header);
             if (result != AAC_BITRATE_TYPE_UNKNOWN)

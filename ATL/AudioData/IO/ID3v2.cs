@@ -6,44 +6,45 @@ using System.Linq;
 using Commons;
 using ATL.Logging;
 using static ATL.TagData;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for ID3v2.2-2.4 tags manipulation
-    /// 
+    ///
     /// Implementation notes
-    /// 
+    ///
     ///     1. Extended header tags
-    /// 
-    ///     Due to the rarity of ID3v2 tags with extended headers (on my disk and on the web), 
+    ///
+    ///     Due to the rarity of ID3v2 tags with extended headers (on my disk and on the web),
     ///     implementation of decoding extended header data has been tested on _forged_ files. Implementation might not be 100% real-world proof.
-    ///     
+    ///
     ///     2. Hierarchical table of contents (CTOC)
-    ///     
+    ///
     ///     ID3v2 chapters specification allows multiple CTOC frames in the tag, in order to describe a multiple-level table of contents.
     ///     (see informal standard  id3v2-chapters-1.0.html)
-    ///     
+    ///
     ///     This feature is currently not supported. If any CTOC is detected while reading, ATL will "blindly" write a flat CTOC containing
     ///     all chapters. Any hierarchical table of contents will be lost while rewriting.
-    ///     
+    ///
     ///     3. Unsynchronization and Unicode
-    ///     
+    ///
     ///     Little-endian UTF-16 BOM's are caught by the unsynchronization encoding, which "breaks" most tag readers.
     ///     Hence unsycnhronization is force-disabled when text encoding is Unicode.
     ///
     ///     4. Unsynchronization at frame level
-    ///     
+    ///
     ///     Even though ID3v2.4 allows it, ATL does not support "individual" unsynchronization at frame level
     ///     => Either the whole tag (all frames) is unsynchronized, or none is
-    ///     
+    ///
     ///     5. Prepended tag
-    ///     
+    ///
     ///     Even though specs allow ID3v2.4 tags to be located at the end of the file, I have yet to find a valid sample.
     ///     => Prepended tags are not supported until someone asks for it.
-    ///     
+    ///
     ///     6. Extended support for GEOB fields
-    ///     
+    ///
     ///     Current support for General Encapsulated Object (GEOB) fields are simplified that way :
     ///     - MIME-type is always "application/octet-stream" (read time + write time)
     ///     - File name is always empty (read time + write time)
@@ -65,6 +66,11 @@ namespace ATL.AudioData.IO
         /// ID3v2.4
         /// </summary>
         public const byte TAG_VERSION_2_4 = 4;
+
+        /// <summary>
+        /// Default zone identifier for ID3v2 data
+        /// </summary>
+        public const string ZONE_ID3V2 = "id3v2_default";
 
         private TagInfo tagHeader;
 
@@ -443,9 +449,9 @@ namespace ATL.AudioData.IO
         // Unicode BOM properties
         private sealed class BomProperties
         {
-            public bool Found = false;          // BOM found
-            public int Size = 0;                // Size of BOM
-            public Encoding Encoding;           // Corresponding encoding
+            public bool Found;          // BOM found
+            public int Size;            // Size of BOM
+            public Encoding Encoding;   // Corresponding encoding
         }
 
         private sealed class RichStructure
@@ -480,7 +486,7 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         protected override int getDefaultTagOffset()
         {
-            return TO_BOF; // Specs allow the ID3v2 tag to be located at the end of the audio (see §5 "Tag location" of specs)
+            return TO_BOF; // Specs allow the ID3v2 tag to be located at the end of the audio (see ï¿½5 "Tag location" of specs)
         }
 
         /// <inheritdoc/>
@@ -556,7 +562,7 @@ namespace ATL.AudioData.IO
             return true; // Will be transformed to a TXXX field
         }
 
-        internal static bool IsValidHeader(byte[] data)
+        internal static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
             if (data.Length < 3) return false;
             return Utils.Latin1Encoding.GetString(data).StartsWith(ID3V2_ID);
@@ -621,7 +627,7 @@ namespace ATL.AudioData.IO
 
             // Content description
             Encoding contentDescriptionEncoding = encoding;
-            if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode || 2 == encodingCode))
+            if (tagVersion > TAG_VERSION_2_2 && encodingCode is 1 or 2)
             {
                 BomProperties bom = readBOM(source);
                 if (bom.Found) contentDescriptionEncoding = bom.Encoding;
@@ -630,12 +636,11 @@ namespace ATL.AudioData.IO
             result.Size = (int)(source.Position - initialPos);
 
             // Ignore malformed comment
-            if (result.Size >= dataSize)
-            {
-                // Get to the physical end of the frame
-                source.Position = initialPos + dataSize;
-                result.Size = dataSize;
-            }
+            if (result.Size < dataSize) return result;
+
+            // Get to the physical end of the frame
+            source.Position = initialPos + dataSize;
+            result.Size = dataSize;
 
             return result;
         }
@@ -669,7 +674,7 @@ namespace ATL.AudioData.IO
             if (10 != source.ReadByte()) source.Position--;
 
             string text = StreamUtils.ReadNullTerminatedString(source, encoding);
-            int timestamp = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+            int timestamp = BinaryPrimitives.ReadInt32BigEndian(source.ReadBytes(4));
             return new LyricsInfo.LyricsPhrase(timestamp, text);
         }
 
@@ -692,7 +697,11 @@ namespace ATL.AudioData.IO
 
 
             // Read frame header and check frame ID
-            frame.ID = TAG_VERSION_2_2 == m_tagVersion ? Utils.Latin1Encoding.GetString(source.ReadBytes(3)) : Utils.Latin1Encoding.GetString(source.ReadBytes(4));
+            int frameIdSize = TAG_VERSION_2_2 == m_tagVersion ? 3 : 4;
+            frame.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(frameIdSize));
+
+            // Tag ID couldn't be read (EOF)
+            if (frame.ID.Length < frameIdSize) return true;
 
             if (!char.IsLetter(frame.ID[0]) || !char.IsUpper(frame.ID[0]))
             {
@@ -714,7 +723,7 @@ namespace ATL.AudioData.IO
             if (tag.ActualEnd > -1) return false;
 
             /*
-            Frame size measures number of bytes between end of flag and end of payload 
+            Frame size measures number of bytes between end of flag and end of payload
 
             Frame size encoding conventions
             ID3v2.2 : 3 bytes
@@ -727,7 +736,7 @@ namespace ATL.AudioData.IO
                     frame.Size = StreamUtils.DecodeBEInt24(source.ReadBytes(3));
                     break;
                 case TAG_VERSION_2_3:
-                    frame.Size = StreamUtils.DecodeBEInt32(source.ReadBytes(4));
+                    frame.Size = BinaryPrimitives.ReadInt32BigEndian(source.ReadBytes(4));
                     break;
                 case TAG_VERSION_2_4:
                     long sizePosition = source.Position;
@@ -740,19 +749,19 @@ namespace ATL.AudioData.IO
                     // If the size descriptor, read as a plain integer, is larger than the whole tag size, we should keep it as a synch safe int
                     if (sizeDescriptor[2] + sizeDescriptor[1] + sizeDescriptor[0] > 0
                         && misencodedSizev4Fields.Contains(frame.ID)
-                        && StreamUtils.DecodeBEInt32(sizeDescriptor) < tag.GetSize(false))
+                        && BinaryPrimitives.ReadInt32BigEndian(sizeDescriptor) < tag.GetSize(false))
                     {
                         // Check if the end of the frame is immediately followed by 4 uppercase chars or by padding chars
                         // If not, try again by reading frame size as a plain integer
                         source.Seek(sizePosition + 6 + frame.Size, SeekOrigin.Begin);
                         string frameId = Utils.Latin1Encoding.GetString(source.ReadBytes(4));
-                        if (!isUpperAlpha(frameId) && !frameId.Equals("\0\0\0\0")) frame.Size = StreamUtils.DecodeBEInt32(sizeDescriptor);
+                        if (!isUpperAlpha(frameId) && !frameId.Equals("\0\0\0\0")) frame.Size = BinaryPrimitives.ReadInt32BigEndian(sizeDescriptor);
                         source.Seek(sizePosition + 4, SeekOrigin.Begin);
                     }
                     break;
             }
 
-            frame.Flags = TAG_VERSION_2_2 == m_tagVersion ? (ushort)0 : StreamUtils.DecodeBEUInt16(source.ReadBytes(2));
+            frame.Flags = TAG_VERSION_2_2 == m_tagVersion ? (ushort)0 : BinaryPrimitives.ReadUInt16BigEndian(source.ReadBytes(2));
 
             var dataSize = frame.Size;
 
@@ -927,10 +936,10 @@ namespace ATL.AudioData.IO
                         long initPos = source.Position;
                         chapter.UniqueID = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
 
-                        chapter.StartTime = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                        chapter.EndTime = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                        chapter.StartOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
-                        chapter.EndOffset = StreamUtils.DecodeBEUInt32(source.ReadBytes(4));
+                        chapter.StartTime = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+                        chapter.EndTime = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+                        chapter.StartOffset = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+                        chapter.EndOffset = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
 
                         chapter.UseOffset = chapter.StartOffset != uint.MaxValue;
 
@@ -1010,12 +1019,12 @@ namespace ATL.AudioData.IO
                             string[] parts = null;
                             if (TAG_VERSION_2_4 == m_tagVersion) // All text information frames may contain multiple values on ID3v2.4
                             {
-                                parts = strData.Trim().Split(new char[] { VALUE_SEPARATOR_24 }, StringSplitOptions.RemoveEmptyEntries);
+                                parts = strData.Trim().Split(new[] { VALUE_SEPARATOR_24 }, StringSplitOptions.RemoveEmptyEntries);
                             }
                             // Only specific text information frames may contain multiple values on ID3v2.2-3
                             else if (multipleValuev23Fields.Contains(frame.ID) && Settings.ID3v2_separatev2v3Values)
                             {
-                                parts = strData.Trim().Split(new char[] { VALUE_SEPARATOR_22 }, StringSplitOptions.RemoveEmptyEntries);
+                                parts = strData.Trim().Split(new[] { VALUE_SEPARATOR_22 }, StringSplitOptions.RemoveEmptyEntries);
                             }
                             if (parts != null) strData = string.Join(Settings.InternalValueSeparator + "", parts);
                         }
@@ -1083,7 +1092,7 @@ namespace ATL.AudioData.IO
                     }
 
                     byte picCode = source.ReadByte();
-                    // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ? 
+                    // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ?
                     PictureInfo.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
 
                     int picturePosition = 0;
@@ -1164,7 +1173,7 @@ namespace ATL.AudioData.IO
             }
 
             /* Store all comments
-             * 
+             *
              * - The only comment with a blank or bland description field is a "classic" Comment
              * - Other comments are treated as additional fields, with their description field as their field code
             */
@@ -1238,7 +1247,7 @@ namespace ATL.AudioData.IO
                 if (TAG_VERSION_2_2 <= m_tagVersion && m_tagVersion <= TAG_VERSION_2_4 && tagHeader.GetSize() > 0)
                 {
                     readFrames(reader, tagHeader, offset, readTagParams);
-                    structureHelper.AddZone(offset, (int)(tagHeader.ActualEnd - offset));
+                    structureHelper.AddZone(offset, (int)(tagHeader.ActualEnd - offset), ZONE_ID3V2);
                 }
                 else
                 {
@@ -1259,6 +1268,8 @@ namespace ATL.AudioData.IO
         /// <returns>True if writing operation succeeded; false if not</returns>
         protected override int write(TagData tag, Stream s, string zone)
         {
+            if (zone == "id3_remove") return 0;
+
             using BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true);
             return write(tag, w);
         }
@@ -1422,13 +1433,14 @@ namespace ATL.AudioData.IO
             else if (3 == Settings.ID3v2_tagSubVersion && recordingDate.Length > 3 && 0 == recordingYear.Length)
             {
                 // Recording date valued for ID3v2.3 (possibly a migration from ID3v2.4 to ID3v2.3)
-                map[Field.RECORDING_YEAR] = recordingDate[..4];
+                var dateSpan = recordingDate.AsSpan();
+                map[Field.RECORDING_YEAR] = dateSpan[..4].ToString();
                 if (recordingDate.Length > 9)
                 {
-                    map[Field.RECORDING_DAYMONTH] = recordingDate.Substring(8, 2) + recordingDate.Substring(5, 2);
+                    map[Field.RECORDING_DAYMONTH] = string.Concat(dateSpan.Slice(8, 2), dateSpan.Slice(5, 2));
                     if (recordingDate.Length > 15)
                     {
-                        map[Field.RECORDING_TIME] = recordingDate.Substring(11, 2) + recordingDate.Substring(14, 2);
+                        map[Field.RECORDING_TIME] = string.Concat(dateSpan.Slice(11, 2), dateSpan.Slice(14, 2));
                     }
                 }
                 map.Remove(Field.RECORDING_DATE);
@@ -1481,7 +1493,7 @@ namespace ATL.AudioData.IO
                 foreach (string s in mapping.Keys)
                 {
                     if (frameType != mapping[s]) continue;
-                    if (s.Equals("CTOC")) continue; // CTOC (table of contents) is handled by writeChapters                            
+                    if (s.Equals("CTOC")) continue; // CTOC (table of contents) is handled by writeChapters
 
                     string value = formatBeforeWriting(frameType, tag, map);
                     writeTextFrame(w, s, value, tagEncoding);
@@ -1628,7 +1640,7 @@ namespace ATL.AudioData.IO
                 if (Utils.ProtectValue(tag[Field.CHAPTERS_TOC_DESCRIPTION]).Length > 0)
                     writeTextFrame(frameWriter, "TIT2", tag[Field.CHAPTERS_TOC_DESCRIPTION], tagEncoding, "", "", true);
 
-                // Go back to frame size location to write its actual size 
+                // Go back to frame size location to write its actual size
                 finalFramePos = frameWriter.BaseStream.Position;
                 frameWriter.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
                 int size = (int)(finalFramePos - frameDataPos - frameOffset);
@@ -1697,7 +1709,7 @@ namespace ATL.AudioData.IO
                     writePictureFrame(frameWriter, chapter.Picture.PictureData, chapter.Picture.MimeType, chapter.Picture.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) ? (byte)chapter.Picture.NativePicCode : EncodeID3v2PictureType(chapter.Picture.PicType), chapter.Picture.Description, tagEncoding, true);
                 }
 
-                // Go back to frame size location to write its actual size 
+                // Go back to frame size location to write its actual size
                 finalFramePos = frameWriter.BaseStream.Position;
                 frameWriter.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
                 int size = (int)(finalFramePos - frameDataPos - frameOffset);
@@ -1764,7 +1776,7 @@ namespace ATL.AudioData.IO
                 w.Write(StreamUtils.EncodeBEInt32(phrase.TimestampStart));
             }
 
-            // Go back to frame size location to write its actual size 
+            // Go back to frame size location to write its actual size
             var finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
             int size = (int)(finalFramePos - frameDataPos);
@@ -2006,7 +2018,7 @@ namespace ATL.AudioData.IO
                 w.Close();
             }
 
-            // Go back to frame size location to write its actual size 
+            // Go back to frame size location to write its actual size
             var finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameOffset + frameSizePos, SeekOrigin.Begin);
             int size = (int)(finalFramePos - frameDataPos - frameOffset);
@@ -2142,7 +2154,7 @@ namespace ATL.AudioData.IO
 
             // Handle ID3v2.4 separators and ID3v2.2-3 parenthesis
             // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character before each genre
-            string[] parts = iGenre.Trim().Replace(Utils.UNICODE_INVISIBLE_EMPTY, "").Split(new char[] { '\0', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = iGenre.Trim().Replace(Utils.UNICODE_INVISIBLE_EMPTY, "").Split(new[] { '\0', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string part in parts)
             {
                 // Handle numerical index of the genre, as per ID3v1 convention
@@ -2186,9 +2198,9 @@ namespace ATL.AudioData.IO
             result.Size = 1;
             result.Encoding = Encoding.Unicode;
 
-            byte[] b = new byte[1];
+            Span<byte> b = stackalloc byte[1];
 
-            source.Read(b, 0, 1);
+            if (source.Read(b) < 1) return result;
             bool first = true;
             bool foundFE = false;
             bool foundFF = false;
@@ -2214,7 +2226,7 @@ namespace ATL.AudioData.IO
                     first = false;
                 }
 
-                source.Read(b, 0, 1);
+                if (source.Read(b) < 1) return result;
                 result.Size++;
             }
 
@@ -2318,7 +2330,7 @@ namespace ATL.AudioData.IO
                 var written = 0;
                 var bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
 
-                from.Read(readBuffer, 0, bytesToRead);
+                if (from.Read(readBuffer, 0, bytesToRead) < bytesToRead) return result;
 
                 for (int i = 0; i < bytesToRead; i++)
                 {
@@ -2348,7 +2360,7 @@ namespace ATL.AudioData.IO
         private static void encodeUnsynchronizedStreamTo(Stream from, BinaryWriter to)
         {
             /* TODO PERF : profile I/O speed using
-             * 
+             *
              *   BinaryReader.readByte vs. BufferedBinaryReader.readByte vs. Stream.Read
              *   BinaryWriter.Write vs. Stream.WriteByte
              */
@@ -2357,12 +2369,12 @@ namespace ATL.AudioData.IO
             long streamLength = from.Length;
             long position = from.Position;
 
-            from.Read(data, 0, 1);
+            if (from.Read(data, 0, 1) < 1) return;
             position++;
 
             while (position < streamLength)
             {
-                from.Read(data, 1, 1);
+                if (from.Read(data, 1, 1) < 1) return;
                 position++;
 
                 to.Write(data[0]);
@@ -2378,10 +2390,10 @@ namespace ATL.AudioData.IO
         /// Returns the .NET Encoding corresponding to the given ID3v2 convention (see below)
         ///
         /// Default encoding should be "ISO-8859-1"
-        /// 
+        ///
         /// Warning : due to approximative implementations, some tags seem to be coded
         /// with the default encoding of the OS they have been tagged on
-        /// 
+        ///
         ///  $00    ISO-8859-1 [ISO-8859-1]. Terminated with $00.
         ///  $01    UTF-16 [UTF-16] encoded Unicode [UNICODE], with BOM if version > 2.2
         ///         All strings in the same frame SHALL have the same byteorder.

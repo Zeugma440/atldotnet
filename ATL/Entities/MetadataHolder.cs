@@ -161,14 +161,14 @@ namespace ATL
                         StringBuilder dateTimeBuilder = new StringBuilder();
                         dateTimeBuilder.Append(year).Append('-');
                         dateTimeBuilder.Append(dayMonth.AsSpan(2, 2)).Append('-');
-                        dateTimeBuilder.Append(dayMonth[..2]);
+                        dateTimeBuilder.Append(dayMonth.AsSpan(0, 2));
                         string time = Utils.ProtectValue(tagData[Field.RECORDING_TIME]); // Try to add time if available
                         if (time.Length >= 4)
                         {
                             dateTimeBuilder.Append('T');
-                            dateTimeBuilder.Append(time[..2]).Append(':');
+                            dateTimeBuilder.Append(time.AsSpan(0, 2)).Append(':');
                             dateTimeBuilder.Append(time.AsSpan(2, 2)).Append(':');
-                            dateTimeBuilder.Append((6 == time.Length) ? time.Substring(4, 2) : "00");
+                            dateTimeBuilder.Append((6 == time.Length) ? time.AsSpan(4, 2) : "00");
                         }
                         success = DateTime.TryParse(dateTimeBuilder.ToString(), out result);
                     }
@@ -176,8 +176,7 @@ namespace ATL
                     // Year only
                     if (!success)
                     {
-                        DateTime? dateTimeFromYear = null;
-                        if (!Utils.TryExtractDateTimeFromDigits(year, out dateTimeFromYear))
+                        if (!Utils.TryExtractDateTimeFromDigits(year, out var dateTimeFromYear))
                         {
                             // ...then try with RecordingDate
                             foreach (var dateValue in dateValues)
@@ -187,17 +186,15 @@ namespace ATL
                         }
 
                         // We have a valid value !
-                        if (dateTimeFromYear.HasValue)
-                        {
-                            result = dateTimeFromYear.Value;
-                            string time = Utils.ProtectValue(tagData[Field.RECORDING_TIME]); // Try to add time if available
-                            if (time.Length >= 4 && Utils.IsNumeric(time))
-                            {
-                                result.AddHours(int.Parse(time[..2]));
-                                result.AddMinutes(int.Parse(time.AsSpan(2, 2)));
-                                if (6 == time.Length) result.AddSeconds(int.Parse(time.Substring(4, 2)));
-                            }
-                        }
+                        if (!dateTimeFromYear.HasValue) return result;
+
+                        result = dateTimeFromYear.Value;
+                        string time = Utils.ProtectValue(tagData[Field.RECORDING_TIME]); // Try to add time if available
+                        if (time.Length < 4 || !Utils.IsNumeric(time)) return result;
+
+                        result.AddHours(int.Parse(time.AsSpan(0, 2)));
+                        result.AddMinutes(int.Parse(time.AsSpan(2, 2)));
+                        if (6 == time.Length) result.AddSeconds(int.Parse(time.AsSpan(4, 2)));
                     }
                 }
                 return result;
@@ -226,27 +223,24 @@ namespace ATL
         {
             get
             {
-                DateTime result;
-                if (!DateTime.TryParse(Utils.ProtectValue(tagData[Field.ORIG_RELEASE_DATE]), out result)) // First try with a proper date field
-                {
-                    bool success = false;
-                    string year = Utils.ProtectValue(tagData[Field.ORIG_RELEASE_YEAR]);
+                // First try with a proper date field
+                if (DateTime.TryParse(Utils.ProtectValue(tagData[Field.ORIG_RELEASE_DATE]), out var result)) return result;
+                bool success = false;
+                string year = Utils.ProtectValue(tagData[Field.ORIG_RELEASE_YEAR]);
 
-                    DateTime? dateTimeFromYear = null;
-                    // ...then with OriginalReleaseDate
-                    if (!Utils.TryExtractDateTimeFromDigits(year, out dateTimeFromYear))
-                    {
-                        year = Utils.ProtectValue(tagData[Field.ORIG_RELEASE_DATE]);
-                        Utils.TryExtractDateTimeFromDigits(year, out dateTimeFromYear);
-                    }
-                    // We have a valid value !
-                    if (dateTimeFromYear.HasValue)
-                    {
-                        result = dateTimeFromYear.Value;
-                        success = true;
-                    }
-                    if (!success) result = DateTime.MinValue;
+                // ...then with OriginalReleaseDate
+                if (!Utils.TryExtractDateTimeFromDigits(year, out var dateTimeFromYear))
+                {
+                    year = Utils.ProtectValue(tagData[Field.ORIG_RELEASE_DATE]);
+                    Utils.TryExtractDateTimeFromDigits(year, out dateTimeFromYear);
                 }
+                // We have a valid value !
+                if (dateTimeFromYear.HasValue)
+                {
+                    result = dateTimeFromYear.Value;
+                    success = true;
+                }
+                if (!success) result = DateTime.MinValue;
                 return result;
             }
             set
@@ -269,8 +263,7 @@ namespace ATL
         {
             get
             {
-                DateTime result;
-                if (!DateTime.TryParse(tagData[Field.PUBLISHING_DATE], out result))
+                if (!DateTime.TryParse(tagData[Field.PUBLISHING_DATE], out var result))
                     result = DateTime.MinValue;
                 return result;
             }
@@ -287,12 +280,9 @@ namespace ATL
         {
             get
             {
-                if (!float.TryParse(tagData[Field.RATING], out var result))
-                {
-                    if (Settings.NullAbsentValues) return null;
-                    return 0f;
-                }
-                return result;
+                if (float.TryParse(tagData[Field.RATING], out var result)) return result;
+                if (Settings.NullAbsentValues) return null;
+                return 0f;
             }
             set => tagData.IntegrateValue(Field.RATING, (null == value) ? null : value.ToString());
         }
@@ -436,12 +426,9 @@ namespace ATL
             get
             {
                 var dbl = Utils.ParseDouble(tagData[Field.BPM]);
-                if (double.IsNaN(dbl))
-                {
-                    if (Settings.NullAbsentValues) return null;
-                    return 0;
-                }
-                return (float)dbl;
+                if (!double.IsNaN(dbl)) return (float)dbl;
+                if (Settings.NullAbsentValues) return null;
+                return 0;
             }
             set => tagData.IntegrateValue(Field.BPM, (null == value) ? null : value.ToString());
         }
@@ -571,8 +558,7 @@ namespace ATL
         /// <inheritdoc />
         public bool Equals(MetaDataHolder other)
         {
-            if (null == other) return false;
-            return tagData.Equals(other.tagData);
+            return null != other && tagData.Equals(other.tagData);
         }
 
         /// <inheritdoc/>

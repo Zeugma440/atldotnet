@@ -105,7 +105,7 @@ namespace ATL.CatalogDataReaders.BinaryLogic
                             if ("REM".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                             {
                                 if (comments.Length > 0) comments.Append(Settings.InternalValueSeparator);
-                                comments.Append(s.Substring(firstBlank + 1, s.Length - firstBlank - 1));
+                                comments.Append(s.AsSpan(firstBlank + 1, s.Length - firstBlank - 1));
                             }
                             else if ("PERFORMER".Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                             {

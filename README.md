@@ -101,7 +101,7 @@ Apple Core Audio | .CAF |  |  |  | (5)
 Audible | .AAX, .AA | R/W | R/W | R/W | R/W
 Audio Interchange File Format | .AIF, .AIFF, .AIFC |  | R/W |  | R/W
 Digital Theatre System | .DTS |  |  |  | 
-Direct Stream Digital | .DSD, .DSF |  | R/W |  | 
+Direct Stream Digital | .DSD, .DSF, .DFF |  | R/W |  | 
 Dolby Digital | .AC3 |  |  | R/W | 
 Extended Module | .XM |  |  |  | R/W (2)
 Free Lossless Audio Codec | .FLAC |  | R/W |  | R/W
@@ -162,7 +162,7 @@ Bitrate, Bit depth (bits per sample), Sample rate, Duration, VBR, Codec family, 
 
 - **Style** : Genre, Beats Per Minute (BPM)
 
-- **Miscellaneous** : Comment, Description, Long description (also known as "Podcast description"), Language, Copyright, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized Lyrics using the LRC or ID3v2 format
+- **Miscellaneous** : Comment, Description, Long description (also known as "Podcast description"), Language, Copyright, Embedded pictures, [Chapters](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-Chapter-metadata), Unsynchronized and synchronized [lyrics](https://github.com/Zeugma440/atldotnet/wiki/Focus-on-lyrics-metadata) using the LRC, SRT or ID3v2 format
 
 
 #### Custom metadata

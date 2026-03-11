@@ -8,11 +8,12 @@ using System.Text;
 using static ATL.ChannelsArrangements;
 using static ATL.TagData;
 using System.Threading.Tasks;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
     /// <summary>
-    /// Class for Portable Sound Format files manipulation (extensions : .PSF, .PSF1, .PSF2, 
+    /// Class for Portable Sound Format files manipulation (extensions : .PSF, .PSF1, .PSF2,
     /// .MINIPSF, .MINIPSF1, .MINIPSF2, .SSF, .MINISSF, .DSF, .MINIDSF, .GSF, .MINIGSF, .QSF, .MINISQF)
     /// According to Neil Corlett's specifications v. 1.6
     /// </summary>
@@ -188,29 +189,25 @@ namespace ATL.AudioData.IO
             }
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, PSF_FORMAT_TAG);
+            return data.StartsWith(PSF_FORMAT_TAG);
         }
 
         private static bool readHeader(Stream source, ref PSFHeader header)
         {
             byte[] buffer = new byte[4];
             if (source.Read(header.FormatTag, 0, 3) < 3) return false;
-            if (IsValidHeader(header.FormatTag))
-            {
-                if (source.Read(buffer, 0, 1) < 1) return false;
-                header.VersionByte = buffer[0];
-                if (source.Read(buffer, 0, 4) < 4) return false;
-                header.ReservedAreaLength = StreamUtils.DecodeUInt32(buffer);
-                if (source.Read(buffer, 0, 4) < 4) return false;
-                header.CompressedProgramLength = StreamUtils.DecodeUInt32(buffer);
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            if (!IsValidHeader(header.FormatTag)) return false;
+
+            if (source.Read(buffer, 0, 1) < 1) return false;
+            header.VersionByte = buffer[0];
+            if (source.Read(buffer, 0, 4) < 4) return false;
+            header.ReservedAreaLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
+            if (source.Read(buffer, 0, 4) < 4) return false;
+            header.CompressedProgramLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
+            return true;
+
         }
 
         private static string readPSFLine(Stream source, Encoding encoding)
@@ -219,7 +216,7 @@ namespace ATL.AudioData.IO
             long lineEnd;
             bool hasEOL = true;
 
-            if (StreamUtils.FindSequence(source, new byte[] { LINE_FEED }))
+            if (StreamUtils.FindSequence(source, new[] { LINE_FEED }))
             {
                 lineEnd = source.Position;
             }
@@ -244,8 +241,8 @@ namespace ATL.AudioData.IO
             long initialPosition = source.Position;
             Encoding encoding = Utils.Latin1Encoding;
 
-            byte[] buffer = new byte[5];
-            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return false;
+            Span<byte> buffer = stackalloc byte[5];
+            if (source.Read(buffer) < buffer.Length) return false;
             tag.TagHeader = Utils.Latin1Encoding.GetString(buffer);
 
             if (TAG_HEADER == tag.TagHeader)
@@ -287,7 +284,7 @@ namespace ATL.AudioData.IO
                     }
 
                     s = readPSFLine(source, encoding);
-                } // Metadata lines 
+                } // Metadata lines
                 SetMetaField(lastKey, lastValue, readTagParams.ReadAllMetaFrames);
 
                 // PSF files without any 'length' tag take default duration, regardless of 'fade' value
@@ -310,7 +307,6 @@ namespace ATL.AudioData.IO
         {
             string hStr = "";
             string mStr = "";
-            string sStr = "";
             string dStr = "";
             double result = 0;
 
@@ -330,7 +326,7 @@ namespace ATL.AudioData.IO
             sepIndex = durationStr.LastIndexOf(':');
 
             sepIndex++;
-            sStr = durationStr.Substring(sepIndex, durationStr.Length - sepIndex);
+            var sStr = durationStr.Substring(sepIndex, durationStr.Length - sepIndex);
 
             durationStr = durationStr[..Math.Max(0, sepIndex - 1)];
 
@@ -386,7 +382,7 @@ namespace ATL.AudioData.IO
 
             if (source.Length > HEADER_LENGTH + header.CompressedProgramLength + header.ReservedAreaLength)
             {
-                source.Seek((long)(4 + header.CompressedProgramLength + header.ReservedAreaLength), SeekOrigin.Current);
+                source.Seek(4 + header.CompressedProgramLength + header.ReservedAreaLength, SeekOrigin.Current);
 
                 if (!readTag(source, ref tag, readTagParams)) throw new InvalidDataException("Not a PSF tag");
             }
@@ -401,7 +397,8 @@ namespace ATL.AudioData.IO
 
         protected override int write(TagData tag, Stream s, string zone)
         {
-            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w);
+            using BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true);
+            return write(tag, w);
         }
 
         private int write(TagData tag, BinaryWriter w)
@@ -456,16 +453,9 @@ namespace ATL.AudioData.IO
 
         private static void writeTextFrame(BinaryWriter writer, string frameCode, string text)
         {
-            string[] textLines;
-            if (text.Contains(Environment.NewLine))
-            {
-                // Split a multiple-line value into multiple frames with the same code
-                textLines = text.Split(Environment.NewLine.ToCharArray());
-            }
-            else
-            {
-                textLines = new[] { text };
-            }
+            // Split a multiple-line value into multiple frames with the same code
+            var textLines =
+                text.Contains(Environment.NewLine) ? text.Split(Environment.NewLine.ToCharArray()) : new[] { text };
 
             foreach (string s in textLines)
             {
@@ -499,12 +489,13 @@ namespace ATL.AudioData.IO
             foreach (MetaFieldInfo fieldInfo in GetAdditionalFields())
             {
                 var fieldCode = fieldInfo.NativeFieldCode.ToLower();
-                if (!fieldCode.StartsWith('_') && !playbackFrames.Contains(fieldCode))
+                if (fieldCode.StartsWith('_') || playbackFrames.Contains(fieldCode)) continue;
+
+                MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo)
                 {
-                    MetaFieldInfo emptyFieldInfo = new MetaFieldInfo(fieldInfo);
-                    emptyFieldInfo.MarkedForDeletion = true;
-                    result.AdditionalFields.Add(emptyFieldInfo);
-                }
+                    MarkedForDeletion = true
+                };
+                result.AdditionalFields.Add(emptyFieldInfo);
             }
 
             return result;

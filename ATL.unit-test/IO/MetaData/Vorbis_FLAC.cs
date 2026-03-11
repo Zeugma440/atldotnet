@@ -547,5 +547,25 @@ namespace ATL.test.IO.MetaData
         {
             test_RW_Cohabitation(MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.ID3V2);
         }
+
+        [TestMethod]
+        public void TagIO_R_VorbisFLAC_Lyrics_Multiple()
+        {
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(TestUtils.GetResourceLocationRoot() + "FLAC/vorbisTag_multiple_lyrics.flac"));
+
+            Assert.IsTrue(theFile.ReadFromFile(false, false));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            checkLyricsMultiple(theFile.NativeTag);
+        }
+
+        private static void checkLyricsMultiple(IMetaData meta)
+        {
+            Assert.AreEqual(1, meta.Lyrics.Count);
+
+            Assert.AreEqual(LyricsInfo.LyricsFormat.LRC, meta.Lyrics[0].Format);
+            Assert.AreEqual(99, meta.Lyrics[0].SynchronizedLyrics.Count);
+        }
     }
 }

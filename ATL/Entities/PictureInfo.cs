@@ -139,7 +139,7 @@ namespace ATL
         /// <summary>
         /// Binary picture data
         /// </summary>
-        public byte[] PictureData { get; private set; }
+        public byte[] PictureData { get; }
 
         /// <summary>
         /// Hash of binary picture data
@@ -297,22 +297,21 @@ namespace ATL
             MarkedForDeletion = false;
             Description = "";
 
-            if (nativePicCode is string picCodeStr)
+            switch (nativePicCode)
             {
-                NativePicCodeStr = picCodeStr;
-                NativePicCode = -1;
-            }
-            else if (nativePicCode is byte code)
-            {
-                NativePicCode = code;
-            }
-            else if (nativePicCode is int picCode)
-            {
-                NativePicCode = picCode;
-            }
-            else
-            {
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte, int or string; found " + nativePicCode.GetType().Name);
+                case string picCodeStr:
+                    NativePicCodeStr = picCodeStr;
+                    NativePicCode = -1;
+                    break;
+                case byte code:
+                    NativePicCode = code;
+                    break;
+                case int picCode:
+                    NativePicCode = picCode;
+                    break;
+                default:
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "nativePicCode type is not supported; expected byte, int or string; found " + nativePicCode.GetType().Name);
+                    break;
             }
         }
 
@@ -364,13 +363,15 @@ namespace ATL
         {
             if (NativePicCode > 0 && TagType != TagType.ANY)
                 return 10000000 * (int)TagType + "N" + NativePicCode;
-            else if (!string.IsNullOrEmpty(NativePicCodeStr) && TagType != TagType.ANY)
-                return 10000000 * (int)TagType + "N" + NativePicCodeStr;
-            else if (PicType != PIC_TYPE.Unsupported)
-                return "T" + Utils.BuildStrictLengthString(((int)PicType).ToString(), 2, '0', false); // TagType doesn't matter if we're working with generic picture codes
-            else
-                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Non-supported picture detected, but no native picture code found");
 
+            if (!string.IsNullOrEmpty(NativePicCodeStr) && TagType != TagType.ANY)
+                return 10000000 * (int)TagType + "N" + NativePicCodeStr;
+
+            if (PicType != PIC_TYPE.Unsupported)
+                return "T" + Utils.BuildStrictLengthString(((int)PicType).ToString(), 2, '0', false); // TagType doesn't matter if we're working with generic picture codes
+
+            LogDelegator.GetLogDelegate()(Log.LV_WARNING,
+                "Non-supported picture detected, but no native picture code found");
             return "";
         }
 

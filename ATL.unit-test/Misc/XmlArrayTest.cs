@@ -1,6 +1,5 @@
 ﻿using ATL.AudioData;
 using ATL.AudioData.IO;
-using System.IO;
 
 namespace ATL.test
 {
@@ -10,11 +9,10 @@ namespace ATL.test
         private static string getFrom(string name)
         {
             var dataPath = TestUtils.GetResourceLocationRoot() + "_Xml" + Path.DirectorySeparatorChar + name;
-            using (var source = new FileStream(dataPath, FileMode.Open))
-            {
-                var reader = new StreamReader(source);
-                return reader.ReadToEnd().ReplaceLineEndings("").Replace("\t", "");
-            }
+            using var source = new FileStream(dataPath, FileMode.Open, FileAccess.Read);
+
+            var reader = new StreamReader(source);
+            return reader.ReadToEnd().ReplaceLineEndings("").Replace("\t", "");
         }
 
         [TestMethod]
@@ -28,9 +26,11 @@ namespace ATL.test
             );
 
             TagHolder holder = new TagHolder();
-            var data = new Dictionary<string, string>();
-            data["test.one"] = "aaa";
-            data["test.two"] = "bbb";
+            var data = new Dictionary<string, string>
+            {
+                ["test.one"] = "aaa",
+                ["test.two"] = "bbb"
+            };
             holder.AdditionalFields = data;
 
             var memStream = new MemoryStream();
@@ -57,11 +57,13 @@ namespace ATL.test
             xmlArray.setStructuralAttributes(new HashSet<string> { "hey", "PIP" });
 
             TagHolder holder = new TagHolder();
-            var data = new Dictionary<string, string>();
-            data["test.one.hey"] = "ho";
-            data["test.one"] = "aaa";
-            data["test.two.pip"] = "boy";
-            data["test.two"] = "bbb";
+            var data = new Dictionary<string, string>
+            {
+                ["test.one.hey"] = "ho",
+                ["test.one"] = "aaa",
+                ["test.two.pip"] = "boy",
+                ["test.two"] = "bbb"
+            };
             holder.AdditionalFields = data;
 
             var memStream = new MemoryStream();
@@ -87,12 +89,14 @@ namespace ATL.test
             );
 
             TagHolder holder = new TagHolder();
-            var data = new Dictionary<string, string>();
-            data["test.one"] = "aaa";
-            data["test.two"] = "bbb";
-            data["test.theList.elt[0].value"] = "11";
-            data["test.theList.elt[1].value"] = "22";
-            data["test.theList.elt[2].value"] = "33";
+            var data = new Dictionary<string, string>
+            {
+                ["test.one"] = "aaa",
+                ["test.two"] = "bbb",
+                ["test.theList.elt[0].value"] = "11",
+                ["test.theList.elt[1].value"] = "22",
+                ["test.theList.elt[2].value"] = "33"
+            };
             holder.AdditionalFields = data;
 
             var memStream = new MemoryStream();
@@ -121,9 +125,11 @@ namespace ATL.test
             xmlArray.setDefaultNamespaces(DEFAULT_NAMESPACES);
 
             TagHolder holder = new TagHolder();
-            var data = new Dictionary<string, string>();
-            data["test.pap:one"] = "aaa";
-            data["test.pap:two"] = "bbb";
+            var data = new Dictionary<string, string>
+            {
+                ["test.pap:one"] = "aaa",
+                ["test.pap:two"] = "bbb"
+            };
             holder.AdditionalFields = data;
 
             var memStream = new MemoryStream();
@@ -137,7 +143,7 @@ namespace ATL.test
             var expected = getFrom("rootNs.xml");
             Assert.AreEqual(expected, result);
 
-            
+
             // All namespaces explicitly anchored to root
             IDictionary<string, ISet<string>> NAMESPACE_ANCHORS = new Dictionary<string, ISet<string>> { { "root", new HashSet<string> { "" } } };
             xmlArray.setNamespaceAnchors(NAMESPACE_ANCHORS);
@@ -184,9 +190,11 @@ namespace ATL.test
             xmlArray.setNamespaceAnchors(NAMESPACE_ANCHORS);
 
             TagHolder holder = new TagHolder();
-            var data = new Dictionary<string, string>();
-            data["test.container.pap:one"] = "aaa";
-            data["test.container.pap:two"] = "bbb";
+            var data = new Dictionary<string, string>
+            {
+                ["test.container.pap:one"] = "aaa",
+                ["test.container.pap:two"] = "bbb"
+            };
             holder.AdditionalFields = data;
 
             var memStream = new MemoryStream();

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -31,7 +30,7 @@ namespace ATL.AudioData
         {
             public string Prefix { get; }
             public string Name { get; }
-            public string FullName => (Prefix?.Length > 0) ? Prefix + ":" + Name : Name;
+            public string FullName => Prefix?.Length > 0 ? Prefix + ":" + Name : Name;
 
             public Node(string prefix, string name)
             {
@@ -72,7 +71,12 @@ namespace ATL.AudioData
             foreach (var a in nsAnchors) namespaceAnchors.Add(a.Key, a.Value);
         }
 
-        public void FromStream(Stream source, MetaDataIO meta, MetaDataIO.ReadTagParams readTagParams, long chunkSize)
+        public void FromStream(
+            Stream source,
+            MetaDataIO meta,
+            MetaDataIO.ReadTagParams readTagParams,
+            IDictionary<string, string> customNamespaces,
+            long chunkSize)
         {
             Stack<string> position = new Stack<string>();
             position.Push(displayPrefix);
@@ -90,7 +94,7 @@ namespace ATL.AudioData
             try
             {
                 // Try using the declared encoding
-                readXml(mem, null, position, meta, readTagParams);
+                readXml(mem, null, position, meta, readTagParams, customNamespaces);
             }
             catch (Exception e) // Fallback to forcing UTF-8 when the declared encoding is invalid (e.g. "UTF - 8")
             {
@@ -98,7 +102,7 @@ namespace ATL.AudioData
                 mem.Seek(0, SeekOrigin.Begin);
                 position = new Stack<string>();
                 position.Push(displayPrefix);
-                readXml(mem, Encoding.UTF8, position, meta, readTagParams);
+                readXml(mem, Encoding.UTF8, position, meta, readTagParams, customNamespaces);
             }
         }
 
@@ -107,7 +111,8 @@ namespace ATL.AudioData
             Encoding encoding,
             Stack<string> position,
             MetaDataIO meta,
-            MetaDataIO.ReadTagParams readTagParams)
+            MetaDataIO.ReadTagParams readTagParams,
+            IDictionary<string, string> customNamespaces)
         {
             Stack<int> listDepth = new Stack<int>();
             IDictionary<int, int> listCounter = new Dictionary<int, int>();
@@ -139,10 +144,19 @@ namespace ATL.AudioData
                             for (int i = 0; i < reader.AttributeCount; i++)
                             {
                                 reader.MoveToAttribute(i);
-                                // Don't show namespaces as metadata for simplicity's sake
-                                if (!string.IsNullOrEmpty(reader.Value) && !reader.Name.StartsWith("xmlns:"))
+                                if (!string.IsNullOrEmpty(reader.Value))
                                 {
-                                    meta.SetMetaField(string.Join(".", position.ToArray().Reverse()) + here + "." + reader.Name, reader.Value, readTagParams.ReadAllMetaFrames);
+                                    if (reader.Name.StartsWith("xmlns:"))
+                                    {
+                                        var ns = reader.Name.Split(':')[^1];
+                                        customNamespaces[ns] = reader.Value;
+                                    }
+                                    else // Don't show namespaces as metadata for simplicity's sake
+                                    {
+                                        meta.SetMetaField(
+                                            string.Join(".", position.ToArray().Reverse()) + here + "." + reader.Name,
+                                            reader.Value, readTagParams.ReadAllMetaFrames);
+                                    }
                                 }
                             }
                         }
@@ -166,7 +180,10 @@ namespace ATL.AudioData
             }
         }
 
-        public int ToStream(Stream s, MetaDataHolder meta)
+        public int ToStream(
+            Stream s,
+            MetaDataHolder meta,
+            IDictionary<string, string> customNamespaces = null)
         {
             // Filter eligible additionalData
             IDictionary<string, string> additionalFields = meta.AdditionalFields
@@ -175,11 +192,7 @@ namespace ATL.AudioData
 
             // Isolate all namespaces provided as input
             var nsKeys = meta.AdditionalFields.Keys.Where(k => k.Contains("xmlns:")).ToHashSet();
-            var namespaces = new Dictionary<string, string>();
-            foreach (var nsKey in nsKeys)
-            {
-                namespaces.Add(nsKey.Split(':')[^1], additionalFields[nsKey]);
-            }
+            var namespaces = nsKeys.ToDictionary(nsKey => nsKey.Split(':')[^1], nsKey => additionalFields[nsKey]);
 
             // Complete with default namespaces if there's any missing
             foreach (var defaultNs in defaultNamespaces)
@@ -187,12 +200,21 @@ namespace ATL.AudioData
                 if (!namespaces.ContainsKey(defaultNs.Key)) namespaces.Add(defaultNs.Key, defaultNs.Value);
             }
 
+            // Complete with custom namespaces
+            if (customNamespaces != null)
+            {
+                foreach (var customNs in customNamespaces)
+                {
+                    if (!namespaces.ContainsKey(customNs.Key)) namespaces.Add(customNs.Key, customNs.Value);
+                }
+            }
+
             // Detect all used namespaces
             ISet<string> usedNamespaces = new HashSet<string>();
             var nonNsKeys = meta.AdditionalFields.Keys.Where(k => !k.Contains("xmlns:")).ToHashSet();
             foreach (var nsKey in nonNsKeys)
             {
-                var parts = nsKey.Split('.').Where(s => s.Contains(':'));
+                var parts = nsKey.Split('.').Where(s1 => s1.Contains(':'));
                 foreach (var part in parts) usedNamespaces.Add(part.Split(':')[0]);
             }
 
@@ -210,9 +232,8 @@ namespace ATL.AudioData
             else writer.WriteStartElement(node.Prefix, node.Name, namespaces[node.Prefix]);
 
             // Namespaces explicitly attached to current element
-            ISet<string> namespacesToAnchor = null;
-            namespaceAnchors.TryGetValue(node.FullName, out namespacesToAnchor);
-            if (namespacesToAnchor != null && namespacesToAnchor.Any(e => string.IsNullOrEmpty(e)))
+            namespaceAnchors.TryGetValue(node.FullName, out var namespacesToAnchor);
+            if (namespacesToAnchor != null && namespacesToAnchor.Any(string.IsNullOrEmpty))
             {
                 namespacesToAnchor.Clear();
                 namespacesToAnchor.UnionWith(usedNamespaces);
@@ -229,7 +250,7 @@ namespace ATL.AudioData
                 if (null == namespacesToAnchor || !namespacesToAnchor.Contains(ns))
                 {
                     // Not attached to any element => Attached to root
-                    var isAnchored = namespaceAnchors.Values.Any(s => s.Any(v => string.IsNullOrEmpty(v) || v.Equals(ns, StringComparison.OrdinalIgnoreCase)));
+                    var isAnchored = namespaceAnchors.Values.Any(s2 => s2.Any(v => string.IsNullOrEmpty(v) || v.Equals(ns, StringComparison.OrdinalIgnoreCase)));
                     if (isAnchored) continue;
                 }
 
@@ -281,7 +302,7 @@ namespace ATL.AudioData
 
                     // Namespaces explicitly attached to current element
                     namespaceAnchors.TryGetValue(node.FullName, out namespacesToAnchor);
-                    if (namespacesToAnchor != null && namespacesToAnchor.Any(e => string.IsNullOrEmpty(e)))
+                    if (namespacesToAnchor != null && namespacesToAnchor.Any(string.IsNullOrEmpty))
                     {
                         namespacesToAnchor.Clear();
                         namespacesToAnchor.UnionWith(usedNamespaces);
@@ -301,6 +322,7 @@ namespace ATL.AudioData
 
                 // Write the last node (=leaf) as a proper value if it does not belong to structural attributes
                 node = parseNode(singleNodes[^1]);
+
                 if (structuralAttributes.Contains(singleNodes[^1].ToLower()))
                 {
                     if (null == node.Prefix) writer.WriteAttributeString(node.Name, additionalFields[key]);
@@ -338,7 +360,8 @@ namespace ATL.AudioData
         {
             string pfx = null;
             string name = key;
-            if (name.Contains('[')) name = name[..name.IndexOf('[')]; // Remove [x]'s
+            int index = name.IndexOf('[');
+            if (index > -1) name = name[..index]; // Remove [x]'s
             int pfxIdfx = name.IndexOf(':');
             if (pfxIdfx > -1)
             {

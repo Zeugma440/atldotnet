@@ -12,6 +12,7 @@ namespace ATL
         private readonly IProgress<float> asyncProgress;
         private readonly Action<float> syncProgress;
 #pragma warning disable S4487 // Unread "private" fields should be removed (field is used for debugging / logging purposes)
+        // ReSharper disable once NotAccessedField.Local
         private readonly string name;
 #pragma warning restore S4487
         private float minProgressBound;

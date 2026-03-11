@@ -1,4 +1,5 @@
-﻿using ATL.AudioData;
+﻿using System.Diagnostics.CodeAnalysis;
+using ATL.AudioData;
 using Commons;
 using HashDepot;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace ATL
         /// <summary>
         /// Origin of the field
         /// </summary>
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         public enum ORIGIN
         {
             /// <summary>
@@ -41,7 +43,10 @@ namespace ATL
             Custom = 5
         };
 
-        private static readonly string[] reservedNativePrefix = {
+        /// <summary>
+        /// AdditionalData key prefixes that map to native tagging systems (ATL convention; may not be equal to standard IDs)
+        /// </summary>
+        private static readonly string[] reservedNativePrefixes = {
             "info", "adtl", "ixml", "disp", "cue", "bext", "sample", "xmp", "cart"
         };
 
@@ -111,12 +116,17 @@ namespace ATL
             TagType = info.TagType; NativeFieldCode = info.NativeFieldCode; Value = info.Value; StreamNumber = info.StreamNumber; Language = info.Language; Zone = info.Zone; Origin = info.Origin;
         }
 
+        /// <summary>
+        /// Determine if the given AdditionalData key belongs in a native tagging system
+        /// </summary>
+        /// <param name="key">Key to examine</param>
+        /// <returns>True if the given AdditionalData key belongs in a native tagging system; false if not</returns>
         internal static bool IsAdditionalDataNative(string key)
         {
             int dotIndex = key.IndexOf('.');
             if (-1 == dotIndex) return false;
-            string prefix = key.Substring(0, dotIndex);
-            return reservedNativePrefix.Contains(prefix);
+            string prefix = key[..dotIndex];
+            return reservedNativePrefixes.Contains(prefix);
         }
 
         // ---------------- OVERRIDES FOR DICTIONARY STORING & UTILS
@@ -127,7 +137,7 @@ namespace ATL
         /// <returns>String representation of the object that doesn't take its zone into account</returns>
         public string ToStringWithoutZone()
         {
-            return 100 + TagType + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(), 5, '0', false) + Language;
+            return 100 + (int)TagType + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(), 5, '0', false) + Language;
         }
 
         /// <summary>
@@ -136,7 +146,7 @@ namespace ATL
         /// <returns>String representation of the object</returns>
         public override string ToString()
         {
-            return 100 + TagType + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(), 5, '0', false) + Language + Zone;
+            return 100 + (int)TagType + NativeFieldCode + Utils.BuildStrictLengthString(StreamNumber.ToString(), 5, '0', false) + Language + Zone;
         }
 
         /// <summary>

@@ -1,4 +1,3 @@
-using ATL.AudioData.IO;
 using System.IO;
 using System.Threading.Tasks;
 using static ATL.AudioData.IO.MetaDataIO;
@@ -35,6 +34,16 @@ namespace ATL.AudioData
         }
 
         /// <summary>
+        /// Is the metadata embedded
+        /// true : Embedded
+        /// false : Default location
+        /// </summary>
+        bool IsEmbedded
+        {
+            get;
+        }
+
+        /// <summary>
         /// Set metadata to be written using the given embedder
         /// </summary>
         /// <param name="embedder">Metadata embedder to be used to write current metadata</param>
@@ -46,7 +55,7 @@ namespace ATL.AudioData
         /// <param name="source">Stream to parse data from</param>
         /// <param name="readTagParams">Tag reading parameters</param>
         /// <returns>true if the operation suceeded; false if not</returns>
-        bool Read(Stream source, MetaDataIO.ReadTagParams readTagParams);
+        bool Read(Stream source, ReadTagParams readTagParams);
 
         /// <summary>
         /// Add the specified information to current tag information (direct call variant)

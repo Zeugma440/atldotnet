@@ -1,6 +1,8 @@
 ﻿// Copyright (c) 2015, 2016 Sedat Kapanoglu
 // MIT License - see LICENSE file for details
 
+using System.Linq;
+
 namespace HashDepot
 {
     /// <summary>
@@ -18,12 +20,7 @@ namespace HashDepot
         /// </summary>
         public static uint Hash32(byte[] buffer)
         {
-            uint result = offsetBasis32;
-            foreach (var b in buffer)
-            {
-                result = prime32 * (result ^ b);
-            }
-            return result;
+            return buffer.Aggregate(offsetBasis32, (current, b) => prime32 * (current ^ b));
         }
 
         /*

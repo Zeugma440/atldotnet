@@ -3,6 +3,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using ATL.Logging;
 
 namespace Commons
@@ -31,6 +32,22 @@ namespace Commons
         /// </summary>
         public static readonly byte[] CR_LF = { 13, 10 };
 
+        /// <summary>
+        /// Decimal separators
+        /// </summary>
+        private static readonly char[] DECIMAL_SEPARATORS = { ',', '.' };
+
+        /// <summary>
+        /// 0-9 digits as arabic and farsi characters
+        /// </summary>
+        private static readonly string[] NUMERAL_DIGITS = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+        private static readonly string[] ARABIC_DIGITS = { "٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩" };
+        private static readonly string[] FARSI_DIGITS = { "۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹" };
+
+        private static long RoundToNearest10(long number)
+        {
+            return (number + 5) / 10;
+        }
 
         /// <summary>
         /// Transform the given string so that is becomes non-null
@@ -42,35 +59,46 @@ namespace Commons
             return value ?? "";
         }
 
+        public enum TimecodeEncodeFormat
+        {
+            DD_HH_MM_SS_UUUU,
+            MM_SS_UUUU,
+            MM_SS_XX
+        }
+
         /// <summary>
         /// Format the given duration using the following format
         ///     DDdHH:MM:SS.UUUU
         ///     OR
         ///     MM:SS.UUUU
-        ///     
+        ///     OR
+        ///     MM:SS.XX(XX will always have 2 digits)
+        ///
         ///  Where
         ///     DD is the number of days, if applicable (i.e. durations of less than 1 day won't display the "DDd" part)
         ///     HH is the number of hours, if applicable (i.e. durations of less than 1 hour won't display the "HH:" part)
         ///     MM is the number of minutes, when using MMSS format, this will extend beyond two digits if necessary
         ///     SS is the number of seconds
         ///     UUUU is the number of milliseconds
+        ///     XX is the number of centiseconds (i.e. milliseconds rounded to the nearest 10, or hundredths of a second). LRC formats use this convention
         /// </summary>
         /// <param name="milliseconds">Duration to format (in milliseconds)</param>
-        /// <param name="useMmSsFormat">Format in MM:SS.UUUU format. Default is false</param>
+        /// <param name="format">Format in MM:SS.UUUU format. Default is false</param>
         /// <returns>Formatted duration according to the abovementioned convention</returns>
-        public static string EncodeTimecode_ms(long milliseconds, bool useMmSsFormat = false)
+        public static string EncodeTimecode_ms(long milliseconds, TimecodeEncodeFormat format = TimecodeEncodeFormat.DD_HH_MM_SS_UUUU)
         {
             long seconds = Convert.ToInt64(Math.Floor(milliseconds / 1000.00));
 
-            var encodedString = useMmSsFormat ? EncodeMmSsTimecode_s(seconds) : EncodeTimecode_s(seconds);
+            var encodedString = format != TimecodeEncodeFormat.DD_HH_MM_SS_UUUU ? EncodeMmSsTimecode_s(seconds) : EncodeTimecode_s(seconds);
 
-            return encodedString + "." + (milliseconds - seconds * 1000);
+            return format == TimecodeEncodeFormat.MM_SS_XX ? encodedString + "." + RoundToNearest10(milliseconds - seconds * 1000).ToString("D2")
+                : encodedString + "." + (milliseconds - seconds * 1000);
         }
 
         /// <summary>
         /// Format the given duration using the following format
         ///     DDdHH:MM:SS
-        ///     
+        ///
         ///  Where
         ///     DD is the number of days, if applicable (i.e. durations of less than 1 day won't display the "DDd" part)
         ///     HH is the number of hours, if applicable (i.e. durations of less than 1 hour won't display the "HH:" part)
@@ -102,7 +130,7 @@ namespace Commons
         /// <summary>
         /// Format the given duration using the following format
         ///     MM:SS
-        ///     
+        ///
         ///  Where
         ///     MM is the number of minutes, this will extend beyond two digits if necessary
         ///     SS is the number of seconds
@@ -124,72 +152,63 @@ namespace Commons
 
         /// <summary>
         /// Convert the duration of the given timecode to milliseconds
-        /// Supported formats : hh:mm, hh:mm:ss.ddd, mm:ss, hh:mm:ss and mm:ss.ddd
+        /// Supported formats : hh:mm, hh:mm:ss.dd, hh:mm:ss.ddd, mm:ss, hh:mm:ss, mm:ss.dd and mm:ss.ddd
         /// </summary>
         /// <param name="timeCode">Timecode to convert</param>
         /// <returns>Duration of the given timecode expressed in milliseconds if succeeded; -1 if failed</returns>
         public static int DecodeTimecodeToMs(string timeCode)
         {
             int result = -1;
-            if (null == timeCode || 0 == timeCode.Length) return result;
+            if (string.IsNullOrEmpty(timeCode)) return result;
 
-            DateTime dateTime;
             bool valid = false;
 
-            if (DateTime.TryParse(timeCode, out dateTime)) // Handle classic cases hh:mm, hh:mm:ss.ddd (the latter being the spec)
+
+            int days = 0;
+            int hours = 0;
+            int milliseconds = 0;
+
+            if (timeCode.Contains(':'))
             {
                 valid = true;
-                result = dateTime.Millisecond;
-                result += dateTime.Second * 1000;
-                result += dateTime.Minute * 60 * 1000;
-                result += dateTime.Hour * 60 * 60 * 1000;
-            }
-            else // Handle mm:ss, hh:mm:ss and mm:ss.ddd
-            {
-                int days = 0;
-                int hours = 0;
-                int minutes = 0;
-                int seconds = 0;
-                int milliseconds = 0;
-
-                if (timeCode.Contains(':'))
+                string[] parts = timeCode.Split(':');
+                if (parts[^1].Contains('.'))
                 {
-                    valid = true;
-                    string[] parts = timeCode.Split(':');
-                    if (parts[^1].Contains('.'))
-                    {
-                        string[] subPart = parts[^1].Split('.');
-                        parts[^1] = subPart[0];
-                        milliseconds = int.Parse(subPart[1]);
-                    }
-                    else if (parts[^1].Contains(','))
-                    {
-                        string[] subPart = parts[^1].Split(',');
-                        parts[^1] = subPart[0];
-                        milliseconds = int.Parse(subPart[1]);
-                    }
-                    seconds = int.Parse(parts[^1]);
-                    minutes = int.Parse(parts[^2]);
-                    if (parts.Length >= 3)
-                    {
-                        string[] subPart = parts[^3].Split('d');
-                        if (subPart.Length > 1)
-                        {
-                            days = int.Parse(subPart[0].Trim());
-                            hours = int.Parse(subPart[1].Trim());
-                        }
-                        else
-                        {
-                            hours = int.Parse(subPart[0]);
-                        }
-                    }
-
-                    result = milliseconds;
-                    result += seconds * 1000;
-                    result += minutes * 60 * 1000;
-                    result += hours * 60 * 60 * 1000;
-                    result += days * 24 * 60 * 60 * 1000;
+                    string[] subPart = parts[^1].Split('.');
+                    parts[^1] = subPart[0];
+                    milliseconds = int.Parse(subPart[1]);
+                    // Handle centiseconds notation (2 digits after second)
+                    if (2 == subPart[1].Length) milliseconds *= 10;
                 }
+                else if (parts[^1].Contains(','))
+                {
+                    string[] subPart = parts[^1].Split(',');
+                    parts[^1] = subPart[0];
+                    milliseconds = int.Parse(subPart[1]);
+                    // Handle centiseconds notation (2 digits after second)
+                    if (2 == subPart[1].Length) milliseconds *= 10;
+                }
+                var seconds = int.Parse(parts[^1]);
+                var minutes = int.Parse(parts[^2]);
+                if (parts.Length >= 3)
+                {
+                    string[] subPart = parts[^3].Split('d');
+                    if (subPart.Length > 1)
+                    {
+                        days = int.Parse(subPart[0].AsSpan().Trim());
+                        hours = int.Parse(subPart[1].AsSpan().Trim());
+                    }
+                    else
+                    {
+                        hours = int.Parse(subPart[0]);
+                    }
+                }
+
+                result = milliseconds;
+                result += seconds * 1000;
+                result += minutes * 60 * 1000;
+                result += hours * 60 * 60 * 1000;
+                result += days * 24 * 60 * 60 * 1000;
             }
 
             if (!valid) result = -1;
@@ -214,9 +233,9 @@ namespace Commons
             var intVal = int.Parse(parts[0]);
             if (intVal < 1900) return false;
             intVal = int.Parse(parts[1]);
-            if (intVal < 0 || intVal > 12) return false;
+            if (intVal is < 0 or > 12) return false;
             intVal = int.Parse(parts[2]);
-            return intVal >= 0 && intVal <= 31;
+            return intVal is >= 0 and <= 31;
         }
 
         /// <summary>
@@ -234,11 +253,11 @@ namespace Commons
             if (parts[2].Length != 2 || !IsNumeric(parts[2])) return false;
             // Range checks
             var intVal = int.Parse(parts[0]);
-            if (intVal < 0 || intVal > 23) return false;
+            if (intVal is < 0 or > 23) return false;
             intVal = int.Parse(parts[1]);
-            if (intVal < 0 || intVal > 59) return false;
+            if (intVal is < 0 or > 59) return false;
             intVal = int.Parse(parts[2]);
-            return intVal >= 0 && intVal <= 59;
+            return intVal is >= 0 and <= 59;
         }
 
         /// <summary>
@@ -254,7 +273,9 @@ namespace Commons
 		public static bool TryExtractDateTimeFromDigits(string str, out DateTime? date)
         {
             date = null;
-            if (!IsNumeric(str, true, false)) return false;
+            if (string.IsNullOrEmpty(str)) return false;
+            str = convertDigits(str);
+            if (str.Any(t => !IsDigit(t))) return false;
 
             switch (str.Length)
             {
@@ -267,8 +288,8 @@ namespace Commons
                     }
                     break;
                 case 6:
-                    year = int.Parse(str.Substring(0, 4));
-                    int month = int.Parse(str.Substring(4, 2));
+                    year = int.Parse(str.AsSpan(0, 4));
+                    int month = int.Parse(str.AsSpan(4, 2));
                     if (year >= DateTime.MinValue.Year && year <= DateTime.MaxValue.Year && month <= DateTime.MaxValue.Month)
                     {
                         date = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -276,9 +297,9 @@ namespace Commons
                     }
                     break;
                 case 8:
-                    year = int.Parse(str.Substring(0, 4));
-                    month = int.Parse(str.Substring(4, 2));
-                    int day = int.Parse(str.Substring(6, 2));
+                    year = int.Parse(str.AsSpan(0, 4));
+                    month = int.Parse(str.AsSpan(4, 2));
+                    int day = int.Parse(str.AsSpan(6, 2));
                     if (year >= DateTime.MinValue.Year && year <= DateTime.MaxValue.Year && month <= DateTime.MaxValue.Month && day <= DateTime.MaxValue.Day)
                     {
                         date = new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc);
@@ -287,6 +308,21 @@ namespace Commons
                     break;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Converts arabic [٠-٩] and Farsi digits [۰-۹] of the given string into numeral digits [0-9]
+        /// </summary>
+        private static string convertDigits(string s)
+        {
+            string result = s;
+
+            for (int i = 0; i <= 9; i++)
+            {
+                result = result.Replace(ARABIC_DIGITS[i], NUMERAL_DIGITS[i]).Replace(FARSI_DIGITS[i], NUMERAL_DIGITS[i]);
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -300,7 +336,7 @@ namespace Commons
             int i = iStr.Length;
             while (i > 0 && '\0' == iStr[i - 1]) i--;
 
-            return iStr.Substring(0, i);
+            return iStr[..i];
         }
 
         /// <summary>
@@ -311,7 +347,7 @@ namespace Commons
         /// <param name="value">Value to transform</param>
         /// <param name="length">Target length of the final string</param>
         /// <param name="paddingChar">Character to use if padding is needed</param>
-        /// <param name="padRight">True if the padding has to be done on the right-side of the target string; 
+        /// <param name="padRight">True if the padding has to be done on the right-side of the target string;
         /// false if the padding has to be done on the left-side (optional; default value = true)</param>
         /// <returns>Reprocessed string of given length, according to rules documented in the method description</returns>
         public static string BuildStrictLengthString(int value, int length, char paddingChar, bool padRight = true)
@@ -326,7 +362,7 @@ namespace Commons
         /// <param name="value">Value to transform</param>
         /// <param name="length">Target length of the final string</param>
         /// <param name="paddingChar">Character to use if padding is needed</param>
-        /// <param name="padRight">True if the padding has to be done on the right-side of the target string; 
+        /// <param name="padRight">True if the padding has to be done on the right-side of the target string;
         /// false if the padding has to be done on the left-side (optional; default value = true)</param>
         /// <returns>Reprocessed string of given length, according to rules documented in the method description</returns>
         public static string BuildStrictLengthString(string value, int length, char paddingChar, bool padRight = true)
@@ -336,8 +372,7 @@ namespace Commons
             if (result.Length > length) result = result[..length];
             else if (result.Length < length)
             {
-                if (padRight) result = result.PadRight(length, paddingChar);
-                else result = result.PadLeft(length, paddingChar);
+                result = padRight ? result.PadRight(length, paddingChar) : result.PadLeft(length, paddingChar);
             }
 
             return result;
@@ -352,37 +387,42 @@ namespace Commons
         /// <param name="targetLength">Target length of the final string</param>
         /// <param name="paddingByte">Byte to use if padding is needed</param>
         /// <param name="encoding">Encoding to use to represent the given string in binary format</param>
-        /// <param name="padRight">True if the padding has to be done on the right-side of the target string; 
+        /// <param name="padRight">True if the padding has to be done on the right-side of the target string;
         /// false if the padding has to be done on the left-side (optional; default value = true)</param>
         /// <returns>Reprocessed string of given length, in binary format, according to rules documented in the method description</returns>
         public static byte[] BuildStrictLengthStringBytes(string value, int targetLength, byte paddingByte, Encoding encoding, bool padRight = true)
         {
-            byte[] result;
+            var str = value.AsSpan();
+            var byteCount = encoding.GetByteCount(str);
 
-            byte[] data = encoding.GetBytes(value);
-            while (data.Length > targetLength)
+            // Remove chars one by one until byte count is as expected
+            while (byteCount > targetLength)
             {
-                value = value.Remove(value.Length - 1);
-                data = encoding.GetBytes(value);
+                str = str[..^1];
+                byteCount = encoding.GetByteCount(str);
             }
 
-            if (data.Length < targetLength)
+            byte[] result = new byte[targetLength];
+            if (byteCount < targetLength)
             {
-                result = new byte[targetLength];
+                // Add necessary padding
+                int diff = targetLength - byteCount;
                 if (padRight)
                 {
-                    Array.Copy(data, result, data.Length);
-                    for (int i = data.Length; i < result.Length; i++) result[i] = paddingByte;
+                    encoding.GetBytes(str, result);
+                    Array.Fill(result, paddingByte, byteCount, diff);
                 }
                 else
                 {
-                    Array.Copy(data, 0, result, result.Length - data.Length, data.Length);
-                    for (int i = 0; i < (result.Length - data.Length); i++) result[i] = paddingByte;
+                    byte[] strAsBytes = new byte[byteCount];
+                    encoding.GetBytes(str, strAsBytes);
+                    Array.Fill(result, paddingByte, 0, diff);
+                    Array.ConstrainedCopy(strAsBytes, 0, result, diff, byteCount);
                 }
             }
             else
             {
-                result = data;
+                encoding.GetBytes(str, result);
             }
 
             return result;
@@ -392,7 +432,7 @@ namespace Commons
         /// Covert given string value to boolean.
         ///   - Returns true if string represents a non-null numeric value or the word "true"
         ///   - Returns false if not
-        ///   
+        ///
         /// NB : This implementation exists because default .NET implementation has a different convention as for parsing numbers
         /// </summary>
         /// <param name="value">Value to be converted</param>
@@ -436,8 +476,8 @@ namespace Commons
         public static byte[] EncodeTo64(byte[] data)
         {
             // Each 3 byte sequence in the source data becomes a 4 byte
-            // sequence in the character array. 
-            long arrayLength = (long)((4.0d / 3.0d) * data.Length);
+            // sequence in the character array.
+            long arrayLength = (long)(4.0d / 3.0d * data.Length);
 
             // If array length is not divisible by 4, go up to the next
             // multiple of 4.
@@ -450,12 +490,12 @@ namespace Commons
 
             Convert.ToBase64CharArray(data, 0, data.Length, dataChar, 0);
 
-            return Utils.Latin1Encoding.GetBytes(dataChar);
+            return Latin1Encoding.GetBytes(dataChar);
         }
 
         /// <summary>
         /// Indicate if the given string is exclusively composed of digital characters
-        /// 
+        ///
         /// NB1 : decimal separators '.' and ',' are tolerated except if allowsOnlyIntegers argument is set to True
         /// NB2 : whitespaces ' ' are not tolerated
         /// NB3 : any alternate notation (e.g. exponent, hex) is not tolerated
@@ -471,7 +511,7 @@ namespace Commons
             for (int i = 0; i < s.Length; i++)
             {
                 char t = s[i];
-                if (t == '.' || t == ',')
+                if (t is '.' or ',')
                 {
                     if (allowsOnlyIntegers) return false;
                 }
@@ -485,13 +525,13 @@ namespace Commons
         }
 
         /// <summary>
-        /// Indicate if the given character represents a non-decimal digit (0..9)
+        /// Indicate if the given character represents a non-decimal numeral digit (0..9)
         /// </summary>
         /// <param name="c">Character to analyze</param>
         /// <returns>True if char is between 0..9; false instead</returns>
         public static bool IsDigit(char c)
         {
-            return c >= '0' && c <= '9';
+            return c is >= '0' and <= '9';
         }
 
         /// <summary>
@@ -504,24 +544,23 @@ namespace Commons
         {
             if (string.IsNullOrEmpty(s)) return -1;
 
-            bool insideInt = false;
-            StringBuilder sb = new StringBuilder();
-            foreach (var t in s)
+            int startIndex = -1;
+            int i = 0;
+            for (; i < s.Length; i++)
             {
-                if (IsDigit(t))
+                if (IsDigit(s[i]))
                 {
-                    if (!insideInt) insideInt = true;
-                    sb.Append(t);
+                    if (startIndex == -1) startIndex = i;
                 }
                 else
                 {
-                    if (insideInt) break;
+                    if (startIndex != -1) break;
                 }
             }
 
-            if (sb.Length > 0)
+            if (startIndex != -1)
             {
-                long number = long.Parse(sb.ToString());
+                long number = long.Parse(s[startIndex..i]);
                 if (number > int.MaxValue) number = 0;
                 return (int)number;
             }
@@ -581,10 +620,15 @@ namespace Commons
         {
             if (!IsNumeric(s)) return double.NaN;
 
-            string[] parts = s.Split(new char[] { ',', '.' });
+            string[] parts = s.Split(DECIMAL_SEPARATORS);
 
-            if (parts.Length > 2) return double.NaN;
-            if (1 == parts.Length) return double.Parse(s);
+            switch (parts.Length)
+            {
+                case > 2:
+                    return double.NaN;
+                case 1:
+                    return double.Parse(s);
+            }
 
             // Other possibilities : 2 == parts.Length
             double decimalDivisor = Math.Pow(10, parts[1].Length);
@@ -594,7 +638,7 @@ namespace Commons
         }
 
         /// <summary>
-        /// Return the human-readable file size for an arbitrary, 64-bit file size 
+        /// Return the human-readable file size for an arbitrary, 64-bit file size
         /// The default format is "0.### XB", e.g. "4.2 KB" or "1.434 GB"
         /// Source : https://www.somacon.com/p576.php
         /// </summary>
@@ -668,8 +712,8 @@ namespace Commons
         }
 
         /// <summary>
-        /// Trace the given Exception 
-        /// - To the ATL logger 
+        /// Trace the given Exception
+        /// - To the ATL logger
         /// - To the Console, if Settings.OutputStacktracesToConsole is true
         /// </summary>
         /// <param name="e">Exception to trace</param>
@@ -716,13 +760,14 @@ namespace Commons
         /// </summary>
         /// <param name="min">Lower limit (included; must be positive) - default : 0</param>
         /// <param name="max">Higher limit (included; must be positive) - default : long.MaxValue</param>
-        /// <param name="rand"></param>
+        /// <param name="rand">The generator to use, <c>Random.Shared</c> if null.</param>
         /// <returns></returns>
-        public static ulong LongRandom(Random rand, long min = 0, long max = long.MaxValue)
+        public static ulong LongRandom(long min = 0, long max = long.MaxValue, Random rand = null)
         {
-            byte[] buf = new byte[8];
+            rand ??= Random.Shared;
+            Span<byte> buf = stackalloc byte[8];
             rand.NextBytes(buf);
-            long longRand = BitConverter.ToInt64(buf, 0);
+            long longRand = BitConverter.ToInt64(buf);
 
             return (ulong)(Math.Abs(longRand % (max - min)) + min);
         }

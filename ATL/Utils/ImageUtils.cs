@@ -1,8 +1,8 @@
 ﻿using ATL;
 using ATL.Logging;
 using System;
+using System.Buffers.Binary;
 using System.IO;
-using System.Linq;
 
 namespace Commons
 {
@@ -77,7 +77,7 @@ namespace Commons
     /// <summary>
     /// Helper methods for reading basic image properties without System.Drawing
     /// This class has been created to reach .NET Core 2.0 compatibility
-    /// 
+    ///
     /// Implementation notes :
     ///   - If a TIFF file has multiple images, only the properties of the 1st image will be read
     ///   - BMPs with color palettes are not supported
@@ -170,14 +170,25 @@ namespace Commons
         {
             if (header.Length < 12) throw new FormatException("Header length must be at least 12");
 
-            if (0xFF == header[0] && 0xD8 == header[1] && 0xFF == header[2]) return ImageFormat.Jpeg;
-            else if (0x42 == header[0] && 0x4D == header[1]) return ImageFormat.Bmp;
-            else if (0x47 == header[0] && 0x49 == header[1] && 0x46 == header[2]) return ImageFormat.Gif;
-            else if (0x89 == header[0] && 0x50 == header[1] && 0x4E == header[2]) return ImageFormat.Png;
-            else if (0x49 == header[0] && 0x49 == header[1] && 0x2A == header[2]) return ImageFormat.Tiff; // Little Endian TIFF
-            else if (0x4D == header[0] && 0x4D == header[1] && 0x00 == header[2]) return ImageFormat.Tiff; // Big Endian TIFF
-            else if (0x52 == header[0] && 0x49 == header[1] && 0x46 == header[2] && 0x46 == header[3] && 0x57 == header[8] && 0x45 == header[9] && 0x42 == header[10] && 0x50 == header[11]) return ImageFormat.Webp;
-            else return ImageFormat.Unsupported;
+            switch (header[0])
+            {
+                case 0xFF when 0xD8 == header[1] && 0xFF == header[2]:
+                    return ImageFormat.Jpeg;
+                case 0x42 when 0x4D == header[1]:
+                    return ImageFormat.Bmp;
+                case 0x47 when 0x49 == header[1] && 0x46 == header[2]:
+                    return ImageFormat.Gif;
+                case 0x89 when 0x50 == header[1] && 0x4E == header[2]:
+                    return ImageFormat.Png;
+                case 0x49 when 0x49 == header[1] && 0x2A == header[2]: // Big Endian TIFF
+
+                case 0x4D when 0x4D == header[1] && 0x00 == header[2]: // Little Endian TIFF
+                    return ImageFormat.Tiff;
+                case 0x52 when 0x49 == header[1] && 0x46 == header[2] && 0x46 == header[3] && 0x57 == header[8] && 0x45 == header[9] && 0x42 == header[10] && 0x50 == header[11]:
+                    return ImageFormat.Webp;
+                default:
+                    return ImageFormat.Unsupported;
+            }
         }
 
         /// <summary>
@@ -214,20 +225,18 @@ namespace Commons
                         int nbIFDEntries = readInt16(r, isBigEndian);
 
                         long initialPos;
-                        int IFDtag, IFDValue32, IFDValue16;
-                        byte[] IFDValueBinary;
                         int photometricInterpretation = 0;
                         int bitsPerSample = 0;
                         int samplesPerPixel = 0;
 
                         for (int i = 0; i < nbIFDEntries; i++)
                         {
-                            IFDtag = readInt16(r, isBigEndian);
+                            int IFDtag = readInt16(r, isBigEndian);
                             s.Seek(2, SeekOrigin.Current); // IFD field type
                             s.Seek(4, SeekOrigin.Current); // IFD number of values
-                            IFDValueBinary = r.ReadBytes(4);
-                            IFDValue32 = isBigEndian ? StreamUtils.DecodeBEInt32(IFDValueBinary) : StreamUtils.DecodeInt32(IFDValueBinary);
-                            IFDValue16 = isBigEndian ? StreamUtils.DecodeBEInt16(IFDValueBinary) : StreamUtils.DecodeInt16(IFDValueBinary);
+                            var IFDValueBinary = r.ReadBytes(4);
+                            var IFDValue32 = isBigEndian ? BinaryPrimitives.ReadInt32BigEndian(IFDValueBinary) : BinaryPrimitives.ReadInt32LittleEndian(IFDValueBinary);
+                            int IFDValue16 = isBigEndian ? BinaryPrimitives.ReadInt16BigEndian(IFDValueBinary) : BinaryPrimitives.ReadInt16LittleEndian(IFDValueBinary);
 
                             switch (IFDtag)
                             {
@@ -275,7 +284,7 @@ namespace Commons
 
                         break;
                     case ImageFormat.Gif:
-                        byte[] GraphicControlExtensionBlockSignature = new byte[] { 0x21, 0xf9 };
+                        byte[] GraphicControlExtensionBlockSignature = { 0x21, 0xf9 };
 
                         props.ColorDepth = 24; // 1 byte for each component
 
@@ -286,7 +295,7 @@ namespace Commons
                         s.Seek(4, SeekOrigin.Current); // Skip logical screen descriptors
 
                         byte globalPaletteUse = r.ReadByte();
-                        if (((globalPaletteUse & 0x80) >> 7) > 0) // File uses a global color palette
+                        if ((globalPaletteUse & 0x80) >> 7 > 0) // File uses a global color palette
                         {
                             props.NumColorsInPalette = 2 << (globalPaletteUse & 0x07);
                         }
@@ -294,8 +303,8 @@ namespace Commons
                         /*
                          * v89a means that the first image block should follow the first graphic control extension block
                          * (which may in turn be located after an application extension block if the GIF is animated)
-                         * 
-                         * => The simplest way to get to the 1st image block is to look for the 1st 
+                         *
+                         * => The simplest way to get to the 1st image block is to look for the 1st
                          * graphic control extension block, and to skip it
                          */
                         if ("89a".Equals(version))
@@ -352,7 +361,7 @@ namespace Commons
                         break;
 
                     case ImageFormat.Png:
-                        byte[] intData = new byte[4];
+                        Span<byte> intData = stackalloc byte[4];
                         byte[] IHDRChunkSignature = Utils.Latin1Encoding.GetBytes("IHDR");
                         byte[] PaletteChunkSignature = Utils.Latin1Encoding.GetBytes("PLTE");
 
@@ -367,10 +376,10 @@ namespace Commons
                         else
                         {
                             // Read IHDR chunk
-                            if (s.Read(intData, 0, 4) < 4) break;
-                            props.Width = StreamUtils.DecodeBEInt32(intData);
-                            if (s.Read(intData, 0, 4) < 4) break;
-                            props.Height = StreamUtils.DecodeBEInt32(intData);
+                            if (s.Read(intData) < 4) break;
+                            props.Width = BinaryPrimitives.ReadInt32BigEndian(intData);
+                            if (s.Read(intData) < 4) break;
+                            props.Height = BinaryPrimitives.ReadInt32BigEndian(intData);
                             props.ColorDepth = r.ReadByte();
                             int colorType = r.ReadByte();
                             if (3 == colorType) // PNG file uses a palette
@@ -394,12 +403,12 @@ namespace Commons
 
                         break;
                     case ImageFormat.Jpeg:
-                        byte[] shortData = new byte[2];
-                        byte[] SOF0FrameSignature = new byte[] { 0xFF, 0xC0 };
+                        Span<byte> shortData = stackalloc byte[2];
+                        byte[] SOF0FrameSignature = { 0xFF, 0xC0 };
 
                         /*
                          * We just need to reach the SOF0 frame descripting the actual picture
-                         * 
+                         *
                          * In order to handle JPEG files that contain multiple SOF0 frames (see test suite),
                          * the simplest way of proceeding is to look for all SOF0 frames in the first 25% of the file,
                          * and then read the very last one
@@ -420,10 +429,10 @@ namespace Commons
                             // Skip frame length
                             s.Seek(2, SeekOrigin.Current);
                             bitsPerSample = r.ReadByte();
-                            if (s.Read(shortData, 0, 2) < 2) break;
-                            props.Height = StreamUtils.DecodeBEUInt16(shortData);
-                            if (s.Read(shortData, 0, 2) < 2) break;
-                            props.Width = StreamUtils.DecodeBEUInt16(shortData);
+                            if (s.Read(shortData) < 2) break;
+                            props.Height = BinaryPrimitives.ReadInt16BigEndian(shortData);
+                            if (s.Read(shortData) < 2) break;
+                            props.Width = BinaryPrimitives.ReadInt16BigEndian(shortData);
                             byte nbComponents = r.ReadByte();
                             props.ColorDepth = bitsPerSample * nbComponents;
                         }
@@ -438,29 +447,38 @@ namespace Commons
                         if (StreamUtils.FindSequence(s, WebpBaseChunkSignature, limit))
                         {
                             char c = (char)s.ReadByte();
-                            if (c == 'L') // Lossless
+                            switch (c)
                             {
-                                s.Seek(5, SeekOrigin.Current);
-                                byte[] data = r.ReadBytes(4);
-                                props.Width = 1 + StreamUtils.ReadBits(data, 0, 14); // Only read the first 14 bits
-                                props.Height = 1 + StreamUtils.ReadBits(data, 14, 14); // Only read the last 14 bits
-                            }
-                            else if (c == 'X') // Extended
-                            {
-                                s.Seek(8, SeekOrigin.Current);
-                                byte[] data = r.ReadBytes(4);
-                                props.Width = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
-                                s.Seek(-1, SeekOrigin.Current);
-                                data = r.ReadBytes(4);
-                                props.Height = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
-                            }
-                            else if (c == ' ') // Lossy
-                            {
-                                s.Seek(10, SeekOrigin.Current);
-                                byte[] data = r.ReadBytes(2);
-                                props.Width = StreamUtils.ReadBits(data, 0, 14);
-                                data = r.ReadBytes(2);
-                                props.Height = StreamUtils.ReadBits(data, 0, 14);
+                                // Lossless
+                                case 'L':
+                                    {
+                                        s.Seek(5, SeekOrigin.Current);
+                                        byte[] data = r.ReadBytes(4);
+                                        props.Width = 1 + StreamUtils.ReadBits(data, 0, 14); // Only read the first 14 bits
+                                        props.Height = 1 + StreamUtils.ReadBits(data, 14, 14); // Only read the last 14 bits
+                                        break;
+                                    }
+                                // Extended
+                                case 'X':
+                                    {
+                                        s.Seek(8, SeekOrigin.Current);
+                                        byte[] data = r.ReadBytes(4);
+                                        props.Width = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
+                                        s.Seek(-1, SeekOrigin.Current);
+                                        data = r.ReadBytes(4);
+                                        props.Height = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
+                                        break;
+                                    }
+                                // Lossy
+                                case ' ':
+                                    {
+                                        s.Seek(10, SeekOrigin.Current);
+                                        byte[] data = r.ReadBytes(2);
+                                        props.Width = StreamUtils.ReadBits(data, 0, 14);
+                                        data = r.ReadBytes(2);
+                                        props.Height = StreamUtils.ReadBits(data, 0, 14);
+                                        break;
+                                    }
                             }
                         }
 
@@ -474,16 +492,14 @@ namespace Commons
 
         private static uint findPngChunk(Stream s, byte[] chunkID, long limit)
         {
-            byte[] intData = new byte[4];
-            uint chunkSize;
-            bool foundChunk;
+            Span<byte> intData = stackalloc byte[4];
 
             while (s.Position < limit)
             {
-                if (s.Read(intData, 0, 4) < 4) break; // Chunk Size
-                chunkSize = StreamUtils.DecodeBEUInt32(intData);
-                if (s.Read(intData, 0, 4) < 4) break; // Chunk ID
-                foundChunk = intData.SequenceEqual(chunkID);
+                if (s.Read(intData) < 4) break; // Chunk Size
+                var chunkSize = BinaryPrimitives.ReadUInt32BigEndian(intData);
+                if (s.Read(intData) < 4) break; // Chunk ID
+                var foundChunk = intData.SequenceEqual(chunkID);
                 if (foundChunk) return chunkSize;
 
                 s.Seek(chunkSize + 4, SeekOrigin.Current);
@@ -496,12 +512,16 @@ namespace Commons
 
         private static short readInt16(BinaryReader r, bool isBigEndian)
         {
-            return isBigEndian ? StreamUtils.DecodeBEInt16(r.ReadBytes(2)) : r.ReadInt16();
+            Span<byte> buffer = stackalloc byte[2];
+            if (r.Read(buffer) < buffer.Length) return 0;
+            return isBigEndian ? BinaryPrimitives.ReadInt16BigEndian(buffer) : BinaryPrimitives.ReadInt16LittleEndian(buffer);
         }
 
         private static int readInt32(BinaryReader r, bool isBigEndian)
         {
-            return isBigEndian ? StreamUtils.DecodeBEInt32(r.ReadBytes(4)) : r.ReadInt32();
+            Span<byte> buffer = stackalloc byte[4];
+            if (r.Read(buffer) < buffer.Length) return 0;
+            return isBigEndian ? BinaryPrimitives.ReadInt32BigEndian(buffer) : BinaryPrimitives.ReadInt32LittleEndian(buffer);
         }
 
     }

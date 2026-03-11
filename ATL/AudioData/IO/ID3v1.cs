@@ -287,7 +287,6 @@ namespace ATL.AudioData.IO
             string header = Utils.Latin1Encoding.GetString(data, 0, 3);
             if (!header.Equals(ID3V1_ID)) return false;
 
-            byte[] endComment = new byte[2];
             structureHelper.AddZone(source.Position - ID3V1_TAG_SIZE, ID3V1_TAG_SIZE);
 
             setMetaField(Field.TITLE, Utils.Latin1Encoding.GetString(data, 3, 30).Replace("\0", ""));
@@ -296,13 +295,13 @@ namespace ATL.AudioData.IO
             setMetaField(Field.RECORDING_YEAR, Utils.Latin1Encoding.GetString(data, 93, 4).Replace("\0", ""));
             string comment = Utils.Latin1Encoding.GetString(data, 97, 28).Replace("\0", "");
 
-            Array.Copy(data, 125, endComment, 0, 2);
+            var endComment = data.AsSpan(125, 2);
             m_tagVersion = GetTagVersion(endComment);
 
             // Fill properties using tag data
             if (TAG_VERSION_1_0 == m_tagVersion)
             {
-                comment += Utils.Latin1Encoding.GetString(endComment, 0, 2).Replace("\0", "");
+                comment += Utils.Latin1Encoding.GetString(endComment).Replace("\0", "");
             }
             else
             {
@@ -315,7 +314,7 @@ namespace ATL.AudioData.IO
             return true;
         }
 
-        private static byte GetTagVersion(byte[] endComment)
+        private static byte GetTagVersion(ReadOnlySpan<byte> endComment)
         {
             byte result = TAG_VERSION_1_0;
             // Terms for ID3v1.1

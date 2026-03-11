@@ -39,6 +39,14 @@ namespace ATL.AudioData
         }
 
         /// <summary>
+        /// Zone containing the old ID3v2 tag (nullable)
+        /// </summary>
+        Zone Id3v2OldZone
+        {
+            get;
+        }
+
+        /// <summary>
         /// Writes the native header that immediately precedes the ID3v2 embedded tag in the given stream, using the given tag size
         /// </summary>
         /// <param name="s">Stream to write the header to</param>

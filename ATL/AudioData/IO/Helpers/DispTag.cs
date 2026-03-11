@@ -1,4 +1,5 @@
 ﻿using Commons;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using static ATL.AudioData.IO.MetaDataIO;
@@ -53,7 +54,7 @@ namespace ATL.AudioData.IO
 
             // Type
             if (source.Read(data, 0, 4) < 4) return;
-            int type = StreamUtils.DecodeInt32(data);
+            int type = BinaryPrimitives.ReadInt32LittleEndian(data);
             meta.SetMetaField("disp.entry[" + index + "].type", getCfLabel(type), readTagParams.ReadAllMetaFrames);
 
             // Data

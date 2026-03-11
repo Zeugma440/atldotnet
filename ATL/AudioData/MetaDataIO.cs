@@ -3,6 +3,7 @@ using Commons;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using static ATL.AudioData.FileStructureHelper;
 using static ATL.TagData;
@@ -84,6 +85,11 @@ namespace ATL.AudioData.IO
             public bool PrepareForWriting { get; set; }
 
             /// <summary>
+            /// True : read all data that will be useful for removing metadata; False : only read metadata values
+            /// </summary>
+            public bool PrepareForRemoving { get; set; }
+
+            /// <summary>
             /// True : read extra padding bytes at the end of ID3v2 block
             /// </summary>
             public bool ExtraID3v2PaddingDetection { get; set; }
@@ -148,6 +154,9 @@ namespace ATL.AudioData.IO
         // ------ READ-ONLY "PHYSICAL" TAG INFO FIELDS ACCESSORS -----------------------------------------------------
 
         /// <inheritdoc/>
+        public bool IsEmbedded { get; set; }
+
+        /// <inheritdoc/>
         public bool Exists => tagData.Exists();
 
         /// <inheritdoc/>
@@ -176,11 +185,7 @@ namespace ATL.AudioData.IO
         {
             get
             {
-                long result = 0;
-
-                foreach (Zone zone in Zones) result += zone.Size;
-
-                return result;
+                return Zones.Sum(zone => zone.Size);
             }
         }
         /// <summary>
@@ -332,6 +337,7 @@ namespace ATL.AudioData.IO
         protected void ResetData()
         {
             m_tagVersion = 0;
+            IsEmbedded = false;
 
             tagData.Clear();
             if (null == picturePositions) picturePositions = new List<KeyValuePair<string, int>>(); else picturePositions.Clear();
@@ -370,28 +376,33 @@ namespace ATL.AudioData.IO
         }
 
         /// <summary>
-        /// Set a new metadata field with the given information 
+        /// Set a new metadata field with the given information
         /// </summary>
         /// <param name="ID">ID of the metadata field</param>
         /// <param name="dataIn">Metadata</param>
         protected void setMetaField(Field ID, string dataIn)
         {
             string dataOut = dataIn;
-            if (Field.TRACK_NUMBER == ID || Field.TRACK_NUMBER_TOTAL == ID)
+            switch (ID)
             {
-                string trackNumberStr = TrackUtils.ExtractTrackNumberStr(dataIn);
-                if (trackNumberStr.Length > 1 && trackNumberStr.StartsWith('0')) tagData.TrackDigitsForLeadingZeroes = trackNumberStr.Length;
-            }
-            else if (Field.DISC_NUMBER_TOTAL == ID || Field.DISC_NUMBER == ID)
-            {
-                string discNumberStr = TrackUtils.ExtractTrackNumberStr(dataIn);
-                if (discNumberStr.Length > 1 && discNumberStr.StartsWith('0')) tagData.DiscDigitsForLeadingZeroes = discNumberStr.Length;
-            }
-
-            // Use the appropriate convention if needed
-            if (Field.RATING == ID)
-            {
-                dataOut = TrackUtils.DecodePopularity(dataIn, ratingConvention).ToString();
+                case Field.TRACK_NUMBER:
+                case Field.TRACK_NUMBER_TOTAL:
+                    {
+                        string trackNumberStr = TrackUtils.ExtractTrackNumberStr(dataIn);
+                        if (trackNumberStr.Length > 1 && trackNumberStr.StartsWith('0')) tagData.TrackDigitsForLeadingZeroes = trackNumberStr.Length;
+                        break;
+                    }
+                case Field.DISC_NUMBER_TOTAL:
+                case Field.DISC_NUMBER:
+                    {
+                        string discNumberStr = TrackUtils.ExtractTrackNumberStr(dataIn);
+                        if (discNumberStr.Length > 1 && discNumberStr.StartsWith('0')) tagData.DiscDigitsForLeadingZeroes = discNumberStr.Length;
+                        break;
+                    }
+                // Use the appropriate convention if needed
+                case Field.RATING:
+                    dataOut = TrackUtils.DecodePopularity(dataIn, ratingConvention).ToString();
+                    break;
             }
 
             tagData.IntegrateValue(ID, dataOut);
@@ -447,8 +458,7 @@ namespace ATL.AudioData.IO
                     return TrackUtils.EncodePopularity(valueD * 5, ratingConvention).ToString();
                 case Field.RECORDING_DATE:
                 case Field.PUBLISHING_DATE:
-                    if (DateTime.TryParse(value, out dateTime)) return EncodeDate(dateTime);
-                    return value;
+                    return DateTime.TryParse(value, out dateTime) ? EncodeDate(dateTime) : value;
                 case Field.RECORDING_DATE_OR_YEAR:
                     if (value.Length > 4 && DateTime.TryParse(value, out dateTime)) return EncodeDate(dateTime);
                     return value;
@@ -466,6 +476,45 @@ namespace ATL.AudioData.IO
                 case Field.DISC_TOTAL:
                     total = value;
                     return TrackUtils.FormatWithLeadingZeroes(value, Settings.OverrideExistingLeadingZeroesFormat, tag.DiscDigitsForLeadingZeroes, Settings.UseLeadingZeroes, total);
+                case Field.NO_FIELD:
+                case Field.GENERAL_DESCRIPTION:
+                case Field.TITLE:
+                case Field.ARTIST:
+                case Field.COMPOSER:
+                case Field.COMMENT:
+                case Field.GENRE:
+                case Field.ALBUM:
+                case Field.RECORDING_YEAR:
+                case Field.RECORDING_DAYMONTH:
+                case Field.RECORDING_TIME:
+                case Field.ORIGINAL_ARTIST:
+                case Field.ORIGINAL_ALBUM:
+                case Field.COPYRIGHT:
+                case Field.ALBUM_ARTIST:
+                case Field.PUBLISHER:
+                case Field.CONDUCTOR:
+                case Field.CHAPTERS_TOC_DESCRIPTION:
+                case Field.LYRICS_UNSYNCH:
+                case Field.PRODUCT_ID:
+                case Field.SORT_ALBUM:
+                case Field.SORT_ALBUM_ARTIST:
+                case Field.SORT_ARTIST:
+                case Field.SORT_TITLE:
+                case Field.GROUP:
+                case Field.SERIES_TITLE:
+                case Field.SERIES_PART:
+                case Field.LONG_DESCRIPTION:
+                case Field.BPM:
+                case Field.ENCODED_BY:
+                case Field.ORIG_RELEASE_YEAR:
+                case Field.ORIG_RELEASE_DATE:
+                case Field.ENCODER:
+                case Field.LANGUAGE:
+                case Field.ISRC:
+                case Field.CATALOG_NUMBER:
+                case Field.AUDIO_SOURCE_URL:
+                case Field.LYRICIST:
+                case Field.INVOLVED_PEOPLE:
                 default: return map[frameType];
             }
         }
@@ -474,7 +523,7 @@ namespace ATL.AudioData.IO
         {
             if (Settings.AutoFormatAdditionalDates && value.StartsWith(DATETIME_PREFIX, StringComparison.OrdinalIgnoreCase))
             {
-                return EncodeDate(DateTime.FromFileTime(long.Parse(value[DATETIME_PREFIX.Length..])));
+                return EncodeDate(DateTime.FromFileTime(long.Parse(value.AsSpan()[DATETIME_PREFIX.Length..])));
             }
             return value;
         }
@@ -522,7 +571,7 @@ namespace ATL.AudioData.IO
             structureHelper.Clear();
             tagData.Pictures.Clear();
 
-            // Constraint-check on non-supported values
+            // Constraint check on non-supported values
             if (FieldCodeFixedLength > 0)
             {
                 ISet<MetaFieldInfo> infoToRemove = new HashSet<MetaFieldInfo>();
@@ -544,24 +593,28 @@ namespace ATL.AudioData.IO
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true)
             {
-                PrepareForWriting = true
+                PrepareForWriting = true,
+                ExtraID3v2PaddingDetection = args.ExtraID3v2PaddingDetection
             };
-            readTagParams.ExtraID3v2PaddingDetection = args.ExtraID3v2PaddingDetection;
 
-            if (m_embedder != null && m_embedder.HasEmbeddedID3v2 > 0)
+            if (m_embedder is { HasEmbeddedID3v2: > 0 })
             {
                 readTagParams.Offset = m_embedder.HasEmbeddedID3v2;
             }
 
             read(r, readTagParams);
 
-            if (m_embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
+            // ID3v2 embedder
+            if (m_embedder is { Id3v2Zone: not null } && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
             {
-                structureHelper.Clear();
+                // Remove default zone created by the ID3v2 reader
+                structureHelper.RemoveZone(ID3v2.ZONE_ID3V2);
                 structureHelper.AddZone(m_embedder.Id3v2Zone);
+                var removeZone = m_embedder.Id3v2OldZone;
+                if (removeZone != null) structureHelper.AddZone(removeZone);
             }
 
-            // Give engine something to work with if the tag is really empty
+            // Give the engine something to work with if the tag is really empty
             if (!Exists && 0 == Zones.Count) structureHelper.AddZone(0, 0);
 
             // Merge existing information + new tag information
@@ -583,29 +636,26 @@ namespace ATL.AudioData.IO
             long cumulativeDelta = 0;
             foreach (var zone in Zones)
             {
-                if (zone.Offset > -1 && !zone.Name.Equals(FileStructureHelper.PADDING_ZONE_NAME))
+                if (zone.Offset <= -1 || zone.Name.Equals(PADDING_ZONE_NAME)) continue;
+                if (zone.IsDeletable)
                 {
-                    if (zone.IsDeletable)
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Deleting " + zone.Name + " (deletable) @ " + zone.Offset + " [" + zone.Size + "]");
+
+                    if (zone.Size > zone.CoreSignature.Length) await StreamUtils.ShortenStreamAsync(s, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
+
+                    if (zone.CoreSignature.Length > 0)
                     {
-                        LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "Deleting " + zone.Name + " (deletable) @ " + zone.Offset + " [" + zone.Size + "]");
-
-                        if (zone.Size > zone.CoreSignature.Length) await StreamUtils.ShortenStreamAsync(s, zone.Offset + zone.Size - cumulativeDelta, (uint)(zone.Size - zone.CoreSignature.Length));
-
-                        if (zone.CoreSignature.Length > 0)
-                        {
-                            s.Position = zone.Offset - cumulativeDelta;
-                            await StreamUtils.WriteBytesAsync(s, zone.CoreSignature);
-                        }
-                    }
-
-                    result = result && rewriteHeaders(s, zone);
-
-                    if (zone.IsDeletable)
-                    {
-                        cumulativeDelta += zone.Size - zone.CoreSignature.Length;
-                        zone.IsDeleted = true;
+                        s.Position = zone.Offset - cumulativeDelta;
+                        await StreamUtils.WriteBytesAsync(s, zone.CoreSignature);
                     }
                 }
+
+                result = result && rewriteHeaders(s, zone);
+
+                if (!zone.IsDeletable) continue;
+
+                cumulativeDelta += zone.Size - zone.CoreSignature.Length;
+                zone.IsDeleted = true;
             }
             postprocessWrite(s);
 
@@ -614,23 +664,19 @@ namespace ATL.AudioData.IO
 
         private void handleEmbedder()
         {
-            if (m_embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2)
-            {
-                structureHelper.Clear();
-                structureHelper.AddZone(m_embedder.Id3v2Zone);
-            }
+            if (m_embedder == null || getImplementedTagType() != MetaDataIOFactory.TagType.ID3V2 || m_embedder.HasEmbeddedID3v2 < 1) return;
+            // Remove default zone created by the ID3v2 reader
+            structureHelper.RemoveZone(ID3v2.ZONE_ID3V2);
+            structureHelper.AddZone(m_embedder.Id3v2Zone);
         }
 
         private bool rewriteHeaders(Stream s, Zone zone)
         {
-            if (MetaDataIOFactory.TagType.NATIVE == getImplementedTagType() || (m_embedder != null && getImplementedTagType() == MetaDataIOFactory.TagType.ID3V2))
-            {
-                if (zone.IsDeletable)
-                    return structureHelper.RewriteHeaders(s, null, -zone.Size + zone.CoreSignature.Length, ACTION.Delete, zone.Name);
-                else
-                    return structureHelper.RewriteHeaders(s, null, 0, ACTION.Edit, zone.Name);
-            }
-            return true;
+            if (MetaDataIOFactory.TagType.NATIVE != getImplementedTagType() &&
+                (m_embedder == null || getImplementedTagType() != MetaDataIOFactory.TagType.ID3V2)) return true;
+
+            return zone.IsDeletable ? structureHelper.RewriteHeaders(s, null, -zone.Size + zone.CoreSignature.Length, ACTION.Delete, zone.Name)
+                : structureHelper.RewriteHeaders(s, null, 0, ACTION.Edit, zone.Name);
         }
 
         /// <summary>

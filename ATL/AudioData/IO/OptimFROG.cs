@@ -1,5 +1,6 @@
 using Commons;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using static ATL.AudioData.AudioDataManager;
@@ -148,9 +149,9 @@ namespace ATL.AudioData.IO
             return OFR_BITS[header.SampleType];
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return StreamUtils.ArrBeginsWith(data, OFR_SIGNATURE);
+            return data.StartsWith(OFR_SIGNATURE);
         }
 
         public List<MetaDataIOFactory.TagType> GetSupportedMetas()
@@ -174,18 +175,18 @@ namespace ATL.AudioData.IO
 
             if (source.Read(header.ID, 0, 4) < 4) return false;
             if (source.Read(buffer, 0, 4) < 4) return false;
-            header.Size = StreamUtils.DecodeUInt32(buffer);
+            header.Size = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
             if (source.Read(buffer, 0, 4) < 4) return false;
-            header.Length = StreamUtils.DecodeUInt32(buffer);
+            header.Length = BinaryPrimitives.ReadUInt32LittleEndian(buffer);
             if (source.Read(buffer, 0, 2) < 2) return false;
-            header.HiLength = StreamUtils.DecodeUInt16(buffer);
+            header.HiLength = BinaryPrimitives.ReadUInt16LittleEndian(buffer);
             if (source.Read(buffer, 0, 2) < 2) return false;
             header.SampleType = buffer[0];
             header.ChannelMode = buffer[1];
             if (source.Read(buffer, 0, 4) < 4) return false;
-            header.SampleRate = StreamUtils.DecodeInt32(buffer);
+            header.SampleRate = BinaryPrimitives.ReadInt32LittleEndian(buffer);
             if (source.Read(buffer, 0, 2) < 2) return false;
-            header.EncoderID = StreamUtils.DecodeUInt16(buffer);
+            header.EncoderID = BinaryPrimitives.ReadUInt16LittleEndian(buffer);
             if (source.Read(buffer, 0, 1) < 1) return false;
             header.CompressionID = buffer[0];
 

@@ -26,7 +26,12 @@ namespace ATL.test
             // Display d, h, m, s and ms
             Assert.AreEqual("2d 01:01:00.0", Utils.EncodeTimecode_ms(48 * 60 * 60 * 1000 + 60 * 60 * 1000 + 60 * 1000));
             // Display m, s and ms for very long durations in MM:SS.UUUU format
-            Assert.AreEqual("2941:01.0", Utils.EncodeTimecode_ms(48 * 60 * 60 * 1000 + 60 * 60 * 1000 + 60 * 1000 + 1000, true));
+            Assert.AreEqual("2941:01.0", Utils.EncodeTimecode_ms(48 * 60 * 60 * 1000 + 60 * 60 * 1000 + 60 * 1000 + 1000, Utils.TimecodeEncodeFormat.MM_SS_UUUU));
+            // Display LRC format with correct rounding
+            Assert.AreEqual("00:21.05", Utils.EncodeTimecode_ms(21 * 1000 + 50, Utils.TimecodeEncodeFormat.MM_SS_XX));
+            Assert.AreEqual("00:21.01", Utils.EncodeTimecode_ms(21 * 1000 + 5, Utils.TimecodeEncodeFormat.MM_SS_XX));
+            Assert.AreEqual("00:21.00", Utils.EncodeTimecode_ms(21 * 1000 + 1, Utils.TimecodeEncodeFormat.MM_SS_XX));
+            Assert.AreEqual("00:29.67", Utils.EncodeTimecode_ms(29 * 1000 + 67 * 10, Utils.TimecodeEncodeFormat.MM_SS_XX));
         }
 
         [TestMethod]
@@ -36,6 +41,10 @@ namespace ATL.test
             Assert.AreEqual(2 * 1000 + 2, Utils.DecodeTimecodeToMs("00:02.2"));
             // Display m, s and ms
             Assert.AreEqual(62 * 1000 + 2, Utils.DecodeTimecodeToMs("01:02.2"));
+            // Correctly parse lrc specific time code
+            Assert.AreEqual(21 * 1000 + 5 * 10, Utils.DecodeTimecodeToMs("00:21.05"));
+            Assert.AreEqual(25 * 1000, Utils.DecodeTimecodeToMs("00:25.00"));
+            Assert.AreEqual(29 * 1000 + 67 * 10, Utils.DecodeTimecodeToMs("00:29.67"));
             // Display h, m, s and ms
             Assert.AreEqual(60 * 60 * 1000 + 60 * 1000 + 16 * 1000 + 612, Utils.DecodeTimecodeToMs("01:01:16.612"));
             Assert.AreEqual(60 * 60 * 1000 + 60 * 1000 + 16 * 1000 + 612, Utils.DecodeTimecodeToMs("01:01:16,612"));
@@ -92,6 +101,20 @@ namespace ATL.test
             Assert.AreEqual(date.Value.Day, 1);
 
             date = null;
+            Assert.IsTrue(Utils.TryExtractDateTimeFromDigits("١٩٣٠", out date));
+            Assert.IsTrue(date.HasValue);
+            Assert.AreEqual(date.Value.Year, 1930);
+            Assert.AreEqual(date.Value.Month, 1);
+            Assert.AreEqual(date.Value.Day, 1);
+
+            date = null;
+            Assert.IsTrue(Utils.TryExtractDateTimeFromDigits("۱۹۳۰", out date));
+            Assert.IsTrue(date.HasValue);
+            Assert.AreEqual(date.Value.Year, 1930);
+            Assert.AreEqual(date.Value.Month, 1);
+            Assert.AreEqual(date.Value.Day, 1);
+
+            date = null;
             Assert.IsTrue(Utils.TryExtractDateTimeFromDigits("193008", out date));
             Assert.IsTrue(date.HasValue);
             Assert.AreEqual(date.Value.Year, 1930);
@@ -106,6 +129,8 @@ namespace ATL.test
             Assert.AreEqual(date.Value.Day, 12);
 
             // KO cases
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("אבדד", out date));
+            Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("〇一三五", out date));
             Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("sds", out date));
             Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("12sds12", out date));
             Assert.IsFalse(Utils.TryExtractDateTimeFromDigits("123456789", out date));
@@ -132,11 +157,8 @@ namespace ATL.test
         [TestMethod]
         public void Utils_StrictLengthStringBytes()
         {
-            byte[] data;
-            byte[] testData;
-
-            testData = new byte[] { 32, 32, 0, 0 };
-            data = Utils.BuildStrictLengthStringBytes("  ", 4, 0, Encoding.UTF8);
+            var testData = new byte[] { 32, 32, 0, 0 };
+            var data = Utils.BuildStrictLengthStringBytes("  ", 4, 0, Encoding.UTF8);
             Assert.IsTrue(testData.SequenceEqual(data));
 
             testData = new byte[] { 0, 0, 32, 32 };

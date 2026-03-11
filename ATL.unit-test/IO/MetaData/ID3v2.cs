@@ -1196,8 +1196,10 @@ namespace ATL.test.IO.MetaData
 
 
             // Write
-            TagData theTag = new TagData();
-            theTag.Lyrics = new List<LyricsInfo>() { new LyricsInfo() };
+            TagData theTag = new TagData
+            {
+                Lyrics = new List<LyricsInfo> { new() }
+            };
             theTag.Lyrics[0].ContentType = LyricsInfo.LyricsType.LYRICS;
             theTag.Lyrics[0].LanguageCode = "jap";
             theTag.Lyrics[0].Description = "song";
@@ -1228,7 +1230,7 @@ namespace ATL.test.IO.MetaData
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             TagData theTag = new TagData();
-            theTag.Lyrics = new List<LyricsInfo>() { new LyricsInfo() };
+            theTag.Lyrics = new List<LyricsInfo> { new() };
             theTag.Lyrics[0].UnsynchronizedLyrics = "[00:28.581]<00:28.581>I'm <00:28.981>wishing <00:29.797>on <00:30.190>a <00:30.629>star<00:31.575>\r\n[00:31.877]<00:31.877>And <00:32.245>trying <00:33.109>to <00:33.525>believe<00:34.845>\r\n";
 
             Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
@@ -1584,6 +1586,23 @@ namespace ATL.test.IO.MetaData
                 Assert.IsTrue(theFile2.ID3v2.AdditionalFields.ContainsKey(v.Key));
                 Assert.AreEqual(theFile2.ID3v2.AdditionalFields[v.Key], v.Value);
             }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_R_ID3v2_Year_Arabic()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/id3v2.4_TDRC_arabic.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+            Assert.AreEqual(theFile.ID3v2.Date.Year, 1441);
+
 
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);

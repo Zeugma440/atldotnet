@@ -1,10 +1,4 @@
-﻿using BenchmarkDotNet.Running;
-using Commons;
-using System;
-using System.Diagnostics.Metrics;
-using System.IO;
-using ATL.Playlist;
-using ATL.AudioData;
+﻿using Commons;
 
 namespace ATL.benchmark
 {
@@ -26,15 +20,13 @@ namespace ATL.benchmark
 
             //compareInfo(@"E:\Music\VGM");
 
-            //browseFor(@"E:\Music\", "*.mp3");
+            //browseFor(@"D:\Music\", "*.mp3");
 
-            //info(@"D:\temp\wav\74\empty_tagged_audacity.wav");
+            // info(@"D:\temp\wav\359\359.WAV");
 
-            //browseForMultithread(@"E:\temp\m4a-mp4\issue 70", "*.*", 4);
+            writeAt(@"D:\temp\wav\359\359.wav");
 
-            info(@"D:\temp\m4a-mp4\327\327.mp4");
-
-            //reduce(@"D:\temp\m4a-mp4\160\2tracks_TestFromABC-Orig.m4a");
+            //removeAt(@"D:\temp\wav\359\359.WAV");
 
             //displayVersionInfo();
         }
@@ -42,7 +34,7 @@ namespace ATL.benchmark
         static private void readAt(string filePath, bool useTagLib = false)
         {
             FileFinder ff = new FileFinder();
-            ConsoleLogger log = new ConsoleLogger();
+            new ATL.Logging.ConsoleLogger();
 
             //            Console.WriteLine(filePath);
 
@@ -109,7 +101,7 @@ namespace ATL.benchmark
                 //Settings.FileBufferSize = 512;
                 //                Settings.ID3v2_tagSubVersion = 3;
 
-                //ConsoleLogger logger = new ConsoleLogger();
+                new ATL.Logging.ConsoleLogger();
                 Console.WriteLine(">>> WRITE : BEGIN @ " + testFileLocation);
 
                 Writing w = new Writing();
@@ -124,31 +116,67 @@ namespace ATL.benchmark
             }
         }
 
+        static private void removeAt(string filePath)
+        {
+            string testFileLocation = TestUtils.GenerateTempTestFile(filePath);
+            try
+            {
+                //Settings.ForceDiskIO = true;
+                Settings.FileBufferSize = 2 * 1024 * 1024;
+                //Settings.FileBufferSize = 512;
+                //                Settings.ID3v2_tagSubVersion = 3;
+
+                new ATL.Logging.ConsoleLogger();
+                Console.WriteLine(">>> REMOVE: BEGIN @ " + testFileLocation);
+
+                Writing w = new Writing();
+                w.performRemove(testFileLocation, 2);
+                Console.WriteLine(">>> REMOVE : END");
+
+                Console.ReadLine();
+            }
+            finally
+            {
+                File.Delete(testFileLocation);
+            }
+        }
+
         static private void reduce(string filePath)
         {
-            new ConsoleLogger();
+            new ATL.Logging.ConsoleLogger();
             new Reduce().reduce(filePath);
             Console.ReadLine();
         }
 
         static private void info(string filePath)
         {
-            new ConsoleLogger();
+            new ATL.Logging.ConsoleLogger();
             Console.WriteLine(">>> INFO : BEGIN @ " + filePath);
+            //Settings.MP3_parseExactDuration = true;
 
-            Track t = new Track(filePath);
-
-            Console.WriteLine(t.AudioFormat.ID);
-
-            Console.WriteLine(t.Path + "......." + t.AudioFormat.Name + " | " + Utils.EncodeTimecode_s(t.Duration) + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")" + " " + t.ChannelsArrangement));
-            Console.WriteLine(Utils.BuildStrictLengthString("", t.Path.Length, '.') + ".......disc " + t.DiscNumber + " | track " + t.TrackNumber + " | title " + t.Title + " | artist " + t.Artist + " | album " + t.Album + " | year " + t.Year);
-
-            Console.WriteLine("images : " + t.EmbeddedPictures.Count);
-
-            Console.WriteLine("AdditionalFields");
-            foreach (var field in t.AdditionalFields)
+            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                Console.WriteLine("  " + field.Key + " = " + field.Value);
+                //IAudioDataIO reader = AudioDataIOFactory.GetInstance().GetFromStream(fs);
+                //ID3v2 tag = new ID3v2();
+                //tag.Read(fs, new AudioData.IO.MetaDataIO.ReadTagParams());
+
+
+                //Track t = new Track(filePath);
+                Track t = new Track(fs);
+
+                Console.WriteLine(t.Path + "......." + t.AudioFormat.Name 
+                                  + " | " + Utils.EncodeTimecode_s(t.Duration) 
+                                  + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")") 
+                                  + " | Channels : " + t.ChannelsArrangement);
+                Console.WriteLine(Utils.BuildStrictLengthString("", t.Path.Length, '.') + ".......disc " + t.DiscNumber + " | track " + t.TrackNumber + " | title " + t.Title + " | artist " + t.Artist + " | album " + t.Album + " | year " + t.Year);
+
+                Console.WriteLine("images : " + t.EmbeddedPictures.Count);
+
+                Console.WriteLine("AdditionalFields");
+                foreach (var field in t.AdditionalFields)
+                {
+                    Console.WriteLine("  " + field.Key + " = " + field.Value);
+                }
             }
 
             Console.WriteLine(">>> INFO : END");

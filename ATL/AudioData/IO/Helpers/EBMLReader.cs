@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Commons;
+using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Commons;
 
 namespace ATL.AudioData
 {
@@ -62,21 +63,16 @@ namespace ATL.AudioData
             }
 
             // Decode buffer
-            switch (nbBytes)
+            return nbBytes switch
             {
-                case 2:
-                    return StreamUtils.DecodeBEUInt16(buffer);
-                case 3:
-                    return StreamUtils.DecodeBEUInt24(buffer);
-                case 4:
-                    return StreamUtils.DecodeBEUInt32(buffer);
-                case 5:
-                    return (long)StreamUtils.DecodeBEUInt40(buffer);
+                2 => BinaryPrimitives.ReadUInt16BigEndian(buffer),
+                3 => StreamUtils.DecodeBEUInt24(buffer),
+                4 => BinaryPrimitives.ReadUInt32BigEndian(buffer),
+                5 => (long)StreamUtils.DecodeBEUInt40(buffer),
                 // TODO 48 and 56 bits longs
-                case 8:
-                    return (long)StreamUtils.DecodeBEUInt64(buffer);
-                default: return buffer[0];
-            }
+                8 => (long)BinaryPrimitives.ReadUInt64BigEndian(buffer),
+                _ => buffer[0]
+            };
         }
 
         public long seek(long size, SeekOrigin origin = SeekOrigin.Begin)
@@ -155,7 +151,7 @@ namespace ATL.AudioData
                             int nbFound = 0;
                             foreach (var c in criteria)
                             {
-                                var crits = new HashSet<Tuple<long, int>> { new Tuple<long, int>(c.Item1, c.Item2) };
+                                var crits = new HashSet<Tuple<long, int>> { new(c.Item1, c.Item2) };
                                 var res = seekElement(c.Item1, crits);
                                 if (res != SeekResult.FOUND_NO_MATCH) nbFound++;
                                 BaseStream.Position = loopOffset;
@@ -167,7 +163,8 @@ namespace ATL.AudioData
                 else
                 {
                     var size = readVint();
-                    BaseStream.Seek(size, SeekOrigin.Current);
+                    var seekTo2 = Math.Min(BaseStream.Position + size, BaseStream.Length);
+                    BaseStream.Seek(seekTo2, SeekOrigin.Begin);
                 }
             }
             if (resultOffset > -1) BaseStream.Seek(resultOffset, SeekOrigin.Begin);
@@ -182,21 +179,16 @@ namespace ATL.AudioData
 
             if (BaseStream.Read(buffer, 0, (int)nbBytes) < nbBytes) return 0;
             // Decode buffer
-            switch (nbBytes)
+            return nbBytes switch
             {
-                case 2:
-                    return StreamUtils.DecodeBEUInt16(buffer);
-                case 3:
-                    return StreamUtils.DecodeBEUInt24(buffer);
-                case 4:
-                    return StreamUtils.DecodeBEUInt32(buffer);
-                case 5:
-                    return StreamUtils.DecodeBEUInt40(buffer);
+                2 => BinaryPrimitives.ReadUInt16BigEndian(buffer),
+                3 => StreamUtils.DecodeBEUInt24(buffer),
+                4 => BinaryPrimitives.ReadUInt32BigEndian(buffer),
+                5 => StreamUtils.DecodeBEUInt40(buffer),
                 // TODO 48 and 56 bits longs
-                case 8:
-                    return StreamUtils.DecodeBEUInt64(buffer);
-                default: return buffer[0];
-            }
+                8 => BinaryPrimitives.ReadUInt64BigEndian(buffer),
+                _ => buffer[0]
+            };
         }
 
         public double readFloat()
@@ -209,8 +201,7 @@ namespace ATL.AudioData
             switch (nbBytes)
             {
                 case 4:
-                    byte[] tmpBuf = new byte[4];
-                    Array.Copy(buffer, tmpBuf, 4);
+                    Span<byte> tmpBuf = new Span<byte>(buffer, 0,4);
                     return ToSingle(tmpBuf);
                 case 8:
                     return ToDouble(buffer);
@@ -218,10 +209,10 @@ namespace ATL.AudioData
             }
         }
 
-        private static float ToSingle(byte[] bytes, int startIndex = 0)
+        private static float ToSingle(Span<byte> bytes)
         {
-            if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
-            return BitConverter.ToSingle(bytes, startIndex);
+            if (BitConverter.IsLittleEndian) bytes.Reverse();
+            return BitConverter.ToSingle(bytes);
         }
         private static double ToDouble(byte[] bytes, int startIndex = 0)
         {

@@ -107,7 +107,6 @@ namespace ATL.AudioData.IO
             w.Write(keys.Count);
 
             // Sample loops data size
-            long sampleLoopsPos = w.BaseStream.Position;
             w.Write(0); // We don't store anything else than the loop itself => value should be 0
 
             // Sample loops data

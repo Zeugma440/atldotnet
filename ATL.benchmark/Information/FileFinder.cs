@@ -1,4 +1,5 @@
-﻿using Commons;
+﻿using ATL.Logging;
+using Commons;
 
 namespace ATL.benchmark
 {

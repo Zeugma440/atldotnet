@@ -6,6 +6,7 @@ using static ATL.AudioData.IO.MetaDataIO;
 using System.Linq;
 using System;
 using System.Text;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
@@ -28,9 +29,9 @@ namespace ATL.AudioData.IO
             long initialPos = position;
 
             // Purpose
-            byte[] data = new byte[4];
-            if (source.Read(data, 0, 4) < 4) return "";
-            string typeId = Utils.Latin1Encoding.GetString(data, 0, 4);
+            Span<byte> data = stackalloc byte[4];
+            if (source.Read(data) < 4) return "";
+            string typeId = Utils.Latin1Encoding.GetString(data);
 
             long maxPos = initialPos + chunkSize - 4; // 4 being the purpose 32bits tag that belongs to the chunk
 
@@ -51,7 +52,7 @@ namespace ATL.AudioData.IO
                 var key = Utils.Latin1Encoding.GetString(data, 0, 4);
                 // Size
                 if (source.Read(data, 0, 4) < 4) return;
-                var size = StreamUtils.DecodeInt32(data);
+                var size = BinaryPrimitives.ReadInt32LittleEndian(data);
                 // Do _NOT_ use StreamUtils.ReadNullTerminatedString because non-textual fields may be found here (e.g. NITR)
                 if (size > 0)
                 {
@@ -68,19 +69,17 @@ namespace ATL.AudioData.IO
 
         private static void readDataListPurpose(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long maxPos)
         {
-            string id;
-            int size;
             int position = 0;
-            byte[] data = new byte[4];
+            Span<byte> data = stackalloc byte[4];
 
             while (source.Position < maxPos)
             {
                 // Sub-chunk ID
-                if (source.Read(data, 0, 4) < 4) return;
-                id = Utils.Latin1Encoding.GetString(data, 0, 4);
+                if (source.Read(data) < 4) return;
+                var id = Utils.Latin1Encoding.GetString(data);
                 // Size
-                if (source.Read(data, 0, 4) < 4) return;
-                size = StreamUtils.DecodeInt32(data);
+                if (source.Read(data) < 4) return;
+                var size = BinaryPrimitives.ReadInt32LittleEndian(data);
                 if (size <= 0) continue;
 
                 meta.SetMetaField($"adtl.Labels[{position}].Type", id, readTagParams.ReadAllMetaFrames);
@@ -123,21 +122,28 @@ namespace ATL.AudioData.IO
             meta.SetMetaField($"adtl.Labels[{position}].Text", value, readTagParams.ReadAllMetaFrames);
         }
 
-        public static bool IsDataEligible(MetaDataHolder meta)
+        public static bool IsDataEligible(MetaDataHolder meta, string purpose)
         {
-            if (meta.Title.Length > 0) return true;
-            if (meta.Album.Length > 0) return true;
-            if (meta.Artist.Length > 0) return true;
-            if (meta.Comment.Length > 0) return true;
-            if (meta.Genre.Length > 0) return true;
-            if (meta.Date > DateTime.MinValue) return true;
-            if (meta.Copyright.Length > 0) return true;
-            if (meta.Popularity > 0) return true;
-            if (meta.EncodedBy.Length > 0) return true;
-            if (meta.Encoder.Length > 0) return true;
-            if (meta.Language.Length > 0) return true;
+            bool isPurposeInfo = purpose.Equals(PURPOSE_INFO, StringComparison.InvariantCultureIgnoreCase);
 
-            return WavHelper.IsDataEligible(meta, "info.") || WavHelper.IsDataEligible(meta, "adtl.");
+            if (isPurposeInfo || 0 == purpose.Length)
+            {
+                if (meta.Title.Length > 0) return true;
+                if (meta.Album.Length > 0) return true;
+                if (meta.Artist.Length > 0) return true;
+                if (meta.Comment.Length > 0) return true;
+                if (meta.Genre.Length > 0) return true;
+                if (meta.Date > DateTime.MinValue) return true;
+                if (meta.Copyright.Length > 0) return true;
+                if (meta.Popularity > 0) return true;
+                if (meta.EncodedBy.Length > 0) return true;
+                if (meta.Encoder.Length > 0) return true;
+                if (meta.Language.Length > 0) return true;
+            }
+
+            if (isPurposeInfo) return WavHelper.IsDataEligible(meta, "info.");
+
+            return purpose.Equals(PURPOSE_ADTL, StringComparison.InvariantCultureIgnoreCase) && WavHelper.IsDataEligible(meta, "adtl.");
         }
 
         public static int ToStream(BinaryWriter w, bool isLittleEndian, string purpose, MetaDataHolder tag, MetaDataIO metaIO)
@@ -209,7 +215,7 @@ namespace ATL.AudioData.IO
                 if (value.Length > 0) writeSizeAndNullTerminatedString("IRTD", value, w, writtenFields);
             }
             // Track number
-            if (meta.TrackNumber != null && meta.TrackNumber != "")
+            if (!string.IsNullOrEmpty(meta.TrackNumber))
             {
                 value = meta.TrackNumber;
                 if (0 == value.Length && additionalFields.TryGetValue("info.TRCK", out var additionalField3)) value = additionalField3;
@@ -345,11 +351,10 @@ namespace ATL.AudioData.IO
                 w.Write((byte)0);
 
             string keyFull = "info." + key;
-            if (writtenFields.ContainsKey(keyFull))
+            if (!writtenFields.TryAdd(keyFull, value))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, $"'{key}' : already written");
             }
-            else writtenFields.Add(keyFull, value);
         }
     }
 }

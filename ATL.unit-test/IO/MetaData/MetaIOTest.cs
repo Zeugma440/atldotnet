@@ -221,7 +221,7 @@ namespace ATL.test.IO.MetaData
             if (testData.Title != "") theTag.Title = "Test !!" + internationalChar;
             else if (testData.GeneralDescription != "") theTag.GeneralDescription = "Description" + internationalChar;
 
-            if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
+            if (testData.AdditionalFields is { Count: > 0 })
             {
                 IDictionary<string, string> additionalFields = new Dictionary<string, string>();
                 foreach (KeyValuePair<string, string> kvp in testData.AdditionalFields)

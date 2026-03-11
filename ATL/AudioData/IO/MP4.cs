@@ -9,21 +9,22 @@ using static ATL.AudioData.FileStructureHelper;
 using System.Linq;
 using System.Collections.Concurrent;
 using static ATL.TagData;
+using System.Buffers.Binary;
 
 namespace ATL.AudioData.IO
 {
     /// <summary>
     /// Class for MP4 files manipulation (extensions : .MP4, .M4A, .M4B, .M4V, .M4P, .M4R, .AAX)
-    /// 
+    ///
     /// Implementation notes
     ///     - If the UDTA atom is absent as a direct child to the MOOV atom, ATL seeks the first TRAK that has an UDTA atom
     ///     and considers that one as the entire file's metadata
-    ///     
+    ///
     ///     - When removing a Track, physical chunks belonging to the track (i.e. those indexed by 'stco') won't be removed
-    ///     
+    ///
     ///     - When adding the exact same chapter picture to multiple chapters, that picture is written as many times as there are chapters
     ///     instead of being written once and referenced from each chapter
-    /// 
+    ///
     /// </summary>
 	class MP4 : MetaDataIO, IAudioDataIO
     {
@@ -35,13 +36,16 @@ namespace ATL.AudioData.IO
         // de facto default namespace for custom fields
         private const string DEFAULT_NAMESPACE = "com.apple.iTunes";
 
+        private const string UUID_PREFIX = "uuid.";
+
         private static readonly byte[] FILE_HEADER = Utils.Latin1Encoding.GetBytes("ftyp");
 
         private static readonly byte[] ILST_CORE_SIGNATURE = { 0, 0, 0, 8, 105, 108, 115, 116 }; // (int32)8 followed by "ilst" field code
 
         // https://mp4ra.org/registered-types/codecs
+        // Plus ".mp3" that is found in the wild
         private static readonly ISet<string> VALID_AUDIO_DESCRIPTORS = new HashSet<string> {
-        "a3ds","ac-3","ac-4","alac","alaw","cavs","av3a","dra1","dts+","dts-","dtsc","dtse","dtsh","dtsl","dtsx","dtsy","ec-3","ec+3","enca","fLaC","g719","g726","icpa","m4ae","mha1","mha2","mhm1","mhm2","mlpa","mp4a","Opus","raw$20","resa","samr","sawb","sawp","sevc","sevs","sqcp","ssmv","twos","ulaw","iamf","ipcm","fpcm" };
+        "a3ds","ac-3","ac-4","alac","alaw","cavs","av3a","dra1","dts+","dts-","dtsc","dtse","dtsh","dtsl","dtsx","dtsy","ec-3","ec+3","enca","fLaC","g719","g726","icpa","m4ae","mha1","mha2","mhm1","mhm2","mlpa","mp4a","Opus","raw$20","resa","samr","sawb","sawp","sevc","sevs","sqcp","ssmv","twos","ulaw","iamf","ipcm","fpcm",".mp3" };
 
         private const string ZONE_MP4_NOUDTA = "noudta";                // Placeholder for missing 'udta' atom
         private const string ZONE_MP4_NOMETA = "nometa";                // Placeholder for missing 'meta' atom
@@ -58,7 +62,7 @@ namespace ATL.AudioData.IO
         private const string ZONE_MP4_PHYSICAL_CHUNK = "chunk";         // Physical audio chunk referenced from stco or co64
 
         // Mapping between MP4 frame codes and ATL frame codes
-        private static readonly Dictionary<string, Field> frameMapping_mp4 = new Dictionary<string, Field>() {
+        private static readonly Dictionary<string, Field> frameMapping_mp4 = new() {
             { "©nam", Field.TITLE },
             { "titl", Field.TITLE },
             { "©alb", Field.ALBUM },
@@ -102,7 +106,7 @@ namespace ATL.AudioData.IO
 
         // Mapping between MP4 frame codes and frame classes that aren't class 1 (UTF-8 text)
         // 0 = special / 21 = int8-16-24-32 / 22 = uint8-16-24-32
-        private static readonly ConcurrentDictionary<string, byte> frameClasses_mp4 = new ConcurrentDictionary<string, byte>()
+        private static readonly ConcurrentDictionary<string, byte> frameClasses_mp4 = new()
         {
             ["gnre"] = 0,
             ["trkn"] = 0,
@@ -272,20 +276,18 @@ namespace ATL.AudioData.IO
             return calculatedDurationMs;
         }
 
-        public static bool IsValidHeader(byte[] data)
+        public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
             // Examine bytes 4 to 8
-            byte[] usefulData = new byte[4];
-            Array.Copy(data, 4, usefulData, 0, 4);
-            return StreamUtils.ArrBeginsWith(usefulData, FILE_HEADER);
+            return data[4..8].StartsWith(FILE_HEADER);
         }
 
         // Get header type of the file
         private bool recognizeHeaderType(Stream source)
         {
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
-            byte[] data = new byte[8];
-            if (source.Read(data, 0, 8) < 8) return false;
+            Span<byte> data = stackalloc byte[8];
+            if (source.Read(data) < 8) return false;
             return IsValidHeader(data);
         }
 
@@ -297,38 +299,39 @@ namespace ATL.AudioData.IO
             double cumulatedDuration = 0;
 
             // Text chapters are "master data"; picture chapters get attached to them
+            Span<byte> data = stackalloc byte[2];
             for (int i = 0; i < chapterTextTrackSamples.Count; i++)
             {
                 MP4Sample textSample = chapterTextTrackSamples[i];
                 MP4Sample pictureSample = i < chapterPictureTrackSamples.Count ? chapterPictureTrackSamples[i] : null;
-                if (textSample.ChunkOffset > 0)
+                if (textSample.ChunkOffset <= 0) continue;
+
+                ChapterInfo chapter = new ChapterInfo
                 {
-                    ChapterInfo chapter = new ChapterInfo();
-                    chapter.Format = ChapterInfo.FORMAT.QT;
+                    Format = ChapterInfo.FORMAT.QT
+                };
 
-                    source.Seek(textSample.ChunkOffset + textSample.RelativeOffset, SeekOrigin.Begin);
-                    byte[] data = new byte[2];
-                    if (source.Read(data, 0, 2) < 2) return;
-                    ushort strDataSize = StreamUtils.DecodeBEUInt16(data);
+                source.Seek(textSample.ChunkOffset + textSample.RelativeOffset, SeekOrigin.Begin);
+                if (source.Read(data) < 2) return;
+                ushort strDataSize = BinaryPrimitives.ReadUInt16BigEndian(data);
 
-                    byte[] strData = new byte[strDataSize];
-                    if (source.Read(strData, 0, strDataSize) < strDataSize) return;
-                    chapter.Title = Encoding.UTF8.GetString(strData);
-                    chapter.StartTime = (uint)Math.Round(cumulatedDuration);
-                    cumulatedDuration += textSample.Duration * 1000;
-                    chapter.EndTime = (uint)Math.Round(cumulatedDuration);
+                byte[] strData = new byte[strDataSize];
+                if (source.Read(strData, 0, strDataSize) < strDataSize) return;
+                chapter.Title = Encoding.UTF8.GetString(strData);
+                chapter.StartTime = (uint)Math.Round(cumulatedDuration);
+                cumulatedDuration += textSample.Duration * 1000;
+                chapter.EndTime = (uint)Math.Round(cumulatedDuration);
 
-                    if (pictureSample != null && pictureSample.ChunkOffset > 0 && pictureSample.Size > 0)
-                    {
-                        source.Seek(pictureSample.ChunkOffset + pictureSample.RelativeOffset, SeekOrigin.Begin);
-                        int localSize = (int)pictureSample.Size;
-                        byte[] localData = new byte[localSize];
-                        if (source.Read(localData, 0, localSize) < localSize) return;
-                        chapter.Picture = PictureInfo.fromBinaryData(localData, PictureInfo.PIC_TYPE.Generic, getImplementedTagType());
-                    }
-
-                    tagData.Chapters.Add(chapter);
+                if (pictureSample is { ChunkOffset: > 0, Size: > 0 })
+                {
+                    source.Seek(pictureSample.ChunkOffset + pictureSample.RelativeOffset, SeekOrigin.Begin);
+                    int localSize = (int)pictureSample.Size;
+                    byte[] localData = new byte[localSize];
+                    if (source.Read(localData, 0, localSize) < localSize) return;
+                    chapter.Picture = PictureInfo.fromBinaryData(localData, PictureInfo.PIC_TYPE.Generic, getImplementedTagType());
                 }
+
+                tagData.Chapters.Add(chapter);
             }
         }
 
@@ -345,7 +348,7 @@ namespace ATL.AudioData.IO
         /// <param name="readTagParams">Reading parameters</param>
         private bool readMP4(Stream source, ReadTagParams readTagParams)
         {
-            byte[] data = new byte[8];
+            Span<byte> data = stackalloc byte[8];
 
             IList<long> audioTrackOffsets = new List<long>(); // Offset of all detected audio/video tracks (tracks with a media type of 'soun' or 'vide')
             IList<MP4Sample> chapterTextTrackSamples = new List<MP4Sample>(); // If non-empty, quicktime chapters have been detected
@@ -358,8 +361,8 @@ namespace ATL.AudioData.IO
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             // FTYP atom
-            if (source.Read(data, 0, 4) < 4) return false;
-            var atomSize = StreamUtils.DecodeBEUInt32(data);
+            if (source.Read(data[..4]) < 4) return false;
+            var atomSize = BinaryPrimitives.ReadUInt32BigEndian(data);
             source.Seek(atomSize - 4, SeekOrigin.Current);
 
             // MOOV atom
@@ -395,18 +398,18 @@ namespace ATL.AudioData.IO
             if (1 == version) source.Seek(16, SeekOrigin.Current);
             else source.Seek(8, SeekOrigin.Current);
 
-            if (source.Read(data, 0, 4) < 4) return false;
-            globalTimeScale = StreamUtils.DecodeBEUInt32(data);
+            if (source.Read(data[..4]) < 4) return false;
+            globalTimeScale = BinaryPrimitives.ReadUInt32BigEndian(data);
             long timeLengthPerSec;
             if (1 == version)
             {
-                if (source.Read(data, 0, 8) < 8) return false;
-                timeLengthPerSec = StreamUtils.DecodeBEInt64(data);
+                if (source.Read(data) < 8) return false;
+                timeLengthPerSec = BinaryPrimitives.ReadInt64BigEndian(data);
             }
             else
             {
-                if (source.Read(data, 0, 4) < 4) return false;
-                timeLengthPerSec = StreamUtils.DecodeBEUInt32(data);
+                if (source.Read(data[..4]) < 4) return false;
+                timeLengthPerSec = BinaryPrimitives.ReadUInt32BigEndian(data);
             }
             calculatedDurationMs = timeLengthPerSec * 1000.0 / globalTimeScale;
             trackCounterPosition = source.Position + 76;
@@ -420,7 +423,7 @@ namespace ATL.AudioData.IO
                 uint trakSize = navigateToAtom(source, "trak");
                 if (0 == trakSize)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "total tracks found : " + (currentTrakIndex - 1));
+                    LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "total tracks found : " + currentTrakIndex);
                     break;
                 }
                 long trakPosition = source.Position - 8;
@@ -445,16 +448,16 @@ namespace ATL.AudioData.IO
                     if (XmpTag.UUID_XMP == uuid.key)
                     {
                         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(uuid.value));
-                        XmpTag.FromStream(stream, this, readTagParams, stream.Length);
+                        XmpTag.FromStream(stream, this, readTagParams, new  Dictionary<string, string>(), stream.Length);
                     }
                     else
                     {
-                        SetMetaField("uuid." + uuid.key, uuid.value, readTagParams.ReadAllMetaFrames);
+                        SetMetaField(UUID_PREFIX + uuid.key, uuid.value, readTagParams.ReadAllMetaFrames);
                     }
 
                     if (readTagParams.PrepareForWriting)
                     {
-                        structureHelper.AddZone(uuid.position, uuid.size, "uuid." + uuid.key);
+                        structureHelper.AddZone(uuid.position, uuid.size, UUID_PREFIX + uuid.key);
                     }
                 }
             } while (uuid.size > 0);
@@ -625,6 +628,7 @@ namespace ATL.AudioData.IO
 
             uint moofSize = navigateToAtom(s, "moof");
             isFragmented = moofSize > 0;
+            byte[] data = new byte[4];
             while (moofSize > 0)
             {
                 var moofOffset = s.Position;
@@ -633,7 +637,6 @@ namespace ATL.AudioData.IO
                 if (0 == navigateToAtom(s, "tfhd")) break;
                 s.Seek(1, SeekOrigin.Current); // Version
 
-                byte[] data = new byte[4];
                 if (s.Read(data, 0, 3) < 3) break;
                 int flags = StreamUtils.DecodeBEInt24(data);
                 if (0 == (flags & 0x00000008)) break;
@@ -642,7 +645,7 @@ namespace ATL.AudioData.IO
                 if ((flags & 0x00000001) > 0) s.Seek(8, SeekOrigin.Current); // base_data_offset
                 if ((flags & 0x00000002) > 0) s.Seek(4, SeekOrigin.Current); // sample_description_index
                 if (s.Read(data, 0, 4) < 4) break;
-                int defaultSampleDuration = StreamUtils.DecodeBEInt32(data);
+                int defaultSampleDuration = BinaryPrimitives.ReadInt32BigEndian(data);
 
                 s.Seek(trafOffset, SeekOrigin.Begin);
                 uint trunSize = navigateToAtom(s, "trun");
@@ -653,7 +656,7 @@ namespace ATL.AudioData.IO
                     if (s.Read(data, 0, 3) < 3) break;
                     flags = StreamUtils.DecodeBEInt24(data);
                     if (s.Read(data, 0, 4) < 4) break;
-                    int sampleCount = StreamUtils.DecodeBEInt32(data);
+                    int sampleCount = BinaryPrimitives.ReadInt32BigEndian(data);
 
                     for (int i = 0; i < sampleCount; i++)
                     {
@@ -662,7 +665,7 @@ namespace ATL.AudioData.IO
                             if ((flags & 0x00000001) > 0) s.Seek(4, SeekOrigin.Current); // data_offset
                             if ((flags & 0x00000004) > 0) s.Seek(4, SeekOrigin.Current); // first_sample_flags
                             if (s.Read(data, 0, 4) < 4) break;
-                            durationAll += StreamUtils.DecodeBEInt32(data);
+                            durationAll += BinaryPrimitives.ReadInt32BigEndian(data);
                         }
                         else durationAll += defaultSampleDuration;
                     }
@@ -670,7 +673,7 @@ namespace ATL.AudioData.IO
                     // Seek next trun atom
                     s.Seek(trunOffset + trunSize - 8, SeekOrigin.Begin);
                     if (s.Read(data, 0, 4) < 4) break;
-                    trunSize = StreamUtils.DecodeBEUInt32(data);
+                    trunSize = BinaryPrimitives.ReadUInt32BigEndian(data);
                     if (s.Read(data, 0, 4) < 4) break;
                     if (!Utils.Latin1Encoding.GetString(data).Equals("trun")) break;
                 }
@@ -679,7 +682,7 @@ namespace ATL.AudioData.IO
                 s.Seek(moofOffset + moofSize - 8, SeekOrigin.Begin);
                 if (s.Read(data, 0, 4) < 4) break;
                 var mdatOffset = s.Position;
-                var mdatSize = StreamUtils.DecodeBEUInt32(data);
+                var mdatSize = BinaryPrimitives.ReadUInt32BigEndian(data);
                 s.Seek(mdatSize - 4, SeekOrigin.Current);
                 // Account for stream truncation
                 if (mdatOffset + mdatSize > s.Length) mdatSize = (uint)(s.Length - mdatOffset + 4);
@@ -713,16 +716,14 @@ namespace ATL.AudioData.IO
         {
             int mediaTimeScale = 1000;
 
-            uint int32Data = 0;
+            uint int32Data;
             byte[] data32 = new byte[4];
             byte[] data64 = new byte[8];
 
             bool isCurrentTrackFirstChapterTextTrack = false; // First chapter text track which should contain chapter titles (as opposed to URLs)
-            bool isCurrentTrackOtherChapterTrack = false; // Generic marker for other chapter-related text tracks
+            bool isCurrentTrackOtherChapterTrack; // Generic marker for other chapter-related text tracks
             bool isCurrentTrackFirstChapterPicturesTrack = false; // First chapter picture track which should contain chapter "covers"
             bool isCurrentTrackFirstAudioTrack = false;
-
-            string trackZoneName = "";
 
             // Read track ID
             if (0 == navigateToAtom(source, "tkhd"))
@@ -735,7 +736,7 @@ namespace ATL.AudioData.IO
             source.Seek(intLength * 2, SeekOrigin.Current); // Creation & Modification Dates
 
             if (source.Read(data32, 0, 4) < 4) return;
-            int trackId = StreamUtils.DecodeBEInt32(data32);
+            int trackId = BinaryPrimitives.ReadInt32BigEndian(data32);
 
             // Detect the track type
             source.Seek(trakPosition + 8, SeekOrigin.Begin);
@@ -757,11 +758,10 @@ namespace ATL.AudioData.IO
                 int mdhdVersion = source.ReadByte();
                 source.Seek(3, SeekOrigin.Current); // Flags
 
-                if (0 == mdhdVersion) source.Seek(8, SeekOrigin.Current);
-                else source.Seek(16, SeekOrigin.Current); // Creation and modification date
+                source.Seek(0 == mdhdVersion ? 8 : 16, SeekOrigin.Current); // Creation and modification date
 
                 if (source.Read(data32, 0, 4) < 4) return;
-                mediaTimeScale = StreamUtils.DecodeBEInt32(data32);
+                mediaTimeScale = BinaryPrimitives.ReadInt32BigEndian(data32);
 
                 source.Seek(mdiaPosition, SeekOrigin.Begin);
             }
@@ -793,11 +793,9 @@ namespace ATL.AudioData.IO
                     }
                     foreach (int index in list)
                     {
-                        if (trackId == index)
-                        {
-                            isCurrentTrackOtherChapterTrack = true;
-                            break;
-                        }
+                        if (trackId != index) continue;
+                        isCurrentTrackOtherChapterTrack = true;
+                        break;
                     }
                 }
             }
@@ -809,7 +807,7 @@ namespace ATL.AudioData.IO
 
             if (readTagParams.PrepareForWriting && isCurrentTrackOtherChapterTrack && !isCurrentTrackFirstChapterTextTrack)
             {
-                trackZoneName = ZONE_MP4_QT_CHAP_TXT_TRAK + "." + trackId;
+                var trackZoneName = ZONE_MP4_QT_CHAP_TXT_TRAK + "." + trackId;
                 structureHelper.AddZone(trakPosition, (int)trakSize, trackZoneName);
                 structureHelper.AddSize(moovPosition - 8, moovSize, trackZoneName);
             }
@@ -835,12 +833,12 @@ namespace ATL.AudioData.IO
             }
             source.Seek(4, SeekOrigin.Current); // 4-byte flags
             if (source.Read(data32, 0, 4) < 4) return;
-            uint nbDescriptions = StreamUtils.DecodeBEUInt32(data32);
+            uint nbDescriptions = BinaryPrimitives.ReadUInt32BigEndian(data32);
 
             for (int i = 0; i < nbDescriptions; i++)
             {
                 if (source.Read(data32, 0, 4) < 4) return;
-                int32Data = StreamUtils.DecodeBEUInt32(data32); // 4-byte description length
+                int32Data = BinaryPrimitives.ReadUInt32BigEndian(data32); // 4-byte description length
                 if (source.Read(data32, 0, 4) < 4) return;
                 string descFormat = Utils.Latin1Encoding.GetString(data32);
 
@@ -853,14 +851,14 @@ namespace ATL.AudioData.IO
                     source.Seek(8, SeekOrigin.Current); // AudioSampleEntry / 8-byte reserved zone
 
                     if (source.Read(data32, 0, 2) < 2) return;
-                    ushort channels = StreamUtils.DecodeBEUInt16(data32); // Channel count
+                    ushort channels = BinaryPrimitives.ReadUInt16BigEndian(data32); // Channel count
                     ChannelsArrangement = GuessFromChannelNumber(channels);
 
                     source.Seek(2, SeekOrigin.Current); // Sample size
                     source.Seek(2, SeekOrigin.Current); // Quicktime stuff (should be length 4, but sampleRate doesn't work when it is...)
 
                     if (source.Read(data32, 0, 4) < 4) return;
-                    SampleRate = (int)StreamUtils.DecodeBEUInt32(data32);
+                    SampleRate = (int)BinaryPrimitives.ReadUInt32BigEndian(data32);
                 }
                 else if (descFormat.Equals("jpeg")) // Descriptor for picture (slides / chapter pictures)
                 {
@@ -894,24 +892,19 @@ namespace ATL.AudioData.IO
                     for (int i = 0; i < (chapSize - 8) / 4; i++)
                     {
                         if (source.Read(data32, 0, 4) < 4) return;
-                        thisTrackIndexes.Add(StreamUtils.DecodeBEInt32(data32));
+                        var index = BinaryPrimitives.ReadInt32BigEndian(data32);
+                        if (index > 0) thisTrackIndexes.Add(BinaryPrimitives.ReadInt32BigEndian(data32));
+                        else LogDelegator.GetLogDelegate()(Log.LV_INFO, "Track " + trackId + " : detected illegal chapter track ID : " + index);
                     }
-                    chapterTrackIndexes.Add(trackId, thisTrackIndexes);
 
-                    foreach (int i in thisTrackIndexes)
-                    {
-                        if (i < trackId)
-                        {
-                            parsePreviousTracks = true;
-                            break;
-                        }
-                    }
+                    chapterTrackIndexes.Add(trackId, thisTrackIndexes);
+                    if (thisTrackIndexes.Any(i => i < trackId)) parsePreviousTracks = true;
                 }
 
                 // If current track has declared a chapter track located at a previous index, come back to read it
                 if (parsePreviousTracks)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_INFO, "detected chapter track located before read cursor; restarting reading tracks from track 1");
+                    LogDelegator.GetLogDelegate()(Log.LV_INFO, "Track " + trackId + " : detected chapter track located before read cursor; restarting reading tracks from track 1");
                     return;
                 }
             }
@@ -954,18 +947,18 @@ namespace ATL.AudioData.IO
             }
             source.Seek(4, SeekOrigin.Current); // 4-byte flags
             if (source.Read(data32, 0, 4) < 4) return;
-            uint blocByteSizeForAll = StreamUtils.DecodeBEUInt32(data32);
+            uint blocByteSizeForAll = BinaryPrimitives.ReadUInt32BigEndian(data32);
             if (0 == blocByteSizeForAll) // If value other than 0, same size everywhere => CBR
             {
                 if (source.Read(data32, 0, 4) < 4) return;
-                uint nbSizes = StreamUtils.DecodeBEUInt32(data32);
+                uint nbSizes = BinaryPrimitives.ReadUInt32BigEndian(data32);
                 uint max = 0;
                 uint min = uint.MaxValue;
 
                 for (int i = 0; i < nbSizes; i++)
                 {
                     if (source.Read(data32, 0, 4) < 4) return;
-                    int32Data = StreamUtils.DecodeBEUInt32(data32);
+                    int32Data = BinaryPrimitives.ReadUInt32BigEndian(data32);
                     min = Math.Min(min, int32Data);
                     max = Math.Max(max, int32Data);
 
@@ -1062,7 +1055,7 @@ namespace ATL.AudioData.IO
 
                 source.Seek(4, SeekOrigin.Current); // Version and flags
                 if (source.Read(data32, 0, 4) < 4) return;
-                var nbChunkOffsets = StreamUtils.DecodeBEUInt32(data32);
+                var nbChunkOffsets = BinaryPrimitives.ReadUInt32BigEndian(data32);
 
                 for (int i = 0; i < nbChunkOffsets; i++)
                 {
@@ -1071,14 +1064,14 @@ namespace ATL.AudioData.IO
                     if (4 == nbBytes)
                     {
                         if (source.Read(data32, 0, 4) < 4) return;
-                        valueLong = StreamUtils.DecodeBEUInt32(data32);
+                        valueLong = BinaryPrimitives.ReadUInt32BigEndian(data32);
                         valueObj = (uint)valueLong;
 
                     }
                     else
                     {
                         if (source.Read(data32, 0, 8) < 8) return;
-                        valueLong = StreamUtils.DecodeBEInt64(data64);
+                        valueLong = BinaryPrimitives.ReadInt64BigEndian(data64);
                         valueObj = valueLong;
                     }
 
@@ -1130,7 +1123,7 @@ namespace ATL.AudioData.IO
             source.Seek(4, SeekOrigin.Current); // Version and flags
 
             if (source.Read(data, 0, 4) < 4) return 0;
-            var int32Data = StreamUtils.DecodeBEUInt32(data); // Number of table entries
+            var int32Data = BinaryPrimitives.ReadUInt32BigEndian(data); // Number of table entries
             if (int32Data > 0)
             {
                 if (isText)
@@ -1151,13 +1144,15 @@ namespace ATL.AudioData.IO
                 for (int i = 0; i < int32Data; i++)
                 {
                     if (source.Read(data, 0, 4) < 4) return 0;
-                    var frameCount = StreamUtils.DecodeBEUInt32(data);
+                    var frameCount = BinaryPrimitives.ReadUInt32BigEndian(data);
                     if (source.Read(data, 0, 4) < 4) return 0;
-                    var sampleDuration = StreamUtils.DecodeBEUInt32(data);
+                    var sampleDuration = BinaryPrimitives.ReadUInt32BigEndian(data);
                     for (int j = 0; j < frameCount; j++)
                     {
-                        MP4Sample sample = new MP4Sample();
-                        sample.Duration = sampleDuration * 1.0 / mediaTimeScale;
+                        MP4Sample sample = new MP4Sample
+                        {
+                            Duration = sampleDuration * 1.0 / mediaTimeScale
+                        };
                         chapterTrackSamples.Add(sample);
                     }
                 }
@@ -1172,7 +1167,7 @@ namespace ATL.AudioData.IO
             }
             source.Seek(4, SeekOrigin.Current); // Version and flags
             if (source.Read(data, 0, 4) < 4) return 0;
-            int32Data = StreamUtils.DecodeBEUInt32(data); // Number of table entries
+            int32Data = BinaryPrimitives.ReadUInt32BigEndian(data); // Number of table entries
 
             int cumulatedSampleIndex = 0;
             uint chunkIndex = 0;
@@ -1183,9 +1178,9 @@ namespace ATL.AudioData.IO
             for (int i = 0; i < int32Data; i++)
             {
                 if (source.Read(data, 0, 4) < 4) return 0;
-                chunkIndex = StreamUtils.DecodeBEUInt32(data);
+                chunkIndex = BinaryPrimitives.ReadUInt32BigEndian(data);
                 if (source.Read(data, 0, 4) < 4) return 0;
-                var samplesPerChunk = StreamUtils.DecodeBEUInt32(data);
+                var samplesPerChunk = BinaryPrimitives.ReadUInt32BigEndian(data);
                 source.Seek(4, SeekOrigin.Current); // Sample description ID
 
                 if (first)
@@ -1312,7 +1307,7 @@ namespace ATL.AudioData.IO
                 source.Seek(4, SeekOrigin.Current); // Version and flags
                 source.Seek(1, SeekOrigin.Current); // Reserved byte
                 if (source.Read(data32, 0, 4) < 4) return;
-                uint neroChapterCount = StreamUtils.DecodeBEUInt32(data32);
+                uint neroChapterCount = BinaryPrimitives.ReadUInt32BigEndian(data32);
 
                 if (neroChapterCount > 0)
                 {
@@ -1326,22 +1321,41 @@ namespace ATL.AudioData.IO
                         tagData.Chapters.Clear();
                         ChapterInfo previousChapter = null;
 
+                        var trackEndTime = Convert.ToUInt32(Math.Floor(calculatedDurationMs));
                         for (int i = 0; i < neroChapterCount; i++)
                         {
-                            var chapter = new ChapterInfo();
-                            chapter.Format = ChapterInfo.FORMAT.Nero;
-                            tagData.Chapters.Add(chapter);
+                            var chapter = new ChapterInfo
+                            {
+                                Format = ChapterInfo.FORMAT.Nero
+                            };
 
                             if (source.Read(data64, 0, 8) < 8) return;
-                            chapter.StartTime = (uint)Math.Round(StreamUtils.DecodeBEInt64(data64) / 10000.0);
-                            if (previousChapter != null) previousChapter.EndTime = chapter.StartTime;
+                            chapter.StartTime = (uint)Math.Round(BinaryPrimitives.ReadInt64BigEndian(data64) / 10000.0);
+
+                            if (!Settings.MP4_disableNeroChecks && chapter.StartTime >= trackEndTime)
+                            {
+                                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Ignoring Nero chapter starting after track duration");
+                                continue;
+                            }
+                            if (previousChapter != null)
+                            {
+                                if (!Settings.MP4_disableNeroChecks && chapter.StartTime <= previousChapter.StartTime)
+                                {
+                                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Ignoring Nero chapter starting before previous chapter");
+                                    continue;
+                                }
+                                // Nero chapters don't have an explicit end time -> make all chapters contiguous
+                                previousChapter.EndTime = chapter.StartTime;
+                            }
                             var stringSize = source.ReadByte();
                             byte[] strData = new byte[stringSize];
                             if (source.Read(strData, 0, stringSize) < stringSize) return;
                             chapter.Title = Encoding.UTF8.GetString(strData);
+
                             previousChapter = chapter;
+                            tagData.Chapters.Add(chapter);
                         }
-                        if (previousChapter != null) previousChapter.EndTime = Convert.ToUInt32(Math.Floor(calculatedDurationMs));
+                        if (previousChapter != null) previousChapter.EndTime = trackEndTime;
                     }
                 }
             }
@@ -1429,7 +1443,7 @@ namespace ATL.AudioData.IO
             {
                 atomHeaderBuilder.Clear();
                 if (source.Read(data, 0, 4) < 4) return;
-                atomSize = StreamUtils.DecodeBEUInt32(data);
+                atomSize = BinaryPrimitives.ReadUInt32BigEndian(data);
                 if (source.Read(data, 0, 4) < 4) return;
                 atomHeaderBuilder.Append(Utils.Latin1Encoding.GetString(data, 0, 4));
 
@@ -1473,6 +1487,9 @@ namespace ATL.AudioData.IO
                     values.Clear();
                 }
                 atomHeader = newAtomHeader;
+
+                // Some files have parasite 'hdlr' single atoms here; ATL should skip them
+                if (atomHeader == "hdlr") continue;
 
                 // Having a 'data' header here means we're still on the same field, with a 2nd value
                 // (e.g. multiple embedded pictures)
@@ -1537,7 +1554,7 @@ namespace ATL.AudioData.IO
                     if (fieldSize > 3)
                     {
                         if (source.Read(data, 0, 4) < 4) return;
-                        intData = StreamUtils.DecodeBEInt32(data);
+                        intData = BinaryPrimitives.ReadInt32BigEndian(data);
                     }
                     else if (fieldSize > 2)
                     {
@@ -1547,7 +1564,7 @@ namespace ATL.AudioData.IO
                     else if (fieldSize > 1)
                     {
                         if (source.Read(data, 0, 2) < 2) return;
-                        intData = StreamUtils.DecodeBEInt16(data);
+                        intData = BinaryPrimitives.ReadInt16BigEndian(data);
                     }
                     else intData = source.ReadByte();
                     values.Add(intData.ToString());
@@ -1561,7 +1578,7 @@ namespace ATL.AudioData.IO
                         if (fieldSize > 3)
                         {
                             if (source.Read(data, 0, 4) < 4) return;
-                            uIntData = StreamUtils.DecodeBEUInt32(data);
+                            uIntData = BinaryPrimitives.ReadUInt32BigEndian(data);
                         }
                         else if (fieldSize > 2)
                         {
@@ -1571,7 +1588,7 @@ namespace ATL.AudioData.IO
                         else if (fieldSize > 1)
                         {
                             if (source.Read(data, 0, 2) < 2) return;
-                            uIntData = StreamUtils.DecodeBEUInt16(data);
+                            uIntData = BinaryPrimitives.ReadUInt16BigEndian(data);
                         }
                         else uIntData = (uint)source.ReadByte();
                         values.Add(uIntData.ToString());
@@ -1619,15 +1636,15 @@ namespace ATL.AudioData.IO
                         {
                             source.Seek(2, SeekOrigin.Current);
                             if (source.Read(data, 0, 2) < 2) return;
-                            ushort number = StreamUtils.DecodeBEUInt16(data); // Current track/disc number
+                            ushort number = BinaryPrimitives.ReadUInt16BigEndian(data); // Current track/disc number
                             if (source.Read(data, 0, 2) < 2) return;
-                            ushort total = StreamUtils.DecodeBEUInt16(data); // Total number of tracks/discs
+                            ushort total = BinaryPrimitives.ReadUInt16BigEndian(data); // Total number of tracks/discs
                             values.Add(number.ToString() + "/" + total.ToString());
                         }
                         else if ("gnre".Equals(atomHeader)) // ©gen is a text field and doesn't belong here
                         {
                             if (source.Read(data, 0, 2) < 2) return;
-                            uIntData = StreamUtils.DecodeBEUInt16(data);
+                            uIntData = BinaryPrimitives.ReadUInt16BigEndian(data);
 
                             strData = "";
                             if (uIntData < ID3v1.MAX_MUSIC_GENRES) strData = ID3v1.MusicGenre[uIntData - 1];
@@ -1683,15 +1700,14 @@ namespace ATL.AudioData.IO
                 setMetaField(supportedMetaID, data);
             }
 
-            if (readAllMetaFrames && ID.Length > 0) // Store it in the additional fields Dictionary
+            if (!readAllMetaFrames || ID.Length <= 0) return; // Store it in the additional fields Dictionary
+
+            MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, 0, "", "");
+            if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
             {
-                MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, 0, "", "");
-                if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
-                {
-                    tagData.AdditionalFields.Remove(fieldInfo);
-                }
-                tagData.AdditionalFields.Add(fieldInfo);
+                tagData.AdditionalFields.Remove(fieldInfo);
             }
+            tagData.AdditionalFields.Add(fieldInfo);
         }
 
         private static Uuid readUuid(Stream source)
@@ -1703,7 +1719,7 @@ namespace ATL.AudioData.IO
             };
             if (result.size >= 16 + 8)
             {
-                Span<byte> key = new byte[16];
+                Span<byte> key = stackalloc byte[16];
                 if (source.Read(key) < key.Length) return result;
                 // Convert key to hex value
                 StringBuilder sbr = new StringBuilder();
@@ -1724,7 +1740,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Look for the atom segment starting with the given key, at the current atom level
         /// Returns with Source positioned right after the atom header, on the 1st byte of data
-        /// 
+        ///
         /// Warning : stream must be positioned at the end of a previous atom before being called
         /// </summary>
         /// <param name="source">Source to read from</param>
@@ -1739,7 +1755,7 @@ namespace ATL.AudioData.IO
         /// <summary>
         /// Look for the atom segment starting with the given key, at the current atom level
         /// Returns with Source positioned right after the atom header, on the 1st byte of data
-        /// 
+        ///
         /// Warning : stream must be positioned at the end of a previous atom before being called
         /// </summary>
         /// <param name="source">Source to read from</param>
@@ -1763,18 +1779,20 @@ namespace ATL.AudioData.IO
                 if (!first) source.Seek(atomSize - atomHeaderSize, SeekOrigin.Current);
                 atomHeaderSize = 8; // Default variant where size takes up 32-bit
                 if (source.Read(data, 0, 4) < 4) return new Tuple<uint, int>(0, atomHeaderSize);
-                atomSize = StreamUtils.DecodeBEUInt32(data);
+                atomSize = BinaryPrimitives.ReadUInt32BigEndian(data);
                 if (source.Read(data, 0, 4) < 4) return new Tuple<uint, int>(0, atomHeaderSize);
                 atomHeader = Utils.Latin1Encoding.GetString(data, 0, 4);
                 if (1 == atomSize) // 64-bit size variant
                 {
                     atomHeaderSize += 8;
                     if (source.Read(data, 0, 8) < 8) return new Tuple<uint, int>(0, atomHeaderSize);
-                    atomSize = StreamUtils.DecodeBEInt64(data);
+                    atomSize = BinaryPrimitives.ReadInt64BigEndian(data);
                 }
 
                 if (first) first = false;
-                if (++iterations > 100) return new Tuple<uint, int>(0, atomHeaderSize);
+                // MDAT atoms don't count towards iterations as there can me _many_ of them on certain files
+                if (!atomHeader.Equals("mdat", StringComparison.OrdinalIgnoreCase)) iterations++;
+                if (iterations > 100) return new Tuple<uint, int>(0, atomHeaderSize);
             } while (!atomKey.Equals(atomHeader) && source.Position + atomSize - atomHeaderSize < source.Length);
 
             if (source.Position + atomSize - atomHeaderSize > source.Length)
@@ -1857,7 +1875,8 @@ namespace ATL.AudioData.IO
 
         protected override int write(TagData tag, Stream s, string zone)
         {
-            using (BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true)) return write(tag, w, zone);
+            using BinaryWriter w = new BinaryWriter(s, Encoding.UTF8, true);
+            return write(tag, w, zone);
         }
 
         private int write(TagData tag, BinaryWriter w, string zone)
@@ -1943,7 +1962,7 @@ namespace ATL.AudioData.IO
             {
                 result = writeQTChaptersData(w, tag.Chapters);
             }
-            else if (zone.StartsWith("uuid.")) // Existing UUID atoms
+            else if (zone.StartsWith(UUID_PREFIX)) // Existing UUID atoms
             {
                 result = writeUuidFrame(tag, zone[5..], w);
             }
@@ -2033,14 +2052,12 @@ namespace ATL.AudioData.IO
             // Other textual fields
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields.Where(isMetaFieldWritable))
             {
-                if (!fieldInfo.NativeFieldCode.StartsWith("uuid.")
-                    && !fieldInfo.NativeFieldCode.StartsWith("xmp.")
-                    && !writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())
-                    )
-                {
-                    writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
-                    counter++;
-                }
+                if (fieldInfo.NativeFieldCode.StartsWith(UUID_PREFIX)
+                    || fieldInfo.NativeFieldCode.StartsWith("xmp.")
+                    || writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())) continue;
+
+                writeTextFrame(w, fieldInfo.NativeFieldCode, FormatBeforeWriting(fieldInfo.Value));
+                counter++;
             }
 
             // Picture fields
@@ -2121,85 +2138,114 @@ namespace ATL.AudioData.IO
             writer.Write(StreamUtils.EncodeBEInt32(frameClass));
             writer.Write(frameFlags);
 
-            if (0 == frameClass) // Special cases : gnre, trkn, disk
+            switch (frameClass)
             {
-                byte[] int16data;
-                if (frameCode.Equals("trkn") || frameCode.Equals("disk"))
-                {
-                    int16data = new byte[2] { 0, 0 };
-                    writer.Write(int16data);
-                    int16data = StreamUtils.EncodeBEUInt16(TrackUtils.ExtractTrackNumber(text));
-                    writer.Write(int16data);
-                    int16data = StreamUtils.EncodeBEUInt16(TrackUtils.ExtractTrackTotal(text));
-                    writer.Write(int16data);
-                    if (frameCode.Equals("trkn")) writer.Write(int16data); // trkn field always has two more bytes than disk field....
-                }
-                else if (frameCode.Equals("gnre"))
-                {
-                    int16data = StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text));
-                    writer.Write(int16data);
-                }
-            }
-            else if (1 == frameClass) // UTF-8 text
-            {
-                string[] values = text.Split(Settings.InternalValueSeparator);
-                var first = true;
-                // Handle multiple values = repeat the 'data' atom
-                foreach (string value in values)
-                {
-                    if (0 == value.Length) continue;
-                    if (first) first = false;
-                    else
+                // Special cases : gnre, trkn, disk
+                case 0:
                     {
-                        finalFramePos = writer.BaseStream.Position;
-                        writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
-                        writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
-                        writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+                        byte[] int16data;
+                        switch (frameCode)
+                        {
+                            case "trkn":
+                            case "disk":
+                                {
+                                    int16data = new byte[] { 0, 0 };
+                                    writer.Write(int16data);
+                                    int16data = StreamUtils.EncodeBEUInt16(TrackUtils.ExtractTrackNumber(text));
+                                    writer.Write(int16data);
+                                    int16data = StreamUtils.EncodeBEUInt16(TrackUtils.ExtractTrackTotal(text));
+                                    writer.Write(int16data);
+                                    if (frameCode.Equals("trkn")) writer.Write(int16data); // trkn field always has two more bytes than disk field....
+                                    break;
+                                }
+                            case "gnre":
+                                int16data = StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text));
+                                writer.Write(int16data);
+                                break;
+                        }
 
-                        frameSizePos2 = writer.BaseStream.Position;
-                        writer.Write(0); // Frame size placeholder to be rewritten in a few lines
-                        writer.Write(Utils.Latin1Encoding.GetBytes("data"));
-                        writer.Write(StreamUtils.EncodeBEInt32(frameClass));
-                        writer.Write(frameFlags);
+                        break;
                     }
-                    writer.Write(Encoding.UTF8.GetBytes(value));
-                }
-            }
-            else if (21 == frameClass) // int8-16-24-32, depending on the value
-            {
-                if (!Utils.IsNumeric(text, true))
-                {
+                // UTF-8 text
+                case 1:
+                    {
+                        string[] values = text.Split(Settings.InternalValueSeparator);
+                        var first = true;
+                        // Handle multiple values = repeat the 'data' atom
+                        foreach (string value in values)
+                        {
+                            if (0 == value.Length) continue;
+                            if (first) first = false;
+                            else
+                            {
+                                finalFramePos = writer.BaseStream.Position;
+                                writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
+                                writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
+                                writer.BaseStream.Seek(finalFramePos, SeekOrigin.Begin);
+
+                                frameSizePos2 = writer.BaseStream.Position;
+                                writer.Write(0); // Frame size placeholder to be rewritten in a few lines
+                                writer.Write(Utils.Latin1Encoding.GetBytes("data"));
+                                writer.Write(StreamUtils.EncodeBEInt32(frameClass));
+                                writer.Write(frameFlags);
+                            }
+                            writer.Write(Encoding.UTF8.GetBytes(value));
+                        }
+
+                        break;
+                    }
+                // int8-16-24-32, depending on the value
+                case 21 when !Utils.IsNumeric(text, true):
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "value " + text + " could not be converted to integer; ignoring");
                     writer.Write(0);
-                }
-                else
-                {
-                    int value = Convert.ToInt32(text);
-                    if (value > short.MaxValue || value < short.MinValue) writer.Write(StreamUtils.EncodeBEInt32(value));
-                    // use int32 instead of int24 because Convert.ToInt24 doesn't exist
-                    else if (value > 127 || value < -127) writer.Write(StreamUtils.EncodeBEInt16(Convert.ToInt16(text)));
-                    else writer.Write(Convert.ToByte(text));
-                }
-            }
-            else if (22 == frameClass) // uint8-16-24-32, depending on the value
-            {
-                if (!Utils.IsNumeric(text, true, false))
-                {
+                    break;
+                case 21:
+                    {
+                        int value = Convert.ToInt32(text);
+                        switch (value)
+                        {
+                            case > short.MaxValue:
+                            case < short.MinValue:
+                                writer.Write(StreamUtils.EncodeBEInt32(value));
+                                break;
+                            // use int32 instead of int24 because Convert.ToInt24 doesn't exist
+                            case > 127:
+                            case < -127:
+                                writer.Write(StreamUtils.EncodeBEInt16(Convert.ToInt16(text)));
+                                break;
+                            default:
+                                writer.Write(Convert.ToByte(text));
+                                break;
+                        }
+                        break;
+                    }
+                // uint8-16-24-32, depending on the value
+                case 22 when !Utils.IsNumeric(text, true, false):
                     LogDelegator.GetLogDelegate()(Log.LV_WARNING, "value " + text + " could not be converted to unsigned integer; ignoring");
                     writer.Write(0);
-                }
-                else
-                {
-                    uint value = Convert.ToUInt32(text);
-                    if (value > 0xffff) writer.Write(StreamUtils.EncodeBEUInt32(value));
-                    // use int32 instead of int24 because Convert.ToUInt24 doesn't exist
-                    else if (value > 0xff) writer.Write(StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text)));
-                    else writer.Write(Convert.ToByte(text));
-                }
+                    break;
+                case 22:
+                    {
+                        uint value = Convert.ToUInt32(text);
+                        switch (value)
+                        {
+                            case > 0xffff:
+                                writer.Write(StreamUtils.EncodeBEUInt32(value));
+                                break;
+                            // use int32 instead of int24 because Convert.ToUInt24 doesn't exist
+                            case > 0xff:
+                                writer.Write(StreamUtils.EncodeBEUInt16(Convert.ToUInt16(text)));
+                                break;
+                            default:
+                                writer.Write(Convert.ToByte(text));
+                                break;
+                        }
+                        break;
+                    }
             }
 
 
-            // Go back to frame size locations to write their actual size 
+            // Go back to frame size locations to write their actual size
             finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameSizePos1, SeekOrigin.Begin);
             writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos1)));
@@ -2216,17 +2262,19 @@ namespace ATL.AudioData.IO
             writer.Write(0); // Frame size placeholder to be rewritten in a few lines
             writer.Write("data".ToCharArray());
 
-            int frameClass;
-            if (picFormat.Equals(ImageFormat.Jpeg)) frameClass = 13;
-            else if (picFormat.Equals(ImageFormat.Png)) frameClass = 14;
-            else frameClass = 0;
+            int frameClass = picFormat switch
+            {
+                ImageFormat.Jpeg => 13,
+                ImageFormat.Png => 14,
+                _ => 0
+            };
 
             writer.Write(StreamUtils.EncodeBEInt32(frameClass));
             writer.Write(frameFlags);
 
             writer.Write(pictureData);
 
-            // Go back to frame size locations to write their actual size 
+            // Go back to frame size locations to write their actual size
             var finalFramePos = writer.BaseStream.Position;
             writer.BaseStream.Seek(frameSizePos2, SeekOrigin.Begin);
             writer.Write(StreamUtils.EncodeBEUInt32(Convert.ToUInt32(finalFramePos - frameSizePos2)));
@@ -2258,8 +2306,7 @@ namespace ATL.AudioData.IO
                 // so that it is parsed properly by Windows
                 if ("wm/shareduserrating" == fieldInfo.NativeFieldCode.ToLower())
                 {
-                    double popularity;
-                    if (double.TryParse(value, out popularity))
+                    if (double.TryParse(value, out var popularity))
                     {
                         value = TrackUtils.EncodePopularity(popularity * 5, MetaDataIO.RC_ASF) + "";
                         isNumeric = true;
@@ -2270,7 +2317,7 @@ namespace ATL.AudioData.IO
                 WMAHelper.WriteField(w, fieldInfo.NativeFieldCode, value, isNumeric);
             }
 
-            // Go back to frame size locations to write their actual size 
+            // Go back to frame size locations to write their actual size
             var finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - frameSizePos)));
@@ -2305,7 +2352,7 @@ namespace ATL.AudioData.IO
                 w.Write(strData, 0, strDataLength);
             }
 
-            // Go back to frame size locations to write their actual size 
+            // Go back to frame size locations to write their actual size
             var finalFramePos = w.BaseStream.Position;
             w.BaseStream.Seek(frameSizePos, SeekOrigin.Begin);
             w.Write(StreamUtils.EncodeBEInt32((int)(finalFramePos - frameSizePos)));
@@ -2695,7 +2742,7 @@ namespace ATL.AudioData.IO
 
             w.Write(StreamUtils.EncodeBEInt32(1));
 
-            // Calculate chunk offset and feed it to FileStructureHelper as a header to the MDAT zone 
+            // Calculate chunk offset and feed it to FileStructureHelper as a header to the MDAT zone
             //   - Physically located in the TRAK zone
             //   - Child of the TRAK zone (i.e. won't be useful to process if the TRAK zone is deleted)
             // NB : Only works when QT track is located _before_ QT mdat
@@ -2756,7 +2803,7 @@ namespace ATL.AudioData.IO
             else
             {
                 var info = tag.AdditionalFields.FirstOrDefault(f =>
-                    "uuid." + keyNominal == f.NativeFieldCode && !f.MarkedForDeletion);
+                    UUID_PREFIX + keyNominal == f.NativeFieldCode && !f.MarkedForDeletion);
                 if (null == info)
                 {
                     LogDelegator.GetLogDelegate()(Log.LV_ERROR,
@@ -2779,13 +2826,13 @@ namespace ATL.AudioData.IO
         {
             var existingUuids =
                 structureHelper.ZoneNames
-                    .Where(n => n.StartsWith("uuid.", StringComparison.OrdinalIgnoreCase))
+                    .Where(n => n.StartsWith(UUID_PREFIX, StringComparison.OrdinalIgnoreCase))
                     .Select(n => n[5..].Replace(" ", "").ToUpper());
 
             var extraUuids = tag.AdditionalFields
                 .Where(f => f.TagType.Equals(MetaDataIOFactory.TagType.ANY) || f.TagType.Equals(getImplementedTagType()))
                 .Where(f => !f.MarkedForDeletion)
-                .Where(f => f.NativeFieldCode.StartsWith("uuid.", StringComparison.OrdinalIgnoreCase))
+                .Where(f => f.NativeFieldCode.StartsWith(UUID_PREFIX, StringComparison.OrdinalIgnoreCase))
                 .Where(f => !existingUuids.Contains(f.NativeFieldCode[5..].Replace(" ", "").ToUpper()));
 
             var written = 0;

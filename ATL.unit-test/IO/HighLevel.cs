@@ -1,4 +1,5 @@
-﻿using ATL.AudioData;
+﻿using System.Buffers.Binary;
+using ATL.AudioData;
 using System.Drawing;
 using ATL.test.IO.MetaData;
 using static ATL.Logging.Log;
@@ -1407,7 +1408,7 @@ namespace ATL.test.IO
             s.Seek(-9, SeekOrigin.Current);
             byte[] buffer = new byte[4];
             s.Read(buffer, 0, 4);
-            return StreamUtils.DecodeInt32(buffer);
+            return BinaryPrimitives.ReadInt32LittleEndian(buffer);
         }
 
         private int getMP4DateFieldLength(Stream s)
@@ -1415,7 +1416,7 @@ namespace ATL.test.IO
             Assert.AreEqual(true, StreamUtils.FindSequence(s, Utils.Latin1Encoding.GetBytes("©day")));
             byte[] buffer = new byte[4];
             s.Read(buffer, 0, 4);
-            return StreamUtils.DecodeBEInt32(buffer);
+            return BinaryPrimitives.ReadInt32BigEndian(buffer);
         }
 
         [TestMethod]
@@ -1668,6 +1669,7 @@ namespace ATL.test.IO
             }
             finally
             {
+                if (File.Exists(testFileLocation)) File.Delete(testFileLocation);
                 if (File.Exists(testFileLocation2)) File.Delete(testFileLocation2);
                 if (File.Exists(testFileLocation3)) File.Delete(testFileLocation3);
             }

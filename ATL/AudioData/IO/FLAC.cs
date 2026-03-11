@@ -181,7 +181,7 @@ namespace ATL.AudioData.IO
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
             header = ReadHeader(source);
 
-            // Process data if loaded and header valid    
+            // Process data if loaded and header valid
             if (header.IsValid())
             {
                 ChannelsArrangement = header.getChannelsArrangement();
@@ -199,11 +199,11 @@ namespace ATL.AudioData.IO
                         blockEndOffset = source.Position;
                     }
 
-                    byte[] metaDataBlockHeader = new byte[4];
+                    Span<byte> metaDataBlockHeader = stackalloc byte[4];
                     bool isLast;
                     do // Read all metadata blocks
                     {
-                        if (source.Read(metaDataBlockHeader, 0, 4) < 4) return false;
+                        if (source.Read(metaDataBlockHeader) < 4) return false;
                         isLast = (metaDataBlockHeader[0] & FLAG_LAST_METADATA_BLOCK) > 0; // last flag ( first bit == 1 )
 
                         blockIndex++;
@@ -380,7 +380,7 @@ namespace ATL.AudioData.IO
         {
             byte toWrite = META_VORBIS_COMMENT;
             if (isLastMetaBlock) toWrite |= FLAG_LAST_METADATA_BLOCK;
-            w.Write(new byte[] { toWrite }, 0, 1);
+            w.Write(new[] { toWrite }, 0, 1);
             var sizePos = w.Position;
             w.Write(new byte[] { 0, 0, 0 }, 0, 3); // Placeholder for 24-bit integer that will be rewritten at the end of the method
 
