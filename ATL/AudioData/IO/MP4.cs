@@ -1776,23 +1776,44 @@ namespace ATL.AudioData.IO
 
             do
             {
-                if (!first) source.Seek(atomSize - atomHeaderSize, SeekOrigin.Current);
+                iterations++;
+                if (!first)
+                {
+                    source.Seek(atomSize - atomHeaderSize, SeekOrigin.Current);
+                }
+                
                 atomHeaderSize = 8; // Default variant where size takes up 32-bit
-                if (source.Read(data, 0, 4) < 4) return new Tuple<uint, int>(0, atomHeaderSize);
+                if (source.Read(data, 0, 4) < 4)
+                {
+                    return new Tuple<uint, int>(0, atomHeaderSize);
+                }
+                
                 atomSize = BinaryPrimitives.ReadUInt32BigEndian(data);
-                if (source.Read(data, 0, 4) < 4) return new Tuple<uint, int>(0, atomHeaderSize);
+                if (source.Read(data, 0, 4) < 4)
+                {
+                    return new Tuple<uint, int>(0, atomHeaderSize);
+                }
+                
                 atomHeader = Utils.Latin1Encoding.GetString(data, 0, 4);
                 if (1 == atomSize) // 64-bit size variant
                 {
                     atomHeaderSize += 8;
-                    if (source.Read(data, 0, 8) < 8) return new Tuple<uint, int>(0, atomHeaderSize);
+                    if (source.Read(data, 0, 8) < 8)
+                    {
+                        return new Tuple<uint, int>(0, atomHeaderSize);
+                    }
                     atomSize = BinaryPrimitives.ReadInt64BigEndian(data);
                 }
 
-                if (first) first = false;
-                // MDAT atoms don't count towards iterations as there can me _many_ of them on certain files
-                if (!atomHeader.Equals("mdat", StringComparison.OrdinalIgnoreCase)) iterations++;
-                if (iterations > 100) return new Tuple<uint, int>(0, atomHeaderSize);
+                if (first)
+                {
+                    first = false;
+                }
+
+                if (iterations > Utils.MaxIterationCount)
+                {
+                    return new Tuple<uint, int>(0, atomHeaderSize);
+                }
             } while (!atomKey.Equals(atomHeader) && source.Position + atomSize - atomHeaderSize < source.Length);
 
             if (source.Position + atomSize - atomHeaderSize > source.Length)
