@@ -290,7 +290,14 @@ namespace ATL.test.IO.MetaData
             theTag.EmbeddedPictures = testPics;
 
             // Add the new tag and check that it has been indeed added with all the correct information
-            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, tagType).GetAwaiter().GetResult());
+            TagData tagToWrite = theTag.tagData;
+            // Reproduce Track behaviour to keep year-only input values
+            if (theTag.Date is { Day: 1, Month: 1 })
+            {
+                tagToWrite.IntegrateValue(TagData.Field.RECORDING_DATE, theTag.Date.Year.ToString());
+                tagToWrite.IntegrateValue(TagData.Field.RECORDING_YEAR, theTag.Date.Year.ToString());
+            }
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(tagToWrite, tagType).GetAwaiter().GetResult());
 
             readExistingTagsOnFile(theFile, initialNbPictures);
 

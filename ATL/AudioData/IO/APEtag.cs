@@ -54,7 +54,7 @@ namespace ATL.AudioData.IO
             { "ARTIST", Field.ARTIST },
             { "ALBUM", Field.ALBUM },
             { "TRACK", Field.TRACK_NUMBER_TOTAL },
-            { "YEAR", Field.RECORDING_YEAR },
+            { "YEAR", Field.RECORDING_DATE_OR_YEAR },
             { "GENRE", Field.GENRE },
             { "COMMENT", Field.COMMENT },
             { "COPYRIGHT", Field.COPYRIGHT },
