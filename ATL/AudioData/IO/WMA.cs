@@ -93,7 +93,7 @@ namespace ATL.AudioData.IO
             { "WM/AUTHOR", Field.ARTIST },
             { "WM/COPYRIGHT", Field.COPYRIGHT },
             { "WM/DESCRIPTION", Field.COMMENT },
-            { "WM/Year", Field.RECORDING_YEAR },
+            { "WM/Year", Field.RECORDING_DATE_OR_YEAR },
             { "WM/Genre", Field.GENRE },
             { "WM/TrackNumber", Field.TRACK_NUMBER_TOTAL },
             { "WM/PartOfSet", Field.DISC_NUMBER_TOTAL },
