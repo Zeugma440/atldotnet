@@ -195,7 +195,8 @@ namespace ATL
             if (null == inStream) throw new ArgumentException("Stream should not be null");
 
             using MemoryStream outStream = new MemoryStream(length);
-            StreamUtils.CopyStream(inStream, outStream, length);
+            if (length > 0) StreamUtils.CopyStream(inStream, outStream, length);
+
             return new PictureInfo(picType, tagType, nativePicCode, position, outStream.ToArray());
         }
 
