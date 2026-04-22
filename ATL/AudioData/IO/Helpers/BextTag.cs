@@ -1,12 +1,13 @@
-﻿using Commons;
-using System.Collections.Generic;
-using System.IO;
-using ATL.Logging;
-using static ATL.AudioData.IO.MetaDataIO;
+﻿using ATL.Logging;
+using Commons;
 using System;
-using System.Globalization;
-using System.Text;
 using System.Buffers.Binary;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using static ATL.AudioData.IO.MetaDataIO;
 
 namespace ATL.AudioData.IO
 {
@@ -27,9 +28,11 @@ namespace ATL.AudioData.IO
         /// <param name="source">Stream to read data from</param>
         /// <param name="meta">Metadata I/O to copy metadata to</param>
         /// <param name="readTagParams">Read parameters to use</param>
-        public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams)
+        /// <param name="chunkSize">Total size of the BEXT chunk</param>
+        public static void FromStream(Stream source, MetaDataIO meta, ReadTagParams readTagParams, long chunkSize)
         {
             byte[] data = new byte[256];
+            long initialPos = source.Position;
 
             // Description
             WavHelper.Utf8FromStream(source, 256, meta, "bext.description", data, readTagParams.ReadAllMetaFrames);
@@ -84,19 +87,16 @@ namespace ATL.AudioData.IO
             source.Seek(180, SeekOrigin.Current);
 
             // CodingHistory
-            long initialPos = source.Position;
-            if (StreamUtils.FindSequence(source, Utils.CR_LF))
-            {
-                long endPos = source.Position - 2;
-                source.Seek(initialPos, SeekOrigin.Begin);
+            int size = (int)(chunkSize - (source.Position - initialPos));
+            if (size <= 0) return;
 
-                int size = (int)(endPos - initialPos);
-                if (data.Length < size) data = new byte[size];
-                if (source.Read(data, 0, size) < size) return;
+            if (data.Length < size) data = new byte[size];
+            if (source.Read(data, 0, size) < size) return;
 
-                string str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, (int)(endPos - initialPos)).Trim());
-                if (str.Length > 0) meta.SetMetaField("bext.codingHistory", str, readTagParams.ReadAllMetaFrames);
-            }
+            string str = Utils.StripEndingZeroChars(Utils.Latin1Encoding.GetString(data, 0, size).Trim());
+            // Strip ending CR LF
+            foreach (var c in Utils.CR_LF.Reverse()) if (str.EndsWith((char)c)) str = str[..^2];
+            if (str.Length > 0) meta.SetMetaField("bext.codingHistory", str, readTagParams.ReadAllMetaFrames);
         }
 
         private static void percent16FromStream(

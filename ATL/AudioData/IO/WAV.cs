@@ -403,7 +403,7 @@ namespace ATL.AudioData.IO
                     structureHelper.AddSize(riffChunkSizePos, formattedRiffChunkSize, subChunkId);
                     foundSubChunks.Add(CHUNK_BEXT);
 
-                    BextTag.FromStream(source, this, readTagParams);
+                    BextTag.FromStream(source, this, readTagParams, chunkSize);
                 }
                 else if (subChunkId.Equals(CHUNK_IXML, StringComparison.OrdinalIgnoreCase))
                 {
