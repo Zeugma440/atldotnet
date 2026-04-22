@@ -73,6 +73,7 @@ namespace ATL.AudioData
         public const int CID_AA = 28;
         public const int CID_CAF = 29;
         public const int CID_MKA = 30;
+        public const int CID_DFF = 31;
 #pragma warning restore CS1591 // Missing XML comment
 
         // ------------------------------------------------------------------------------------------
@@ -223,15 +224,21 @@ namespace ATL.AudioData
                 tempFmt.SearchHeader = Midi.FindValidHeader;
                 theFactory.addFormat(tempFmt);
 
-                tempFmt = new AudioFormat(CID_DSF, "Direct Stream Digital", "DSD");
+                tempFmt = new AudioFormat(CID_DSF, "Direct Stream Digital Interchange File Format (Sony)", "DSF");
                 tempFmt.AddMimeType("audio/dsf");
                 tempFmt.AddMimeType("audio/x-dsf");
                 tempFmt.AddMimeType("audio/dsd");
                 tempFmt.AddMimeType("audio/x-dsd");
                 tempFmt.AddExtension(".dsf");
                 tempFmt.AddExtension(".dsd");
-                tempFmt.AddExtension(".dff");
                 tempFmt.CheckHeader = DSF.IsValidHeader;
+                theFactory.addFormat(tempFmt);
+
+                tempFmt = new AudioFormat(CID_DFF, "Direct Stream Digital Stream File (Philips)", "DFF");
+                tempFmt.AddMimeType("audio/dff");
+                tempFmt.AddMimeType("audio/x-dff");
+                tempFmt.AddExtension(".dff");
+                tempFmt.CheckHeader = DFF.IsValidHeader;
                 theFactory.addFormat(tempFmt);
 
                 tempFmt = new AudioFormat(CID_PSF, "Portable Sound Format", "PSF");
@@ -459,7 +466,7 @@ namespace ATL.AudioData
         public static IAudioDataIO GetFromFormat(string path, AudioFormat theFormat)
         {
             // Use container format ID if different than audio data format ID
-            var id = (theFormat.ContainerId != theFormat.DataFormat.ID) ? theFormat.ContainerId : theFormat.DataFormat.ID;
+            var id = theFormat.ContainerId != theFormat.DataFormat.ID ? theFormat.ContainerId : theFormat.DataFormat.ID;
             return id switch
             {
                 CID_MPEG => new MPEGaudio(path, theFormat),
@@ -492,6 +499,7 @@ namespace ATL.AudioData
                 CID_AA => new AA(path, theFormat),
                 CID_CAF => new CAF(path, theFormat),
                 CID_MKA => new MKA(path, theFormat),
+                CID_DFF => new DFF(path, theFormat),
                 _ => new DummyReader(path)
             };
         }

@@ -216,7 +216,8 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_DSF_DSD()
         {
-            testGenericAudio("DSF/dsf.dsf", CID_DSF, CID_DSF, 3982, 5671, 1, 2822400, false, CF_LOSSLESS, STEREO, "Direct Stream Digital", 80, 2809868);
+            testGenericAudio("DSF/dsf.dsf", CID_DSF, CID_DSF, 3982, 5671, 1, 2822400, false, CF_LOSSLESS, STEREO, "Direct Stream Digital Interchange File Format (Sony)", 80, 2809868);
+            testGenericAudio("DSF/dff.dff", CID_DFF, CID_DFF, 50, 5645, 1, 2822400, false, CF_LOSSLESS, STEREO, "Direct Stream Digital Stream File (Philips)", 130, 35280);
         }
 
         [TestMethod]

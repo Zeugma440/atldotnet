@@ -1,6 +1,4 @@
-﻿ using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ATL.AudioData;
+﻿using ATL.AudioData;
 
 namespace ATL.test.IO.MetaData
 {
@@ -23,7 +21,7 @@ namespace ATL.test.IO.MetaData
 
             readExistingTagsOnFile(theFile);
         }
-        
+
         [TestMethod]
         public void TagIO_RW_DSF_ID3v2_Existing()
         {

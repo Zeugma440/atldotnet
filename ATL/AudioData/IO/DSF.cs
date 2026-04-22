@@ -10,22 +10,17 @@ using static ATL.ChannelsArrangements;
 namespace ATL.AudioData.IO
 {
     /// <summary>
-    /// Class for Direct Stream Digital Interchange files manipulation
-    ///  - DSD Stream File (extension : .DSF)
-    ///  - Direct Stream Digital Interchange File (extension : .DFF, .DSD)
+    /// Class for Direct Stream Digital Stream files (aka "Sony DSD") manipulation (extension : .DSF, .DSD)
     /// </summary>
 	class DSF : IAudioDataIO, IMetaDataEmbedder
     {
-        // Headers ID
-        private static readonly byte[] DFF_ID = Utils.Latin1Encoding.GetBytes("FRM8");
+        // Header IDs
         private static readonly byte[] DSD_ID = Utils.Latin1Encoding.GetBytes("DSD ");
         private static readonly byte[] FMT_ID = Utils.Latin1Encoding.GetBytes("fmt ");
-        private static readonly byte[] PROP_ID = Utils.Latin1Encoding.GetBytes("PROP");
-        private static readonly byte[] ID3_ID = Utils.Latin1Encoding.GetBytes("ID3 ");
+        private const string ID3_ID = "ID3 ";
 
 
         // Private declarations
-        private int formatType = -1; // 0 = DSF; 1 = DFF
         private ChannelsArrangement channelsArrangement;
         private uint bits;
         private uint sampleRate;
@@ -35,7 +30,7 @@ namespace ATL.AudioData.IO
         private SizeInfo sizeInfo;
 
         private long id3v2Offset;
-        private readonly FileStructureHelper id3v2StructureHelper = new FileStructureHelper();
+        private readonly FileStructureHelper id3v2StructureHelper = new();
 
 
         // Public declarations
@@ -65,7 +60,7 @@ namespace ATL.AudioData.IO
         // IMetaDataEmbedder
         public long HasEmbeddedID3v2 => id3v2Offset;
         public uint ID3v2EmbeddingHeaderSize => 0;
-        public FileStructureHelper.Zone Id3v2Zone => id3v2StructureHelper.GetZone(FileStructureHelper.DEFAULT_ZONE_NAME);
+        public FileStructureHelper.Zone Id3v2Zone => id3v2StructureHelper.GetZone(ID3_ID);
         public FileStructureHelper.Zone Id3v2OldZone => id3v2StructureHelper.GetZone("id3_remove");
         public long AudioDataOffset { get; set; }
         public long AudioDataSize { get; set; }
@@ -75,7 +70,6 @@ namespace ATL.AudioData.IO
 
         protected void resetData()
         {
-            formatType = -1;
             bits = 0;
             sampleRate = 0;
             Duration = 0;
@@ -109,13 +103,12 @@ namespace ATL.AudioData.IO
 
         public static bool IsValidHeader(ReadOnlySpan<byte> data)
         {
-            return data.StartsWith(DSD_ID) || data.StartsWith(DFF_ID);
+            return data.StartsWith(DSD_ID);
         }
 
-        private bool readDsd(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
+        private bool readSonyDsd(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
         {
             byte[] buffer = new byte[8];
-            formatType = 0;
 
             source.Seek(16, SeekOrigin.Current); // Chunk size and file size
             if (source.Read(buffer, 0, 8) < 8) return false;
@@ -131,7 +124,7 @@ namespace ATL.AudioData.IO
 
                 if (formatVersion > 1)
                 {
-                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "DSF format version " + formatVersion + " not supported");
+                    LogDelegator.GetLogDelegate()(Log.LV_ERROR, "DSD format version " + formatVersion + " not supported");
                     return false;
                 }
 
@@ -162,7 +155,7 @@ namespace ATL.AudioData.IO
                 ulong sampleCount = BinaryPrimitives.ReadUInt64LittleEndian(buffer);
 
                 Duration = sampleCount * 1000.0 / sampleRate;
-                BitRate = Math.Round(((double)(sizeNfo.FileSize - source.Position)) * 8 / Duration); //time to calculate average bitrate
+                BitRate = Math.Round((double)(sizeNfo.FileSize - source.Position) * 8 / Duration);
 
                 AudioDataOffset = source.Position + 8;
                 if (id3v2Offset > 0)
@@ -176,9 +169,9 @@ namespace ATL.AudioData.IO
             {
                 if (readTagParams.PrepareForWriting)
                 {
-                    id3v2StructureHelper.AddZone(id3v2Offset, (int)(source.Length - id3v2Offset));
-                    id3v2StructureHelper.AddSize(12, source.Length);
-                    id3v2StructureHelper.AddIndex(20, id3v2Offset);
+                    id3v2StructureHelper.AddZone(id3v2Offset, (int)(source.Length - id3v2Offset), ID3_ID);
+                    id3v2StructureHelper.AddSize(12, source.Length, ID3_ID);
+                    id3v2StructureHelper.AddIndex(20, id3v2Offset, false, ID3_ID);
                 }
             }
             else
@@ -188,89 +181,9 @@ namespace ATL.AudioData.IO
                 if (readTagParams.PrepareForWriting)
                 {
                     // Add EOF zone for future tag writing
-                    id3v2StructureHelper.AddZone(source.Length, 0);
-                    id3v2StructureHelper.AddSize(12, source.Length);
-                    id3v2StructureHelper.AddIndex(20, source.Length);
-                }
-            }
-
-            return true;
-        }
-
-        private bool readDsf(Stream source, SizeInfo sizeNfo, MetaDataIO.ReadTagParams readTagParams)
-        {
-            byte[] buffer = new byte[8];
-            long id3v2Size = -1;
-            formatType = 1;
-
-            source.Seek(12, SeekOrigin.Begin); // Chunk size and file size
-            if (source.Read(buffer, 0, 4) < 4) return false;
-            if (!buffer.AsSpan().StartsWith(DSD_ID)) return false;
-
-            // Read chunks
-            do
-            {
-                long chunkOffset = source.Position;
-                if (source.Read(buffer, 0, 4) < 4) return false;
-                var chunkId = buffer[..4].AsSpan();
-
-                if (source.Read(buffer, 0, 8) < 8) return false;
-                long chunkSize = BinaryPrimitives.ReadInt64BigEndian(buffer); // Should be unsigned
-
-                if (chunkId.StartsWith(PROP_ID))
-                {
-                    source.Seek(4, SeekOrigin.Current); // 'SND ' propType
-                    do
-                    {
-                        long subChunkOffset = source.Position;
-                        if (source.Read(buffer, 0, 4) < 4) return false;
-                        var subChunkId = buffer[..4].AsSpan();
-
-                        if (source.Read(buffer, 0, 8) < 8) return false;
-                        long subChunkSize = BinaryPrimitives.ReadInt64BigEndian(buffer); // Should be unsigned
-
-                        // ID3 can be located as a subchunk inside the PROP chunk
-                        // TODO create size counter on the PROPS chunk header
-                        if (subChunkId.StartsWith(ID3_ID))
-                        {
-                            id3v2Offset = source.Position;
-                            id3v2Size = chunkSize;
-                        }
-
-                        source.Seek(subChunkOffset + 12 + subChunkSize, SeekOrigin.Begin);
-                    } while (source.Position < chunkOffset + chunkSize);
-                }
-
-                // ID3 can also be located as an independent chunk
-                if (chunkId.StartsWith(ID3_ID))
-                {
-                    id3v2Offset = source.Position;
-                    id3v2Size = chunkSize;
-                }
-
-                // TODO AudioDataOffset, AudioDataSize, Props
-
-                source.Seek(chunkOffset + 12 + chunkSize, SeekOrigin.Begin);
-            } while (source.Position < source.Length);
-
-            // Load tag if exists
-            if (id3v2Offset > 0)
-            {
-                if (readTagParams.PrepareForWriting)
-                {
-                    id3v2StructureHelper.AddZone(id3v2Offset - 12, id3v2Size + 12);
-                    id3v2StructureHelper.AddSize(4, source.Length);
-                }
-            }
-            else
-            {
-                id3v2Offset = 0; // Switch status to "tried to read, but nothing found"
-
-                if (readTagParams.PrepareForWriting)
-                {
-                    // Add EOF zone for future tag writing
-                    id3v2StructureHelper.AddZone(source.Length, 0);
-                    id3v2StructureHelper.AddSize(4, source.Length);
+                    id3v2StructureHelper.AddZone(source.Length, 0, ID3_ID);
+                    id3v2StructureHelper.AddSize(12, source.Length, ID3_ID);
+                    id3v2StructureHelper.AddIndex(20, source.Length, false, ID3_ID);
                 }
             }
 
@@ -289,18 +202,13 @@ namespace ATL.AudioData.IO
             if (source.Read(buffer, 0, 4) < 4) return false;
             var span = buffer.AsSpan();
 
-            if (span.StartsWith(DSD_ID)) return readDsd(source, sizeNfo, readTagParams);
-            return span.StartsWith(DFF_ID) && readDsf(source, sizeNfo, readTagParams);
+            return span.StartsWith(DSD_ID) && readSonyDsd(source, sizeNfo, readTagParams);
         }
 
         /// <inheritdoc/>
         public void WriteID3v2EmbeddingHeader(Stream s, long tagSize)
         {
-            // Nothing to do for DSF (format 0) which defines no frame header for its embedded ID3v2 tag
-            if (1 != formatType) return;
-
-            StreamUtils.WriteBytes(s, ID3_ID);
-            s.Write(StreamUtils.EncodeBEUInt64((ulong)tagSize));
+            // Nothing to do for DSF which defines no frame header for its embedded ID3v2 tag
         }
 
         public void WriteID3v2EmbeddingFooter(Stream s, long tagSize)
