@@ -20,6 +20,11 @@ namespace Commons
         /// Looks like a BOM unfortunately converted into an unicode character :/
         /// </summary>
         public static readonly string UNICODE_INVISIBLE_EMPTY = "\uFEFF";
+        
+        /// <summary>
+        /// A maximum iteration count, preventing infinte loops
+        /// </summary>
+        public const int MaxIterationCount = 100;
 
 
         /// <summary>
