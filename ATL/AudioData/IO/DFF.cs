@@ -9,7 +9,7 @@ using static ATL.ChannelsArrangements;
 namespace ATL.AudioData.IO
 {
     /// <summary>
-    /// Class for Direct Stream Digital Direct Stream Digital Interchange (aka "Philips DSD") files manipulation (extension : .DFF)
+    /// Class for Direct Stream Digital Interchange (aka "Philips DSD") files manipulation (extension : .DFF)
     /// </summary>
 	class DFF : IAudioDataIO, IMetaDataEmbedder
     {
