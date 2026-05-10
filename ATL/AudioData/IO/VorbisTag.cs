@@ -307,7 +307,7 @@ namespace ATL.AudioData.IO
                 MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
                 if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
                 {
-                    // If the value already exists, concatenate it with the new one
+                    // If the value already exists, concatenate it with the new one (stores multiple values when implemented as successive additional fields)
                     foreach (var info in tagData.AdditionalFields.Where(info => info.Equals(fieldInfo)))
                     {
                         fieldInfo.Value = info.Value + Settings.InternalValueSeparator + fieldInfo.Value;
