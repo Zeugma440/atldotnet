@@ -416,6 +416,10 @@ namespace ATL
                         if (metaInfo.EqualsWithoutZone(newMetaInfo) || metaInfo.EqualsApproximate(newMetaInfo))
                         {
                             found = true;
+
+                            if (!newMetaInfo.NativeFieldCode.Equals(metaInfo.NativeFieldCode) && newMetaInfo.NativeFieldCode.Equals(metaInfo.NativeFieldCode, StringComparison.InvariantCultureIgnoreCase))
+                                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Adding an AdditionalField with the same field code and a different case (" + metaInfo.NativeFieldCode + " => " + newMetaInfo.NativeFieldCode+"). Initial case ("+ metaInfo.NativeFieldCode+") will be kept.");
+
                             if (newMetaInfo.MarkedForDeletion) metaInfo.MarkedForDeletion = true; // New MetaFieldInfo is a demand for deletion
                             else metaInfo.Value = newMetaInfo.Value;
                             break;

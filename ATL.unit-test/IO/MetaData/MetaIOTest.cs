@@ -1,7 +1,9 @@
 ﻿using ATL.AudioData;
 using ATL.AudioData.IO;
-using System.Drawing;
 using Commons;
+using System.Drawing;
+using ATL.Logging;
+using static ATL.Logging.Log;
 using static ATL.PictureInfo;
 
 namespace ATL.test.IO.MetaData
@@ -71,7 +73,7 @@ namespace ATL.test.IO.MetaData
             testData.TrackNumber = "01";
             testData.TrackTotal = 2;
             testData.Composer = "ccᱬdd";
-            testData.Conductor = "";  // Empty string means "supported, but not valued in test sample"
+            testData.Conductor = ""; // Empty string means "supported, but not valued in test sample"
             testData.Publisher = "";
             testData.PublishingDate = DateTime.MinValue;
             testData.DiscNumber = 3;
@@ -87,26 +89,32 @@ namespace ATL.test.IO.MetaData
 
             IList<PictureInfo> testPictureInfos = new List<PictureInfo>();
             // 0x03 : front cover according to ID3v2 conventions
-            PictureInfo pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported, tagType, 0x03);
+            PictureInfo pic = PictureInfo.fromBinaryData(
+                File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpeg"), PIC_TYPE.Unsupported,
+                tagType, 0x03);
             pic.ComputePicHash();
             testPictureInfos.Add(pic);
 
             // 0x02 : conductor according to ID3v2 conventions
-            pic = PictureInfo.fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png"), PIC_TYPE.Unsupported, tagType, 0x02);
+            pic = PictureInfo.fromBinaryData(
+                File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.png"), PIC_TYPE.Unsupported,
+                tagType, 0x02);
             pic.ComputePicHash();
             testPictureInfos.Add(pic);
 
             testData.EmbeddedPictures = testPictureInfos;
         }
 
-        protected void test_RW_Cohabitation(MetaDataIOFactory.TagType tagType1, MetaDataIOFactory.TagType tagType2, bool canMeta1NotExist = true)
+        protected void test_RW_Cohabitation(MetaDataIOFactory.TagType tagType1, MetaDataIOFactory.TagType tagType2,
+            bool canMeta1NotExist = true)
         {
             new ConsoleLogger();
 
             // Source : empty file
             string location = TestUtils.GetResourceLocationRoot() + emptyFile;
             string testFileLocation = TestUtils.CopyAsTempTestFile(emptyFile);
-            AudioDataManager theFile = new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile =
+                new AudioDataManager(ATL.AudioData.AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check that it is indeed tag-free
             Assert.IsTrue(theFile.ReadFromFile());
@@ -200,14 +208,16 @@ namespace ATL.test.IO.MetaData
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
-        protected void test_RW_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true, bool sameSizeAfterEdit = false, bool sameBitsAfterEdit = false)
+        protected void test_RW_Existing(string fileName, int initialNbPictures, bool deleteTempFile = true,
+            bool sameSizeAfterEdit = false, bool sameBitsAfterEdit = false)
         {
             new ConsoleLogger();
 
             // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile =
+                new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.ReadFromFile());
@@ -228,11 +238,15 @@ namespace ATL.test.IO.MetaData
                 {
                     additionalFields.Add(kvp.Key, kvp.Value);
                 }
+
                 theTag.AdditionalFields = additionalFields;
             }
+
             testData = new TagHolder(theTag.tagData);
 
-            PictureInfo picInfo = fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"), PictureInfo.PIC_TYPE.CD);
+            PictureInfo picInfo =
+                fromBinaryData(File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg"),
+                    PictureInfo.PIC_TYPE.CD);
             picInfo.NativePicCode = 6;
             var testPics = theTag.EmbeddedPictures;
             testPics.Add(picInfo);
@@ -247,7 +261,8 @@ namespace ATL.test.IO.MetaData
             IMetaDataIO meta = theFile.getMeta(tagType);
             Assert.IsTrue(meta.Exists);
 
-            if (supportsExtraEmbeddedPictures && testData.EmbeddedPictures != null && testData.EmbeddedPictures.Count > 0)
+            if (supportsExtraEmbeddedPictures && testData.EmbeddedPictures != null &&
+                testData.EmbeddedPictures.Count > 0)
             {
                 int nbFound = 0;
                 foreach (PictureInfo pic in meta.EmbeddedPictures)
@@ -297,6 +312,7 @@ namespace ATL.test.IO.MetaData
                 tagToWrite.IntegrateValue(TagData.Field.RECORDING_DATE, theTag.Date.Year.ToString());
                 tagToWrite.IntegrateValue(TagData.Field.RECORDING_YEAR, theTag.Date.Year.ToString());
             }
+
             Assert.IsTrue(theFile.UpdateTagInFileAsync(tagToWrite, tagType).GetAwaiter().GetResult());
 
             readExistingTagsOnFile(theFile, initialNbPictures);
@@ -335,7 +351,8 @@ namespace ATL.test.IO.MetaData
 
             // Source : file with existing tag incl. unsupported picture (Conductor); unsupported field (MOOD)
             string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile =
+                new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Add a new supported field and a new supported picture
             Assert.IsTrue(theFile.RemoveTagFromFileAsync(tagType).GetAwaiter().GetResult());
@@ -349,7 +366,8 @@ namespace ATL.test.IO.MetaData
             if (deleteTempFile && Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
-        protected void test_RW_UpdateTrackDiscZeroes(string fileName, bool useLeadingZeroes, bool overrideExistingLeadingZeroesFormat, StreamDelegate checkDelegate, bool deleteTempFile = true)
+        protected void test_RW_UpdateTrackDiscZeroes(string fileName, bool useLeadingZeroes,
+            bool overrideExistingLeadingZeroesFormat, StreamDelegate checkDelegate, bool deleteTempFile = true)
         {
             new ConsoleLogger();
 
@@ -411,7 +429,8 @@ namespace ATL.test.IO.MetaData
             // Source : totally metadata-free file
             string location = TestUtils.GetResourceLocationRoot() + fileName;
             string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile =
+                new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
 
             // Check that it is indeed metadata-free
@@ -457,13 +476,17 @@ namespace ATL.test.IO.MetaData
             if (testData.BPM != 0) theTag.BPM = 550;
             if (testData.EncodedBy != "") theTag.EncodedBy = "reaKtor";
             if (testData.Encoder != "") theTag.Encoder = "supaTool";
-            if (testData.OriginalReleaseDate > DateTime.MinValue) theTag.OriginalReleaseDate = DateTime.Parse("2009/02/02");
+            if (testData.OriginalReleaseDate > DateTime.MinValue)
+                theTag.OriginalReleaseDate = DateTime.Parse("2009/02/02");
             if (testData.Language != "") theTag.Language = "Esperanto";
             if (testData.ISRC != "") theTag.ISRC = "444-SJB-9879-YY";
             if (testData.CatalogNumber != "") theTag.CatalogNumber = "614651";
             if (testData.AudioSourceUrl != "") theTag.AudioSourceUrl = "https://somewhere.out.the.re";
             if (testData.Lyricist != "") theTag.Lyricist = "Benjamin Zippy";
-            if (testData.InvolvedPeople != "") theTag.InvolvedPeople = "Producer" + ATL.Settings.DisplayValueSeparator + "Paul Black" + ATL.Settings.DisplayValueSeparator + "Recording engineer" + ATL.Settings.DisplayValueSeparator + "Zack Parrish";
+            if (testData.InvolvedPeople != "")
+                theTag.InvolvedPeople = "Producer" + ATL.Settings.DisplayValueSeparator + "Paul Black" +
+                                        ATL.Settings.DisplayValueSeparator + "Recording engineer" +
+                                        ATL.Settings.DisplayValueSeparator + "Zack Parrish";
 
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
@@ -472,6 +495,7 @@ namespace ATL.test.IO.MetaData
                 {
                     testAddFields.Add(info.Key, info.Value);
                 }
+
                 theTag.AdditionalFields = testAddFields;
             }
 
@@ -497,6 +521,7 @@ namespace ATL.test.IO.MetaData
                     Assert.IsTrue(DateTime.TryParse("2008/01/01", out date));
                     Assert.AreEqual(date, meta.Date);
                 }
+
                 if (!testData.PublishingDate.Equals(DateTime.MinValue))
                 {
                     DateTime date;
@@ -515,6 +540,7 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(date, meta.Date);
                 }
             }
+
             if (testData.Genre != "") Assert.AreEqual("Merengue", meta.Genre);
             if (testData.Popularity != 0) Assert.AreEqual(2.5f / 5, meta.Popularity);
             if (testData.TrackNumber != null && testData.TrackNumber != "") Assert.AreEqual("1", meta.TrackNumber);
@@ -544,12 +570,17 @@ namespace ATL.test.IO.MetaData
                 Assert.IsTrue(DateTime.TryParse("2009/02/02", out date));
                 Assert.AreEqual(date, meta.OriginalReleaseDate);
             }
+
             if (testData.Language != "") Assert.AreEqual("Esperanto", meta.Language);
             if (testData.ISRC != "") Assert.AreEqual("444-SJB-9879-YY", meta.ISRC);
             if (testData.CatalogNumber != "") Assert.AreEqual("614651", meta.CatalogNumber);
             if (testData.AudioSourceUrl != "") Assert.AreEqual("https://somewhere.out.the.re", meta.AudioSourceUrl);
             if (testData.Lyricist != "") Assert.AreEqual("Benjamin Zippy", meta.Lyricist);
-            if (testData.InvolvedPeople != "") Assert.AreEqual("Producer" + ATL.Settings.InternalValueSeparator + "Paul Black" + ATL.Settings.InternalValueSeparator + "Recording engineer" + ATL.Settings.InternalValueSeparator + "Zack Parrish", meta.InvolvedPeople);
+            if (testData.InvolvedPeople != "")
+                Assert.AreEqual(
+                    "Producer" + ATL.Settings.InternalValueSeparator + "Paul Black" +
+                    ATL.Settings.InternalValueSeparator + "Recording engineer" + ATL.Settings.InternalValueSeparator +
+                    "Zack Parrish", meta.InvolvedPeople);
 
             if (testData.AdditionalFields != null && testData.AdditionalFields.Count > 0)
             {
@@ -643,13 +674,15 @@ namespace ATL.test.IO.MetaData
         }
 
         // Test for unsupported metadata fields support (both non-picture and picture)
-        public void test_RW_Unsupported_Empty(string fileName, bool handleUnsupportedPics = true, bool deleteTempFile = true)
+        public void test_RW_Unsupported_Empty(string fileName, bool handleUnsupportedPics = true,
+            bool deleteTempFile = true)
         {
             new ConsoleLogger();
 
             // Source : totally metadata-free file
             string testFileLocation = TestUtils.CopyAsTempTestFile(fileName);
-            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            AudioDataManager theFile =
+                new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
 
             // Check that it is indeed tag-free
             Assert.IsTrue(theFile.ReadFromFile());
@@ -660,7 +693,8 @@ namespace ATL.test.IO.MetaData
 
 
             bool handleUnsupportedFields = testData.AdditionalFields != null && testData.AdditionalFields.Count > 0;
-            bool handleUnsupportedPictures = testData.EmbeddedPictures != null && testData.EmbeddedPictures.Count > 0 && handleUnsupportedPics;
+            bool handleUnsupportedPictures = testData.EmbeddedPictures != null && testData.EmbeddedPictures.Count > 0 &&
+                                             handleUnsupportedPics;
             char internationalChar = supportsInternationalChars ? '父' : '!';
 
             // Add new unsupported fields
@@ -668,7 +702,8 @@ namespace ATL.test.IO.MetaData
             if (handleUnsupportedFields)
             {
                 theTag.AdditionalFields.Add(new MetaFieldInfo(tagType, "TEST", "This is a test " + internationalChar));
-                theTag.AdditionalFields.Add(new MetaFieldInfo(tagType, "TES2", "This is another test " + internationalChar));
+                theTag.AdditionalFields.Add(new MetaFieldInfo(tagType, "TES2",
+                    "This is another test " + internationalChar));
             }
 
             // Add new unsupported pictures
@@ -729,7 +764,8 @@ namespace ATL.test.IO.MetaData
                 foreach (PictureInfo pic in meta.EmbeddedPictures)
                 {
                     if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported) &&
-                         (pic.NativePicCode.Equals(pictureCode1) || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode1)))
+                        (pic.NativePicCode.Equals(pictureCode1) ||
+                         (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode1)))
                        )
                     {
                         using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
@@ -738,10 +774,12 @@ namespace ATL.test.IO.MetaData
                             Assert.AreEqual(600, picture.Height);
                             Assert.AreEqual(900, picture.Width);
                         }
+
                         found++;
                     }
                     else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported)
-                                && (pic.NativePicCode.Equals(pictureCode2) || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode2)))
+                             && (pic.NativePicCode.Equals(pictureCode2) || (pic.NativePicCodeStr != null &&
+                                                                            pic.NativePicCodeStr.Equals(pictureCode2)))
                             )
                     {
                         using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
@@ -750,9 +788,11 @@ namespace ATL.test.IO.MetaData
                             Assert.AreEqual(290, picture.Height);
                             Assert.AreEqual(900, picture.Width);
                         }
+
                         found++;
                     }
                 }
+
                 Assert.AreEqual(2, found);
 #pragma warning restore CA1416
             }
@@ -806,7 +846,8 @@ namespace ATL.test.IO.MetaData
                     foreach (PictureInfo pic in meta.EmbeddedPictures)
                     {
                         if (pic.PicType.Equals(PIC_TYPE.Unsupported) && (pic.NativePicCode.Equals(pictureCode2)
-                            || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode2)))
+                                                                         || (pic.NativePicCodeStr != null &&
+                                                                             pic.NativePicCodeStr.Equals(pictureCode2)))
                            )
                         {
                             using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
@@ -815,9 +856,11 @@ namespace ATL.test.IO.MetaData
                                 Assert.AreEqual(290, picture.Height);
                                 Assert.AreEqual(900, picture.Width);
                             }
+
                             found++;
                         }
                     }
+
                     Assert.AreEqual(1, found);
 #pragma warning restore CA1416
                 }
@@ -847,6 +890,7 @@ namespace ATL.test.IO.MetaData
                 {
                     Assert.AreEqual(testData.Date, meta.Date);
                 }
+
                 if (testData.PublishingDate > DateTime.MinValue)
                 {
                     Assert.AreEqual(testData.PublishingDate, meta.PublishingDate);
@@ -861,17 +905,20 @@ namespace ATL.test.IO.MetaData
                     Assert.AreEqual(testData.Date, meta.Date);
                 }
             }
+
             if (testData.Genre != "") Assert.AreEqual(testData.Genre, meta.Genre);
             if (testData.Composer != "") Assert.AreEqual(testData.Composer, meta.Composer);
             if (testData.Popularity != 0) Assert.AreEqual(testData.Popularity, meta.Popularity);
-            if (testData.TrackNumber != null && testData.TrackNumber != "") Assert.AreEqual(testData.TrackNumber, meta.TrackNumber);
+            if (testData.TrackNumber != null && testData.TrackNumber != "")
+                Assert.AreEqual(testData.TrackNumber, meta.TrackNumber);
             if (testData.TrackTotal != 0) Assert.AreEqual(testData.TrackTotal, meta.TrackTotal);
             if (testData.DiscNumber != 0) Assert.AreEqual(testData.DiscNumber, meta.DiscNumber);
             if (testData.DiscTotal != 0) Assert.AreEqual(testData.DiscTotal, meta.DiscTotal);
             if (testData.Conductor != "") Assert.AreEqual(testData.Conductor, meta.Conductor);
             if (testData.Publisher != "") Assert.AreEqual(testData.Publisher, meta.Publisher);
             if (testData.Copyright != "") Assert.AreEqual(testData.Copyright, meta.Copyright);
-            if (testData.GeneralDescription != "") Assert.AreEqual(testData.GeneralDescription, meta.GeneralDescription);
+            if (testData.GeneralDescription != "")
+                Assert.AreEqual(testData.GeneralDescription, meta.GeneralDescription);
             if (testData.ProductId != "") Assert.AreEqual(testData.ProductId, meta.ProductId);
             if (testData.BPM != 0) Assert.AreEqual(testData.BPM, meta.BPM);
             if (testData.EncodedBy != "") Assert.AreEqual(testData.EncodedBy, meta.EncodedBy);
@@ -880,6 +927,7 @@ namespace ATL.test.IO.MetaData
             {
                 Assert.AreEqual(testData.OriginalReleaseDate, meta.OriginalReleaseDate);
             }
+
             if (testData.Language != "") Assert.AreEqual(testData.Language, meta.Language);
             if (testData.ISRC != "") Assert.AreEqual(testData.ISRC, meta.ISRC);
             if (testData.CatalogNumber != "") Assert.AreEqual(testData.CatalogNumber, meta.CatalogNumber);
@@ -898,7 +946,8 @@ namespace ATL.test.IO.MetaData
             }
 
             // Pictures
-            if (supportsExtraEmbeddedPictures && testData.EmbeddedPictures != null && testData.EmbeddedPictures.Count > 0)
+            if (supportsExtraEmbeddedPictures && testData.EmbeddedPictures != null &&
+                testData.EmbeddedPictures.Count > 0)
             {
                 Assert.AreEqual(nbPictures, meta.EmbeddedPictures.Count);
 
@@ -910,7 +959,9 @@ namespace ATL.test.IO.MetaData
                     {
                         testPicInfo.ComputePicHash();
                         if ((pic.NativePicCode > -1 && pic.NativePicCode.Equals(testPicInfo.NativePicCode))
-                            || (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(testPicInfo.NativePicCodeStr, StringComparison.OrdinalIgnoreCase))
+                            || (pic.NativePicCodeStr != null &&
+                                pic.NativePicCodeStr.Equals(testPicInfo.NativePicCodeStr,
+                                    StringComparison.OrdinalIgnoreCase))
                            )
                         {
                             nbFound++;
@@ -919,11 +970,13 @@ namespace ATL.test.IO.MetaData
                         }
                     }
                 }
+
                 Assert.AreEqual(testData.EmbeddedPictures.Count, nbFound);
             }
         }
 
-        protected void assumeRatingInFile(string file, double rating, MetaDataIOFactory.TagType tagType, bool canHaveNoTag = false)
+        protected void assumeRatingInFile(string file, double rating, MetaDataIOFactory.TagType tagType,
+            bool canHaveNoTag = false)
         {
             string location = TestUtils.GetResourceLocationRoot() + file;
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
@@ -942,5 +995,54 @@ namespace ATL.test.IO.MetaData
                 Assert.AreEqual((float)rating, meta.Popularity);
         }
 
+        protected void additionalFieldsCase(string file, MetaDataIOFactory.TagType tagType, string tagId = "TEST")
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile(file);
+
+            AudioDataManager theFile =
+                new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile(readAllMetaFrames: true));
+
+            TagData theTag = new TagData();
+            theTag.AdditionalFields.Add(new MetaFieldInfo(tagType, tagId, "This is a test"));
+
+            // Add the new tag and check that it has been indeed added with all the correct information
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, tagType).GetAwaiter().GetResult());
+
+            Assert.IsTrue(theFile.ReadFromFile(readAllMetaFrames:true));
+
+            var meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual(1, meta.AdditionalFields.Count);
+
+            theTag = new TagData();
+            theTag.AdditionalFields.Add(new MetaFieldInfo(tagType, tagId.ToLower(), "This is another test"));
+
+            ArrayLogger log = new ArrayLogger();
+            
+            // Add the new tag and check that it has been indeed added with all the correct information
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag, tagType).GetAwaiter().GetResult());
+
+            IList<LogItem> logItems = log.GetAllItems(LV_WARNING);
+            Assert.IsTrue(logItems.Count > 0);
+            Assert.IsTrue(logItems.Any(i => i.Message.StartsWith("Adding an AdditionalField with the same field code and a different case")));
+
+            Assert.IsTrue(theFile.ReadFromFile(readAllMetaFrames: true));
+
+            meta = theFile.getMeta(tagType);
+            Assert.IsTrue(meta.Exists);
+
+            Assert.AreEqual(1, meta.AdditionalFields.Count);
+            Assert.IsTrue(meta.AdditionalFields.ContainsKey(tagId));
+            Assert.AreEqual("This is another test", meta.AdditionalFields[tagId]);
+
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
     }
 }

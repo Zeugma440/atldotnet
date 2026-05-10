@@ -7,9 +7,9 @@ using ATL.AudioData.IO;
 namespace ATL.test.IO.MetaData
 {
     [TestClass]
-    public class APE : MetaIOTest
+    public class APEtag : MetaIOTest
     {
-        public APE()
+        public APEtag()
         {
             emptyFile = "MP3/empty.mp3";
             notEmptyFile = "MP3/APE.mp3";
@@ -187,6 +187,12 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_APE_ID3v2()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.ID3V2);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_VorbisFLAC_AdditionalFieldsCase()
+        {
+            additionalFieldsCase(emptyFile, MetaDataIOFactory.TagType.APE);
         }
     }
 }

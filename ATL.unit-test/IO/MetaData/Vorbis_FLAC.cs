@@ -567,5 +567,11 @@ namespace ATL.test.IO.MetaData
             Assert.AreEqual(LyricsInfo.LyricsFormat.LRC, meta.Lyrics[0].Format);
             Assert.AreEqual(99, meta.Lyrics[0].SynchronizedLyrics.Count);
         }
+
+        [TestMethod]
+        public void TagIO_RW_VorbisFLAC_AdditionalFieldsCase()
+        {
+            additionalFieldsCase(emptyFile, MetaDataIOFactory.TagType.NATIVE);
+        }
     }
 }

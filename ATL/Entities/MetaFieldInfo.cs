@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using ATL.AudioData;
 using Commons;
 using HashDepot;
@@ -172,7 +173,7 @@ namespace ATL
             if (obj.GetType() != this.GetType()) return false;
 
             // Call the implementation from IEquatable
-            return this.ToStringWithoutZone().Equals(((MetaFieldInfo)obj).ToStringWithoutZone());
+            return this.ToStringWithoutZone().Equals(((MetaFieldInfo)obj).ToStringWithoutZone(), StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <summary>
@@ -185,7 +186,7 @@ namespace ATL
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
 
-            bool result = MetaDataIOFactory.TagType.ANY == obj.TagType && obj.NativeFieldCode.Equals(this.NativeFieldCode);
+            bool result = MetaDataIOFactory.TagType.ANY == obj.TagType && obj.NativeFieldCode.Equals(this.NativeFieldCode, StringComparison.InvariantCultureIgnoreCase);
             if (obj.StreamNumber > 0) result = result && obj.StreamNumber == this.StreamNumber;
             if (obj.Language.Length > 0) result = result && obj.Language.Equals(this.Language);
 

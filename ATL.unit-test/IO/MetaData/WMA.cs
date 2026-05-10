@@ -538,5 +538,11 @@ namespace ATL.test.IO.MetaData
         {
             test_RW_Cohabitation(MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.APE);
         }
+
+        [TestMethod]
+        public void TagIO_RW_WMA_AdditionalFieldsCase()
+        {
+            additionalFieldsCase(emptyFile, MetaDataIOFactory.TagType.NATIVE);
+        }
     }
 }

@@ -1619,5 +1619,11 @@ namespace ATL.test.IO.MetaData
         {
             test_RW_Cohabitation(MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.APE);
         }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_AdditionalFieldsCase()
+        {
+            additionalFieldsCase(emptyFile, MetaDataIOFactory.TagType.ID3V2);
+        }
     }
 }

@@ -315,6 +315,7 @@ namespace ATL.AudioData.IO
 
                     tagData.AdditionalFields.Remove(fieldInfo);
                 }
+
                 tagData.AdditionalFields.Add(fieldInfo);
             }
         }
@@ -533,7 +534,7 @@ namespace ATL.AudioData.IO
             foreach (MetaFieldInfo fieldInfo in tag.AdditionalFields.Where(isMetaFieldWritable))
             {
                 if (fieldInfo.NativeFieldCode.Equals(VENDOR_METADATA_ID)
-                    || writtenFieldCodes.Contains(fieldInfo.NativeFieldCode.ToUpper())) continue;
+                    || writtenFieldCodes.Contains(fieldInfo.NativeFieldCode)) continue;
 
                 string value = FormatBeforeWriting(fieldInfo.Value);
                 if (value.Contains(Settings.DisplayValueSeparator + ""))

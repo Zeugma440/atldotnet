@@ -2075,5 +2075,11 @@ namespace ATL.test.IO.MetaData
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
+
+        [TestMethod]
+        public void TagIO_RW_MP4_AdditionalFieldsCase()
+        {
+            additionalFieldsCase(emptyFile, MetaDataIOFactory.TagType.NATIVE);
+        }
     }
 }
