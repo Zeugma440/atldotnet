@@ -692,7 +692,7 @@ namespace ATL.AudioData.IO
                 moofSize = navigateToAtom(s, "moof");
             }
 
-            if (isFragmented)
+            if (isFragmented && durationAll > 0)
             {
                 calculatedDurationMs = durationAll * 1000.0 / SampleRate;
                 bitrate = (int)Math.Round(mdatSizeAll * 8 / calculatedDurationMs * 1000.0, 0);
