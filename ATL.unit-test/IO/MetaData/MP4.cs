@@ -5,6 +5,7 @@ using ATL.AudioData.IO;
 using static ATL.Logging.Log;
 using ATL.Logging;
 using Commons;
+using System.Buffers.Binary;
 using System.Text;
 
 namespace ATL.test.IO.MetaData
@@ -134,6 +135,25 @@ namespace ATL.test.IO.MetaData
                 testData.BPM = bpm;
                 testData.Lyricist = lyricist;
             }
+        }
+
+        [TestMethod]
+        public void TagIO_R_MP4_CustomFieldWithoutData()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile(notEmptyFile);
+            insertCustomFieldWithoutDataBeforeCover(testFileLocation);
+
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+            Assert.AreEqual(1, theFile.NativeTag.EmbeddedPictures.Count);
+            Assert.IsTrue(theFile.NativeTag.EmbeddedPictures[0].PictureData.Length > 0);
+
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
         [TestMethod]
@@ -2080,6 +2100,86 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_MP4_AdditionalFieldsCase()
         {
             additionalFieldsCase(emptyFile, MetaDataIOFactory.TagType.NATIVE);
+        }
+
+        private static void insertCustomFieldWithoutDataBeforeCover(string fileName)
+        {
+            byte[] fileData = File.ReadAllBytes(fileName);
+            int moovPosition = findAtom(fileData, 0, fileData.Length, "moov");
+            int moovEnd = moovPosition + (int)readUInt32(fileData, moovPosition);
+            int udtaPosition = findAtom(fileData, moovPosition + 8, moovEnd, "udta");
+            int udtaEnd = udtaPosition + (int)readUInt32(fileData, udtaPosition);
+            int metaPosition = findAtom(fileData, udtaPosition + 8, udtaEnd, "meta");
+            int metaEnd = metaPosition + (int)readUInt32(fileData, metaPosition);
+            int ilstPosition = findAtom(fileData, metaPosition + 12, metaEnd, "ilst");
+            int ilstEnd = ilstPosition + (int)readUInt32(fileData, ilstPosition);
+            int covrPosition = findAtom(fileData, ilstPosition + 8, ilstEnd, "covr");
+
+            byte[] fieldData = createAtom("----",
+                createTextAtom("mean", "com.apple.iTunes"),
+                createTextAtom("name", "LANGUAGE"));
+
+            byte[] result = new byte[fileData.Length + fieldData.Length];
+            Array.Copy(fileData, 0, result, 0, covrPosition);
+            Array.Copy(fieldData, 0, result, covrPosition, fieldData.Length);
+            Array.Copy(fileData, covrPosition, result, covrPosition + fieldData.Length, fileData.Length - covrPosition);
+
+            foreach (int atomPosition in new[] { moovPosition, udtaPosition, metaPosition, ilstPosition })
+            {
+                writeUInt32(result, atomPosition, readUInt32(fileData, atomPosition) + (uint)fieldData.Length);
+            }
+
+            File.WriteAllBytes(fileName, result);
+        }
+
+        private static int findAtom(byte[] data, int start, int end, string atomName)
+        {
+            int position = start;
+            while (position + 8 <= end)
+            {
+                uint atomSize = readUInt32(data, position);
+                string currentAtomName = Utils.Latin1Encoding.GetString(data, position + 4, 4);
+
+                if (atomName.Equals(currentAtomName)) return position;
+                if (atomSize < 8 || position + atomSize > end) break;
+
+                position += (int)atomSize;
+            }
+
+            Assert.Fail("Could not find atom " + atomName);
+            return -1;
+        }
+
+        private static byte[] createTextAtom(string atomName, string value)
+        {
+            return createAtom(atomName, new byte[] { 0, 0, 0, 0 }, Encoding.UTF8.GetBytes(value));
+        }
+
+        private static byte[] createAtom(string atomName, params byte[][] payloads)
+        {
+            int atomSize = 8 + payloads.Sum(payload => payload.Length);
+            byte[] result = new byte[atomSize];
+            writeUInt32(result, 0, (uint)atomSize);
+            Utils.Latin1Encoding.GetBytes(atomName).CopyTo(result, 4);
+
+            int position = 8;
+            foreach (byte[] payload in payloads)
+            {
+                payload.CopyTo(result, position);
+                position += payload.Length;
+            }
+
+            return result;
+        }
+
+        private static uint readUInt32(byte[] data, int position)
+        {
+            return BinaryPrimitives.ReadUInt32BigEndian(data.AsSpan(position, 4));
+        }
+
+        private static void writeUInt32(byte[] data, int position, uint value)
+        {
+            BinaryPrimitives.WriteUInt32BigEndian(data.AsSpan(position, 4), value);
         }
     }
 }

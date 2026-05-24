@@ -1442,10 +1442,17 @@ namespace ATL.AudioData.IO
             while (iListPosition < iListSize - 8)
             {
                 atomHeaderBuilder.Clear();
+                atomPosition = source.Position;
                 if (source.Read(data, 0, 4) < 4) return;
                 atomSize = BinaryPrimitives.ReadUInt32BigEndian(data);
                 if (source.Read(data, 0, 4) < 4) return;
-                atomHeaderBuilder.Append(Utils.Latin1Encoding.GetString(data, 0, 4));
+                string rawAtomHeader = Utils.Latin1Encoding.GetString(data, 0, 4);
+                if (atomSize < 8)
+                {
+                    LogDelegator.GetLogDelegate()(Log.LV_WARNING, "atom " + rawAtomHeader + " has an invalid size; aborting read");
+                    return;
+                }
+                atomHeaderBuilder.Append(rawAtomHeader);
 
                 uint metadataSize;
                 if ("----".Equals(atomHeaderBuilder.ToString())) // Custom text metadata
@@ -1498,8 +1505,10 @@ namespace ATL.AudioData.IO
                     metadataSize = navigateToAtom(source, "data");
                     if (0 == metadataSize)
                     {
-                        LogDelegator.GetLogDelegate()(Log.LV_ERROR, "data atom could not be found; aborting read");
-                        return;
+                        LogDelegator.GetLogDelegate()(Log.LV_WARNING, "data atom could not be found; skipping atom " + rawAtomHeader + " / field " + atomHeader);
+                        source.Seek(atomPosition + atomSize, SeekOrigin.Begin);
+                        iListPosition += atomSize;
+                        continue;
                     }
                     atomPosition = source.Position - 8;
                 }
