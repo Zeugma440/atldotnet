@@ -17,12 +17,11 @@ namespace ATL
 
         /// <summary>
         /// Buffer size used for I/O operations, in bytes.
-        /// Default : 512 bytes
+        /// Default : 64 kilobytes
         /// 
         /// A higher value will consume more RAM but will allow faster I/O on large files.
-        /// Warning : The app will crash if you set a value higher than the file size itself.
         /// </summary>
-        public static int FileBufferSize = 512;
+        public static int FileBufferSize = 64 * 1024;
 
         /// <summary>
         /// Force high-level I/O operations to be performed without zone buffering,
