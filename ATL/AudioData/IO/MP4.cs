@@ -448,7 +448,7 @@ namespace ATL.AudioData.IO
                     if (XmpTag.UUID_XMP == uuid.key)
                     {
                         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(uuid.value));
-                        XmpTag.FromStream(stream, this, readTagParams, new  Dictionary<string, string>(), stream.Length);
+                        XmpTag.FromStream(stream, this, readTagParams, new Dictionary<string, string>(), stream.Length);
                     }
                     else
                     {
@@ -658,7 +658,8 @@ namespace ATL.AudioData.IO
                     if (s.Read(data, 0, 4) < 4) break;
                     int sampleCount = BinaryPrimitives.ReadInt32BigEndian(data);
 
-                    for (int i = 0; i < sampleCount; i++)
+                    long endOffset = trunOffset + trunSize - 8;
+                    for (int i = 0; i < sampleCount && s.Position < endOffset; i++)
                     {
                         if ((flags & 0x00000100) > 0) // Sample has its own duration
                         {
