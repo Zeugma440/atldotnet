@@ -32,7 +32,7 @@ jobs:
     - name: Run SonarScanner
       env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: dotnet sonarscanner begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.token=$$SONAR_TOKEN"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="${GITHUB_WORKSPACE}/ATL.unit-test/lcov.info"
+      run: dotnet sonarscanner begin /k:"Zeugma440_atldotnet" /o:"zeugma440-github" /d:"sonar.host.url=https://sonarcloud.io" /d:"sonar.token=$env:SONAR_TOKEN"  /d:sonar.sourceEncoding="UTF-8" /d:sonar.cs.opencover.reportsPaths="${GITHUB_WORKSPACE}/ATL.unit-test/lcov.info"
   
     - name: Test
       run: dotnet test ATL.unit-test --verbosity normal --results-directory "TestResults"
@@ -54,4 +54,4 @@ jobs:
     - name: Upload to SonarScanner
       env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run : dotnet sonarscanner end /d:"sonar.token=$$SONAR_TOKEN"
+      run : dotnet sonarscanner end /d:"sonar.token=$env:SONAR_TOKEN"
