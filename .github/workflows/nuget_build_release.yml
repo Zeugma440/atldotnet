@@ -40,4 +40,4 @@ jobs:
       - name: "Push package"
         env:
           API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: dotnet nuget push "${{ env.PACKAGE_OUTPUT_DIRECTORY }}/*.nupkg" --source ${{ env.NUGET_SOURCE_URL }} --api-key $env:API_KEY --skip-duplicate
+        run: dotnet nuget push "${{ env.PACKAGE_OUTPUT_DIRECTORY }}/*.nupkg" --source ${{ env.NUGET_SOURCE_URL }} --api-key $$API_KEY --skip-duplicate
