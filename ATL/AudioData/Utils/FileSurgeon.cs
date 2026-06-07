@@ -288,6 +288,7 @@ namespace ATL.AudioData.IO
                                 if (newTagSize > zone.Size)
                                 {
                                     uint deltaBytes = (uint)(newTagSize - zone.Size);
+                                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "boundaries : " + tagBeginOffset + "-" + (tagEndOffset + deltaBytes));
                                     if (!isBuffered) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
                                     else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Lengthening (delta=" + Utils.GetBytesReadable(deltaBytes) + ")");
 
@@ -296,11 +297,13 @@ namespace ATL.AudioData.IO
                                 else if (newTagSize < zone.Size) // Need to reduce file size
                                 {
                                     uint deltaBytes = (uint)(zone.Size - newTagSize);
+                                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "boundaries : " + tagBeginOffset + "-" + (tagEndOffset + deltaBytes));
                                     if (!isBuffered) Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (direct) : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
                                     else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Buffer stream operation : Shortening (delta=-" + Utils.GetBytesReadable(deltaBytes) + ")");
 
                                     await StreamUtils.ShortenStreamAsync(writer, tagEndOffset, deltaBytes, (null == buffer) ? progress : null);
                                 }
+                                else Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "No stream operation");
                             }
 
                             // Copy tag contents to the new slot
@@ -330,6 +333,7 @@ namespace ATL.AudioData.IO
 
                         if (null == buffer && writeProgress != null && !zone.IsReadonly) incrementProgress(ref progress);
                     } // Loop through zones
+                    Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "------------ REGION " + (regionIndex - 1) + " END");
 
                     if (buffer != null)
                     {
@@ -340,16 +344,19 @@ namespace ATL.AudioData.IO
                         else // for classes that don't use FileStructureHelper(FLAC)
                             tagEndOffset = region.StartOffset + globalCumulativeDelta - regionCumulativeDelta + initialBufferSize;
 
+                        var delta = buffer.Length - initialBufferSize;
+                        Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "boundaries : " + (tagEndOffset - initialBufferSize) + "-" + (tagEndOffset + delta));
+
                         // Need to build a larger file
-                        if (buffer.Length > initialBufferSize)
+                        if (delta > 0)
                         {
-                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Lengthening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + "; endOffset=" + tagEndOffset + ")");
-                            await StreamUtils.LengthenStreamAsync(fullScopeWriter, tagEndOffset, (uint)(buffer.Length - initialBufferSize), false, progress);
+                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Lengthening (delta=" + Utils.GetBytesReadable(delta) + "; endOffset=" + tagEndOffset + ")");
+                            await StreamUtils.LengthenStreamAsync(fullScopeWriter, tagEndOffset, (uint)delta, false, progress);
                         }
-                        else if (buffer.Length < initialBufferSize) // Need to reduce file size
+                        else if (delta < 0) // Need to reduce file size
                         {
-                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Shortening (delta=" + Utils.GetBytesReadable(buffer.Length - initialBufferSize) + "; endOffset=" + tagEndOffset + ")");
-                            await StreamUtils.ShortenStreamAsync(fullScopeWriter, tagEndOffset, (uint)(initialBufferSize - buffer.Length), progress);
+                            Logging.LogDelegator.GetLogDelegate()(Logging.Log.LV_DEBUG, "Disk stream operation (buffer) : Shortening (delta=" + Utils.GetBytesReadable(delta) + "; endOffset=" + tagEndOffset + ")");
+                            await StreamUtils.ShortenStreamAsync(fullScopeWriter, tagEndOffset, (uint)-delta, progress);
                         }
 
                         // Copy tag contents to the new slot

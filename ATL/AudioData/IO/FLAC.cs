@@ -214,12 +214,12 @@ namespace ATL.AudioData.IO
 
                         if (blockType == META_VORBIS_COMMENT) // Vorbis metadata
                         {
-                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "." + zones.Count, position - 4, (int)blockLength + 4, Array.Empty<byte>(), true, blockType));
+                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "." + zones.Count, position - 4, 0, (int)blockLength + 4, Array.Empty<byte>(), true, blockType));
                             vorbisTag.Read(source, readTagParams);
                         }
                         else if (blockType == META_PADDING && !paddingFound)  // Padding block (skip any other padding block)
                         {
-                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(PADDING_ZONE_NAME, position - 4, (int)blockLength + 4, Array.Empty<byte>(), true, blockType));
+                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(PADDING_ZONE_NAME, position - 4, 0, (int)blockLength + 4, Array.Empty<byte>(), true, blockType));
                             initialPaddingSize = blockLength;
                             initialPaddingOffset = position;
                             paddingFound = true;
@@ -227,12 +227,12 @@ namespace ATL.AudioData.IO
                         }
                         else if (blockType == META_PICTURE) // Picture (NB: as per FLAC specs, pictures must be embedded at the FLAC level, not in the VorbisComment !)
                         {
-                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "." + zones.Count, position - 4, (int)blockLength + 4, Array.Empty<byte>(), true, blockType));
+                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "." + zones.Count, position - 4, 0, (int)blockLength + 4, Array.Empty<byte>(), true, blockType));
                             vorbisTag.ReadPicture(source, readTagParams);
                         }
                         else if (blockType != META_INVALID) // Unhandled block; needs to be zoned anyway to be able to manage the 'isLast' flag at write-time
                         {
-                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "." + zones.Count, position - 4, (int)blockLength + 4, Array.Empty<byte>(), true, blockType));
+                            if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "." + zones.Count, position - 4, 0, (int)blockLength + 4, Array.Empty<byte>(), true, blockType));
                         }
 
                         if (blockType < 7)
@@ -259,10 +259,12 @@ namespace ATL.AudioData.IO
                             else if (zone.Flag == META_VORBIS_COMMENT) vorbisTagFound = true;
                         }
 
-                        if (!vorbisTagFound) zones.Add(new Zone(META_VORBIS_COMMENT + "." + zones.Count, blockEndOffset, 0, Array.Empty<byte>(), true, META_VORBIS_COMMENT));
-                        if (!pictureFound) zones.Add(new Zone(META_PICTURE + "." + zones.Count, blockEndOffset, 0, Array.Empty<byte>(), true, META_PICTURE));
+                        int offsetPosition = 0;
+                        if (!vorbisTagFound)
+                            zones.Add(new Zone(META_VORBIS_COMMENT + "." + zones.Count, blockEndOffset, offsetPosition++, 0, Array.Empty<byte>(), true, META_VORBIS_COMMENT));
+                        if (!pictureFound) zones.Add(new Zone(META_PICTURE + "." + zones.Count, blockEndOffset, offsetPosition++, 0, Array.Empty<byte>(), true, META_PICTURE));
                         // Padding must be the last block for it to correctly absorb size variations of the other blocks
-                        if (!paddingFound && Settings.AddNewPadding) zones.Add(new Zone(PADDING_ZONE_NAME, blockEndOffset, 0, Array.Empty<byte>(), true, META_PADDING));
+                        if (!paddingFound && Settings.AddNewPadding) zones.Add(new Zone(PADDING_ZONE_NAME, blockEndOffset, offsetPosition, 0, Array.Empty<byte>(), true, META_PADDING));
                     }
                 }
             }
@@ -372,7 +374,9 @@ namespace ATL.AudioData.IO
             if (nbExistingPictures < picturesToWrite.Count)
             {
                 for (int i = 0; i < picturesToWrite.Count - nbExistingPictures; i++)
-                    zones.Insert(lastPictureZoneIndex + 1, new Zone(META_PICTURE + "." + zones.Count, lastPictureZoneEnd, 0, Array.Empty<byte>(), true, META_PICTURE));
+                    zones.Insert(lastPictureZoneIndex + 1,
+                        new Zone(META_PICTURE + "." + zones.Count, lastPictureZoneEnd, i, 0, Array.Empty<byte>(), true,
+                            META_PICTURE));
             }
         }
 

@@ -134,6 +134,10 @@ namespace ATL.AudioData
             /// </summary>
             public long Offset { get; set; }
             /// <summary>
+            /// Position among zones starting at the same Offset
+            /// </summary>
+            public long OffsetPosition { get; set; }
+            /// <summary>
             /// Size in bytes
             /// </summary>
             public long Size { get; set; }
@@ -169,9 +173,11 @@ namespace ATL.AudioData
             /// <summary>
             /// Construct a new Zone using the given field values
             /// </summary>
-            public Zone(string name, long offset, long size, byte[] coreSignature, bool isDeletable = true, byte flag = 0, bool resizable = true)
+            public Zone(string name, long offset, int offsetPosition, long size, byte[] coreSignature, bool isDeletable = true, byte flag = 0, bool resizable = true)
             {
-                Name = name; Offset = offset; Size = size; CoreSignature = coreSignature; IsDeletable = isDeletable; Flag = flag; IsResizable = resizable;
+                Name = name; Offset = offset;
+                OffsetPosition = offsetPosition;
+                Size = size; CoreSignature = coreSignature; IsDeletable = isDeletable; Flag = flag; IsResizable = resizable;
                 IsDeleted = false;
                 Headers = new List<FrameHeader>();
             }
@@ -222,6 +228,8 @@ namespace ATL.AudioData
         // Recorded zones
         private readonly IDictionary<string, Zone> zones;
 
+        private readonly IDictionary<long, int> offsetCounter = new Dictionary<long, int>();
+
         // Stores offset variations caused by zone editing (add/remove/shrink/expand) within current file
         //      1st dictionary key  : region id (-1 = file-wide offset correction that records cumulative changes across all regions)
         //      2nd dictionary key  : zone information
@@ -250,9 +258,10 @@ namespace ATL.AudioData
             {
                 // 1. Ignore zones declared but not added
                 // 2. Ignore deleted zones
-                // 3. Sort by offset
+                // 3. Sort by offset and offset position
                 return zones.Values.Where(zone => zone.Offset > -1 && !zone.IsDeleted)
                     .OrderBy(zone => zone.Offset)
+                    .ThenBy(zone => zone.OffsetPosition)
                     .ThenBy(zone => zone.Name)
                     .ToList();
             }
@@ -326,14 +335,26 @@ namespace ATL.AudioData
         /// </summary>
         public void AddZone(long offset, long size, byte[] coreSignature, string name = DEFAULT_ZONE_NAME, bool isDeletable = true, bool resizable = true)
         {
+            int offsetPosition = 1;
+            if (offsetCounter.TryGetValue(offset, out var value))
+            {
+                offsetPosition = value;
+            }
+
             if (!zones.ContainsKey(name))
             {
-                zones.Add(name, new Zone(name, offset, size, coreSignature, isDeletable, 0, resizable));
+                if (offset > -1) offsetCounter[offset] = offsetPosition + 1;
+                zones.Add(name, new Zone(name, offset, offsetPosition, size, coreSignature, isDeletable, 0, resizable));
             }
             else // Existing zone might already contain headers
             {
                 zones[name].Name = name;
                 zones[name].Offset = offset;
+                if (0 == zones[name].OffsetPosition && offset > -1)
+                {
+                    zones[name].OffsetPosition = offsetPosition;
+                    offsetCounter[offset] = offsetPosition + 1;
+                }
                 zones[name].Size = size;
                 zones[name].CoreSignature = coreSignature;
                 zones[name].IsDeletable = isDeletable;
