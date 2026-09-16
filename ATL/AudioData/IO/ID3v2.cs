@@ -15,12 +15,7 @@ namespace ATL.AudioData.IO
     ///
     /// Implementation notes
     ///
-    ///     1. Extended header tags
-    ///
-    ///     Due to the rarity of ID3v2 tags with extended headers (on my disk and on the web),
-    ///     implementation of decoding extended header data has been tested on _forged_ files. Implementation might not be 100% real-world proof.
-    ///
-    ///     2. Hierarchical table of contents (CTOC)
+    ///     1. Hierarchical table of contents (CTOC)
     ///
     ///     ID3v2 chapters specification allows multiple CTOC frames in the tag, in order to describe a multiple-level table of contents.
     ///     (see informal standard  id3v2-chapters-1.0.html)
@@ -28,22 +23,22 @@ namespace ATL.AudioData.IO
     ///     This feature is currently not supported. If any CTOC is detected while reading, ATL will "blindly" write a flat CTOC containing
     ///     all chapters. Any hierarchical table of contents will be lost while rewriting.
     ///
-    ///     3. Unsynchronization and Unicode
+    ///     2. Unsynchronization and Unicode
     ///
     ///     Little-endian UTF-16 BOM's are caught by the unsynchronization encoding, which "breaks" most tag readers.
     ///     Hence unsycnhronization is force-disabled when text encoding is Unicode.
     ///
-    ///     4. Unsynchronization at frame level
+    ///     3. Unsynchronization at frame level
     ///
     ///     Even though ID3v2.4 allows it, ATL does not support "individual" unsynchronization at frame level
     ///     => Either the whole tag (all frames) is unsynchronized, or none is
     ///
-    ///     5. Prepended tag
+    ///     4. Prepended tag
     ///
     ///     Even though specs allow ID3v2.4 tags to be located at the end of the file, I have yet to find a valid sample.
     ///     => Prepended tags are not supported until someone asks for it.
     ///
-    ///     6. Extended support for GEOB fields
+    ///     5. Extended support for GEOB fields
     ///
     ///     Current support for General Encapsulated Object (GEOB) fields are simplified that way :
     ///     - MIME-type is always "application/octet-stream" (read time + write time)
@@ -586,6 +581,8 @@ namespace ATL.AudioData.IO
             // Reads optional (extended) header
             if (Tag.HasExtendedHeader)
             {
+                long extendedHeaderOffset = SourceFile.Position;
+                if (TAG_VERSION_2_3 == Tag.Version) extendedHeaderOffset += 4; // In ID3v2.3, header size excludes the size descriptor
                 Tag.ExtendedHeaderSize = StreamUtils.DecodeSynchSafeInt(SourceFile.ReadBytes(4)); // Extended header size
                 SourceFile.Seek(1, SeekOrigin.Current); // Number of flag bytes; always 1 according to spec
 
@@ -603,6 +600,7 @@ namespace ATL.AudioData.IO
                 {
                     Tag.TagRestrictions = SourceFile.ReadByte();
                 }
+                SourceFile.Seek(extendedHeaderOffset + Tag.ExtendedHeaderSize, SeekOrigin.Begin);
             }
             Tag.HeaderEnd = SourceFile.Position;
 

@@ -1609,6 +1609,35 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_ID3v2_ExtendedHeader()
+        {
+            // ID3v2.4
+            String location = TestUtils.GetResourceLocationRoot() + "MP3/extHeader_S5_v24_all.mp3";
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.AreEqual("L'inversion des pôles", theFile.ID3v2.Title);
+            Assert.AreEqual("Mass Hysteria", theFile.ID3v2.Artist);
+
+            // ID3v2.3
+            location = TestUtils.GetResourceLocationRoot() + "MP3/extHeader_S7_v23_ext_crc.mp3";
+            theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            Assert.IsTrue(theFile.ReadFromFile());
+
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            // Supported fields
+            Assert.AreEqual("L'inversion des pôles", theFile.ID3v2.Title);
+            Assert.AreEqual("Mass Hysteria", theFile.ID3v2.Artist);
+        }
+
+        [TestMethod]
         public void TagIO_RW_ID3v2_ID3v1()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ID3V1);
