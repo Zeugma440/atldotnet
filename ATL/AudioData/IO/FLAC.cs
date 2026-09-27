@@ -215,7 +215,7 @@ namespace ATL.AudioData.IO
                         if (blockType == META_VORBIS_COMMENT) // Vorbis metadata
                         {
                             if (readTagParams.PrepareForWriting) zones.Add(new Zone(blockType + "." + zones.Count, position - 4, 0, (int)blockLength + 4, Array.Empty<byte>(), true, blockType));
-                            vorbisTag.Read(source, readTagParams);
+                            vorbisTag.Read(source, readTagParams, position + blockLength);
                         }
                         else if (blockType == META_PADDING && !paddingFound)  // Padding block (skip any other padding block)
                         {
