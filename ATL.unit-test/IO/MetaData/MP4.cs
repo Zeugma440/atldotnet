@@ -157,6 +157,23 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_MP4_IlstBeforeHdlr()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/ilst_before_hdlr.mp4");
+
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+            Assert.AreEqual("Test Artist", theFile.NativeTag.Artist);
+
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_RW_MP4_Empty()
         {
             test_RW_Empty(emptyFile, true, true, true, true);

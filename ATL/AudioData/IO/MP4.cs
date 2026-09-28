@@ -1398,13 +1398,14 @@ namespace ATL.AudioData.IO
         {
             byte[] data = new byte[8];
             var atomPosition = source.Position;
+
+            // Process HDLR atom
             var atomSize = navigateToAtom(source, "hdlr"); // Metadata handler
             if (0 == atomSize)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "hdlr atom could not be found; aborting read");
                 return;
             }
-            long hdlrPosition = source.Position - 8;
             source.Seek(4, SeekOrigin.Current); // 4-byte flags
             source.Seek(4, SeekOrigin.Current); // Quicktime type
             if (source.Read(data, 0, 4) < 4) return;
@@ -1420,8 +1421,9 @@ namespace ATL.AudioData.IO
 
                 throw new NotSupportedException(errMsg);
             }
-            source.Seek(atomSize + hdlrPosition, SeekOrigin.Begin); // Reach the end of the hdlr box
 
+            // Process ILST atom (might be after or before the HDLR atom)
+            source.Seek(atomPosition, SeekOrigin.Begin);
             long iListSize = navigateToAtom(source, "ilst"); // === Metadata list
             if (0 == iListSize)
             {
