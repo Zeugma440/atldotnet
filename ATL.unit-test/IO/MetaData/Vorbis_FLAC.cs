@@ -69,6 +69,18 @@ namespace ATL.test.IO.MetaData
             testData.PublishingDate = DateTime.Parse("1998-07-21");
         }
 
+        [DataTestMethod]
+        [DataRow("sine_1s_vendor_past_comment_block.flac")]
+        [DataRow("sine_1s_invalid_vendor_length.flac")]
+        [Timeout(5000)]
+        public void TagIO_R_VorbisFLAC_oversizedVendorLength(string fileName)
+        {
+            byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "FLAC/" + fileName);
+            using MemoryStream stream = new MemoryStream(data);
+            Track track = new Track(stream, ".flac");
+            Assert.IsFalse(track.AdditionalFields.ContainsKey("VORBIS-VENDOR"));
+        }
+
         [TestMethod]
         public void TagIO_R_VorbisFLAC_simple()
         {

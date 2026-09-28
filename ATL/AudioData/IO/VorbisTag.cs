@@ -95,6 +95,9 @@ namespace ATL.AudioData.IO
         // Initial offset of the entire Vorbis tag
         private long initialTagOffset;
 
+        // FLAC stores comments in a bounded metadata block; Ogg supplies a comment packet.
+        private long readEndOffset = long.MaxValue;
+
         // Initial offset of the padding block; used to handle padding the smart way when rewriting data
         private long initialPaddingOffset, initialPaddingSize;
 
@@ -320,6 +323,19 @@ namespace ATL.AudioData.IO
             }
         }
 
+        public bool Read(Stream source, ReadTagParams readTagParams, long endOffset)
+        {
+            readEndOffset = endOffset;
+            try
+            {
+                return Read(source, readTagParams);
+            }
+            finally
+            {
+                readEndOffset = long.MaxValue;
+            }
+        }
+
         protected override bool read(Stream source, ReadTagParams readTagParams)
         {
             int nbFields = 0;
@@ -337,16 +353,21 @@ namespace ATL.AudioData.IO
             }
 
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
+            long endOffset = Math.Min(reader.Length, readEndOffset);
             initialTagOffset = reader.Position;
             do
             {
+                if (reader.Position > endOffset - 4) return false;
                 var size = reader.ReadInt32();
                 var position = reader.Position;
+                if (size < 0 || size > endOffset - position) return false;
 
                 string strData;
                 if (0 == index) // Mandatory : first metadata has to be the Vorbis vendor string
                 {
-                    strData = Encoding.UTF8.GetString(reader.ReadBytes(size)).Trim();
+                    byte[] vendor = reader.ReadBytes(size);
+                    if (vendor.Length != size) return false;
+                    strData = Encoding.UTF8.GetString(vendor).Trim();
                     if (strData.Length > 0) SetMetaField(VENDOR_METADATA_ID, strData, readTagParams.ReadAllMetaFrames);
                 }
                 else
@@ -355,27 +376,26 @@ namespace ATL.AudioData.IO
                     StringBuilder tagIdBuilder = new StringBuilder();
                     byte[] stringData = new byte[KEY_BUFFER];
                     int equalsIndex = -1;
-                    int nbRead = 0;
                     int nbBuffered = 0;
 
-                    while (-1 == equalsIndex && nbBuffered <= size)
+                    while (-1 == equalsIndex && nbBuffered < size)
                     {
-                        nbBuffered += nbRead;
-                        nbRead = reader.Read(stringData, 0, KEY_BUFFER);
+                        int nbRead = reader.Read(stringData, 0, Math.Min(KEY_BUFFER, size - nbBuffered));
+                        if (0 == nbRead) return false;
 
                         for (int i = 0; i < nbRead; i++)
                         {
                             if (stringData[i] != 0x3D) continue; // '=' character
-                            if (nbBuffered + equalsIndex < size) equalsIndex = i;
-
+                            equalsIndex = nbBuffered + i;
                             break;
                         }
 
-                        tagIdBuilder.Append(Utils.Latin1Encoding.GetString(stringData, 0, -1 == equalsIndex ? nbRead : equalsIndex));
+                        tagIdBuilder.Append(Utils.Latin1Encoding.GetString(stringData, 0,
+                            -1 == equalsIndex ? nbRead : equalsIndex - nbBuffered));
+                        nbBuffered += nbRead;
                     }
 
-                    if (equalsIndex > -1) equalsIndex += nbBuffered;
-                    else tagIdBuilder.Clear();
+                    if (equalsIndex < 0) return false;
 
                     reader.Seek(position + equalsIndex + 1, SeekOrigin.Begin);
                     string tagId = tagIdBuilder.ToString().ToUpper();
@@ -386,7 +406,9 @@ namespace ATL.AudioData.IO
                     }
                     else
                     {
-                        strData = Encoding.UTF8.GetString(reader.ReadBytes(size - equalsIndex - 1)).Trim();
+                        byte[] value = reader.ReadBytes(size - equalsIndex - 1);
+                        if (value.Length != size - equalsIndex - 1) return false;
+                        strData = Encoding.UTF8.GetString(value).Trim();
 
                         if (tagId.StartsWith(CHAPTER_ID, StringComparison.OrdinalIgnoreCase)) // Chapter description
                         {
@@ -400,7 +422,12 @@ namespace ATL.AudioData.IO
                 }
                 reader.Seek(position + size, SeekOrigin.Begin);
 
-                if (0 == index) nbFields = reader.ReadInt32();
+                if (0 == index)
+                {
+                    if (reader.Position > endOffset - 4) return false;
+                    nbFields = reader.ReadInt32();
+                    if (nbFields < 0 || nbFields > (endOffset - reader.Position) / 4) return false;
+                }
 
                 index++;
             } while (index <= nbFields);
