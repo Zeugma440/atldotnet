@@ -215,7 +215,7 @@ namespace ATL
             {
                 if (Utils.ProtectValue(tagData[Field.RECORDING_DATE]).Length > 4) return false;
                 if (Utils.ProtectValue(tagData[Field.RECORDING_DATE_OR_YEAR]).Length > 4) return false;
-                return Utils.ProtectValue(tagData[Field.RECORDING_YEAR]).Length > 0;
+                return Utils.ProtectValue(tagData[Field.RECORDING_YEAR]).Length > 0 && Utils.ProtectValue(tagData[Field.RECORDING_DAYMONTH]).Length < 4;
             }
         }
         /// <inheritdoc/>
