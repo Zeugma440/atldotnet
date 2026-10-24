@@ -248,7 +248,7 @@ namespace ATL
         /// <summary>
         /// All standard fields, stored according to their code
         /// </summary>
-        private IDictionary<Field, string> Fields { get; }
+        private IDictionary<Field, LiteFieldInfo> Fields { get; }
 
         /// <summary>
         /// Additional fields = non-classic fields
@@ -290,7 +290,7 @@ namespace ATL
         /// </summary>
         public TagData()
         {
-            Fields = new Dictionary<Field, string>();
+            Fields = new Dictionary<Field, LiteFieldInfo>();
             AdditionalFields = new List<MetaFieldInfo>();
             Pictures = new List<PictureInfo>();
         }
@@ -302,7 +302,7 @@ namespace ATL
         /// <param name="supportsSynchronizedLyrics">True if the current tagging system supports synchronized lyrics</param>
         public TagData(TagData tagData, bool supportsSynchronizedLyrics = false)
         {
-            Fields = new Dictionary<Field, string>();
+            Fields = new Dictionary<Field, LiteFieldInfo>();
             AdditionalFields = new List<MetaFieldInfo>();
             Pictures = new List<PictureInfo>();
             TrackDigitsForLeadingZeroes = tagData.TrackDigitsForLeadingZeroes;
@@ -326,7 +326,7 @@ namespace ATL
         /// <summary>
         /// Return true if any standard metadata field is set and usable
         /// </summary>
-        public bool HasUsableField() => Fields.Any(f => f.Value.Length > 0 && !nonTagFields.Contains(f.Key));
+        public bool HasUsableField() => Fields.Any(f => !f.Value.isEmpty && !nonTagFields.Contains(f.Key));
 
         private static bool isNumeric(Field f) { return numericFields.Contains(f); }
 
@@ -337,7 +337,8 @@ namespace ATL
         /// </summary>
         /// <param name="key">Identifier describing the metadata to store (see TagData public consts)</param>
         /// <param name="value">Value of the metadata to store</param>
-        public void IntegrateValue(Field key, string value)
+        /// <param name="language">Language of the metadata</param>
+        public void IntegrateValue(Field key, string value, string language = "")
         {
             if (null == value)
             {
@@ -364,8 +365,8 @@ namespace ATL
                             break;
                         }
                     case Field.RECORDING_DATE_OR_YEAR when 0 == value.Length:
-                        Fields[Field.RECORDING_YEAR] = "";
-                        Fields[Field.RECORDING_DATE] = "";
+                        Fields[Field.RECORDING_YEAR] = new LiteFieldInfo("");
+                        Fields[Field.RECORDING_DATE] = new LiteFieldInfo("");
                         break;
                     case Field.RECORDING_DATE_OR_YEAR when value.Length < 5:
                         Fields[Field.RECORDING_YEAR] = emptyIfZero(value);
@@ -377,7 +378,7 @@ namespace ATL
                             break;
                         }
                     default:
-                        Fields[key] = isNumeric(key) ? emptyIfZero(value) : value;
+                        Fields[key] = isNumeric(key) ? emptyIfZero(value) : new LiteFieldInfo(value, language);
                         break;
                 }
             }
@@ -393,8 +394,8 @@ namespace ATL
         public void IntegrateValues(TagData targetData, bool integratePictures = true, bool mergeAdditionalData = true, bool supportsSynchronizedLyrics = false)
         {
             // String values
-            IDictionary<Field, string> newData = targetData.ToMap(supportsSynchronizedLyrics);
-            foreach (KeyValuePair<Field, string> kvp in newData) IntegrateValue(kvp.Key, kvp.Value);
+            IDictionary<Field, LiteFieldInfo> newData = targetData.ToMap(supportsSynchronizedLyrics);
+            foreach (KeyValuePair<Field, LiteFieldInfo> kvp in newData) IntegrateValue(kvp.Key, kvp.Value.Value, kvp.Value.Language);
 
             // Force to input value, if any
             if (targetData.PaddingSize > -1) PaddingSize = targetData.PaddingSize; else PaddingSize = -1;
@@ -418,7 +419,7 @@ namespace ATL
                             found = true;
 
                             if (!newMetaInfo.NativeFieldCode.Equals(metaInfo.NativeFieldCode) && newMetaInfo.NativeFieldCode.Equals(metaInfo.NativeFieldCode, StringComparison.InvariantCultureIgnoreCase))
-                                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Adding an AdditionalField with the same field code and a different case (" + metaInfo.NativeFieldCode + " => " + newMetaInfo.NativeFieldCode+"). Initial case ("+ metaInfo.NativeFieldCode+") will be kept.");
+                                LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Adding an AdditionalField with the same field code and a different case (" + metaInfo.NativeFieldCode + " => " + newMetaInfo.NativeFieldCode + "). Initial case (" + metaInfo.NativeFieldCode + ") will be kept.");
 
                             if (newMetaInfo.MarkedForDeletion) metaInfo.MarkedForDeletion = true; // New MetaFieldInfo is a demand for deletion
                             else metaInfo.Value = newMetaInfo.Value;
@@ -608,7 +609,13 @@ namespace ATL
         /// </summary>
         /// <param name="index">ATL field code to search for</param>
         /// <returns>Value associated with the given ATL field code</returns>
-        public string this[Field index] => getField(index);
+        public string? this[Field index] => getStrField(index);
+
+        private string? getStrField(Field index)
+        {
+            LiteFieldInfo result = getField(index);
+            return (null == result) ? null : result.Value;
+        }
 
         /// <summary>
         /// Field accessor 
@@ -616,7 +623,7 @@ namespace ATL
         /// <param name="index">ATL field code to search for</param>
         /// <param name="supportsSyncLyrics">true if synched lyrics are supported</param>
         /// <returns>Value associated with the given ATL field code</returns>
-        private string getField(Field index, bool supportsSyncLyrics = false)
+        private LiteFieldInfo? getField(Field index, bool supportsSyncLyrics = false)
         {
             Fields.TryGetValue(index, out var result);
 
@@ -642,7 +649,7 @@ namespace ATL
                 var unsynch = Lyrics.FirstOrDefault(l => l.Format == LyricsInfo.LyricsFormat.UNSYNCHRONIZED && !string.IsNullOrEmpty(l.UnsynchronizedLyrics));
                 if (unsynch != null)
                 {
-                    result = unsynch.UnsynchronizedLyrics;
+                    result = new LiteFieldInfo(unsynch.UnsynchronizedLyrics);
                 }
                 else if (!supportsSyncLyrics)
                 {
@@ -651,13 +658,13 @@ namespace ATL
                         // Synch lyrics override unsynch lyrics when the target format cannot support both of them
                         if (l.SynchronizedLyrics.Count <= 0) continue;
 
-                        result = l.FormatSynch();
+                        result = new LiteFieldInfo(l.FormatSynch());
                         break;
                     }
                 }
             }
 
-            return result;
+            return (null == result) ? null : new LiteFieldInfo(result);
         }
 
         /// <summary>
@@ -666,9 +673,9 @@ namespace ATL
         /// NB : Additional fields, pictures and chapters won't be part of the Map
         /// </summary>
         /// <returns>Map containing all 'classic' metadata fields</returns>
-        public IDictionary<Field, string> ToMap(bool supportsSyncLyrics = false)
+        public IDictionary<Field, LiteFieldInfo> ToMap(bool supportsSyncLyrics = false)
         {
-            IDictionary<Field, string> result = new Dictionary<Field, string>(Fields);
+            IDictionary<Field, LiteFieldInfo> result = new Dictionary<Field, LiteFieldInfo>(Fields);
 
             if (result.ContainsKey(Field.RECORDING_DATE_OR_YEAR))
             {
@@ -682,7 +689,23 @@ namespace ATL
             return result;
         }
 
-        private void checkField(IDictionary<Field, string> map, Field index, bool supportsSyncLyrics = false)
+        /// <summary>
+        /// Convert non-null 'classic' fields values into a properties Map containing string values only
+        /// 
+        /// NB : Additional fields, pictures and chapters won't be part of the Map
+        /// </summary>
+        /// <returns>Map containing all 'classic' metadata fields as srting values</returns>
+        public IDictionary<Field, string> ToStringMap(bool supportsSyncLyrics = false)
+        {
+            IDictionary<Field, LiteFieldInfo> richRes = ToMap(supportsSyncLyrics);
+
+            IDictionary<Field, string> result = new Dictionary<Field, string>();
+            foreach (var e in richRes) { result[e.Key] = e.Value.Value; }
+
+            return result;
+        }
+
+        private void checkField(IDictionary<Field, LiteFieldInfo> map, Field index, bool supportsSyncLyrics = false)
         {
             if (map.ContainsKey(index)) return;
             var value = getField(index, supportsSyncLyrics);
@@ -714,7 +737,7 @@ namespace ATL
         {
             if (Fields.ContainsKey(Field.TRACK_NUMBER))
             {
-                string trackNumber = Fields[Field.TRACK_NUMBER];
+                string trackNumber = Fields[Field.TRACK_NUMBER].Value;
                 string trackTotal = null;
                 string trackNumberTotal;
                 if (trackNumber.Contains('/'))
@@ -729,7 +752,7 @@ namespace ATL
                     trackNumberTotal = trackNumber;
                     if (Fields.TryGetValue(Field.TRACK_TOTAL, out var field))
                     {
-                        trackTotal = field;
+                        trackTotal = field.Value;
                         if (Utils.IsNumeric(trackTotal)) trackNumberTotal += "/" + trackTotal;
                     }
                 }
@@ -737,14 +760,14 @@ namespace ATL
                 {
                     trackNumberTotal = "";
                 }
-                Fields[Field.TRACK_NUMBER] = trackNumber;
+                Fields[Field.TRACK_NUMBER] = new LiteFieldInfo(trackNumber);
                 IntegrateValue(Field.TRACK_TOTAL, trackTotal);
-                Fields[Field.TRACK_NUMBER_TOTAL] = trackNumberTotal;
+                Fields[Field.TRACK_NUMBER_TOTAL] = new LiteFieldInfo(trackNumberTotal);
             }
 
             if (Fields.ContainsKey(Field.DISC_NUMBER))
             {
-                string discNumber = Fields[Field.DISC_NUMBER];
+                string discNumber = Fields[Field.DISC_NUMBER].Value;
                 string discTotal = null;
                 string discNumberTotal;
                 if (discNumber.Contains('/'))
@@ -759,7 +782,7 @@ namespace ATL
                     discNumberTotal = discNumber;
                     if (Fields.TryGetValue(Field.DISC_TOTAL, out var field))
                     {
-                        discTotal = field;
+                        discTotal = field.Value;
                         if (Utils.IsNumeric(discTotal)) discNumberTotal += "/" + discTotal;
                     }
                 }
@@ -767,9 +790,9 @@ namespace ATL
                 {
                     discNumberTotal = "";
                 }
-                Fields[Field.DISC_NUMBER] = discNumber;
+                Fields[Field.DISC_NUMBER] = new LiteFieldInfo(discNumber);
                 IntegrateValue(Field.DISC_TOTAL, discTotal);
-                Fields[Field.DISC_NUMBER_TOTAL] = discNumberTotal;
+                Fields[Field.DISC_NUMBER_TOTAL] = new LiteFieldInfo(discNumberTotal);
             }
 
             if (Chapters is { Count: > 0 })
@@ -803,11 +826,11 @@ namespace ATL
         /// </summary>
         /// <param name="s">Value to convert</param>
         /// <returns>If null or zero ("0"), empty string (""); else initial value</returns>
-        private static string emptyIfZero(string s)
+        private static LiteFieldInfo emptyIfZero(string s)
         {
-            string result = s;
+            LiteFieldInfo result = new LiteFieldInfo(s);
 
-            if (!Settings.NullAbsentValues && s is "0") result = "";
+            if (!Settings.NullAbsentValues && s is "0") result = new LiteFieldInfo("");
 
             return result;
         }
@@ -817,8 +840,8 @@ namespace ATL
         {
             // TODO do better than that and compare all fields
             if (null == other) return false;
-            var map = ToMap();
-            var otherMap = other.ToMap();
+            var map = ToStringMap();
+            var otherMap = other.ToStringMap();
             if (map.Count != otherMap.Count) return false;
             foreach (var entry in map)
             {
@@ -839,7 +862,7 @@ namespace ATL
         public override int GetHashCode()
         {
             // TODO do better than that and compare all fields
-            return ToMap().GetHashCode();
+            return ToStringMap().GetHashCode();
         }
     }
 }

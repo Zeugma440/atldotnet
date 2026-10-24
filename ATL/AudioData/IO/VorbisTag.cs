@@ -521,7 +521,7 @@ namespace ATL.AudioData.IO
         {
             uint nbFrames = 0;
 
-            IDictionary<Field, string> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToStringMap();
             // Keep these in memory to prevent setting them twice using AdditionalFields
             var writtenFieldCodes = new HashSet<string>();
 

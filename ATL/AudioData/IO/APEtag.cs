@@ -437,7 +437,7 @@ namespace ATL.AudioData.IO
                 nbFrames++;
             }
 
-            IDictionary<Field, string> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToStringMap();
 
             // Supported textual fields
             foreach (Field frameType in map.Keys)

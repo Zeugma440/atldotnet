@@ -306,7 +306,7 @@ namespace ATL.AudioData.IO
 
             string recordingYear = "";
 
-            IDictionary<Field, string> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToStringMap();
 
             // 1st pass to gather date information
             foreach (Field frameType in map.Keys)

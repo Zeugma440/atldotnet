@@ -1177,19 +1177,24 @@ namespace ATL.AudioData.IO
             */
             if (comments != null && comments.Count > 0)
             {
+                string fieldCode = (m_tagVersion > TAG_VERSION_2_2) ? "COMM" : "COM";
                 foreach (MetaFieldInfo comm in comments)
                 {
                     string commentDescription = comm.NativeFieldCode.Trim().Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
-                    if (commentDescription.Length > 0 && !commentDescription.Equals("comment", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("no description", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("description", StringComparison.OrdinalIgnoreCase))
+                    bool hasDescription = (commentDescription.Length > 0 && !commentDescription.Equals("comment", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("no description", StringComparison.OrdinalIgnoreCase) && !commentDescription.Equals("description", StringComparison.OrdinalIgnoreCase));
+                    string language = Utils.StripEndingZeroChars(comm.Language).Trim();
+                    bool hasLanguage = language.Length > 0;
+
+                    if (hasDescription || hasLanguage)
                     {
+                        string code = hasDescription ? commentDescription : fieldCode;
                         // Processed as an additional field
-                        SetMetaField(commentDescription, comm.Value, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version, 0, comm.Language);
+                        SetMetaField(code, comm.Value, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version, 0, language);
                         continue;
                     }
 
                     // Processed as a "classic" Comment
-                    if (m_tagVersion > TAG_VERSION_2_2) SetMetaField("COMM", comm.Value, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version);
-                    else SetMetaField("COM", comm.Value, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version);
+                    SetMetaField(fieldCode, comm.Value, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version);
                 }
             }
 
@@ -1388,7 +1393,7 @@ namespace ATL.AudioData.IO
             int nbFrames = 0;
 
             // === ID3v2 FRAMES ===
-            IDictionary<Field, string> map = tag.ToMap(true);
+            IDictionary<Field, LiteFieldInfo> map = tag.ToMap(true);
 
             // 1st pass to gather date information
 
@@ -1403,21 +1408,21 @@ namespace ATL.AudioData.IO
 
             foreach (Field frameType in map.Keys)
             {
-                if (map[frameType].Length <= 0) continue; // No frame with empty value
+                if (map[frameType].isEmpty) continue; // No frame with empty value
 
                 switch (frameType)
                 {
                     case Field.RECORDING_YEAR:
-                        recordingYear = map[frameType];
+                        recordingYear = map[frameType].Value;
                         break;
                     case Field.RECORDING_DAYMONTH:
-                        recordingDayMonth = map[frameType];
+                        recordingDayMonth = map[frameType].Value;
                         break;
                     case Field.RECORDING_TIME:
-                        recordingTime = map[frameType];
+                        recordingTime = map[frameType].Value;
                         break;
                     case Field.RECORDING_DATE:
-                        recordingDate = map[frameType];
+                        recordingDate = map[frameType].Value;
                         break;
                 }
             }
@@ -1426,19 +1431,19 @@ namespace ATL.AudioData.IO
             {
                 // Make sure we don't erase an existing, same date with less detailed (year only) information
                 if (0 == recordingDate.Length || !recordingDate.StartsWith(recordingYear))
-                    map[Field.RECORDING_DATE] = TrackUtils.FormatISOTimestamp(recordingYear, recordingDayMonth, recordingTime);
+                    map[Field.RECORDING_DATE] = new LiteFieldInfo(TrackUtils.FormatISOTimestamp(recordingYear, recordingDayMonth, recordingTime));
             }
             else if (3 == Settings.ID3v2_tagSubVersion && recordingDate.Length > 3 && 0 == recordingYear.Length)
             {
                 // Recording date valued for ID3v2.3 (possibly a migration from ID3v2.4 to ID3v2.3)
                 var dateSpan = recordingDate.AsSpan();
-                map[Field.RECORDING_YEAR] = dateSpan[..4].ToString();
+                map[Field.RECORDING_YEAR] = new LiteFieldInfo(dateSpan[..4].ToString());
                 if (recordingDate.Length > 9)
                 {
-                    map[Field.RECORDING_DAYMONTH] = string.Concat(dateSpan.Slice(8, 2), dateSpan.Slice(5, 2));
+                    map[Field.RECORDING_DAYMONTH] = new LiteFieldInfo(string.Concat(dateSpan.Slice(8, 2), dateSpan.Slice(5, 2)));
                     if (recordingDate.Length > 15)
                     {
-                        map[Field.RECORDING_TIME] = string.Concat(dateSpan.Slice(11, 2), dateSpan.Slice(14, 2));
+                        map[Field.RECORDING_TIME] = new LiteFieldInfo(string.Concat(dateSpan.Slice(11, 2), dateSpan.Slice(14, 2)));
                     }
                 }
                 map.Remove(Field.RECORDING_DATE);
@@ -1453,15 +1458,15 @@ namespace ATL.AudioData.IO
 
             foreach (Field frameType in map.Keys)
             {
-                if (map[frameType].Length <= 0) continue; // No frame with empty value
+                if (map[frameType].isEmpty) continue; // No frame with empty value
 
                 switch (frameType)
                 {
                     case Field.ORIG_RELEASE_YEAR:
-                        origReleaseYear = map[frameType];
+                        origReleaseYear = map[frameType].Value;
                         break;
                     case Field.ORIG_RELEASE_DATE:
-                        origReleaseDate = map[frameType];
+                        origReleaseDate = map[frameType].Value;
                         break;
                 }
             }
@@ -1469,12 +1474,12 @@ namespace ATL.AudioData.IO
             {
                 // Make sure we don't erase an existing, same date with less detailed (year only) information
                 if (0 == origReleaseDate.Length || !origReleaseDate.StartsWith(origReleaseYear))
-                    map[Field.ORIG_RELEASE_DATE] = TrackUtils.FormatISOTimestamp(origReleaseYear, "0101", "");
+                    map[Field.ORIG_RELEASE_DATE] = new LiteFieldInfo(TrackUtils.FormatISOTimestamp(origReleaseYear, "0101", ""));
             }
             else if (3 == Settings.ID3v2_tagSubVersion && origReleaseDate.Length > 3 && 0 == origReleaseYear.Length)
             {
                 // Original release date valued for ID3v2.3 (possibly a migration from ID3v2.4 to ID3v2.3)
-                map[Field.ORIG_RELEASE_YEAR] = origReleaseDate[..4];
+                map[Field.ORIG_RELEASE_YEAR] = new LiteFieldInfo(origReleaseDate[..4]);
                 map.Remove(Field.ORIG_RELEASE_DATE);
             }
 
@@ -1485,16 +1490,19 @@ namespace ATL.AudioData.IO
             // Keep these in memory to prevent setting them twice using AdditionalFields
             var writtenFieldCodes = new HashSet<string>();
 
+            IDictionary<Field, string> stringMap = new Dictionary<Field, string>();
+            foreach (var e in map) { stringMap[e.Key] = e.Value.Value; }
+
             foreach (Field frameType in map.Keys)
             {
-                if (map[frameType].Length <= 0) continue; // No frame with empty value
+                if (map[frameType].isEmpty) continue; // No frame with empty value
                 foreach (string s in mapping.Keys)
                 {
                     if (frameType != mapping[s]) continue;
                     if (s.Equals("CTOC")) continue; // CTOC (table of contents) is handled by writeChapters
 
-                    string value = formatBeforeWriting(frameType, tag, map);
-                    writeTextFrame(w, s, value, tagEncoding);
+                    string value = formatBeforeWriting(frameType, tag, stringMap);
+                    writeTextFrame(w, s, value, tagEncoding, language: map[frameType].Language);
                     writtenFieldCodes.Add(s.ToUpper());
                     nbFrames++;
                     break;

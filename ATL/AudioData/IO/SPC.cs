@@ -535,7 +535,7 @@ namespace ATL.AudioData.IO
                 long sizePos = s.Position;
                 StreamUtils.WriteInt32(s, 0, buffer); // Size placeholder; to be rewritten with actual value at the end of the method
 
-                IDictionary<Field, string> map = tag.ToMap();
+                IDictionary<Field, string> map = tag.ToStringMap();
 
                 // Supported textual fields
                 foreach (Field frameType in map.Keys)

@@ -413,7 +413,7 @@ namespace ATL.AudioData.IO
             w.Write(Utils.Latin1Encoding.GetBytes("utf8=1"));
             w.Write(LINE_FEED);
 
-            IDictionary<Field, string> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToStringMap();
 
             // Supported textual fields
             foreach (Field frameType in map.Keys)

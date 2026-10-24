@@ -127,8 +127,8 @@ namespace ATL.AudioData
             Field atlCode = getAtlCodeForFrame(frame);
             if (atlCode != Field.NO_FIELD)
             {
-                IDictionary<Field, string> dataMap = tagData.ToMap();
-                if (dataMap.TryGetValue(atlCode, out var data)) return data;
+                IDictionary<Field, LiteFieldInfo> dataMap = tagData.ToMap();
+                if (dataMap.TryGetValue(atlCode, out var data)) return data.Value;
             }
             return "";
         }

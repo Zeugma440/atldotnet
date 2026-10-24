@@ -1624,6 +1624,34 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_RW_ID3v2_COM_language()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/comm_eng.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+            AudioDataManager theFile2 = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            TagHolder theTag = new TagHolder();
+            theTag.Title = "ATL 393 repro";
+            Assert.IsTrue(theFile2.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile2.ReadFromFile(true, true));
+
+            byte[] buffer = new byte[3];
+            using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                fs.Seek(46, SeekOrigin.Begin);
+                fs.Read(buffer);
+                Assert.AreEqual("eng", Utils.Latin1Encoding.GetString(buffer));
+            }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
         public void TagIO_R_ID3v2_Year_Arabic()
         {
             new ConsoleLogger();

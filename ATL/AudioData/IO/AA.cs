@@ -371,7 +371,7 @@ namespace ATL.AudioData.IO
                 s.Write(StreamUtils.EncodeInt32(0)); // Number of tags; will be rewritten at the end of the method
 
                 // Mapped textual fields
-                IDictionary<Field, string> map = tag.ToMap();
+                IDictionary<Field, string> map = tag.ToStringMap();
                 foreach (Field frameType in map.Keys)
                 {
                     if (map[frameType].Length > 0) // No frame with empty value

@@ -726,7 +726,7 @@ namespace ATL.AudioData.IO
             string comment = "";
             string rating = "";
 
-            IDictionary<Field, string> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToStringMap();
             if (0 == invertedFrameMapping.Count)
             {
                 foreach (var kvp in frameMapping)
@@ -798,7 +798,7 @@ namespace ATL.AudioData.IO
             var counterPos = w.BaseStream.Position;
             w.Write((ushort)0); // Counter placeholder to be rewritten at the end of the method
 
-            IDictionary<Field, string> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToStringMap();
 
             // Supported textual fields
             foreach (Field frameType in map.Keys)

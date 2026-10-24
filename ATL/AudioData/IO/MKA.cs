@@ -1069,7 +1069,7 @@ namespace ATL.AudioData.IO
         {
             int result = 0;
 
-            IDictionary<Field, string> map = data.ToMap();
+            IDictionary<Field, string> map = data.ToStringMap();
             var writtenFieldCodes = new HashSet<string>();
 
             IDictionary<string, int> targetTypeInverted = new Dictionary<string, int>();

@@ -2039,7 +2039,7 @@ namespace ATL.AudioData.IO
             // Keep these in memory to prevent setting them twice using AdditionalFields
             var writtenFieldCodes = new HashSet<string>();
 
-            IDictionary<Field, string> map = tag.ToMap();
+            IDictionary<Field, string> map = tag.ToStringMap();
 
             // Supported textual fields
             foreach (Field frameType in map.Keys)

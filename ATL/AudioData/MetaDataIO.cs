@@ -361,10 +361,10 @@ namespace ATL.AudioData.IO
             // Finds the ATL field identifier
             Field supportedMetaID = getFrameMapping(zone, ID, tagVersion);
 
-            // If ID has been mapped with an 'classic' ATL field, store it in the dedicated place...
+            // If ID has been mapped with an 'classic' ATL field and has no metadata, store it in the dedicated place...
             if (supportedMetaID != Field.NO_FIELD)
             {
-                setMetaField(supportedMetaID, data);
+                setMetaField(supportedMetaID, data, language);
             }
             else if (readAllMetaFrames && ID.Length > 0) // ...else store it in the additional fields Dictionary
             {
@@ -382,7 +382,8 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="ID">ID of the metadata field</param>
         /// <param name="dataIn">Metadata</param>
-        protected void setMetaField(Field ID, string dataIn)
+        /// <param name="language">Language of the metadata</param>
+        protected void setMetaField(Field ID, string dataIn, string language = "")
         {
             string dataOut = dataIn;
             switch (ID)
@@ -407,7 +408,7 @@ namespace ATL.AudioData.IO
                     break;
             }
 
-            tagData.IntegrateValue(ID, dataOut);
+            tagData.IntegrateValue(ID, dataOut, language);
         }
 
         /// <summary>

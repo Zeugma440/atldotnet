@@ -148,7 +148,7 @@ namespace ATL.test.IO.Playlist
                         sr.ReadLine(); // Duration
                         nbEntries++;
                     }
-                    var hop = sr.ReadLine();
+                    sr.ReadLine();
                     Assert.IsTrue(sr.EndOfStream);
                 }
                 Assert.AreEqual(4, nbEntries - 1);
