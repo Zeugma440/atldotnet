@@ -1714,7 +1714,7 @@ namespace ATL.AudioData.IO
 
             if (!readAllMetaFrames || ID.Length <= 0) return; // Store it in the additional fields Dictionary
 
-            MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, 0, "", "");
+            MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, 0, "", zone : "");
             if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
             {
                 tagData.AdditionalFields.Remove(fieldInfo);

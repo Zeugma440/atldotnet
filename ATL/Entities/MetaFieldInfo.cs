@@ -4,6 +4,7 @@ using ATL.AudioData;
 using Commons;
 using HashDepot;
 using System.Linq;
+using System.IO.Enumeration;
 
 namespace ATL
 {
@@ -69,6 +70,16 @@ namespace ATL
         public string Language { get; set; }
 
         /// <summary>
+        /// MIME-type of the value
+        /// </summary>
+        public string MimeType { get; set; }
+
+        /// <summary>
+        /// Associated file name (specific to certain fields; e.g. GEOB)
+        /// </summary>
+        public string FileName { get; set; }
+
+        /// <summary>
         /// Value of the field
         /// </summary>
         public string Value { get; set; }
@@ -102,10 +113,12 @@ namespace ATL
         /// <param name="value">Value of the field</param>
         /// <param name="streamNumber">Index of the stream the field is attached to (if applicable, i.e. for multi-stream files)</param>
         /// <param name="language">Language the value is written in</param>
+        /// <param name="mime">MIME-type of the value</param>
+        /// <param name="fileName">Associated file name</param>
         /// <param name="zone">File zone where the value is supposed to appear</param>
-        public MetaFieldInfo(MetaDataIOFactory.TagType tagType, string nativeFieldCode, string value = "", ushort streamNumber = 0, string language = "", string zone = "")
+        public MetaFieldInfo(MetaDataIOFactory.TagType tagType, string nativeFieldCode, string value = "", ushort streamNumber = 0, string language = "", string mime  = "", string fileName = "", string zone = "")
         {
-            TagType = tagType; NativeFieldCode = nativeFieldCode; Value = value; StreamNumber = streamNumber; Language = language; Zone = zone;
+            TagType = tagType; NativeFieldCode = nativeFieldCode; Value = value; StreamNumber = streamNumber; Language = language; MimeType = mime; FileName = fileName; Zone = zone;
         }
 
         /// <summary>
@@ -114,7 +127,7 @@ namespace ATL
         /// <param name="info">Object to copy data from</param>
         public MetaFieldInfo(MetaFieldInfo info)
         {
-            TagType = info.TagType; NativeFieldCode = info.NativeFieldCode; Value = info.Value; StreamNumber = info.StreamNumber; Language = info.Language; Zone = info.Zone; Origin = info.Origin;
+            TagType = info.TagType; NativeFieldCode = info.NativeFieldCode; Value = info.Value; StreamNumber = info.StreamNumber; Language = info.Language; MimeType = info.MimeType; FileName = info.FileName; Zone = info.Zone; Origin = info.Origin;
         }
 
         /// <summary>

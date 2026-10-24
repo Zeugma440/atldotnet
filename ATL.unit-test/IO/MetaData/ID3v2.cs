@@ -1,8 +1,9 @@
 ﻿using ATL.AudioData;
-using System.Drawing;
-using Commons;
-using static ATL.PictureInfo;
 using ATL.AudioData.IO;
+using Commons;
+using System.Drawing;
+using System.Reflection.PortableExecutable;
+using static ATL.PictureInfo;
 
 namespace ATL.test.IO.MetaData
 {
@@ -1585,6 +1586,37 @@ namespace ATL.test.IO.MetaData
             {
                 Assert.IsTrue(theFile2.ID3v2.AdditionalFields.ContainsKey(v.Key));
                 Assert.AreEqual(theFile2.ID3v2.AdditionalFields[v.Key], v.Value);
+            }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
+        [TestMethod]
+        public void TagIO_RW_ID3v2_GEOB_mime_fileName()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/GEOB_mime_fileName.mp3");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+            AudioDataManager theFile2 = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+            TagHolder theTag = new TagHolder();
+            theTag.Title = "edited";
+            Assert.IsTrue(theFile2.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.ID3V2).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile2.ReadFromFile(true, true));
+
+            byte[] buffer = new byte[16];
+            using (FileStream fs = new FileStream(testFileLocation, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                fs.Seek(62, SeekOrigin.Begin);
+                fs.Read(buffer, 0, 16);
+                Assert.AreEqual("application/c2pa", Utils.Latin1Encoding.GetString(buffer));
+                fs.Seek(1, SeekOrigin.Current);
+                fs.Read(buffer, 0, 4);
+                Assert.AreEqual("c2pa", Utils.Latin1Encoding.GetString(buffer, 0, 4));
             }
 
             // Get rid of the working copy

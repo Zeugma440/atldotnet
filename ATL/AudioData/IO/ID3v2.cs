@@ -41,8 +41,6 @@ namespace ATL.AudioData.IO
     ///     5. Extended support for GEOB fields
     ///
     ///     Current support for General Encapsulated Object (GEOB) fields are simplified that way :
-    ///     - MIME-type is always "application/octet-stream" (read time + write time)
-    ///     - File name is always empty (read time + write time)
     ///     - Frame encoding is always Latin-1 (write-time only)
     /// </summary>
     public class ID3v2 : MetaDataIO
@@ -690,6 +688,8 @@ namespace ATL.AudioData.IO
 
             ChapterInfo chapter = null;
             MetaFieldInfo comment = null;
+            string mimeType = "";
+            string fileName = "";
 
             bool inLyrics = false;
 
@@ -854,8 +854,8 @@ namespace ATL.AudioData.IO
             if (frame.ID.StartsWith("GEO"))
             {
                 long geoStartOffset = source.Position;
-                StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Mime-type; unused
-                StreamUtils.ReadNullTerminatedString(source, frameEncoding); // File name; unused
+                mimeType = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Mime-type
+                fileName = StreamUtils.ReadNullTerminatedString(source, frameEncoding); // File name
                 string cDesc = StreamUtils.ReadNullTerminatedString(source, frameEncoding); // Content description
                 frame.ID += "." + cDesc;
                 dataSize -= (int)(source.Position - geoStartOffset);
@@ -1034,7 +1034,7 @@ namespace ATL.AudioData.IO
                     }
                     else if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value
                     {
-                        if (!inChapter) SetMetaField(frame.ID, strData, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version);
+                        if (!inChapter) SetMetaField(frame.ID, strData, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version, mimeType: mimeType, fileName: fileName);
                         else
                         {
                             chapter = tagData.Chapters[^1];
@@ -1546,7 +1546,7 @@ namespace ATL.AudioData.IO
                         }
                     }
 
-                    writeTextFrame(w, fieldCode, FormatBeforeWriting(fieldInfo.Value), tagEncoding, fieldInfo.Language);
+                    writeTextFrame(w, fieldCode, FormatBeforeWriting(fieldInfo.Value), tagEncoding, fieldInfo.Language, "", fieldInfo.MimeType, fieldInfo.FileName);
                     nbFrames++;
                 }
             }
@@ -1636,7 +1636,7 @@ namespace ATL.AudioData.IO
 
                 // CTOC description
                 if (Utils.ProtectValue(tag[Field.CHAPTERS_TOC_DESCRIPTION]).Length > 0)
-                    writeTextFrame(frameWriter, "TIT2", tag[Field.CHAPTERS_TOC_DESCRIPTION], tagEncoding, "", "", true);
+                    writeTextFrame(frameWriter, "TIT2", tag[Field.CHAPTERS_TOC_DESCRIPTION], tagEncoding, isInsideUnsynch: true);
 
                 // Go back to frame size location to write its actual size
                 finalFramePos = frameWriter.BaseStream.Position;
@@ -1692,15 +1692,15 @@ namespace ATL.AudioData.IO
                 if (!string.IsNullOrEmpty(chapter.Title))
                 {
                     // NB : FFmpeg uses Latin-1
-                    writeTextFrame(frameWriter, "TIT2", chapter.Title, tagEncoding, "", "", true);
+                    writeTextFrame(frameWriter, "TIT2", chapter.Title, tagEncoding, isInsideUnsynch: true);
                 }
                 if (!string.IsNullOrEmpty(chapter.Subtitle))
                 {
-                    writeTextFrame(frameWriter, "TIT3", chapter.Subtitle, tagEncoding, "", "", true);
+                    writeTextFrame(frameWriter, "TIT3", chapter.Subtitle, tagEncoding, isInsideUnsynch: true);
                 }
                 if (chapter.Url != null)
                 {
-                    writeTextFrame(frameWriter, "WXXX", chapter.Url.ToString(), tagEncoding, "", "", true);
+                    writeTextFrame(frameWriter, "WXXX", chapter.Url.ToString(), tagEncoding, isInsideUnsynch: true);
                 }
                 if (chapter.Picture != null && chapter.Picture.PictureData != null && chapter.Picture.PictureData.Length > 0)
                 {
@@ -1790,6 +1790,8 @@ namespace ATL.AudioData.IO
             Encoding tagEncoding,
             string language = "",
             string description = "",
+            string mimeType = "",
+            string fileName = "",
             bool isInsideUnsynch = false)
         {
             long frameOffset;
@@ -1949,8 +1951,9 @@ namespace ATL.AudioData.IO
             {
                 Encoding geoEncoding = Utils.Latin1Encoding;
                 w.Write(encodeID3v2CharEncoding(geoEncoding));
-                w.Write(Utils.Latin1Encoding.GetBytes("application/octet-stream\0")); // MIME-type; unsupported for now
-                w.Write((byte)0); // File name; unsupported for now
+                string mime = (0 == mimeType.Length) ? "application/octet-stream" : mimeType;
+                w.Write(Utils.Latin1Encoding.GetBytes(mime + '\0')); // MIME-type
+                w.Write(Utils.Latin1Encoding.GetBytes(fileName + '\0')); // File name
                 w.Write(getBomFromEncoding(geoEncoding));
                 w.Write(geoEncoding.GetBytes(actualFrameCode + '\0')); // Content description
                 w.Write(getBomFromEncoding(geoEncoding));

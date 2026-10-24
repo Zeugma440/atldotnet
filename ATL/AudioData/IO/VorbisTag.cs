@@ -307,7 +307,7 @@ namespace ATL.AudioData.IO
             }
             else if (readAllMetaFrames && ID.Length > 0) // ...else store it in the additional fields Dictionary
             {
-                MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
+                MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone : zone);
                 if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
                 {
                     // If the value already exists, concatenate it with the new one (stores multiple values when implemented as successive additional fields)

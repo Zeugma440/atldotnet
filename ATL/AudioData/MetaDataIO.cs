@@ -354,7 +354,9 @@ namespace ATL.AudioData.IO
         /// <param name="tagVersion">Version of the tagging system</param>
         /// <param name="streamNumber">Number of the corresponding stream</param>
         /// <param name="language">Language</param>
-        public void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "")
+        /// <param name="mimeType">MIME-type</param>
+        /// <param name="fileName">File name</param>
+        public void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "", string mimeType  = "", string fileName = "")
         {
             // Finds the ATL field identifier
             Field supportedMetaID = getFrameMapping(zone, ID, tagVersion);
@@ -366,7 +368,7 @@ namespace ATL.AudioData.IO
             }
             else if (readAllMetaFrames && ID.Length > 0) // ...else store it in the additional fields Dictionary
             {
-                MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, zone);
+                MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, mimeType, fileName, zone : zone);
                 if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
                 {
                     tagData.AdditionalFields.Remove(fieldInfo);
