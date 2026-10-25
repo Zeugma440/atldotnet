@@ -73,6 +73,11 @@ namespace ATL
             set => tagData.IntegrateValue(Field.COMMENT, value);
         }
         /// <inheritdoc/>
+        public string CommentLanguage
+        {
+            get => Utils.ProtectValue(tagData.getFieldDetails(Field.COMMENT)?.Language ?? "");
+        }
+        /// <inheritdoc/>
         public string Genre
         {
             get => Utils.ProtectValue(tagData[Field.GENRE]);

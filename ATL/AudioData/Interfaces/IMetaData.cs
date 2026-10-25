@@ -45,6 +45,13 @@ namespace ATL.AudioData
             get;
         }
         /// <summary>
+        /// Comments language
+        /// </summary>
+        string CommentLanguage
+        {
+            get;
+        }
+        /// <summary>
         /// Genre
         /// </summary>
         string Genre

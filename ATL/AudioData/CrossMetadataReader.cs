@@ -119,6 +119,25 @@ namespace ATL.AudioData
             }
         }
         /// <inheritdoc/>
+        public string CommentLanguage
+        {
+            get
+            {
+                string data = "";
+                foreach (IMetaDataIO reader in metaReaders)
+                {
+                    var comValue = reader.Comment;
+                    if (comValue != "")
+                    {
+                        data = reader.CommentLanguage;
+                        break;
+                    }
+                }
+                return data;
+            }
+        }
+
+        /// <inheritdoc/>
         public string Genre
         {
             get

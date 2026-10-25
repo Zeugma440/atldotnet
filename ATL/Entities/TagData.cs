@@ -611,6 +611,16 @@ namespace ATL
         /// <returns>Value associated with the given ATL field code</returns>
         public string? this[Field index] => getStrField(index);
 
+        /// <summary>
+        /// Field details
+        /// </summary>
+        /// <param name="index">ATL field code to search for</param>
+        /// <returns>Value associated with the given ATL field code</returns>
+        public LiteFieldInfo? getFieldDetails(Field index)
+        {
+            return getField(index);
+        }
+
         private string? getStrField(Field index)
         {
             LiteFieldInfo result = getField(index);

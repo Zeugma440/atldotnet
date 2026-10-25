@@ -369,6 +369,8 @@ namespace ATL
         private DateTime? originalReleaseDate;
         private bool isORYearExplicit;
 
+        private string commentLanguage;
+
         /// <summary>
         /// Format of tagging systems present on the file
         /// NB : their IDs match `MetaDataIOFactory.TagType` enum values
@@ -506,6 +508,7 @@ namespace ATL
             Artist = Utils.ProtectValue(processString(metadata.Artist));
             Composer = Utils.ProtectValue(processString(metadata.Composer));
             Comment = Utils.ProtectValue(processString(metadata.Comment));
+            commentLanguage = Utils.ProtectValue(processString(metadata.CommentLanguage));
             Genre = Utils.ProtectValue(processString(metadata.Genre));
             OriginalArtist = Utils.ProtectValue(processString(metadata.OriginalArtist));
             OriginalAlbum = Utils.ProtectValue(processString(metadata.OriginalAlbum));
@@ -599,7 +602,7 @@ namespace ATL
             result.IntegrateValue(Field.TITLE, Title);
             result.IntegrateValue(Field.ARTIST, Artist);
             result.IntegrateValue(Field.COMPOSER, Composer);
-            result.IntegrateValue(Field.COMMENT, Comment);
+            result.IntegrateValue(Field.COMMENT, Comment, commentLanguage);
             result.IntegrateValue(Field.GENRE, Genre);
             result.IntegrateValue(Field.ORIGINAL_ARTIST, OriginalArtist);
             result.IntegrateValue(Field.ORIGINAL_ALBUM, OriginalAlbum);
