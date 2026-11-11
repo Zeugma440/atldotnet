@@ -690,6 +690,37 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_MP4_Chapters_QT_Co64()
+        {
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/chapters_QT.m4v");
+            try
+            {
+                var original = new Track(testFileLocation);
+                Assert.AreEqual(4, original.Chapters.Count);
+
+                convertChapterOffsetsToCo64(testFileLocation);
+
+                AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+                Assert.IsTrue(theFile.ReadFromFile(false, true));
+                var actual = new Track(testFileLocation);
+                Assert.AreEqual(original.Title, actual.Title);
+                Assert.AreEqual(original.Artist, actual.Artist);
+                Assert.AreEqual(original.Date, actual.Date);
+                Assert.AreEqual(original.Chapters.Count, actual.Chapters.Count);
+                for (int i = 0; i < original.Chapters.Count; i++)
+                {
+                    Assert.AreEqual(original.Chapters[i].StartTime, actual.Chapters[i].StartTime);
+                    Assert.AreEqual(original.Chapters[i].EndTime, actual.Chapters[i].EndTime);
+                    Assert.AreEqual(original.Chapters[i].Title, actual.Chapters[i].Title);
+                }
+            }
+            finally
+            {
+                if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+            }
+        }
+
+        [TestMethod]
         public void TagIO_RW_MP4_Chapters_QT_Edit()
         {
             new ConsoleLogger();
@@ -2117,6 +2148,45 @@ namespace ATL.test.IO.MetaData
         public void TagIO_RW_MP4_AdditionalFieldsCase()
         {
             additionalFieldsCase(emptyFile, MetaDataIOFactory.TagType.NATIVE);
+        }
+
+        private static void convertChapterOffsetsToCo64(string fileName)
+        {
+            byte[] fileData = File.ReadAllBytes(fileName);
+            int moovPosition = findAtom(fileData, 0, fileData.Length, "moov");
+            int moovEnd = moovPosition + (int)readUInt32(fileData, moovPosition);
+            // This fixture has a terminal moov, so growing it does not move media samples.
+            Assert.AreEqual(fileData.Length, moovEnd);
+            int audioTrackPosition = findAtom(fileData, moovPosition + 8, moovEnd, "trak");
+            int trackPosition = findAtom(fileData, audioTrackPosition + (int)readUInt32(fileData, audioTrackPosition), moovEnd, "trak");
+            int trackEnd = trackPosition + (int)readUInt32(fileData, trackPosition);
+            int mdiaPosition = findAtom(fileData, trackPosition + 8, trackEnd, "mdia");
+            int hdlrPosition = findAtom(fileData, mdiaPosition + 8, trackEnd, "hdlr");
+            Assert.AreEqual("text", Utils.Latin1Encoding.GetString(fileData, hdlrPosition + 16, 4));
+            int minfPosition = findAtom(fileData, mdiaPosition + 8, trackEnd, "minf");
+            int stblPosition = findAtom(fileData, minfPosition + 8, trackEnd, "stbl");
+            int stcoPosition = findAtom(fileData, stblPosition + 8, trackEnd, "stco");
+            int count = (int)readUInt32(fileData, stcoPosition + 12);
+            byte[] payload = new byte[8 + count * 8];
+            Array.Copy(fileData, stcoPosition + 8, payload, 0, 8);
+            for (int i = 0; i < count; i++)
+            {
+                BinaryPrimitives.WriteUInt64BigEndian(payload.AsSpan(8 + i * 8, 8), readUInt32(fileData, stcoPosition + 16 + i * 4));
+            }
+
+            byte[] co64 = createAtom("co64", payload);
+            int oldSize = (int)readUInt32(fileData, stcoPosition);
+            int growth = co64.Length - oldSize;
+            byte[] result = new byte[fileData.Length + growth];
+            Array.Copy(fileData, 0, result, 0, stcoPosition);
+            co64.CopyTo(result, stcoPosition);
+            Array.Copy(fileData, stcoPosition + oldSize, result, stcoPosition + co64.Length, fileData.Length - stcoPosition - oldSize);
+            foreach (int position in new[] { moovPosition, trackPosition, mdiaPosition, minfPosition, stblPosition })
+            {
+                writeUInt32(result, position, readUInt32(fileData, position) + (uint)growth);
+            }
+
+            File.WriteAllBytes(fileName, result);
         }
 
         private static void insertCustomFieldWithoutDataBeforeCover(string fileName)

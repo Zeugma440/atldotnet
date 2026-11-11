@@ -1071,7 +1071,7 @@ namespace ATL.AudioData.IO
                     }
                     else
                     {
-                        if (source.Read(data32, 0, 8) < 8) return;
+                        if (source.Read(data64, 0, 8) < 8) return;
                         valueLong = BinaryPrimitives.ReadInt64BigEndian(data64);
                         valueObj = valueLong;
                     }
