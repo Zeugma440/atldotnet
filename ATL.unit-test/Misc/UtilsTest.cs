@@ -1,5 +1,6 @@
 ﻿using Commons;
 using System.Text;
+using System.Xml.Linq;
 
 namespace ATL.test
 {
@@ -269,5 +270,18 @@ namespace ATL.test
             Assert.AreEqual(double.NaN, Utils.ParseDouble("a"));
             Assert.AreEqual(double.NaN, Utils.ParseDouble("1.11.1"));
         }
+
+        /*
+         WAITING FOR #147
+        [TestMethod]
+        public void Utils_GuessEncoding()
+        {
+            var dataPath = TestUtils.GetResourceLocationRoot() + "_Cuesheet" + Path.DirectorySeparatorChar + "歌声伴随你 - 第24集.cue";
+            using var source = new FileStream(dataPath, FileMode.Open, FileAccess.Read);
+
+            var encoding = Utils.GuessTextEncoding(source);
+            Assert.AreEqual("GB18030", encoding.EncodingName);
+        }
+        */
     }
 }

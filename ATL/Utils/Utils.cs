@@ -704,10 +704,15 @@ namespace Commons
         /// <returns>Guessed encoding, if any; else Settings.DefaultTextEncoding</returns>
         public static Encoding GuessTextEncoding(Stream s)
         {
+            /*
+            UtfUnknown.DetectionResult result = UtfUnknown.CharsetDetector.DetectFromStream(s);
+            if (result != null) return result.Detected.Encoding;
+            */
             Ude.CharsetDetector cdet = new Ude.CharsetDetector();
             cdet.Feed(s);
             cdet.DataEnd();
             if (cdet.Charset != null) return getEncodingCached(cdet.Charset);
+
             return Settings.DefaultTextEncoding;
         }
 
