@@ -10,9 +10,13 @@ env:
   NUGET_SOURCE_URL: "https://api.nuget.org/v3/index.json"
 
 jobs:
-  publish:
+  build-and-publish:
     name: "Publish to NuGet Gallery"
     runs-on: "ubuntu-latest"
+
+    permissions:
+      id-token: write  # enable GitHub OIDC token issuance for this job
+  
     steps:
       - name: "Checkout"
         uses: actions/checkout@v6
@@ -37,5 +41,12 @@ jobs:
       - name: "Pack project"
         run: dotnet pack "${{ env.PROJECT_PATH }}" -p:PackageVersion=${{ github.event.release.tag_name }} --no-restore --no-build --configuration Release --output "${{ env.PACKAGE_OUTPUT_DIRECTORY }}"
 
+      # Get a short-lived NuGet API key
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: Zeugma440
+    
       - name: "Push package"
-        run: dotnet nuget push "${{ env.PACKAGE_OUTPUT_DIRECTORY }}/*.nupkg" --source ${{ env.NUGET_SOURCE_URL }} --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+        run: dotnet nuget push "${{ env.PACKAGE_OUTPUT_DIRECTORY }}/*.nupkg" --source ${{ env.NUGET_SOURCE_URL }} --api-key ${{steps.login.outputs.NUGET_API_KEY}} --skip-duplicate
