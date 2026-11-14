@@ -679,7 +679,7 @@ namespace ATL.AudioData.IO
         TagInfo tag,
         ReadTagParams readTagParams,
         ref IList<MetaFieldInfo> comments,
-        bool inChapter = false)
+        int chapterDepth = 0)
         {
             FrameHeader frame = new FrameHeader();
             byte encodingCode;
@@ -942,9 +942,9 @@ namespace ATL.AudioData.IO
                         chapter.UseOffset = chapter.StartOffset != uint.MaxValue;
 
                         long remainingData = dataSize - (source.Position - initPos);
-                        while (remainingData > 0)
+                        while (remainingData > 0 && chapterDepth < 4) // Limit chapter depth to 3 levels
                         {
-                            if (!readFrame(source, tag, readTagParams, ref comments, true)) break;
+                            if (!readFrame(source, tag, readTagParams, ref comments, chapterDepth + 1)) break;
                             remainingData = dataSize - (source.Position - initPos);
                         } // End chapter frames loop
 
@@ -1034,7 +1034,7 @@ namespace ATL.AudioData.IO
                     }
                     else if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value
                     {
-                        if (!inChapter) SetMetaField(frame.ID, strData, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version, mimeType: mimeType, fileName: fileName);
+                        if (0 == chapterDepth) SetMetaField(frame.ID, strData, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version, mimeType: mimeType, fileName: fileName);
                         else
                         {
                             chapter = tagData.Chapters[^1];
@@ -1094,7 +1094,7 @@ namespace ATL.AudioData.IO
                     PictureInfo.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
 
                     int picturePosition = 0;
-                    if (!inChapter)
+                    if (0 == chapterDepth)
                     {
                         if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
                         {
@@ -1111,7 +1111,7 @@ namespace ATL.AudioData.IO
                     if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(source);
                     string description = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
 
-                    if (readTagParams.ReadPictures || inChapter)
+                    if (readTagParams.ReadPictures || chapterDepth > 0)
                     {
                         int picSize = dataSize - (int)(source.Position - position);
 
@@ -1129,7 +1129,7 @@ namespace ATL.AudioData.IO
                         PictureInfo picInfo = PictureInfo.fromBinaryData(data, picType, getImplementedTagType(), picCode, picturePosition);
                         picInfo.Description = description;
 
-                        if (!inChapter)
+                        if (0 == chapterDepth)
                         {
                             tagData.Pictures.Add(picInfo);
                         }
