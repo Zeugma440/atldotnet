@@ -699,7 +699,7 @@ namespace ATL.AudioData.IO
             frame.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(frameIdSize));
 
             // Tag ID couldn't be read (EOF)
-            if (frame.ID.Length < frameIdSize) return true;
+            if (frame.ID.Length < frameIdSize) return false;
 
             if (!char.IsLetter(frame.ID[0]) || !char.IsUpper(frame.ID[0]))
             {
