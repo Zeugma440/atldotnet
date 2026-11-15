@@ -72,17 +72,6 @@ namespace ATL.AudioData.IO
         public bool IsVBR => false;
 
         /// <inheritdoc/>
-        public override IList<Format> MetadataFormats
-        {
-            get
-            {
-                IList<Format> result = base.MetadataFormats;
-                result[0].Name += " (FLAC)";
-                result[0].ID += AudioFormat.ID;
-                return result;
-            }
-        }
-        /// <inheritdoc/>
         public string FileName { get; }
 
         /// <inheritdoc/>

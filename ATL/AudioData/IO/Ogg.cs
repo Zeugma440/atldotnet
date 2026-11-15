@@ -484,19 +484,6 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public bool IsNativeMetadataRich => true;
 
-        /// <inheritdoc/>
-        public override IList<Format> MetadataFormats
-        {
-            get
-            {
-                IList<Format> result = base.MetadataFormats;
-                result[0].Name += " (OGG)";
-                result[0].ID += AudioFormat.ID;
-                return result;
-            }
-        }
-
-
         // ---------------------------------------------------------------------------
 
         // Read total samples of OGG file, which are located on the very last page of the file
