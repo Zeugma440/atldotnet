@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ATL
 {
@@ -47,7 +48,7 @@ namespace ATL
         /// <param name="name">Name</param>
         /// <param name="shortName">Short name</param>
         /// <param name="writable">Indicate if ATL implements writing for this Format</param>
-        public Format(int id, string name, string shortName = "", bool writable = true)
+        public Format(short id, string name, string shortName = "", bool writable = true)
         {
             init(id, name, 0 == shortName.Length ? name : shortName, writable);
         }
@@ -72,7 +73,8 @@ namespace ATL
         /// <param name="f">Format to copy data from</param>
         protected void copyFrom(Format f)
         {
-            ID = f.ID;
+            MainID = f.MainID;
+            SubID = f.SubID;
             Name = f.Name;
             ShortName = f.ShortName;
             mimeList = new Dictionary<string, int>(f.mimeList);
@@ -90,9 +92,9 @@ namespace ATL
         /// <param name="name">Name</param>
         /// <param name="shortName">Short name</param>
         /// <param name="writable">Indicate if ATL implements writing for this Format</param>
-        protected void init(int id, string name, string shortName = "", bool writable = true)
+        protected void init(short id, string name, string shortName = "", bool writable = true)
         {
-            ID = id;
+            MainID = id;
             Name = name;
             ShortName = 0 == shortName.Length ? name : shortName;
             Readable = true;
@@ -104,17 +106,42 @@ namespace ATL
         /// <summary>
         /// Name
         /// </summary>
-        public string Name { get; set; }
+        public virtual string Name { get; protected set; }
+
+        /// <summary>
+        /// Add to the given suffix to name, and the given sub-ID to the ID
+        /// </summary>
+        public void MakeSubformat(String suffix, byte subId)
+        {
+            Name = Name + suffix;
+            SubID = subId;
+        }
 
         /// <summary>
         /// Short name
         /// </summary>
-        public string ShortName { get; set; }
+        public string ShortName { get; protected set; }
 
         /// <summary>
-        /// Internal unique ID
+        /// Internal unique main ID
         /// </summary>
-        public int ID { get; set; }
+        public short MainID { get; set; }
+
+        /// <summary>
+        /// Sub-ID (relative to MainID)
+        /// </summary>
+        public byte SubID { get; set; }
+
+        /// <summary>
+        /// Unique ID
+        /// </summary>
+        [Obsolete("Please use MainID (stable to recognize a given format) or UniqueID (unique but not stable)")]
+        public int ID => MainID;
+
+        /// <summary>
+        /// Unique ID
+        /// </summary>
+        protected virtual int UniqueID => (MainID << 24) + SubID;
 
         /// <summary>
         /// Check if the given data matches that format's header signature

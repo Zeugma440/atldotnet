@@ -110,7 +110,7 @@ namespace ATL
                 foreach (T f in formats)
                 {
                     // Filter duplicates "caused by" indexing formats by extension
-                    result.TryAdd(f.ID, f);
+                    result.TryAdd(f.MainID, f);
                 }
             }
             return result.Values;
@@ -126,7 +126,7 @@ namespace ATL
             {
                 foreach (T f in formats)
                 {
-                    if (f.ID == ID) return f;
+                    if (f.MainID == ID) return f;
                 }
             }
             return null;

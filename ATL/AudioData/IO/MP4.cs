@@ -171,7 +171,7 @@ namespace ATL.AudioData.IO
 
         private AudioDataManager.SizeInfo sizeInfo;
         private string _descFormat;
-        private AudioFormat _audioFormat;
+        private AudioFormat containterFormat;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -183,8 +183,8 @@ namespace ATL.AudioData.IO
         {
             get
             {
-                AudioFormat f = new AudioFormat(_audioFormat);
-                f.ShortName = _descFormat.ToUpper();
+                AudioFormat f = new AudioFormat(containterFormat);
+                f.SpecifyCodec(_descFormat.ToUpper());
                 return f;
             }
         }
@@ -276,7 +276,7 @@ namespace ATL.AudioData.IO
         public MP4(string fileName, AudioFormat format)
         {
             this.FileName = fileName;
-            _audioFormat = format;
+            containterFormat = format;
             resetData();
         }
 

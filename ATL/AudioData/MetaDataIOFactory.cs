@@ -85,19 +85,19 @@ namespace ATL.AudioData
                     theFactory.formatListByExt = new Dictionary<string, IList<Format>>();
                     theFactory.formatListByMime = new Dictionary<string, IList<Format>>();
 
-                    Format tempFmt = new Format((int)TagType.ID3V1, "ID3v1");
+                    Format tempFmt = new Format((short)TagType.ID3V1, "ID3v1");
                     tempFmt.AddExtension("id3v1");
                     theFactory.addFormat(tempFmt);
 
-                    tempFmt = new Format((int)TagType.ID3V2, "ID3v2");
+                    tempFmt = new Format((short)TagType.ID3V2, "ID3v2");
                     tempFmt.AddExtension("id3v2");
                     theFactory.addFormat(tempFmt);
 
-                    tempFmt = new Format((int)TagType.APE, "APEtag");
+                    tempFmt = new Format((short)TagType.APE, "APEtag");
                     tempFmt.AddExtension("ape");
                     theFactory.addFormat(tempFmt);
 
-                    tempFmt = new Format((int)TagType.NATIVE, "Native tagging", "Native");
+                    tempFmt = new Format((short)TagType.NATIVE, "Native tagging", "Native");
                     tempFmt.AddExtension("native");
                     theFactory.addFormat(tempFmt);
                 }

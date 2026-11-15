@@ -100,10 +100,10 @@ namespace ATL.test.IO
             Assert.AreEqual("ID3v1.1", theTrack.MetadataFormats[1].Name);
             theTrack = new Track(TestUtils.GetResourceLocationRoot() + "OGG/ogg.ogg");
             Assert.AreEqual(1, theTrack.MetadataFormats.Count);
-            Assert.AreEqual("Native tagging / Vorbis (OGG)", theTrack.MetadataFormats[0].Name);
+            Assert.AreEqual("Native tagging / Vorbis", theTrack.MetadataFormats[0].Name);
             theTrack = new Track(TestUtils.GetResourceLocationRoot() + "FLAC/flac.flac");
             Assert.AreEqual(1, theTrack.MetadataFormats.Count);
-            Assert.AreEqual("Native tagging / Vorbis (FLAC)", theTrack.MetadataFormats[0].Name);
+            Assert.AreEqual("Native tagging / Vorbis", theTrack.MetadataFormats[0].Name);
         }
 
         [TestMethod]

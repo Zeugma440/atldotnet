@@ -1,6 +1,7 @@
 ﻿using ATL.AudioData;
 using static ATL.ChannelsArrangements;
 using static ATL.AudioData.AudioDataIOFactory;
+using ATL.AudioData.IO;
 
 namespace ATL.test.IO
 {
@@ -16,8 +17,8 @@ namespace ATL.test.IO
 
         private void testGenericAudio(
             string resource,
-            int containerId,
-            int dataId,
+            short containerId,
+            short dataId,
             int duration,
             int bitrate,
             int bitDepth,
@@ -67,7 +68,7 @@ namespace ATL.test.IO
             manager.ReadFromFile();
 
             Assert.AreEqual(containerId, theReader.AudioFormat.ContainerId);
-            Assert.AreEqual(dataId, theReader.AudioFormat.DataFormat.ID);
+            Assert.AreEqual(dataId, theReader.AudioFormat.DataFormat.MainID);
 
             Assert.AreEqual(duration, (int)Math.Round(theReader.Duration));
             Assert.AreEqual(bitrate, (int)Math.Round(theReader.BitRate));
@@ -91,50 +92,50 @@ namespace ATL.test.IO
                 ATL.Settings.MP3_parseExactDuration = false;
 
                 // MPEG1 Layer 1
-                testGenericAudio("MP3/mp1Layer1.mp1", CID_MPEG, CID_MPEG, 522, 384, -1, 44100, false, CF_LOSSY, STEREO, "MPEG Audio (Layer I)", 0, 25080);
+                testGenericAudio("MP3/mp1Layer1.mp1", CID_MPEG, 3, 522, 384, -1, 44100, false, CF_LOSSY, STEREO, "MPEG Audio / Layer I", 0, 25080);
                 // MPEG1 Layer 2
-                testGenericAudio("MP3/mp1Layer2.mp1", CID_MPEG, CID_MPEG, 758, 384, -1, 44100, false, CF_LOSSY, STEREO, "MPEG Audio (Layer II)", 0, 36362);
+                testGenericAudio("MP3/mp1Layer2.mp1", CID_MPEG, 2, 758, 384, -1, 44100, false, CF_LOSSY, STEREO, "MPEG Audio / Layer II", 0, 36362);
                 // MPEG2 Layer 1
-                testGenericAudio("MP3/mp2Layer1.mp2", CID_MPEG, CID_MPEG, 1411, 128, -1, 22050, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer I)", 0, 22572);
+                testGenericAudio("MP3/mp2Layer1.mp2", CID_MPEG, 3, 1411, 128, -1, 22050, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio / Layer I", 0, 22572);
                 // MPEG2 Layer 2
-                testGenericAudio("MP3/mp2Layer2.mp2", CID_MPEG, CID_MPEG, 1296, 160, -1, 24000, false, CF_LOSSY, STEREO, "MPEG Audio (Layer II)", 0, 25920);
+                testGenericAudio("MP3/mp2Layer2.mp2", CID_MPEG, 2, 1296, 160, -1, 24000, false, CF_LOSSY, STEREO, "MPEG Audio / Layer II", 0, 25920);
 
                 // VBR
-                testGenericAudio("MP3/01 - Title Screen.mp3", CID_MPEG, CID_MPEG, 3866, 129, -1, 44100, true, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 2048, 62342);
+                testGenericAudio("MP3/01 - Title Screen.mp3", CID_MPEG, 1, 3866, 129, -1, 44100, true, CF_LOSSY, JOINT_STEREO, "MPEG Audio / Layer III", 2048, 62342);
                 // Malpositioned header
-                testGenericAudio("MP3/headerPatternIsNotHeader.mp3", CID_MPEG, CID_MPEG, 139, 192, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 1252, 3340);
+                testGenericAudio("MP3/headerPatternIsNotHeader.mp3", CID_MPEG, 1, 139, 192, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio / Layer III", 1252, 3340);
                 // Malpositioned header 2
-                testGenericAudio("MP3/truncated_frame.mp3", CID_MPEG, CID_MPEG, 498, 320, -1, 48000, false, CF_LOSSY, STEREO, "MPEG Audio (Layer III)", 954, 19908);
+                testGenericAudio("MP3/truncated_frame.mp3", CID_MPEG, 1, 498, 320, -1, 48000, false, CF_LOSSY, STEREO, "MPEG Audio / Layer III", 954, 19908);
                 // Fake header + garbage before actual header
-                testGenericAudio("MP3/garbage_before_header.mp3", CID_MPEG, CID_MPEG, 6142, 64, -1, 24000, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 141, 49139);
+                testGenericAudio("MP3/garbage_before_header.mp3", CID_MPEG, 1, 6142, 64, -1, 24000, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio / Layer III", 141, 49139);
                 // Ghost data after the last frame
-                testGenericAudio("MP3/ghost_data_after_last_frame.mp3", CID_MPEG, CID_MPEG, 1258, 112, -1, 44100, false, CF_LOSSY, MONO, "MPEG Audio (Layer III)", 0, 17607);
+                testGenericAudio("MP3/ghost_data_after_last_frame.mp3", CID_MPEG, 1, 1258, 112, -1, 44100, false, CF_LOSSY, MONO, "MPEG Audio / Layer III", 0, 17607);
                 // Contradictory frames
-                testGenericAudio("MP3/different_bitrates_modes.mp3", CID_MPEG, CID_MPEG, 6439, 128, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 45, 103025);
+                testGenericAudio("MP3/different_bitrates_modes.mp3", CID_MPEG, 1, 6439, 128, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio / Layer III", 45, 103025);
 
                 ATL.Settings.MP3_parseExactDuration = true;
 
                 // MPEG1 Layer 1
-                testGenericAudio("MP3/mp1Layer1.mp1", CID_MPEG, CID_MPEG, 522, 384, -1, 44100, false, CF_LOSSY, STEREO, "MPEG Audio (Layer I)", 0, 25080);
+                testGenericAudio("MP3/mp1Layer1.mp1", CID_MPEG, 3, 522, 384, -1, 44100, false, CF_LOSSY, STEREO, "MPEG Audio / Layer I", 0, 25080);
                 // MPEG1 Layer 2
-                testGenericAudio("MP3/mp1Layer2.mp1", CID_MPEG, CID_MPEG, 758, 384, -1, 44100, false, CF_LOSSY, STEREO, "MPEG Audio (Layer II)", 0, 36362);
+                testGenericAudio("MP3/mp1Layer2.mp1", CID_MPEG, 2, 758, 384, -1, 44100, false, CF_LOSSY, STEREO, "MPEG Audio / Layer II", 0, 36362);
                 // MPEG2 Layer 1
-                testGenericAudio("MP3/mp2Layer1.mp2", CID_MPEG, CID_MPEG, 1411, 128, -1, 22050, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer I)", 0, 22572);
+                testGenericAudio("MP3/mp2Layer1.mp2", CID_MPEG, 3, 1411, 128, -1, 22050, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio / Layer I", 0, 22572);
                 // MPEG2 Layer 2
-                testGenericAudio("MP3/mp2Layer2.mp2", CID_MPEG, CID_MPEG, 1296, 160, -1, 24000, false, CF_LOSSY, STEREO, "MPEG Audio (Layer II)", 0, 25920);
+                testGenericAudio("MP3/mp2Layer2.mp2", CID_MPEG, 2, 1296, 160, -1, 24000, false, CF_LOSSY, STEREO, "MPEG Audio / Layer II", 0, 25920);
 
                 // VBR
-                testGenericAudio("MP3/01 - Title Screen.mp3", CID_MPEG, CID_MPEG, 3866, 129, -1, 44100, true, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 2048, 62342);
+                testGenericAudio("MP3/01 - Title Screen.mp3", CID_MPEG, 1, 3866, 129, -1, 44100, true, CF_LOSSY, JOINT_STEREO, "MPEG Audio / Layer III", 2048, 62342);
                 // Malpositioned header
-                testGenericAudio("MP3/headerPatternIsNotHeader.mp3", CID_MPEG, CID_MPEG, 156, 192, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 1252, 3756);
+                testGenericAudio("MP3/headerPatternIsNotHeader.mp3", CID_MPEG, 1, 156, 192, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio / Layer III", 1252, 3756);
                 // Malpositioned header 2
-                testGenericAudio("MP3/truncated_frame.mp3", CID_MPEG, CID_MPEG, 504, 320, -1, 48000, false, CF_LOSSY, STEREO, "MPEG Audio (Layer III)", 954, 20160);
+                testGenericAudio("MP3/truncated_frame.mp3", CID_MPEG, 1, 504, 320, -1, 48000, false, CF_LOSSY, STEREO, "MPEG Audio / Layer III", 954, 20160);
                 // Fake header + garbage before actual header
-                testGenericAudio("MP3/garbage_before_header.mp3", CID_MPEG, CID_MPEG, 6144, 64, -1, 24000, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 141, 49152);
+                testGenericAudio("MP3/garbage_before_header.mp3", CID_MPEG, 1, 6144, 64, -1, 24000, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio / Layer III", 141, 49152);
                 // Ghost data after the last frame
-                testGenericAudio("MP3/ghost_data_after_last_frame.mp3", CID_MPEG, CID_MPEG, 209, 112, -1, 44100, false, CF_LOSSY, MONO, "MPEG Audio (Layer III)", 0, 2925);
+                testGenericAudio("MP3/ghost_data_after_last_frame.mp3", CID_MPEG, 1, 209, 112, -1, 44100, false, CF_LOSSY, MONO, "MPEG Audio / Layer III", 0, 2925);
                 // Contradictory frames
-                testGenericAudio("MP3/different_bitrates_modes.mp3", CID_MPEG, CID_MPEG, 6439, 128, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio (Layer III)", 45, 103025);
+                testGenericAudio("MP3/different_bitrates_modes.mp3", CID_MPEG, 1, 6439, 128, -1, 44100, false, CF_LOSSY, JOINT_STEREO, "MPEG Audio / Layer III", 45, 103025);
             }
             finally
             {
@@ -145,9 +146,9 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_MP4()
         {
-            testGenericAudio("MP4/mp4.m4a", CID_MP4, CID_MP4, 14053, 75, -1, 48000, true, CF_LOSSY, ISO_3_4_1, "MPEG-4 Part 14", 25746, 131708);
+            testGenericAudio("MP4/mp4.m4a", CID_MP4, 0, 14053, 75, -1, 48000, true, CF_LOSSY, ISO_3_4_1, "MPEG-4 Part 14 / AAC-LC", 25746, 131708);
             // Bitrate is 0 as the MDAT has been manually truncated => too little data for a long duration
-            testGenericAudio("MP4/fragmented.mp4", CID_MP4, CID_MP4, 87211, 0, -1, 48000, false, CF_LOSSY, MONO, "MPEG-4 Part 14", 18820, 2252);
+            testGenericAudio("MP4/fragmented.mp4", CID_MP4, 0, 87211, 0, -1, 48000, false, CF_LOSSY, MONO, "MPEG-4 Part 14 / AAC-LC", 18820, 2252);
         }
 
         [TestMethod]
@@ -173,20 +174,20 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_OGG()
         {
-            testGenericAudio("OGG/ogg.ogg", CID_OGG, CID_OGG, 33003, 69, -1, 22050, true, CF_LOSSY, STEREO, "OGG (Vorbis)", 23125, 278029);
+            testGenericAudio("OGG/ogg.ogg", CID_OGG, (short)Ogg.Contents.VORBIS, 33003, 69, -1, 22050, true, CF_LOSSY, STEREO, "OGG / Vorbis", 23125, 278029);
         }
 
         [TestMethod]
         public void Audio_Opus()
         {
-            testGenericAudio("OPUS/opus.opus", CID_OGG, CID_OGG, 30959, 33, -1, 48000, true, CF_LOSSY, STEREO, "OGG (Opus)", 19479, 126225);
+            testGenericAudio("OPUS/opus.opus", CID_OGG, (short)Ogg.Contents.OPUS, 30959, 33, -1, 48000, true, CF_LOSSY, STEREO, "OGG / Opus", 19479, 126225);
         }
 
         [TestMethod]
         public void Audio_FLAC()
         {
             testGenericAudio("FLAC/flac.flac", CID_FLAC, CID_FLAC, 5176, 694, 16, 44100, false, CF_LOSSLESS, STEREO, "Free Lossless Audio Codec", 18030, 448997);
-            testGenericAudio("OGG/embedded-flac.ogg", CID_OGG, CID_FLAC, 5176, 635, 16, 44100, false, CF_LOSSLESS, STEREO, "OGG (FLAC)", 397, 410863);
+            testGenericAudio("OGG/embedded-flac.ogg", CID_OGG, CID_FLAC, 5176, 635, 16, 44100, false, CF_LOSSLESS, STEREO, "OGG / FLAC", 397, 410863);
         }
 
         [TestMethod]
@@ -248,9 +249,9 @@ namespace ATL.test.IO
         public void Audio_MOD()
         {
             // No distinctive header
-            testGenericAudio("MOD/empty.mod", CID_MOD, CID_MOD, 158976, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "Tracker Module (ProTracker)", 20, 42042, false);
+            testGenericAudio("MOD/empty.mod", CID_MOD, 0, 158976, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "Tracker Module / ProTracker", 20, 42042, false);
             // No distinctive header
-            testGenericAudio("MOD/mod.mod", CID_MOD, CID_MOD, 330240, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "Tracker Module (ProTracker)", 20, 99986, false);
+            testGenericAudio("MOD/mod.mod", CID_MOD, 0, 330240, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "Tracker Module / ProTracker", 20, 99986, false);
         }
 
         [TestMethod]
@@ -264,30 +265,30 @@ namespace ATL.test.IO
         public void Audio_S3M()
         {
             // No distinctive header
-            testGenericAudio("S3M/empty.s3m", CID_S3M, CID_S3M, 126720, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module (OpenMPT)", 32, 13936, false);
+            testGenericAudio("S3M/empty.s3m", CID_S3M, 0, 126720, 0, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module / OpenMPT", 32, 13936, false);
             // No distinctive header
-            testGenericAudio("S3M/s3m.s3m", CID_S3M, CID_S3M, 404846, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module (ScreamTracker)", 32, 626624, false);
+            testGenericAudio("S3M/s3m.s3m", CID_S3M, 0, 404846, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module / ScreamTracker", 32, 626624, false);
             // This one contains extra instructions
             // No distinctive header
-            testGenericAudio("S3M/s3m2.s3m", CID_S3M, CID_S3M, 9796, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module (ScreamTracker)", 32, 17870, false);
+            testGenericAudio("S3M/s3m2.s3m", CID_S3M, 0, 9796, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module / ScreamTracker", 32, 17870, false);
             // This one contains yet other extra instructions
             // No distinctive header
-            testGenericAudio("S3M/s3m3.s3m", CID_S3M, CID_S3M, 475070, 1, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module (ScreamTracker)", 32, 375488, false);
+            testGenericAudio("S3M/s3m3.s3m", CID_S3M, 0, 475070, 1, -1, 0, false, CF_SEQ_WAV, STEREO, "ScreamTracker Module / ScreamTracker", 32, 375488, false);
         }
 
         [TestMethod]
         public void Audio_XM()
         {
-            testGenericAudio("XM/empty.xm", CID_XM, CID_XM, 55172, 1, -1, 0, false, CF_SEQ_WAV, STEREO, "Extended Module (OpenMPT 1.26.14.00)", 60, 55729);
-            testGenericAudio("XM/xm.xm", CID_XM, CID_XM, 260667, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "Extended Module (FastTracker v2.00)", 60, 430062);
+            testGenericAudio("XM/empty.xm", CID_XM, 0, 55172, 1, -1, 0, false, CF_SEQ_WAV, STEREO, "Extended Module / OpenMPT 1.26.14.00", 60, 55729);
+            testGenericAudio("XM/xm.xm", CID_XM, 0, 260667, 2, -1, 0, false, CF_SEQ_WAV, STEREO, "Extended Module / FastTracker v2.00", 60, 430062);
         }
 
         [TestMethod]
         public void Audio_DSF_PSF()
         {
-            testGenericAudio("PSF/psf.psf", CID_PSF, CID_PSF, 159000, 10, -1, 44100, false, CF_SEQ_WAV, STEREO, "Portable Sound Format (Playstation)", 0, 204788);
-            testGenericAudio("PSF/nolength.psf", CID_PSF, CID_PSF, 180000, 13, -1, 44100, false, CF_SEQ_WAV, STEREO, "Portable Sound Format (Playstation)", 0, 287437);
-            testGenericAudio("DSF/adgpp_PLAY_01_05.dsf", CID_PSF, CID_PSF, 26200, 0, -1, 44100, false, CF_SEQ_WAV, STEREO, "Portable Sound Format (Dreamcast)", 0, 30, true, 1);
+            testGenericAudio("PSF/psf.psf", CID_PSF, 1, 159000, 10, -1, 44100, false, CF_SEQ_WAV, STEREO, "Portable Sound Format / Playstation", 0, 204788);
+            testGenericAudio("PSF/nolength.psf", CID_PSF, 1, 180000, 13, -1, 44100, false, CF_SEQ_WAV, STEREO, "Portable Sound Format / Playstation", 0, 287437);
+            testGenericAudio("DSF/adgpp_PLAY_01_05.dsf", CID_PSF, 18, 26200, 0, -1, 44100, false, CF_SEQ_WAV, STEREO, "Portable Sound Format / Dreamcast", 0, 30, true, 1);
         }
 
         [TestMethod]
@@ -311,9 +312,9 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_WAV()
         {
-            testGenericAudio("WAV/wav.wav", CID_WAV, CID_WAV, 7646, 1411, 16, 44100, false, CF_LOSSLESS, STEREO, "PCM (uncompressed audio) (Windows PCM)", 44, 1348720);
-            testGenericAudio("WAV/rifx.wav", CID_WAV, CID_WAV, 150, 2117, 24, 44100, false, CF_LOSSLESS, STEREO, "PCM (uncompressed audio) (Unknown)", 80, 39690);
-            testGenericAudio("WAV/cortissimo.wav", CID_WAV, CID_WAV, 187, 6144, 32, 96000, false, CF_LOSSLESS, STEREO, "PCM (uncompressed audio) (Unknown)", 80, 143544);
+            testGenericAudio("WAV/wav.wav", CID_WAV, 0, 7646, 1411, 16, 44100, false, CF_LOSSLESS, STEREO, "PCM (uncompressed audio) / Windows PCM", 44, 1348720);
+            testGenericAudio("WAV/rifx.wav", CID_WAV, 0, 150, 2117, 24, 44100, false, CF_LOSSLESS, STEREO, "PCM (uncompressed audio) / Unknown", 80, 39690);
+            testGenericAudio("WAV/cortissimo.wav", CID_WAV, 0, 187, 6144, 32, 96000, false, CF_LOSSLESS, STEREO, "PCM (uncompressed audio) / Unknown", 80, 143544);
         }
 
         [TestMethod]
@@ -367,7 +368,7 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_AA()
         {
-            testGenericAudio("AA/aa.aa", CID_AA, CID_AA, 2967, 1, -1, 8500, false, CF_LOSSY, MONO, "Audible (legacy) (acelp85)", 26806, 3152173);
+            testGenericAudio("AA/aa.aa", CID_AA, 0, 2967, 1, -1, 8500, false, CF_LOSSY, MONO, "Audible (legacy) / acelp85", 26806, 3152173);
         }
 
         [TestMethod]
@@ -379,15 +380,15 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_MKA()
         {
-            testGenericAudio("MKA/mka.mka", CID_MKA, CID_MPEG, 3422, 128, -1, 44100, false, CF_LOSSY, STEREO, "Matroska / MPEG", 459, 69016);
+            testGenericAudio("MKA/mka.mka", CID_MKA, CID_MPEG, 3422, 128, -1, 44100, false, CF_LOSSY, STEREO, "Matroska / MPEG Audio", 459, 69016);
             testGenericAudio("MKA/no_info_duration.webm", CID_MKA, CID_OGG, 7159, 16, 0, 48000, false, CF_LOSSY, MONO, "Matroska / Opus", 167, 112605);
         }
 
         [TestMethod]
         public void Audio_SPX()
         {
-            testGenericAudio("SPX/empty.spx", CID_OGG, CID_OGG, 15675, 9, -1, 8000, false, CF_LOSSY, MONO, "OGG (Speex)", 156, 17010);
-            testGenericAudio("SPX/stereo.spx", CID_OGG, CID_OGG, 8715, 17, -1, 8000, false, CF_LOSSY, STEREO, "OGG (Speex)", 322, 18119);
+            testGenericAudio("SPX/empty.spx", CID_OGG, (short)Ogg.Contents.SPEEX, 15675, 9, -1, 8000, false, CF_LOSSY, MONO, "OGG / Speex", 156, 17010);
+            testGenericAudio("SPX/stereo.spx", CID_OGG, (short)Ogg.Contents.SPEEX, 8715, 17, -1, 8000, false, CF_LOSSY, STEREO, "OGG / Speex", 322, 18119);
         }
 #pragma warning restore S2699 // Tests should include assertions
     }

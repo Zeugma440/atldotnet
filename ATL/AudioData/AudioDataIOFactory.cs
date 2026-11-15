@@ -43,37 +43,37 @@ namespace ATL.AudioData
 
         // Codec IDs
 #pragma warning disable CS1591 // Missing XML comment
-        public const int CID_MPEG = 1;
-        public const int CID_OGG = 2;
-        public const int CID_MPC = 3;
-        public const int CID_FLAC = 4;
-        public const int CID_APE = 5;
-        public const int CID_WMA = 6;
-        public const int CID_MIDI = 7;
-        public const int CID_AAC = 8;
-        public const int CID_AC3 = 9;
-        public const int CID_OFR = 10;
-        public const int CID_WAVPACK = 11;
-        public const int CID_WAV = 12;
-        public const int CID_PSF = 13;
-        public const int CID_SPC = 14;
-        public const int CID_DTS = 15;
-        public const int CID_VQF = 16;
-        public const int CID_TTA = 17;
-        public const int CID_DSF = 18;
-        public const int CID_TAK = 19;
-        public const int CID_MOD = 20;
-        public const int CID_S3M = 21;
-        public const int CID_XM = 22;
-        public const int CID_IT = 23;
-        public const int CID_AIFF = 24;
-        public const int CID_VGM = 25;
-        public const int CID_GYM = 26;
-        public const int CID_MP4 = 27;
-        public const int CID_AA = 28;
-        public const int CID_CAF = 29;
-        public const int CID_MKA = 30;
-        public const int CID_DFF = 31;
+        public const short CID_MPEG = 1;
+        public const short CID_OGG = 2;
+        public const short CID_MPC = 3;
+        public const short CID_FLAC = 4;
+        public const short CID_APE = 5;
+        public const short CID_WMA = 6;
+        public const short CID_MIDI = 7;
+        public const short CID_AAC = 8;
+        public const short CID_AC3 = 9;
+        public const short CID_OFR = 10;
+        public const short CID_WAVPACK = 11;
+        public const short CID_WAV = 12;
+        public const short CID_PSF = 13;
+        public const short CID_SPC = 14;
+        public const short CID_DTS = 15;
+        public const short CID_VQF = 16;
+        public const short CID_TTA = 17;
+        public const short CID_DSF = 18;
+        public const short CID_TAK = 19;
+        public const short CID_MOD = 20;
+        public const short CID_S3M = 21;
+        public const short CID_XM = 22;
+        public const short CID_IT = 23;
+        public const short CID_AIFF = 24;
+        public const short CID_VGM = 25;
+        public const short CID_GYM = 26;
+        public const short CID_MP4 = 27;
+        public const short CID_AA = 28;
+        public const short CID_CAF = 29;
+        public const short CID_MKA = 30;
+        public const short CID_DFF = 31;
 #pragma warning restore CS1591 // Missing XML comment
 
         // ------------------------------------------------------------------------------------------
@@ -466,7 +466,7 @@ namespace ATL.AudioData
         public static IAudioDataIO GetFromFormat(string path, AudioFormat theFormat)
         {
             // Use container format ID if different than audio data format ID
-            var id = theFormat.ContainerId != theFormat.DataFormat.ID ? theFormat.ContainerId : theFormat.DataFormat.ID;
+            var id = theFormat.ContainerId != theFormat.DataFormat.MainID ? theFormat.ContainerId : theFormat.DataFormat.MainID;
             return id switch
             {
                 CID_MPEG => new MPEGaudio(path, theFormat),

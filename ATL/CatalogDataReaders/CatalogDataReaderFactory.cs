@@ -11,7 +11,7 @@ namespace ATL.CatalogDataReaders
         /// <summary>
         ///  Cuesheet
         /// </summary>
-        public const int CR_CUE = 1;
+        public const short CR_CUE = 1;
 
         // The instance of this factory
         private static CatalogDataReaderFactory theFactory;
@@ -52,11 +52,11 @@ namespace ATL.CatalogDataReaders
 
             if (formats != null && formats.Count > 0)
             {
-                result = GetCatalogDataReader(formats[0].ID, path);
+                result = GetCatalogDataReader(formats[0].MainID, path);
             }
             else
             {
-                result = GetCatalogDataReader(Format.UNKNOWN_FORMAT.ID);
+                result = GetCatalogDataReader(Format.UNKNOWN_FORMAT.MainID);
             }
 
             result.Path = path;

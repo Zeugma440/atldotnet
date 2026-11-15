@@ -28,10 +28,8 @@ namespace ATL.AudioData.IO
         {
             get
             {
-                Format nativeFormat = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("native")[0])
-                {
-                    Name = "Native tagging / Vorbis"
-                };
+                Format nativeFormat = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("native")[0]);
+                nativeFormat.MakeSubformat(" / Vorbis", 0); // No need to identify Vorbis with a specific subId
                 return new List<Format>(new[] { nativeFormat });
             }
         }

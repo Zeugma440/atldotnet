@@ -169,8 +169,7 @@ namespace ATL.AudioData.IO
                 if (this is IAudioDataIO iO)
 #pragma warning restore S3060 // "is" should not be used with "this"
                 {
-                    nativeFormat.Name = nativeFormat.Name + " / " + iO.AudioFormat.ShortName;
-                    nativeFormat.ID += iO.AudioFormat.ID;
+                    nativeFormat.MakeSubformat(" / " + iO.AudioFormat.ShortName, 0); // Don't need to identify specific native subformats
                 }
                 return new List<Format>(new[] { nativeFormat });
             }
@@ -356,7 +355,7 @@ namespace ATL.AudioData.IO
         /// <param name="language">Language</param>
         /// <param name="mimeType">MIME-type</param>
         /// <param name="fileName">File name</param>
-        public void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "", string mimeType  = "", string fileName = "")
+        public void SetMetaField(string ID, string data, bool readAllMetaFrames, string zone = DEFAULT_ZONE_NAME, byte tagVersion = 0, ushort streamNumber = 0, string language = "", string mimeType = "", string fileName = "")
         {
             // Finds the ATL field identifier
             Field supportedMetaID = getFrameMapping(zone, ID, tagVersion);
@@ -368,7 +367,7 @@ namespace ATL.AudioData.IO
             }
             else if (readAllMetaFrames && ID.Length > 0) // ...else store it in the additional fields Dictionary
             {
-                MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, mimeType, fileName, zone : zone);
+                MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, streamNumber, language, mimeType, fileName, zone: zone);
                 if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
                 {
                     tagData.AdditionalFields.Remove(fieldInfo);

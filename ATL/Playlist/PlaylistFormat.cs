@@ -73,7 +73,7 @@ namespace ATL.Playlist
         /// <param name="ID">Format ID</param>
         /// <param name="iName">Format name</param>
         /// <param name="writable">Indicate if ATL implements writing for this Format</param>
-        public PlaylistFormat(int ID, string iName, bool writable = true)
+        public PlaylistFormat(short ID, string iName, bool writable = true)
         {
             init(ID, iName, writable);
         }
@@ -100,7 +100,7 @@ namespace ATL.Playlist
         /// <param name="id">Format ID</param>
         /// <param name="name">Format name</param>
         /// <param name="writable">Indicate if ATL implements writing for this Format</param>
-        protected void init(int id, string name, bool writable = true)
+        protected void init(short id, string name, bool writable = true)
         {
             base.init(id, name, "", writable);
             LocationFormat = LocationFormatting.FilePath;

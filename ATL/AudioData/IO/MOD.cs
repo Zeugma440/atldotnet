@@ -113,9 +113,7 @@ namespace ATL.AudioData.IO
             {
                 AudioFormat f = new AudioFormat(audioFormat);
                 if (modFormats.TryGetValue(formatTag, out var format))
-                    f.Name = f.Name + " (" + format.Name + ")";
-                else
-                    f.Name = f.Name + " (Unknown)";
+                    f.SpecifyCodec(format.Name);
                 return f;
             }
         }

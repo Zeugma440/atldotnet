@@ -60,7 +60,7 @@ namespace ATL.AudioData.IO
             get
             {
                 AudioFormat f = new AudioFormat(audioFormat);
-                f.Name = f.Name + " (" + trackerName + ")";
+                f.SpecifyCodec(trackerName);
                 return f;
             }
         }

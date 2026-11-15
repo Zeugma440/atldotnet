@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Security.Cryptography.X509Certificates;
+using System.Xml.Linq;
 
 namespace ATL
 {
@@ -13,40 +15,32 @@ namespace ATL
         /// Container ID
         /// Reference : AudioDataIOFactory.CID_ constants
         /// </summary>
-        public int ContainerId { get; set; }
+        public short ContainerId { get; set; }
 
         /// <summary>
-        /// Audio format
+        /// Name of the container, if the format has one (e.g. "Matroska")
+        /// </summary>
+        public string ContainerName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Audio data format / Codec
         /// </summary>
         public Format DataFormat { get; set; }
 
-        /// <summary>
-        /// Standard Constructor
-        /// </summary>
-        /// <param name="containerId">ID of the container format</param>
-        /// <param name="dataFormat">Audio data format</param>
-        /// <param name="name">Name</param>
-        /// <param name="shortName">Short name</param>
-        /// <param name="writable">Indicate if ATL implements writing for this Format</param>
-        public AudioFormat(short containerId, Format dataFormat, string name, string shortName = "", bool writable = true)
-        {
-            ContainerId = containerId;
-            DataFormat = new Format(dataFormat);
-            init(combineIds(containerId, dataFormat.ID), name, 0 == shortName.Length ? name : shortName, writable);
-        }
 
         /// <summary>
-        /// Standard Constructor
+        /// Constructor for a simple format where audio data and container are the same structure (e.g. MP3)
         /// </summary>
-        /// <param name="dataFormatId">ID of the data format</param>
-        /// <param name="name">Name</param>
-        /// <param name="shortName">Short name</param>
+        /// <param name="id">ID of the data format / codec</param>
+        /// <param name="name">Name of the data format / codec</param>
+        /// <param name="shortName">Short name of the data format / codec</param>
         /// <param name="writable">Indicate if ATL implements writing for this Format</param>
-        public AudioFormat(short dataFormatId, string name, string shortName = "", bool writable = true)
+        public AudioFormat(short id, string name, string shortName = "", bool writable = true)
         {
-            ContainerId = dataFormatId;
-            DataFormat = new Format(dataFormatId, name, 0 == shortName.Length ? name : shortName, writable);
-            init(dataFormatId, name, shortName, writable);
+            ContainerId = id;
+            ContainerName = name;
+            DataFormat = new Format(id, name, 0 == shortName.Length ? name : shortName, writable);
+            init(id, name, shortName, writable);
         }
 
         /// <summary>
@@ -66,7 +60,6 @@ namespace ATL
         {
             copyFrom(f);
             DataFormat = f;
-            ComputeId();
         }
 
         /// <summary>
@@ -76,21 +69,47 @@ namespace ATL
         protected void copyFrom(AudioFormat f)
         {
             ContainerId = f.ContainerId;
+            ContainerName = f.ContainerName;
             DataFormat = new Format(f.DataFormat);
             base.copyFrom(f);
         }
 
         /// <summary>
-        /// Compute the Format ID using Container format ID and Audio format ID
+        /// Turns into a container format, using the given Audio data / codec name and ID
         /// </summary>
-        public void ComputeId()
+        public void SpecifyCodec(String codecName, short codecId = 0)
         {
-            ID = combineIds((short)Math.Min(short.MaxValue, ContainerId), (short)Math.Min(short.MaxValue, DataFormat.ID));
+            DataFormat = new Format(codecId, codecName);
         }
 
-        private static int combineIds(int id1, int id2)
+        /// <summary>
+        /// Turns into a container format, using the given Format as Audio data / codec information
+        /// </summary>
+        public void SpecifyCodec(Format format)
         {
-            return (id1 << 16) + id2;
+            DataFormat = new Format(format);
+        }
+
+
+        /// <summary>
+        /// Name of the format (e.g. "FLAC"), including the Audio data format / Codec if the current format is a container (e.g. "Matroska / FLAC")
+        /// </summary>
+        override public string Name
+        {
+            get
+            {
+                if (ContainerName.Length > 0 && ContainerName != DataFormat.Name) return $"{ContainerName} / {DataFormat.Name}";
+                else return DataFormat.Name;
+            }
+        }
+
+        /// <inheritdoc/>
+        protected override int UniqueID
+        {
+            get
+            {
+                return (ContainerId << 16) + DataFormat.MainID;
+            }
         }
     }
 }

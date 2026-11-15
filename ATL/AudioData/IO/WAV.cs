@@ -111,7 +111,7 @@ namespace ATL.AudioData.IO
             get
             {
                 AudioFormat f = new AudioFormat(audioFormat);
-                f.Name = f.Name + " (" + getFormat() + ")";
+                f.SpecifyCodec(getFormat());
                 return f;
             }
         }

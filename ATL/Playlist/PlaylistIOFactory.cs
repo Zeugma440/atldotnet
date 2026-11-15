@@ -13,35 +13,35 @@ namespace ATL.Playlist
         /// <summary>
         /// M3U format
         /// </summary>
-        public const int PL_M3U = 1;
+       public const short PL_M3U = 1;
         /// <summary>
         /// PLS format
         /// </summary>
-        public const int PL_PLS = 2;
+       public const short PL_PLS = 2;
         /// <summary>
         /// FPL format
         /// </summary>
-        public const int PL_FPL = 3;
+       public const short PL_FPL = 3;
         /// <summary>
         /// XSPF format
         /// </summary>
-        public const int PL_XSPF = 4;
+       public const short PL_XSPF = 4;
         /// <summary>
         /// SMIL format
         /// </summary>
-        public const int PL_SMIL = 5;
+       public const short PL_SMIL = 5;
         /// <summary>
         /// ASX format
         /// </summary>
-        public const int PL_ASX = 6;
+       public const short PL_ASX = 6;
         /// <summary>
         /// B4S format
         /// </summary>
-        public const int PL_B4S = 7;
+       public const short PL_B4S = 7;
         /// <summary>
         /// Daum Playlist (PotPlayer)
         /// </summary>
-        public const int PL_DPL = 8;
+       public const short PL_DPL = 8;
 
         // The instance of this factory
         private static PlaylistIOFactory theFactory;
@@ -148,7 +148,7 @@ namespace ATL.Playlist
             {
                 format = Format.UNKNOWN_FORMAT;
             }
-            var result = GetPlaylistIO(format.ID, path);
+            var result = GetPlaylistIO(format.MainID, path);
 
             // Default settings inherited from format
             if (!format.Equals(Format.UNKNOWN_FORMAT))

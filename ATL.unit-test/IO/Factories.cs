@@ -18,12 +18,10 @@ namespace ATL.test.IO
             Format f2 = new Format(f1);
 
             f1.AddMimeType("ef/gh");
-            f1.ID = 2;
+            f1.MainID = 2;
             f1.AddExtension("bb");
-            f1.Name = "AA";
 
-            Assert.AreEqual("AAA", f2.Name);
-            Assert.AreEqual(1, f2.ID);
+            Assert.AreEqual(1, f2.MainID);
             Assert.AreEqual(1, f2.MimeList.Count);
             Assert.AreEqual(false, f2.IsValidExtension("bb"));
         }

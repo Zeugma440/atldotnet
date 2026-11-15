@@ -157,10 +157,10 @@ namespace ATL.AudioData.IO
         {
             get
             {
-                Format format = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("ape")[0]);
-                format.Name = format.Name + " v" + m_tagVersion / 1000f;
-                format.ID += m_tagVersion / 10; // e.g. 1250 -> 125
-                return new List<Format>(new[] { format });
+                Format subformat = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("ape")[0]);
+                byte subformatId = (byte)Math.Min(byte.MaxValue, m_tagVersion / 10); // e.g. 1250 -> 125; max should be 2000 -> 200
+                subformat.MakeSubformat(" v" + m_tagVersion / 1000f, subformatId);
+                return new List<Format>(new[] { subformat });
             }
         }
 

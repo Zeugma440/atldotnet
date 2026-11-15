@@ -29,11 +29,17 @@ namespace ATL.AudioData.IO
     /// </summary>
 	partial class Ogg : VorbisTagHolder, IMetaDataIO, IAudioDataIO
     {
-        // Contents of the file
-        private const int CONTENTS_VORBIS = 0;				// Vorbis
-        private const int CONTENTS_OPUS = 1;                // Opus
-        private const int CONTENTS_FLAC = 2;                // FLAC
-        private const int CONTENTS_SPEEX = 3;               // Speex
+        /// <summary>
+        /// Contents of the file
+        /// </summary>
+        public enum Contents
+        {
+            UNKNOWN = 0,
+            VORBIS = 1,
+            OPUS = 2,
+            SPEEX = 3,
+            FLAC = AudioDataIOFactory.CID_FLAC, // 4
+        }
 
         private const int MAX_PAGE_SIZE = 255 * 255;
 
@@ -73,7 +79,7 @@ namespace ATL.AudioData.IO
 
         private readonly FileInfo info = new();
 
-        private int contents;
+        private Contents contents;
 
         private ushort bitRateNominal;
         private ulong samples;
@@ -426,7 +432,7 @@ namespace ATL.AudioData.IO
             bitRateNominal = 0;
             BitDepth = -1;
             samples = 0;
-            contents = -1;
+            contents = Contents.UNKNOWN;
             AudioDataOffset = -1;
             AudioDataSize = 0;
 
@@ -451,16 +457,16 @@ namespace ATL.AudioData.IO
                 string subformat;
                 switch (contents)
                 {
-                    case CONTENTS_VORBIS:
+                    case Contents.VORBIS:
                         subformat = "Vorbis";
                         break;
-                    case CONTENTS_OPUS:
+                    case Contents.OPUS:
                         subformat = "Opus";
                         break;
-                    case CONTENTS_SPEEX:
+                    case Contents.SPEEX:
                         subformat = "Speex";
                         break;
-                    case CONTENTS_FLAC:
+                    case Contents.FLAC:
                         subformat = "FLAC";
                         f.DataFormat = AudioDataIOFactory.GetInstance().getFormat(AudioDataIOFactory.CID_FLAC);
                         break;
@@ -468,12 +474,11 @@ namespace ATL.AudioData.IO
                         subformat = "Unsupported";
                         break;
                 }
-                f.Name = f.Name + " (" + subformat + ")";
-                f.ComputeId();
+                f.SpecifyCodec(subformat, (byte)contents);
                 return f;
             }
         }
-        public int CodecFamily => contents == CONTENTS_FLAC ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY;
+        public int CodecFamily => contents == Contents.FLAC ? AudioDataIOFactory.CF_LOSSLESS : AudioDataIOFactory.CF_LOSSY;
 
         /// <inheritdoc/>
         public List<MetaDataIOFactory.TagType> GetSupportedMetas()
@@ -662,7 +667,7 @@ namespace ATL.AudioData.IO
                 {
                     switch (contents)
                     {
-                        case CONTENTS_VORBIS or CONTENTS_FLAC:
+                        case Contents.VORBIS or Contents.FLAC:
                             {
                                 // Determine the boundaries of 3rd header (Setup header) by searching from the last-but-one page
                                 source.Position = pageOffsets.Count > 1 ? pageOffsets[^2] : pageOffsets[0];
@@ -710,7 +715,7 @@ namespace ATL.AudioData.IO
 
                                 break;
                             }
-                        case CONTENTS_OPUS or CONTENTS_SPEEX:
+                        case Contents.OPUS or Contents.SPEEX:
                             info.SetupHeaderStart = info.SetupHeaderEnd;
                             info.CommentHeaderEnd = info.SetupHeaderStart;
                             info.CommentHeaderSpanPages = pageOffsets.Count;
@@ -755,19 +760,19 @@ namespace ATL.AudioData.IO
 
             if (VORBIS_HEADER_ID.AsSpan().StartsWith(headerStart))
             {
-                contents = CONTENTS_VORBIS;
+                contents = Contents.VORBIS;
                 info.VorbisParameters.FromStream(source);
                 isSupportedHeader = info.VorbisParameters.IsValid();
             }
             else if (OPUS_HEADER_ID.AsSpan().StartsWith(headerStart))
             {
-                contents = CONTENTS_OPUS;
+                contents = Contents.OPUS;
                 info.OpusParameters.FromStream(source);
                 isSupportedHeader = info.OpusParameters.IsValid();
             }
             else if (FLAC_HEADER_ID.AsSpan().StartsWith(headerStart))
             {
-                contents = CONTENTS_FLAC;
+                contents = Contents.FLAC;
                 source.Seek(FLAC_HEADER_ID.Length, SeekOrigin.Current); // Skip the entire FLAC segment header
                 source.Seek(2, SeekOrigin.Current); // FLAC-to-Ogg mapping version
                 short nbHeaderPackets = BinaryPrimitives.ReadInt16BigEndian(source.ReadBytes(2));
@@ -776,7 +781,7 @@ namespace ATL.AudioData.IO
             }
             else if (SPEEX_HEADER_ID.AsSpan().StartsWith(headerStart))
             {
-                contents = CONTENTS_SPEEX;
+                contents = Contents.SPEEX;
                 info.SpeexParameters.FromStream(source);
                 isSupportedHeader = info.SpeexParameters.IsValid();
             }
@@ -787,25 +792,25 @@ namespace ATL.AudioData.IO
             return isSupportedHeader;
         }
 
-        private static void readCommentPacket(Stream source, int contentType, VorbisTag tag, ReadTagParams readTagParams)
+        private static void readCommentPacket(Stream source, Contents contentType, VorbisTag tag, ReadTagParams readTagParams)
         {
             byte[] buffer = new byte[8];
             bool isValidTagHeader = false;
-            if (contentType.Equals(CONTENTS_VORBIS))
+            if (contentType.Equals(Contents.VORBIS))
             {
                 if (source.Read(buffer, 0, 7) < 7) return;
                 isValidTagHeader = buffer.AsSpan().StartsWith(VORBIS_COMMENT_ID);
             }
-            else if (contentType.Equals(CONTENTS_OPUS))
+            else if (contentType.Equals(Contents.OPUS))
             {
                 if (source.Read(buffer, 0, 8) < 8) return;
                 isValidTagHeader = buffer.AsSpan().StartsWith(OPUS_TAG_ID);
             }
-            else if (contentType.Equals(CONTENTS_SPEEX))
+            else if (contentType.Equals(Contents.SPEEX))
             {
                 isValidTagHeader = true; // No specific tag header
             }
-            else if (contentType.Equals(CONTENTS_FLAC))
+            else if (contentType.Equals(Contents.FLAC))
             {
                 if (source.Read(buffer, 0, 4) < 4) return;
                 //uint blockLength = StreamUtils.DecodeBEUInt24(buffer, 1);
@@ -858,8 +863,8 @@ namespace ATL.AudioData.IO
         {
             switch (contents)
             {
-                case CONTENTS_FLAC: return false;
-                case CONTENTS_SPEEX: return info.SpeexParameters.Vbr > 0;
+                case Contents.FLAC: return false;
+                case Contents.SPEEX: return info.SpeexParameters.Vbr > 0;
                 default: return true;
             }
         }
@@ -909,22 +914,22 @@ namespace ATL.AudioData.IO
 
             switch (contents)
             {
-                case CONTENTS_VORBIS:
+                case Contents.VORBIS:
                     ChannelsArrangement = getArrangementFromCode(info.VorbisParameters.ChannelMode);
                     SampleRate = info.VorbisParameters.SampleRate;
                     bitRateNominal = (ushort)(info.VorbisParameters.BitRateNominal / 1000); // Integer division
                     break;
-                case CONTENTS_OPUS:
+                case Contents.OPUS:
                     ChannelsArrangement = getArrangementFromCode(info.OpusParameters.OutputChannelCount);
                     SampleRate = (int)info.OpusParameters.InputSampleRate;
                     // No nominal bitrate for OPUS
                     break;
-                case CONTENTS_SPEEX:
+                case Contents.SPEEX:
                     ChannelsArrangement = GuessFromChannelNumber(info.SpeexParameters.NbChannels);
                     SampleRate = info.SpeexParameters.Rate;
                     bitRateNominal = (ushort)(info.SpeexParameters.Bitrate / 1000);
                     break;
-                case CONTENTS_FLAC:
+                case Contents.FLAC:
                     ChannelsArrangement = info.FlacParameters.getChannelsArrangement();
                     SampleRate = info.FlacParameters.SampleRate;
                     BitDepth = info.FlacParameters.BitsPerSample;
@@ -958,24 +963,24 @@ namespace ATL.AudioData.IO
             // Create the "unpaged" in-memory stream to be written, containing the vorbis tag (=comment header)
             using (var memStream = new MemoryStream((int)(info.SetupHeaderEnd - info.CommentHeaderStart)))
             {
-                if (CONTENTS_VORBIS == contents)
+                if (Contents.VORBIS == contents)
                 {
                     await memStream.WriteAsync(VORBIS_COMMENT_ID, 0, VORBIS_COMMENT_ID.Length);
                     vorbisTag.switchOggBehaviour();
                     await vorbisTag.WriteAsync(memStream, tag, args);
                 }
-                else if (CONTENTS_OPUS == contents)
+                else if (Contents.OPUS == contents)
                 {
                     await memStream.WriteAsync(OPUS_TAG_ID, 0, OPUS_TAG_ID.Length);
                     vorbisTag.switchOggBehaviour();
                     await vorbisTag.WriteAsync(memStream, tag, args);
                 }
-                else if (CONTENTS_SPEEX == contents)
+                else if (Contents.SPEEX == contents)
                 {
                     vorbisTag.switchFlacBehaviour();
                     await vorbisTag.WriteAsync(memStream, tag, args);
                 }
-                else if (CONTENTS_FLAC == contents)
+                else if (Contents.FLAC == contents)
                 {
                     vorbisTag.switchFlacBehaviour();
                     FLAC.writeVorbisCommentBlock(memStream, tag, vorbisTag, true);
@@ -988,7 +993,7 @@ namespace ATL.AudioData.IO
                 byte setupHeader_remainingBytesInLastSegment = 0;
 
                 // VORBIS: Append the setup header in the "unpaged" in-memory stream
-                if (CONTENTS_VORBIS == contents)
+                if (Contents.VORBIS == contents)
                 {
                     s.Seek(info.SetupHeaderStart, SeekOrigin.Begin);
                     if (1 == info.SetupHeaderSpanPages)
@@ -1058,7 +1063,7 @@ namespace ATL.AudioData.IO
                 entireSegmentsTable[i] = 255;
             }
             entireSegmentsTable[commentsHeader_nbSegments - 1] = commentsHeader_remainingBytesInLastSegment;
-            if (CONTENTS_VORBIS == contents)
+            if (Contents.VORBIS == contents)
             {
                 for (int i = commentsHeader_nbSegments; i < commentsHeader_nbSegments + setupHeader_nbSegments - 1; i++)
                 {

@@ -95,10 +95,7 @@ namespace ATL.AudioData.IO
             get
             {
                 AudioFormat f = new AudioFormat(audioFormat);
-                if (codec.Length > 0)
-                    f.Name = f.Name + " (" + codec + ")";
-                else
-                    f.Name += " (Unknown)";
+                if (codec.Length > 0) f.SpecifyCodec(codec);
                 return f;
             }
         }

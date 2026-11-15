@@ -466,10 +466,9 @@ namespace ATL.AudioData.IO
         {
             get
             {
-                Format format = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("id3v2")[0]);
-                format.Name = format.Name + "." + m_tagVersion;
-                format.ID += m_tagVersion;
-                return new List<Format>(new[] { format });
+                Format subformat = new Format(MetaDataIOFactory.GetInstance().getFormatsFromPath("id3v2")[0]);
+                subformat.MakeSubformat("." + m_tagVersion, (byte)m_tagVersion);
+                return new List<Format>(new[] { subformat });
             }
         }
 
