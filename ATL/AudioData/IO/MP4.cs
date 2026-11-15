@@ -26,7 +26,7 @@ namespace ATL.AudioData.IO
     ///     instead of being written once and referenced from each chapter
     ///
     /// </summary>
-	class MP4 : MetaDataIO, IAudioDataIO
+    class MP4 : MetaDataIO, IAudioDataIO
     {
         // Bit rate type codes
         public const byte MP4_BITRATE_TYPE_UNKNOWN = 0;                      // Unknown
@@ -170,6 +170,8 @@ namespace ATL.AudioData.IO
         private bool isFragmented;
 
         private AudioDataManager.SizeInfo sizeInfo;
+        private string _descFormat;
+        private AudioFormat _audioFormat;
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -177,11 +179,20 @@ namespace ATL.AudioData.IO
         // IAudioDataIO
         public bool IsVBR => MP4_BITRATE_TYPE_VBR == bitrateTypeID;
 
-        public AudioFormat AudioFormat { get; }
-        public int CodecFamily => AudioDataIOFactory.CF_LOSSY;
+        public AudioFormat AudioFormat
+        {
+            get
+            {
+                AudioFormat f = new AudioFormat(_audioFormat);
+                f.ShortName = _descFormat.ToUpper();
+                return f;
+            }
+        }
+
+        public int CodecFamily { get; set; } = AudioDataIOFactory.CF_LOSSY;
 
         public double BitRate => bitrate / 1000.0;
-        public int BitDepth => -1; // Irrelevant for lossy formats
+        public int BitDepth { get; set; } = -1;
         public double Duration => getDuration();
 
         public int SampleRate { get; private set; }
@@ -193,12 +204,16 @@ namespace ATL.AudioData.IO
         {
             return new List<MetaDataIOFactory.TagType> { MetaDataIOFactory.TagType.NATIVE, MetaDataIOFactory.TagType.APE, MetaDataIOFactory.TagType.ID3V1 };
         }
+
         /// <inheritdoc/>
         public bool IsNativeMetadataRich => true;
+
         /// <inheritdoc/>
         protected override bool supportsAdditionalFields => true;
+
         /// <inheritdoc/>
         protected override bool supportsPictures => true;
+
         public ChannelsArrangement ChannelsArrangement { get; private set; }
 
         public long AudioDataOffset { get; set; }
@@ -253,13 +268,15 @@ namespace ATL.AudioData.IO
             chapterTextTrackEdits = null;
             chapterPictureTrackEdits = null;
 
+            _descFormat = String.Empty;
+
             ResetData();
         }
 
         public MP4(string fileName, AudioFormat format)
         {
             this.FileName = fileName;
-            AudioFormat = format;
+            _audioFormat = format;
             resetData();
         }
 
@@ -349,6 +366,7 @@ namespace ATL.AudioData.IO
         private bool readMP4(Stream source, ReadTagParams readTagParams)
         {
             Span<byte> data = stackalloc byte[8];
+            var data32 = data[..4];
 
             IList<long> audioTrackOffsets = new List<long>(); // Offset of all detected audio/video tracks (tracks with a media type of 'soun' or 'vide')
             IList<MP4Sample> chapterTextTrackSamples = new List<MP4Sample>(); // If non-empty, quicktime chapters have been detected
@@ -361,7 +379,7 @@ namespace ATL.AudioData.IO
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             // FTYP atom
-            if (source.Read(data[..4]) < 4) return false;
+            if (source.Read(data32) < 4) return false;
             var atomSize = BinaryPrimitives.ReadUInt32BigEndian(data);
             source.Seek(atomSize - 4, SeekOrigin.Current);
 
@@ -393,12 +411,13 @@ namespace ATL.AudioData.IO
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mvhd atom could not be found; aborting read");
                 return false;
             }
+
             int version = source.ReadByte();
             source.Seek(3, SeekOrigin.Current); // 3-byte flags
             if (1 == version) source.Seek(16, SeekOrigin.Current);
             else source.Seek(8, SeekOrigin.Current);
 
-            if (source.Read(data[..4]) < 4) return false;
+            if (source.Read(data32) < 4) return false;
             globalTimeScale = BinaryPrimitives.ReadUInt32BigEndian(data);
             long timeLengthPerSec;
             if (1 == version)
@@ -408,9 +427,10 @@ namespace ATL.AudioData.IO
             }
             else
             {
-                if (source.Read(data[..4]) < 4) return false;
-                timeLengthPerSec = BinaryPrimitives.ReadUInt32BigEndian(data);
+                if (source.Read(data32) < 4) return false;
+                timeLengthPerSec = BinaryPrimitives.ReadUInt32BigEndian(data32);
             }
+
             calculatedDurationMs = timeLengthPerSec * 1000.0 / globalTimeScale;
             trackCounterPosition = source.Position + 76;
 
@@ -426,6 +446,7 @@ namespace ATL.AudioData.IO
                     LogDelegator.GetLogDelegate()(Log.LV_DEBUG, "total tracks found : " + currentTrakIndex);
                     break;
                 }
+
                 long trakPosition = source.Position - 8;
 
                 readTrack(source, trakPosition, trakSize, readTagParams, ++currentTrakIndex, chapterTextTrackSamples, chapterPictureTrackSamples, chapterTrackIndexes, audioTrackOffsets, moovPosition, moovSize);
@@ -478,6 +499,7 @@ namespace ATL.AudioData.IO
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdat atom could not be found; aborting read");
                 return false;
             }
+
             long mdatOffset = source.Position;
             AudioDataOffset = mdatOffset - mdatHeaderSize;
             if (0 == AudioDataSize) AudioDataSize = mdatSize;
@@ -718,8 +740,8 @@ namespace ATL.AudioData.IO
             int mediaTimeScale = 1000;
 
             uint int32Data;
-            byte[] data32 = new byte[4];
-            byte[] data64 = new byte[8];
+            Span<byte> data64 = stackalloc byte[8];
+            var data32 = data64[..4];
 
             bool isCurrentTrackFirstChapterTextTrack = false; // First chapter text track which should contain chapter titles (as opposed to URLs)
             bool isCurrentTrackOtherChapterTrack; // Generic marker for other chapter-related text tracks
@@ -736,7 +758,7 @@ namespace ATL.AudioData.IO
             source.Seek(3, SeekOrigin.Current); // Flags
             source.Seek(intLength * 2, SeekOrigin.Current); // Creation & Modification Dates
 
-            if (source.Read(data32, 0, 4) < 4) return;
+            if (source.Read(data32) < 4) return;
             int trackId = BinaryPrimitives.ReadInt32BigEndian(data32);
 
             // Detect the track type
@@ -761,7 +783,7 @@ namespace ATL.AudioData.IO
 
                 source.Seek(0 == mdhdVersion ? 8 : 16, SeekOrigin.Current); // Creation and modification date
 
-                if (source.Read(data32, 0, 4) < 4) return;
+                if (source.Read(data32) < 4) return;
                 mediaTimeScale = BinaryPrimitives.ReadInt32BigEndian(data32);
 
                 source.Seek(mdiaPosition, SeekOrigin.Begin);
@@ -775,7 +797,7 @@ namespace ATL.AudioData.IO
             }
             source.Seek(4, SeekOrigin.Current); // Version and flags
             source.Seek(4, SeekOrigin.Current); // Quicktime type
-            if (source.Read(data32, 0, 4) < 4) return;
+            if (source.Read(data32) < 4) return;
             string mediaType = Utils.Latin1Encoding.GetString(data32);
 
             // Check if current track is the 1st chapter track
@@ -833,35 +855,29 @@ namespace ATL.AudioData.IO
                 return;
             }
             source.Seek(4, SeekOrigin.Current); // 4-byte flags
-            if (source.Read(data32, 0, 4) < 4) return;
+            if (source.Read(data32) < 4) return;
             uint nbDescriptions = BinaryPrimitives.ReadUInt32BigEndian(data32);
 
             for (int i = 0; i < nbDescriptions; i++)
             {
-                if (source.Read(data32, 0, 4) < 4) return;
+                var entryPos = source.Position;
+                if (source.Read(data32) < 4) return;
                 int32Data = BinaryPrimitives.ReadUInt32BigEndian(data32); // 4-byte description length
-                if (source.Read(data32, 0, 4) < 4) return;
-                string descFormat = Utils.Latin1Encoding.GetString(data32);
+                if (source.Read(data32) < 4) return;
+                _descFormat = Utils.Latin1Encoding.GetString(data32);
 
                 // Descriptors for audio
-                if (VALID_AUDIO_DESCRIPTORS.Contains(descFormat))
+                if (VALID_AUDIO_DESCRIPTORS.Contains(_descFormat))
                 {
-                    source.Seek(6, SeekOrigin.Current); // SampleEntry / 6-byte reserved zone set to zero
-                    source.Seek(2, SeekOrigin.Current); // SampleEntry / Data reference index
+                    if (!TryParseAudioData(source))
+                    {
+                        return;
+                    }
 
-                    source.Seek(8, SeekOrigin.Current); // AudioSampleEntry / 8-byte reserved zone
-
-                    if (source.Read(data32, 0, 2) < 2) return;
-                    ushort channels = BinaryPrimitives.ReadUInt16BigEndian(data32); // Channel count
-                    ChannelsArrangement = GuessFromChannelNumber(channels);
-
-                    source.Seek(2, SeekOrigin.Current); // Sample size
-                    source.Seek(2, SeekOrigin.Current); // Quicktime stuff (should be length 4, but sampleRate doesn't work when it is...)
-
-                    if (source.Read(data32, 0, 4) < 4) return;
-                    SampleRate = (int)BinaryPrimitives.ReadUInt32BigEndian(data32);
+                    // there might be some trailing zeros
+                    source.Position = entryPos + int32Data;
                 }
-                else if (descFormat.Equals("jpeg")) // Descriptor for picture (slides / chapter pictures)
+                else if (_descFormat.Equals("jpeg")) // Descriptor for picture (slides / chapter pictures)
                 {
                     isCurrentTrackFirstChapterPicturesTrack = chapterTrackIndexes.Values.Any(list => list.Contains(trackId));
                     source.Seek(int32Data - 4, SeekOrigin.Current);
@@ -892,7 +908,7 @@ namespace ATL.AudioData.IO
                     IList<int> thisTrackIndexes = new List<int>();
                     for (int i = 0; i < (chapSize - 8) / 4; i++)
                     {
-                        if (source.Read(data32, 0, 4) < 4) return;
+                        if (source.Read(data32) < 4) return;
                         var index = BinaryPrimitives.ReadInt32BigEndian(data32);
                         if (index > 0) thisTrackIndexes.Add(BinaryPrimitives.ReadInt32BigEndian(data32));
                         else LogDelegator.GetLogDelegate()(Log.LV_INFO, "Track " + trackId + " : detected illegal chapter track ID : " + index);
@@ -947,18 +963,18 @@ namespace ATL.AudioData.IO
                 return;
             }
             source.Seek(4, SeekOrigin.Current); // 4-byte flags
-            if (source.Read(data32, 0, 4) < 4) return;
+            if (source.Read(data32) < 4) return;
             uint blocByteSizeForAll = BinaryPrimitives.ReadUInt32BigEndian(data32);
             if (0 == blocByteSizeForAll) // If value other than 0, same size everywhere => CBR
             {
-                if (source.Read(data32, 0, 4) < 4) return;
+                if (source.Read(data32) < 4) return;
                 uint nbSizes = BinaryPrimitives.ReadUInt32BigEndian(data32);
                 uint max = 0;
                 uint min = uint.MaxValue;
 
                 for (int i = 0; i < nbSizes; i++)
                 {
-                    if (source.Read(data32, 0, 4) < 4) return;
+                    if (source.Read(data32) < 4) return;
                     int32Data = BinaryPrimitives.ReadUInt32BigEndian(data32);
                     min = Math.Min(min, int32Data);
                     max = Math.Max(max, int32Data);
@@ -1055,7 +1071,7 @@ namespace ATL.AudioData.IO
                 }
 
                 source.Seek(4, SeekOrigin.Current); // Version and flags
-                if (source.Read(data32, 0, 4) < 4) return;
+                if (source.Read(data32) < 4) return;
                 var nbChunkOffsets = BinaryPrimitives.ReadUInt32BigEndian(data32);
 
                 for (int i = 0; i < nbChunkOffsets; i++)
@@ -1064,14 +1080,14 @@ namespace ATL.AudioData.IO
                     long valueLong;
                     if (4 == nbBytes)
                     {
-                        if (source.Read(data32, 0, 4) < 4) return;
+                        if (source.Read(data32) < 4) return;
                         valueLong = BinaryPrimitives.ReadUInt32BigEndian(data32);
                         valueObj = (uint)valueLong;
 
                     }
                     else
                     {
-                        if (source.Read(data64, 0, 8) < 8) return;
+                        if (source.Read(data64) < 8) return;
                         valueLong = BinaryPrimitives.ReadInt64BigEndian(data64);
                         valueObj = valueLong;
                     }
@@ -1330,7 +1346,7 @@ namespace ATL.AudioData.IO
                                 Format = ChapterInfo.FORMAT.Nero
                             };
 
-                            if (source.Read(data64, 0, 8) < 8) return;
+                            if (source.Read(data64) < 8) return;
                             chapter.StartTime = (uint)Math.Round(BinaryPrimitives.ReadInt64BigEndian(data64) / 10000.0);
 
                             if (!Settings.MP4_disableNeroChecks && chapter.StartTime >= trackEndTime)
@@ -1406,6 +1422,7 @@ namespace ATL.AudioData.IO
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "hdlr atom could not be found; aborting read");
                 return;
             }
+            long hdlrPosition = source.Position - 8;
             source.Seek(4, SeekOrigin.Current); // 4-byte flags
             source.Seek(4, SeekOrigin.Current); // Quicktime type
             if (source.Read(data, 0, 4) < 4) return;
@@ -1714,7 +1731,7 @@ namespace ATL.AudioData.IO
 
             if (!readAllMetaFrames || ID.Length <= 0) return; // Store it in the additional fields Dictionary
 
-            MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, 0, "", zone : "");
+            MetaFieldInfo fieldInfo = new MetaFieldInfo(getImplementedTagType(), ID, data, 0, "", "");
             if (tagData.AdditionalFields.Contains(fieldInfo)) // Prevent duplicates
             {
                 tagData.AdditionalFields.Remove(fieldInfo);
@@ -1784,21 +1801,23 @@ namespace ATL.AudioData.IO
             bool first = true;
             int iterations = 0;
             int atomHeaderSize = 8;
-            byte[] data = new byte[8];
+
+            Span<byte> data64 = stackalloc byte[8];
+            var data32 = data64[..4];
 
             do
             {
                 if (!first) source.Seek(atomSize - atomHeaderSize, SeekOrigin.Current);
                 atomHeaderSize = 8; // Default variant where size takes up 32-bit
-                if (source.Read(data, 0, 4) < 4) return new Tuple<uint, int>(0, atomHeaderSize);
-                atomSize = BinaryPrimitives.ReadUInt32BigEndian(data);
-                if (source.Read(data, 0, 4) < 4) return new Tuple<uint, int>(0, atomHeaderSize);
-                atomHeader = Utils.Latin1Encoding.GetString(data, 0, 4);
+                if (source.Read(data32) < 4) return new Tuple<uint, int>(0, atomHeaderSize);
+                atomSize = BinaryPrimitives.ReadUInt32BigEndian(data32);
+                if (source.Read(data32) < 4) return new Tuple<uint, int>(0, atomHeaderSize);
+                atomHeader = Utils.Latin1Encoding.GetString(data32);
                 if (1 == atomSize) // 64-bit size variant
                 {
                     atomHeaderSize += 8;
-                    if (source.Read(data, 0, 8) < 8) return new Tuple<uint, int>(0, atomHeaderSize);
-                    atomSize = BinaryPrimitives.ReadInt64BigEndian(data);
+                    if (source.Read(data64) < 8) return new Tuple<uint, int>(0, atomHeaderSize);
+                    atomSize = BinaryPrimitives.ReadInt64BigEndian(data64);
                 }
 
                 if (first) first = false;
@@ -2927,6 +2946,230 @@ namespace ATL.AudioData.IO
                     return true;
                 }
                 */
+
+        private bool TryParseAudioData(Stream source)
+        {
+            Span<byte> data32 = stackalloc byte[4];
+            Span<byte> data16 = data32[..2];
+
+            source.Seek(6, SeekOrigin.Current); // SampleEntry / 6-byte reserved zone set to zero
+            source.Seek(2, SeekOrigin.Current); // SampleEntry / Data reference index
+
+            source.Seek(8, SeekOrigin.Current); // AudioSampleEntry / 8-byte reserved zone
+
+            if (source.Read(data16) < 2) return false;
+            ushort channels = BinaryPrimitives.ReadUInt16BigEndian(data16); // Channel count
+            ChannelsArrangement = GuessFromChannelNumber(channels);
+
+            source.Seek(2, SeekOrigin.Current); // Sample size
+            source.Seek(2, SeekOrigin.Current); // Quicktime stuff (should be length 4, but sampleRate doesn't work when it is...)
+
+            if (source.Read(data32) < 4) return false;
+            SampleRate = (int)BinaryPrimitives.ReadUInt32BigEndian(data32);
+            source.Position += 2;
+
+            return _descFormat switch
+            {
+                "mp4a" => TryParseMp4a(source),
+                "alac" => TryParseAlac(source),
+                _ => true,
+            };
+
+            bool TryParseMp4a(Stream stream)
+            {
+                {
+                    var (atomSize, headerSize) = navigateToAtomSize(stream, "esds");
+                    if (atomSize != 0)
+                    {
+                        var dataSize = atomSize - headerSize;
+                        if (!TryParseEsdsAtom(stream, dataSize)) return false;
+                    }
+                }
+                {
+                    var (atomSize, headerSize) = navigateToAtomSize(stream, "btrt");
+                    if (atomSize != 0)
+                    {
+                        var dataSize = atomSize - headerSize;
+                        if (!TryParseBtrtAtom(stream, dataSize)) return false;
+                    }
+                }
+                return true;
+            }
+
+            bool TryParseAlac(Stream source1)
+            {
+                var (atomSine, headerSize) = navigateToAtomSize(source1, "alac");
+                if (atomSine != 0)
+                {
+                    var dataSize = atomSine - headerSize;
+                    if (!this.TryParseAlacAtom(source1, dataSize)) return false;
+                }
+
+                return true;
+            }
+        }
+
+
+        private const byte ES_DescrTag = 0x03;
+        private const byte DecoderConfigDescrTag = 0x04;
+        private const byte DecSpecificInfoTag = 0x05;
+
+        private bool TryParseAlacAtom(Stream source, long dataSize)
+        {
+            if (dataSize < 27) return false;
+
+            Span<byte> span = stackalloc byte[(int)dataSize];
+            if (source.Read(span) != dataSize) return false;
+
+            var sampleSize = span[9];
+            if (sampleSize is not (16 or 20 or 24 or 32))
+                return false; // Invalid sample size
+            this.BitDepth = sampleSize;
+
+            var channels = span[13];
+            if (channels is < 1 or > 8)
+                return false; // Invalid channel count
+            ChannelsArrangement = ChannelsArrangements.GuessFromChannelNumber(channels == 7 ? 8 : channels);
+
+            this.bitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(20, 4));
+            this.SampleRate = BinaryPrimitives.ReadInt32BigEndian(span.Slice(24, 4));
+            this.CodecFamily = AudioDataIOFactory.CF_LOSSLESS;
+
+            return true;
+        }
+
+        private bool TryParseEsdsAtom(Stream source, long dataSize)
+        {
+            if (dataSize < 4) return false;
+
+            Span<byte> span = stackalloc byte[(int)dataSize];
+            if (source.Read(span) != dataSize) return false;
+
+            var offset = 4;
+            if (span[offset++] != ES_DescrTag) return false;
+
+            var esDescriptorSize = ReadDescriptorSize(span, ref offset);
+            if ((esDescriptorSize + offset) > span.Length)
+                return false;
+
+            // Skip ES_ID (2 bytes) and flags (1 byte)
+            offset += 3;
+
+            // Find Decoder Config Descriptor
+            if ((offset > span.Length) || (span[offset++] != DecoderConfigDescrTag))
+                return false;
+
+            var decoderConfigSize = ReadDescriptorSize(span, ref offset);
+            if ((decoderConfigSize + offset) > span.Length)
+                return false;
+
+            // Read decoder config
+            if ((span.Length - offset) < 13)
+                return false;
+
+            var objectTypeIndication = span[offset++];
+            _descFormat = objectTypeIndication switch
+            {
+                0x40 => "AAC-LC",
+                0x66 => "AAC Main",
+                0x67 => "AAC-LC",
+                0x68 => "AAC-SSR",
+                0x69 => "AAC-LTP",
+                0x6B => "MP3",
+                _ => "MP4A"
+            };
+
+            offset += 4; // streamType (1), bufferSizeDB (3)
+
+            // var maxBitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(offset, 4));
+            offset += 4;
+
+            this.bitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(offset, 4)); // Average bitrate
+            offset += 4;
+
+            // Find DecoderSpecificInfo (Audio Specific Config)
+            if (((span.Length - offset) == 0) || (span[offset++] != DecSpecificInfoTag))
+                return false;
+
+            var audioSpecificConfigSize = ReadDescriptorSize(span, ref offset);
+            if (audioSpecificConfigSize > (span.Length - offset))
+                return false;
+
+            if (audioSpecificConfigSize < 2)
+                return false;
+
+            var config = span.Slice(offset, audioSpecificConfigSize);
+
+            var bits = BinaryPrimitives.ReadUInt16BigEndian(config.Slice(0, 2));
+
+            // Extract samplingFrequencyIndex (4 bits starting at bit 5)
+            var samplingFrequencyIndex = (bits >> 7) & 0x0F;
+
+            int channelOffset;
+            if (samplingFrequencyIndex == 15)
+            {
+                // Explicit 24-bit sample rate follows
+                if (config.Length < 5)
+                    return false;
+
+                // Read 24-bit sample rate (bits 9-32)
+                SampleRate = ((config[1] & 0x7F) << 17) | (config[2] << 9) | (config[3] << 1) | (config[4] >> 7);
+                channelOffset = 4;
+            }
+            else
+            {
+                // Use lookup table
+                SampleRate = samplingFrequencyIndex < AAC.AAC_SAMPLE_RATE.Length
+                    ? AAC.AAC_SAMPLE_RATE[samplingFrequencyIndex]
+                    : 0;
+                channelOffset = 1;
+            }
+
+            // Extract channelConfiguration (4 bits)
+            int channels;
+            if (samplingFrequencyIndex == 15)
+            {
+                // Channel config starts at bit 33
+                channels = (config[channelOffset] >> 3) & 0x0F;
+            }
+            else
+            {
+                // Channel config starts at bit 11
+                channels = (config[channelOffset] >> 3) & 0x0F;
+            }
+
+            ChannelsArrangement = ChannelsArrangements.GuessFromChannelNumber(channels == 7 ? 8 : channels);
+
+            return true;
+
+            static int ReadDescriptorSize(Span<byte> span, ref int offset)
+            {
+                var size = 0;
+                var count = 0;
+
+                while (((span.Length - offset) > 0) && (count < 4))
+                {
+                    var b = span[offset++];
+                    size = (size << 7) | (b & 0x7F);
+                    if ((b & 0x80) == 0)
+                        break;
+                    count++;
+                }
+
+                return size;
+            }
+        }
+
+        private bool TryParseBtrtAtom(Stream source, long dataSize)
+        {
+            Span<byte> span = stackalloc byte[(int)dataSize];
+            if (source.Read(span) != dataSize) return false;
+
+            //var maxBitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(4, 4));
+            bitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(8, 4)); // Average bitrate
+
+            return true;
+        }
     }
 #pragma warning restore S125 // Sections of code should not be commented out
 }

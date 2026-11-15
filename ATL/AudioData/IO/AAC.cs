@@ -52,9 +52,9 @@ namespace ATL.AudioData.IO
         public static readonly string[] AAC_BITRATE_TYPE = { "Unknown", "CBR", "VBR" };
 
         // Sample rate values
-        private static readonly int[] SAMPLE_RATE = {   96000, 88200, 64000, 48000, 44100, 32000,
-                                                        24000, 22050, 16000, 12000, 11025, 8000,
-                                                        0, 0, 0, 0 };
+        public static readonly int[] AAC_SAMPLE_RATE = {   96000, 88200, 64000, 48000, 44100, 32000,
+                                                    24000, 22050, 16000, 12000, 11025, 8000,
+                                                    7350, 0, 0, 0 };
 
         private byte headerTypeID;
         private byte bitrateTypeID;
@@ -198,7 +198,7 @@ namespace ATL.AudioData.IO
             Position += 2;
 
             uint channels = 1;
-            SampleRate = SAMPLE_RATE[StreamUtils.ReadBEBits(source, Position, 4)];
+            SampleRate = AAC_SAMPLE_RATE[StreamUtils.ReadBEBits(source, Position, 4)];
             Position += 4;
             channels += StreamUtils.ReadBEBits(source, Position, 4);
             Position += 4;
@@ -230,7 +230,7 @@ namespace ATL.AudioData.IO
                 if (StreamUtils.ReadBEBits(source, position, 2) != 0) break; // Make sure Layer is 0
                 position += 5;
 
-                SampleRate = SAMPLE_RATE[StreamUtils.ReadBEBits(source, position, 4)];
+                SampleRate = AAC_SAMPLE_RATE[StreamUtils.ReadBEBits(source, position, 4)];
                 position += 5;
 
                 uint channels = StreamUtils.ReadBEBits(source, position, 3);
