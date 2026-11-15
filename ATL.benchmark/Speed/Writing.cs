@@ -18,6 +18,9 @@ namespace ATL.benchmark
         private IList<string> tempFiles = new List<string>();
 
 
+        private readonly IList<string> tempFiles = new List<string>();
+
+
         [GlobalSetup]
         public void Setup(string fileName = "")
         {
@@ -44,7 +47,7 @@ namespace ATL.benchmark
             performWrite();
         }
 
-        private void displayProgress(float progress)
+        private static void displayProgress(float progress)
         {
             Console.WriteLine(progress * 100 + "%");
         }
@@ -55,7 +58,7 @@ namespace ATL.benchmark
             foreach (string s in tempFiles) performWrite(s);
         }
 
-        public void performWrite(String filePath)
+        public static void performWrite(String filePath)
         {
             Track theFile;
 

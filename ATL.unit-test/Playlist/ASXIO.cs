@@ -146,7 +146,7 @@ namespace ATL.test.IO.Playlist
                                     Assert.AreEqual(localFilePath1, writtenPath);
                                     break;
                                 case 2:
-                                    Assert.AreEqual(TestUtils.MakePathRelative(testFileLocation, localFilePath2),
+                                    Assert.AreEqual(TestUtils.MakePathRelative(testFileLocation, localFilePath2 ?? ""),
                                         writtenPath);
                                     break;
                                 case 3:

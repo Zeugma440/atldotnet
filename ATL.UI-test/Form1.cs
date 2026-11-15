@@ -66,7 +66,7 @@ namespace ATL.UI_test
             await processFile(filePath, "async silent", true);
         }
 
-        private async Task<bool> processFile(string path, string method, bool asynchronous, Action<float> progress = null)
+        private async Task<bool> processFile(string path, string method, bool asynchronous, Action<float>? progress = null)
         {
             ProgressLbl.Text = "Preparing temp file...";
             Application.DoEvents();
