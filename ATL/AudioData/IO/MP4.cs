@@ -363,7 +363,7 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="source">Source to read from</param>
         /// <param name="readTagParams">Reading parameters</param>
-        private bool readMP4(Stream source, ReadTagParams readTagParams)
+        private IMetaDataIO.ReadStatus readMP4(Stream source, ReadTagParams readTagParams)
         {
             Span<byte> data = stackalloc byte[8];
             var data32 = data[..4];
@@ -379,7 +379,7 @@ namespace ATL.AudioData.IO
             source.Seek(sizeInfo.ID3v2Size, SeekOrigin.Begin);
 
             // FTYP atom
-            if (source.Read(data32) < 4) return false;
+            if (source.Read(data32) < 4) return IMetaDataIO.ReadStatus.KO;
             var atomSize = BinaryPrimitives.ReadUInt32BigEndian(data);
             source.Seek(atomSize - 4, SeekOrigin.Current);
 
@@ -388,7 +388,7 @@ namespace ATL.AudioData.IO
             if (0 == moovSize)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "moov atom could not be found; aborting read");
-                return false;
+                return IMetaDataIO.ReadStatus.KO;
             }
 
             var moovPosition = source.Position;
@@ -409,7 +409,7 @@ namespace ATL.AudioData.IO
             if (0 == navigateToAtom(source, "mvhd"))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mvhd atom could not be found; aborting read");
-                return false;
+                return IMetaDataIO.ReadStatus.KO;
             }
 
             int version = source.ReadByte();
@@ -417,17 +417,17 @@ namespace ATL.AudioData.IO
             if (1 == version) source.Seek(16, SeekOrigin.Current);
             else source.Seek(8, SeekOrigin.Current);
 
-            if (source.Read(data32) < 4) return false;
+            if (source.Read(data32) < 4) return IMetaDataIO.ReadStatus.KO;
             globalTimeScale = BinaryPrimitives.ReadUInt32BigEndian(data);
             long timeLengthPerSec;
             if (1 == version)
             {
-                if (source.Read(data) < 8) return false;
+                if (source.Read(data) < 8) return IMetaDataIO.ReadStatus.KO;
                 timeLengthPerSec = BinaryPrimitives.ReadInt64BigEndian(data);
             }
             else
             {
-                if (source.Read(data32) < 4) return false;
+                if (source.Read(data32) < 4) return IMetaDataIO.ReadStatus.KO;
                 timeLengthPerSec = BinaryPrimitives.ReadUInt32BigEndian(data32);
             }
 
@@ -497,7 +497,7 @@ namespace ATL.AudioData.IO
             if (0 == mdatSize)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "mdat atom could not be found; aborting read");
-                return false;
+                return IMetaDataIO.ReadStatus.KO;
             }
 
             long mdatOffset = source.Position;
@@ -573,7 +573,7 @@ namespace ATL.AudioData.IO
                             structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_PIC_TRAK);
                             structureHelper.RemoveZone(ZONE_MP4_QT_CHAP_MDAT);
                             LogDelegator.GetLogDelegate()(Log.LV_WARNING, "ATL does not support writing non-contiguous (e.g. interleaved with audio data) Quicktime chapters; ignoring Quicktime chapters.");
-                            return true;
+                            return IMetaDataIO.ReadStatus.OK;
                         }
                     }
 
@@ -638,7 +638,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            return true;
+            return IMetaDataIO.ReadStatus.OK;
         }
 
         // Try getting duration from moof atoms (fragmented MP4), if they exist
@@ -1849,10 +1849,10 @@ namespace ATL.AudioData.IO
         {
             this.sizeInfo = sizeNfo;
 
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             if (readTagParams is null) throw new ArgumentNullException(nameof(readTagParams));
 
@@ -1864,7 +1864,7 @@ namespace ATL.AudioData.IO
             else
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "unknown header type");
-                return false;
+                return IMetaDataIO.ReadStatus.KO;
             }
         }
 

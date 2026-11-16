@@ -45,6 +45,7 @@ namespace ATL.AudioData
         public class SizeInfo
         {
             private readonly IDictionary<TagType, long> TagSizes = new Dictionary<TagType, long>();
+            private readonly IDictionary<TagType, bool> TagWarnings = new Dictionary<TagType, bool>();
             private long audioDataSize = -1;
 
             /// <summary>
@@ -60,6 +61,24 @@ namespace ATL.AudioData
             public void SetSize(TagType type, long size)
             {
                 TagSizes[type] = size;
+            }
+
+            /// <summary>
+            /// Set warning status for the given TagType
+            /// </summary>
+            /// <param name="type">Tag type to set the warning for</param>
+            /// <param name="warning">Warning to set</param>
+            public void SetWarning(TagType type, bool warning)
+            {
+                TagWarnings[type] = warning;
+            }
+
+            /// <summary>
+            /// Indicate wether the given TagType has been read with warnings
+            /// </summary>
+            public bool HasWarning (TagType type)
+            {
+                return TagWarnings.ContainsKey(type) && TagWarnings[type];
             }
 
             /// <summary>
@@ -174,7 +193,7 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="type">Tag type whose presence to check</param>
         /// <returns>True if the current audio file contains a tag of the given type; false if not</returns>
-        public bool hasMeta(TagType type)
+        public bool HasMeta(TagType type)
         {
             return type switch
             {
@@ -184,6 +203,14 @@ namespace ATL.AudioData
                 TagType.NATIVE => NativeTag is { Exists: true },
                 _ => false
             };
+        }
+
+        /// <summary>
+        /// Indicate wether the given TagType has been read with warnings
+        /// </summary>
+        public bool HasWarning(TagType type)
+        {
+            return sizeInfo.HasWarning(type);
         }
 
         /// <summary>
@@ -208,7 +235,7 @@ namespace ATL.AudioData
         {
             ISet<TagType> result = new HashSet<TagType>();
             foreach (var tagType in from TagType tagType in Enum.GetValues(typeof(TagType))
-                                    where hasMeta(tagType)
+                                    where HasMeta(tagType)
                                     select tagType)
             {
                 result.Add(tagType);
@@ -399,7 +426,7 @@ namespace ATL.AudioData
             LogDelegator.GetLocateDelegate()(targetPath);
             theTag.DurationMs = audioDataIO.Duration;
 
-            if (isMetaSupported(tagType) || hasMeta(tagType)) // Update supported _and_ present tagging systems
+            if (isMetaSupported(tagType) || HasMeta(tagType)) // Update supported _and_ present tagging systems
             {
                 try
                 {
@@ -522,7 +549,7 @@ namespace ATL.AudioData
             sizeInfo.ResetData();
             sizeInfo.FileSize = source.Length;
 
-            if (isMetaSupported(TagType.ID3V1) && ID3v1.Read(source, readTagParams))
+            if (isMetaSupported(TagType.ID3V1) && ID3v1.Read(source, readTagParams) != IMetaDataIO.ReadStatus.KO)
             {
                 sizeInfo.SetSize(TagType.ID3V1, ID3v1.Size);
             }
@@ -537,11 +564,13 @@ namespace ATL.AudioData
             {
                 source.Position = 0;
                 readTagParams.ExtraID3v2PaddingDetection = isMetaSupported(TagType.ID3V2);
-                if (ID3v2.Read(source, readTagParams)) sizeInfo.SetSize(TagType.ID3V2, ID3v2.Size);
+                var status = ID3v2.Read(source, readTagParams);
+                if (status != IMetaDataIO.ReadStatus.KO) sizeInfo.SetSize(TagType.ID3V2, ID3v2.Size);
+                sizeInfo.SetWarning(TagType.ID3V2, status == IMetaDataIO.ReadStatus.WARNING);
             }
             source.Position = 0;
 
-            if (isMetaSupported(TagType.APE) && APEtag.Read(source, readTagParams))
+            if (isMetaSupported(TagType.APE) && APEtag.Read(source, readTagParams) != IMetaDataIO.ReadStatus.KO)
             {
                 sizeInfo.SetSize(TagType.APE, APEtag.Size);
             }
@@ -564,7 +593,7 @@ namespace ATL.AudioData
             {
                 // Embedded ID3v2 tag detected while reading
                 readTagParams.Offset = embedder.HasEmbeddedID3v2;
-                if (ID3v2.Read(source, readTagParams)) sizeInfo.SetSize(TagType.ID3V2, ID3v2.Size);
+                if (ID3v2.Read(source, readTagParams) != IMetaDataIO.ReadStatus.KO) sizeInfo.SetSize(TagType.ID3V2, ID3v2.Size);
             }
 
             sizeInfo.AudioDataOffset = audioDataIO.AudioDataOffset;

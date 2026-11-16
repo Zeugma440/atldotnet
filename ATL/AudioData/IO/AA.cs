@@ -337,14 +337,14 @@ namespace ATL.AudioData.IO
         // Read data from file
         public bool Read(Stream source, AudioDataManager.SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
             ResetData();
-            if (!readHeader(reader)) return false;
+            if (!readHeader(reader)) return IMetaDataIO.ReadStatus.KO;
             if (toc.ContainsKey(TOC_CONTENT_TAGS))
             {
                 readTags(reader, toc[TOC_CONTENT_TAGS].Offset, readTagParams);
@@ -355,7 +355,7 @@ namespace ATL.AudioData.IO
             }
             readChapters(reader, toc[TOC_AUDIO].Offset, toc[TOC_AUDIO].Size);
 
-            return true;
+            return IMetaDataIO.ReadStatus.OK;
         }
 
         protected override int write(TagData tag, Stream s, string zone)

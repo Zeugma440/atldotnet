@@ -328,7 +328,7 @@ namespace ATL.AudioData.IO
             readEndOffset = endOffset;
             try
             {
-                return Read(source, readTagParams);
+                return Read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
             }
             finally
             {
@@ -336,7 +336,7 @@ namespace ATL.AudioData.IO
             }
         }
 
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             int nbFields = 0;
             int index = 0;
@@ -357,16 +357,16 @@ namespace ATL.AudioData.IO
             initialTagOffset = reader.Position;
             do
             {
-                if (reader.Position > endOffset - 4) return false;
+                if (reader.Position > endOffset - 4) return IMetaDataIO.ReadStatus.KO;
                 var size = reader.ReadInt32();
                 var position = reader.Position;
-                if (size < 0 || size > endOffset - position) return false;
+                if (size < 0 || size > endOffset - position) return IMetaDataIO.ReadStatus.KO;
 
                 string strData;
                 if (0 == index) // Mandatory : first metadata has to be the Vorbis vendor string
                 {
                     byte[] vendor = reader.ReadBytes(size);
-                    if (vendor.Length != size) return false;
+                    if (vendor.Length != size) return IMetaDataIO.ReadStatus.KO;
                     strData = Encoding.UTF8.GetString(vendor).Trim();
                     if (strData.Length > 0) SetMetaField(VENDOR_METADATA_ID, strData, readTagParams.ReadAllMetaFrames);
                 }
@@ -381,7 +381,7 @@ namespace ATL.AudioData.IO
                     while (-1 == equalsIndex && nbBuffered < size)
                     {
                         int nbRead = reader.Read(stringData, 0, Math.Min(KEY_BUFFER, size - nbBuffered));
-                        if (0 == nbRead) return false;
+                        if (0 == nbRead) return IMetaDataIO.ReadStatus.KO;
 
                         for (int i = 0; i < nbRead; i++)
                         {
@@ -395,7 +395,7 @@ namespace ATL.AudioData.IO
                         nbBuffered += nbRead;
                     }
 
-                    if (equalsIndex < 0) return false;
+                    if (equalsIndex < 0) return IMetaDataIO.ReadStatus.KO;
 
                     reader.Seek(position + equalsIndex + 1, SeekOrigin.Begin);
                     string tagId = tagIdBuilder.ToString().ToUpper();
@@ -407,7 +407,7 @@ namespace ATL.AudioData.IO
                     else
                     {
                         byte[] value = reader.ReadBytes(size - equalsIndex - 1);
-                        if (value.Length != size - equalsIndex - 1) return false;
+                        if (value.Length != size - equalsIndex - 1) return IMetaDataIO.ReadStatus.KO;
                         strData = Encoding.UTF8.GetString(value).Trim();
 
                         if (tagId.StartsWith(CHAPTER_ID, StringComparison.OrdinalIgnoreCase)) // Chapter description
@@ -424,9 +424,9 @@ namespace ATL.AudioData.IO
 
                 if (0 == index)
                 {
-                    if (reader.Position > endOffset - 4) return false;
+                    if (reader.Position > endOffset - 4) return IMetaDataIO.ReadStatus.KO;
                     nbFields = reader.ReadInt32();
-                    if (nbFields < 0 || nbFields > (endOffset - reader.Position) / 4) return false;
+                    if (nbFields < 0 || nbFields > (endOffset - reader.Position) / 4) return IMetaDataIO.ReadStatus.KO;
                 }
 
                 index++;
@@ -434,7 +434,7 @@ namespace ATL.AudioData.IO
 
             structureHelper.AddZone(initialTagOffset, (int)(reader.Position - initialTagOffset), hasCoreSignature ? OGG_CORE_SIGNATURE : Array.Empty<byte>());
 
-            if (!readTagParams.PrepareForWriting) return true;
+            if (!readTagParams.PrepareForWriting) return IMetaDataIO.ReadStatus.OK;
 
             // Skip framing bit
             if (reader.PeekChar()) reader.Seek(1, SeekOrigin.Current);
@@ -442,13 +442,13 @@ namespace ATL.AudioData.IO
             long streamPos = reader.Position;
 
             // Prod to see if there's padding after the last field
-            if (streamPos + 4 >= reader.Length || 0 != reader.ReadInt32()) return true;
+            if (streamPos + 4 >= reader.Length || 0 != reader.ReadInt32()) return IMetaDataIO.ReadStatus.OK;
 
             initialPaddingOffset = streamPos;
             initialPaddingSize = StreamUtils.TraversePadding(reader) - initialPaddingOffset;
             tagData.PaddingSize = initialPaddingSize;
 
-            return true;
+            return IMetaDataIO.ReadStatus.OK;
         }
 
         /// <summary>

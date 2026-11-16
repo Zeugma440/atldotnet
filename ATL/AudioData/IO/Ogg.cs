@@ -902,15 +902,15 @@ namespace ATL.AudioData.IO
         {
             this.sizeInfo = sizeNfo;
 
-            return Read(source, readTagParams);
+            return IMetaDataIO.ReadStatus.OK == Read(source, readTagParams);
         }
 
-        public bool Read(Stream source, ReadTagParams readTagParams)
+        public IMetaDataIO.ReadStatus Read(Stream source, ReadTagParams readTagParams)
         {
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
             info.Reset();
 
-            if (!getInfo(reader, info, readTagParams)) return false;
+            if (!getInfo(reader, info, readTagParams)) return IMetaDataIO.ReadStatus.KO;
 
             switch (contents)
             {
@@ -939,7 +939,7 @@ namespace ATL.AudioData.IO
 
             samples = info.Samples;
 
-            return true;
+            return IMetaDataIO.ReadStatus.OK;
         }
 
         // Specific implementation for OGG container (multiple pages with limited size)

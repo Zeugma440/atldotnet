@@ -321,7 +321,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             TagInfo Tag = new TagInfo();
 
@@ -333,7 +333,7 @@ namespace ATL.AudioData.IO
             bool result = readFooter(reader, Tag);
 
             // Process data if loaded and footer valid
-            if (!result) return false;
+            if (!result) return IMetaDataIO.ReadStatus.KO;
 
             // Fill properties with footer data
             m_tagVersion = Tag.Version;
@@ -348,7 +348,7 @@ namespace ATL.AudioData.IO
             // Get information from fields
             result = readFrames(reader, Tag, readTagParams);
 
-            return result;
+            return result ? IMetaDataIO.ReadStatus.OK : IMetaDataIO.ReadStatus.KO;
         }
 
         /// <summary>

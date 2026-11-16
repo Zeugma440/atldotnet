@@ -362,10 +362,10 @@ namespace ATL.AudioData.IO
         {
             this.sizeInfo = sizeNfo;
 
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             StringBuilder comment = new StringBuilder("");
 
@@ -446,7 +446,7 @@ namespace ATL.AudioData.IO
             tagData.IntegrateValue(Field.COMMENT, comment.ToString());
             BitRate = sizeInfo.FileSize / Duration;
 
-            return true;
+            return IMetaDataIO.ReadStatus.OK;
         }
 
         protected override int write(TagData tag, Stream s, string zone)

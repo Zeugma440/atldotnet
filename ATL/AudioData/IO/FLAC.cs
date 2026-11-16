@@ -151,14 +151,14 @@ namespace ATL.AudioData.IO
         {
             this.sizeInfo = sizeNfo;
 
-            return Read(source, readTagParams);
+            return Read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
         // TODO : support for CUESHEET block
         /// <inheritdoc/>
-        public bool Read(Stream source, ReadTagParams readTagParams)
+        public IMetaDataIO.ReadStatus Read(Stream source, ReadTagParams readTagParams)
         {
-            bool result = false;
+            var result = IMetaDataIO.ReadStatus.KO;
 
             initialPaddingOffset = -1;
             initialPaddingSize = 0;
@@ -192,7 +192,7 @@ namespace ATL.AudioData.IO
                     bool isLast;
                     do // Read all metadata blocks
                     {
-                        if (source.Read(metaDataBlockHeader) < 4) return false;
+                        if (source.Read(metaDataBlockHeader) < 4) return IMetaDataIO.ReadStatus.KO;
                         isLast = (metaDataBlockHeader[0] & FLAG_LAST_METADATA_BLOCK) > 0; // last flag ( first bit == 1 )
 
                         blockIndex++;
@@ -262,7 +262,7 @@ namespace ATL.AudioData.IO
             {
                 AudioDataOffset = source.Position;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
-                result = true;
+                result = IMetaDataIO.ReadStatus.OK;
             }
 
             return result;
@@ -287,7 +287,7 @@ namespace ATL.AudioData.IO
             // Read all the fields in the existing tag (including unsupported fields)
             ReadTagParams readTagParams = new ReadTagParams(true, true);
             readTagParams.PrepareForWriting = true;
-            bool tagExists = Read(r, readTagParams);
+            bool tagExists = IMetaDataIO.ReadStatus.OK == Read(r, readTagParams);
 
             // Save a snapshot of the initial embedded pictures for processing purposes
             existingPictureIndex = 0;

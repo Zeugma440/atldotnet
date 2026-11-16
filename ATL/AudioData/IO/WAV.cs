@@ -221,7 +221,7 @@ namespace ATL.AudioData.IO
             return data.StartsWith(HEADER_RIFF) || data.StartsWith(HEADER_RIFX) || data.StartsWith(HEADER_RF64);
         }
 
-        private bool readWAV(Stream source, ReadTagParams readTagParams)
+        private IMetaDataIO.ReadStatus readWAV(Stream source, ReadTagParams readTagParams)
         {
             bool isRf64 = false;
             object formattedRiffChunkSize = 0;
@@ -232,7 +232,7 @@ namespace ATL.AudioData.IO
             source.Seek(offset, SeekOrigin.Begin);
 
             // Read header
-            if (source.Read(data, 0, 4) < 4) return false;
+            if (source.Read(data, 0, 4) < 4) return IMetaDataIO.ReadStatus.KO;
 
             if (data.SequenceEqual(HEADER_RF64)) isRf64 = true;
 
@@ -246,7 +246,7 @@ namespace ATL.AudioData.IO
             }
             else
             {
-                return false;
+                return IMetaDataIO.ReadStatus.KO;
             }
 
             // Force creation of FileStructureHelper with detected endianness
@@ -254,14 +254,14 @@ namespace ATL.AudioData.IO
             id3v2StructureHelper = new FileStructureHelper(isLittleEndian);
 
             var riffChunkSizePos = source.Position;
-            if (source.Read(data, 0, 4) < 4) return false;
+            if (source.Read(data, 0, 4) < 4) return IMetaDataIO.ReadStatus.KO;
             long riffChunkSize = isLittleEndian ? BinaryPrimitives.ReadUInt32LittleEndian(data) : BinaryPrimitives.ReadUInt32BigEndian(data);
             if (riffChunkSize < uint.MaxValue) formattedRiffChunkSize = getFormattedRiffChunkSize(riffChunkSize, isRf64);
 
             // Format code
-            if (source.Read(data, 0, 4) < 4) return false;
+            if (source.Read(data, 0, 4) < 4) return IMetaDataIO.ReadStatus.KO;
             string str = Utils.Latin1Encoding.GetString(data);
-            if (!str.Equals(FORMAT_WAVE)) return false;
+            if (!str.Equals(FORMAT_WAVE)) return IMetaDataIO.ReadStatus.KO;
 
 
             string subChunkId = "";
@@ -278,7 +278,7 @@ namespace ATL.AudioData.IO
             {
                 if (paddingSize > 0)
                 {
-                    if (source.Read(data, 0, 1) < 1) return false;
+                    if (source.Read(data, 0, 1) < 1) return IMetaDataIO.ReadStatus.KO;
                     // Padding has been forgotten !
                     if (data[0] > 31 && data[0] < 255)
                     {
@@ -297,11 +297,11 @@ namespace ATL.AudioData.IO
                     }
                 }
                 // Chunk ID
-                if (source.Read(data, 0, 4) < 4) return false;
+                if (source.Read(data, 0, 4) < 4) return IMetaDataIO.ReadStatus.KO;
                 subChunkId = Utils.Latin1Encoding.GetString(data);
 
                 // Chunk size
-                if (source.Read(data, 0, 4) < 4) return false;
+                if (source.Read(data, 0, 4) < 4) return IMetaDataIO.ReadStatus.KO;
                 long chunkSize = isLittleEndian ? BinaryPrimitives.ReadUInt32LittleEndian(data) : BinaryPrimitives.ReadUInt32BigEndian(data);
                 // Word-align declared chunk size, as per specs
                 paddingSize = (uint)(chunkSize % 2);
@@ -310,7 +310,7 @@ namespace ATL.AudioData.IO
 
                 if (subChunkId.Equals(CHUNK_FORMAT64, StringComparison.OrdinalIgnoreCase)) // DS64 always appears before FMT
                 {
-                    if (source.Read(data64, 0, 8) < 8) return false; // riffSize
+                    if (source.Read(data64, 0, 8) < 8) return IMetaDataIO.ReadStatus.KO; // riffSize
                     if (uint.MaxValue == riffChunkSize)
                     {
                         riffChunkSize = BinaryPrimitives.ReadInt64LittleEndian(data64);
@@ -318,33 +318,33 @@ namespace ATL.AudioData.IO
                         formattedRiffChunkSize = getFormattedRiffChunkSize(riffChunkSize, isRf64);
                     }
 
-                    if (source.Read(data64, 0, 8) < 8) return false; // dataSize
+                    if (source.Read(data64, 0, 8) < 8) return IMetaDataIO.ReadStatus.KO; // dataSize
                     AudioDataSize = BinaryPrimitives.ReadInt64LittleEndian(data64);
 
-                    if (source.Read(data64, 0, 8) < 8) return false; // sampleCount
+                    if (source.Read(data64, 0, 8) < 8) return IMetaDataIO.ReadStatus.KO; // sampleCount
                     sampleNumber = BinaryPrimitives.ReadInt64LittleEndian(data64);
 
-                    if (source.Read(data, 0, 4) < 4) return false; // wave table length
+                    if (source.Read(data, 0, 4) < 4) return IMetaDataIO.ReadStatus.KO; // wave table length
                     uint tableLength = BinaryPrimitives.ReadUInt32LittleEndian(data);
                     source.Seek(tableLength, SeekOrigin.Current); // wave table
                 }
                 else if (subChunkId.Equals(CHUNK_FORMAT, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (source.Read(data, 0, 2) < 2) return false;
+                    if (source.Read(data, 0, 2) < 2) return IMetaDataIO.ReadStatus.KO;
                     formatId = isLittleEndian ? BinaryPrimitives.ReadUInt16LittleEndian(data) : BinaryPrimitives.ReadUInt16BigEndian(data);
 
-                    if (source.Read(data, 0, 2) < 2) return false;
+                    if (source.Read(data, 0, 2) < 2) return IMetaDataIO.ReadStatus.KO;
                     ChannelsArrangement = GuessFromChannelNumber(isLittleEndian ? BinaryPrimitives.ReadUInt16LittleEndian(data) : BinaryPrimitives.ReadUInt16BigEndian(data));
 
-                    if (source.Read(data, 0, 4) < 4) return false;
+                    if (source.Read(data, 0, 4) < 4) return IMetaDataIO.ReadStatus.KO;
                     sampleRate = isLittleEndian ? BinaryPrimitives.ReadUInt32LittleEndian(data) : BinaryPrimitives.ReadUInt32BigEndian(data);
 
-                    if (source.Read(data, 0, 4) < 4) return false;
+                    if (source.Read(data, 0, 4) < 4) return IMetaDataIO.ReadStatus.KO;
                     bytesPerSecond = isLittleEndian ? BinaryPrimitives.ReadUInt32LittleEndian(data) : BinaryPrimitives.ReadUInt32BigEndian(data);
 
                     source.Seek(2, SeekOrigin.Current); // BlockAlign
 
-                    if (source.Read(data, 0, 2) < 2) return false;
+                    if (source.Read(data, 0, 2) < 2) return IMetaDataIO.ReadStatus.KO;
                     bitsPerSample = isLittleEndian ? BinaryPrimitives.ReadUInt16LittleEndian(data) : BinaryPrimitives.ReadUInt16BigEndian(data);
                 }
                 else if (subChunkId.Equals(CHUNK_DATA, StringComparison.OrdinalIgnoreCase))
@@ -358,7 +358,7 @@ namespace ATL.AudioData.IO
                 }
                 else if (subChunkId.Equals(CHUNK_FACT, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (source.Read(data, 0, 4) < 4) return false;
+                    if (source.Read(data, 0, 4) < 4) return IMetaDataIO.ReadStatus.KO;
                     var inputSampleNumber = isLittleEndian ? BinaryPrimitives.ReadUInt32LittleEndian(data) : BinaryPrimitives.ReadUInt32BigEndian(data);
                     if (inputSampleNumber < uint.MaxValue) sampleNumber = inputSampleNumber;
                 }
@@ -465,7 +465,7 @@ namespace ATL.AudioData.IO
                     if (!StreamUtils.FindSequence(source, Utils.Latin1Encoding.GetBytes(metaChunkId))) continue;
 
                     // Read subchunk size
-                    if (source.Read(data, 0, 4) < 4) return false;
+                    if (source.Read(data, 0, 4) < 4) return IMetaDataIO.ReadStatus.KO;
                     long chunkSize = isLittleEndian ? BinaryPrimitives.ReadUInt32LittleEndian(data) : BinaryPrimitives.ReadUInt32BigEndian(data);
                     // Word-align declared chunk size, as per specs
                     paddingSize = (uint)(chunkSize % 2);
@@ -557,7 +557,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            return true;
+            return IMetaDataIO.ReadStatus.OK;
         }
 
         private static object getFormattedRiffChunkSize(long input, bool isRf64)
@@ -602,10 +602,10 @@ namespace ATL.AudioData.IO
         {
             this.sizeInfo = sizeNfo;
 
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             resetData();
             return readWAV(source, readTagParams);

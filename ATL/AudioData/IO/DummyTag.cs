@@ -50,7 +50,7 @@ namespace ATL.AudioData.IO
             return Task.FromResult(true);
         }
         /// <inheritdoc/>
-        public bool Read(Stream source, ReadTagParams readTagParams)
+        public IMetaDataIO.ReadStatus Read(Stream source, ReadTagParams readTagParams)
         {
             throw new NotImplementedException();
         }

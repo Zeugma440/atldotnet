@@ -263,7 +263,7 @@ namespace ATL.AudioData.IO
         {
             this.sizeInfo = sizeNfo;
 
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
         public static bool IsValidHeader(ReadOnlySpan<byte> data)
@@ -271,7 +271,7 @@ namespace ATL.AudioData.IO
             return data.StartsWith(TWIN_ID);
         }
 
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             HeaderInfo Header = new HeaderInfo();
 
@@ -295,7 +295,7 @@ namespace ATL.AudioData.IO
                 AudioDataOffset = reader.Position;
                 AudioDataSize = sizeInfo.FileSize - sizeInfo.APESize - sizeInfo.ID3v1Size - AudioDataOffset;
             }
-            return result;
+            return IMetaDataIO.ReadStatus.OK;
         }
 
         protected override int write(TagData tag, Stream s, string zone)

@@ -338,7 +338,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
 
@@ -351,7 +351,7 @@ namespace ATL.AudioData.IO
             // Process data if loaded successfuly
             if (!result) ResetData();
 
-            return result;
+            return result ? IMetaDataIO.ReadStatus.OK : IMetaDataIO.ReadStatus.KO;
         }
 
         /// <inheritdoc/>

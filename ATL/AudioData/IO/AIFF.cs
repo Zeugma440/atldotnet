@@ -246,17 +246,17 @@ namespace ATL.AudioData.IO
 
         public bool Read(Stream source, SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             resetData();
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
             reader.Seek(0, SeekOrigin.Begin);
 
             // Magic number check
-            if (!IsValidHeader(reader.ReadBytes(4))) return false;
+            if (!IsValidHeader(reader.ReadBytes(4))) return IMetaDataIO.ReadStatus.KO;
 
             // Container chunk size
             long containerChunkPos = reader.Position;
@@ -271,7 +271,7 @@ namespace ATL.AudioData.IO
             string format = Utils.Latin1Encoding.GetString(reader.ReadBytes(4));
 
             // AIFF / AIFC format check
-            if (!format.Equals(FORMTYPE_AIFF) && !format.Equals(FORMTYPE_AIFC)) return false;
+            if (!format.Equals(FORMTYPE_AIFF) && !format.Equals(FORMTYPE_AIFC)) return IMetaDataIO.ReadStatus.KO;
 
             StringBuilder commentStr = new StringBuilder("");
             long soundChunkPosition = 0;
@@ -477,7 +477,7 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            return true;
+            return IMetaDataIO.ReadStatus.OK;
         }
 
         protected override int write(TagData tag, Stream s, string zone)

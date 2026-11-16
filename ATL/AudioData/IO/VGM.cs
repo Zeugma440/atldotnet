@@ -250,10 +250,10 @@ namespace ATL.AudioData.IO
         {
             this.sizeInfo = sizeNfo;
 
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             resetData();
 
@@ -269,7 +269,7 @@ namespace ATL.AudioData.IO
                 if (readTagParams.PrepareForWriting)
                 {
                     LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Writing metadata to gzipped VGM files is not supported yet.");
-                    return false;
+                    return IMetaDataIO.ReadStatus.KO;
                 }
 
                 using GZipStream gzStream = new GZipStream(reader, CompressionMode.Decompress);
@@ -281,7 +281,7 @@ namespace ATL.AudioData.IO
 
             if (readHeader(usedSource, readTagParams) && gd3TagOffset > VGM_HEADER_SIZE) readGd3Tag(usedSource, gd3TagOffset);
 
-            return true;
+            return IMetaDataIO.ReadStatus.OK;
         }
 
         // Write GD3 tag

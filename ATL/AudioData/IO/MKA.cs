@@ -823,11 +823,11 @@ namespace ATL.AudioData.IO
         public bool Read(Stream source, AudioDataManager.SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
             sizeInfo = sizeNfo;
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
         /// <inheritdoc/>
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             ResetData();
 
@@ -836,12 +836,12 @@ namespace ATL.AudioData.IO
 
             EBMLReader reader = new EBMLReader(source);
 
-            if (!readEbmlHeader(reader, readTagParams)) return false;
+            if (!readEbmlHeader(reader, readTagParams)) return IMetaDataIO.ReadStatus.KO;
 
             if (!reader.enterContainer(ID_SEGMENT))
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "File is not a valid Matroska file");
-                return false;
+                return IMetaDataIO.ReadStatus.KO;
             }
 
             segmentOffset = reader.Position;
@@ -859,7 +859,7 @@ namespace ATL.AudioData.IO
 
             // Physical data
             reader.seek(segmentOffset);
-            if (!readPhysicalData(reader)) return false;
+            if (!readPhysicalData(reader)) return IMetaDataIO.ReadStatus.KO;
 
             // SeekHead
             reader.seek(segmentOffset);
@@ -879,7 +879,7 @@ namespace ATL.AudioData.IO
             reader.seek(segmentOffset);
             readAttachments(reader, readTagParams);
 
-            return true;
+            return IMetaDataIO.ReadStatus.OK;
         }
 
         protected override void postprocessWrite(Stream s)

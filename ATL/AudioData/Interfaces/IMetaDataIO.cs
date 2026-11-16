@@ -10,6 +10,25 @@ namespace ATL.AudioData
     public interface IMetaDataIO : IMetaData
     {
         /// <summary>
+        /// Status of the Read operation
+        /// </summary>
+        public enum ReadStatus
+        {
+            /// <summary>
+            /// Read has suceeded without warnings
+            /// </summary>
+            OK = 0,
+            /// <summary>
+            /// Read has completely failed
+            /// </summary>
+            KO = 1,
+            /// <summary>
+            /// Read has succeeded with warnings
+            /// </summary>
+            WARNING = 2
+        }
+
+        /// <summary>
         /// Returns true if this kind of metadata exists in the file, false if not
         /// </summary>
         bool Exists
@@ -54,8 +73,8 @@ namespace ATL.AudioData
         /// </summary>
         /// <param name="source">Stream to parse data from</param>
         /// <param name="readTagParams">Tag reading parameters</param>
-        /// <returns>true if the operation suceeded; false if not</returns>
-        bool Read(Stream source, ReadTagParams readTagParams);
+        /// <returns>Status</returns>
+        ReadStatus Read(Stream source, ReadTagParams readTagParams);
 
         /// <summary>
         /// Add the specified information to current tag information (direct call variant)

@@ -1517,9 +1517,9 @@ namespace ATL.test.IO
             AudioDataManager theFile =
                 new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
             theFile.ReadFromFile();
-            Assert.IsTrue(theFile.hasMeta(MetaDataIOFactory.TagType.APE));
-            Assert.IsFalse(theFile.hasMeta(MetaDataIOFactory.TagType.ID3V1));
-            Assert.IsFalse(theFile.hasMeta(MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsTrue(theFile.HasMeta(MetaDataIOFactory.TagType.APE));
+            Assert.IsFalse(theFile.HasMeta(MetaDataIOFactory.TagType.ID3V1));
+            Assert.IsFalse(theFile.HasMeta(MetaDataIOFactory.TagType.ID3V2));
             Assert.IsFalse(theFile.HasNativeMeta());
 
             Assert.AreEqual(newValue, theFile.APEtag.Artist);
@@ -1536,9 +1536,9 @@ namespace ATL.test.IO
 
             theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
             theFile.ReadFromFile();
-            Assert.IsTrue(theFile.hasMeta(MetaDataIOFactory.TagType.APE));
-            Assert.IsFalse(theFile.hasMeta(MetaDataIOFactory.TagType.ID3V1));
-            Assert.IsTrue(theFile.hasMeta(MetaDataIOFactory.TagType.ID3V2));
+            Assert.IsTrue(theFile.HasMeta(MetaDataIOFactory.TagType.APE));
+            Assert.IsFalse(theFile.HasMeta(MetaDataIOFactory.TagType.ID3V1));
+            Assert.IsTrue(theFile.HasMeta(MetaDataIOFactory.TagType.ID3V2));
             Assert.IsFalse(theFile.HasNativeMeta());
 
             Assert.AreEqual(newValue, theFile.ID3v2.Artist);

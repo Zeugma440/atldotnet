@@ -538,9 +538,9 @@ namespace ATL.AudioData.IO
             return data.StartsWith(WMA_HEADER_ID);
         }
 
-        private bool readData(Stream source, ReadTagParams readTagParams)
+        private IMetaDataIO.ReadStatus readData(Stream source, ReadTagParams readTagParams)
         {
-            bool result = false;
+            var result = IMetaDataIO.ReadStatus.KO;
 
             languages?.Clear();
 
@@ -641,7 +641,7 @@ namespace ATL.AudioData.IO
                     }
                 }
 
-                result = true;
+                result = IMetaDataIO.ReadStatus.OK;
             }
 
             fileData.HeaderSize = reader.Position - initialPos;
@@ -662,19 +662,19 @@ namespace ATL.AudioData.IO
         {
             m_sizeInfo = sizeNfo;
 
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
         /// <inheritdoc/>
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             fileData = new FileData();
 
             resetData();
-            bool result = readData(source, readTagParams);
+            var result = readData(source, readTagParams);
 
             // Process data if loaded and valid
-            if (result && isValid(fileData))
+            if (IMetaDataIO.ReadStatus.OK == result && isValid(fileData))
             {
                 ChannelsArrangement = GuessFromChannelNumber(fileData.Channels);
                 SampleRate = fileData.SampleRate;

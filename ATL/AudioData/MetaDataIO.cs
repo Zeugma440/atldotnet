@@ -292,7 +292,7 @@ namespace ATL.AudioData.IO
         /// <param name="source">Source to read metadata from</param>
         /// <param name="readTagParams">Read parameters</param>
         /// <returns>True if read has been successful, false if it failed</returns>
-        protected abstract bool read(Stream source, ReadTagParams readTagParams);
+        protected abstract IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams);
 
         /// <summary>
         /// Write the given zone's metadata using the given writer
@@ -537,7 +537,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        public bool Read(Stream source, ReadTagParams readTagParams)
+        public IMetaDataIO.ReadStatus Read(Stream source, ReadTagParams readTagParams)
         {
             if (readTagParams.PrepareForWriting) structureHelper.Clear();
 

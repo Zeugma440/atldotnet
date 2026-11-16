@@ -364,10 +364,10 @@ namespace ATL.AudioData.IO
         {
             this.sizeInfo = sizeNfo;
 
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             PSFHeader header = new PSFHeader();
             PSFTag tag = new PSFTag();
@@ -392,7 +392,7 @@ namespace ATL.AudioData.IO
             version = header.VersionByte;
             BitRate = AudioDataSize * 8 / Duration;
 
-            return true;
+            return IMetaDataIO.ReadStatus.OK;
         }
 
         protected override int write(TagData tag, Stream s, string zone)

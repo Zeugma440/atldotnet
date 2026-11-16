@@ -1,3 +1,4 @@
+using ATL.AudioData.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,8 +23,17 @@ namespace ATL.AudioData
         {
             metaReaders = new List<IMetaDataIO>();
 
+            // Process metas with warnings last
+            var leftovers = new List<MetaDataIOFactory.TagType>();
+
             foreach (var t in tagPriority)
             {
+                if (audioManager.HasWarning(t))
+                {
+                    leftovers.Add(t);
+                    continue;
+                }
+
                 if (MetaDataIOFactory.TagType.NATIVE == t && audioManager.HasNativeMeta() && audioManager.NativeTag != null)
                 {
                     metaReaders.Add(audioManager.NativeTag);
@@ -41,6 +51,8 @@ namespace ATL.AudioData
                     metaReaders.Add(audioManager.APEtag);
                 }
             }
+
+            foreach (var t in leftovers) metaReaders.Add(audioManager.getMeta(t));
         }
 
         /// <inheritdoc/>
@@ -753,7 +765,7 @@ namespace ATL.AudioData
         public bool IsEmbedded => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public bool Read(Stream source, ReadTagParams readTagParams) { throw new NotImplementedException(); }
+        public IMetaDataIO.ReadStatus Read(Stream source, ReadTagParams readTagParams) { throw new NotImplementedException(); }
 
         /// <inheritdoc/>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]

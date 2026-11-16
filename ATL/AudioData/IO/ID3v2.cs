@@ -698,7 +698,11 @@ namespace ATL.AudioData.IO
             frame.ID = Utils.Latin1Encoding.GetString(source.ReadBytes(frameIdSize));
 
             // Tag ID couldn't be read (EOF)
-            if (frame.ID.Length < frameIdSize) return false;
+            if (frame.ID.Length < frameIdSize)
+            {
+                LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Tag ID couldn't be read (EOF?)");
+                return false;
+            }
 
             if (!char.IsLetter(frame.ID[0]) || !char.IsUpper(frame.ID[0]))
             {
@@ -717,7 +721,8 @@ namespace ATL.AudioData.IO
                 }
             }
 
-            if (tag.ActualEnd > -1) return false;
+            // Padding block has been found; time to leave
+            if (tag.ActualEnd > -1) return true;
 
             /*
             Frame size measures number of bytes between end of flag and end of payload
@@ -775,7 +780,7 @@ namespace ATL.AudioData.IO
 
             if (!noTextEncodingFields.Contains(frame.ID))
             {
-                dataSize--; // Minus encoding byte
+                dataSize--; // Minus encoding byte, which is part of frame data, not frame header
                 encodingCode = source.ReadByte();
             }
             else
@@ -1150,8 +1155,9 @@ namespace ATL.AudioData.IO
         }
 
         // Get information from frames (universal)
-        private void readFrames(BufferedBinaryReader source, TagInfo tag, long offset, ReadTagParams readTagParams)
+        private bool readFrames(BufferedBinaryReader source, TagInfo tag, long offset, ReadTagParams readTagParams)
         {
+            var result = true;
             long streamLength = source.Length;
 
             tag.PaddingOffset = -1;
@@ -1164,7 +1170,16 @@ namespace ATL.AudioData.IO
 
             while (streamPos - offset < tag.GetSize(false) && streamPos < streamLength)
             {
-                if (!readFrame(source, tag, readTagParams, ref comments)) break;
+                if (!readFrame(source, tag, readTagParams, ref comments))
+                {
+                    // If read fails, go to the end of the ID3v2 block in order to return a correct size
+                    streamPos = Math.Min(tag.GetSize(false) + offset, streamLength);
+                    result = false;
+                    break;
+                }
+
+                // The padding block has been found
+                if (tag.ActualEnd > -1) break;
 
                 streamPos = source.Position;
             }
@@ -1210,12 +1225,13 @@ namespace ATL.AudioData.IO
                     tag.ActualEnd = streamPos;
                 }
             }
+            return result;
         }
 
         // ********************** Public functions & voids **********************
 
         /// <inheritdoc/>
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             return Read(source, readTagParams.Offset, readTagParams);
         }
@@ -1227,7 +1243,7 @@ namespace ATL.AudioData.IO
         /// <param name="offset">ID3v2 header offset (mostly 0, except for specific audio containers such as AIFF or DSF)</param>
         /// <param name="readTagParams">Reading parameters</param>
         /// <returns>True if the reading operation has succeeded; false if not</returns>
-        public bool Read(Stream source, long offset, ReadTagParams readTagParams)
+        public IMetaDataIO.ReadStatus Read(Stream source, long offset, ReadTagParams readTagParams)
         {
             tagHeader = new TagInfo();
 
@@ -1235,12 +1251,12 @@ namespace ATL.AudioData.IO
 
             // Reset data and load header from file to variable
             ResetData();
-            bool result = readHeader(reader, tagHeader, offset);
+            IMetaDataIO.ReadStatus result = readHeader(reader, tagHeader, offset) ? IMetaDataIO.ReadStatus.OK : IMetaDataIO.ReadStatus.KO;
 
             tagData.PaddingSize = tagHeader.GetPaddingSize();
 
             // Process data if loaded and header valid
-            if (result && IsValidHeader(tagHeader.ID))
+            if (IMetaDataIO.ReadStatus.OK == result && IsValidHeader(tagHeader.ID))
             {
                 // Fill properties with header data
                 m_tagVersion = tagHeader.Version;
@@ -1248,13 +1264,14 @@ namespace ATL.AudioData.IO
                 // Get information from frames if version supported
                 if (TAG_VERSION_2_2 <= m_tagVersion && m_tagVersion <= TAG_VERSION_2_4 && tagHeader.GetSize() > 0)
                 {
-                    readFrames(reader, tagHeader, offset, readTagParams);
+                    if (!readFrames(reader, tagHeader, offset, readTagParams)) result = IMetaDataIO.ReadStatus.WARNING;
                     structureHelper.AddZone(offset, (int)(tagHeader.ActualEnd - offset), ZONE_ID3V2);
                 }
                 else
                 {
                     if (m_tagVersion < TAG_VERSION_2_2 || m_tagVersion > TAG_VERSION_2_4) LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ID3v2 tag version unknown : " + m_tagVersion + "; parsing interrupted");
                     if (0 == Size) LogDelegator.GetLogDelegate()(Log.LV_ERROR, "ID3v2 size is zero; parsing interrupted");
+                    result = IMetaDataIO.ReadStatus.KO;
                 }
             }
 

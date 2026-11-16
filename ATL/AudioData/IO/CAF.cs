@@ -330,11 +330,11 @@ namespace ATL.AudioData.IO
         /// <inheritdoc/>
         public bool Read(Stream source, AudioDataManager.SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
         /// <inheritdoc/>
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             ResetData();
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
@@ -391,7 +391,7 @@ namespace ATL.AudioData.IO
                 else ChannelsArrangement = new ChannelsArrangement((int)channelsPerFrame, "Custom layout (" + channelsPerFrame + " channels)");
             }
 
-            return result;
+            return result ? IMetaDataIO.ReadStatus.OK : IMetaDataIO.ReadStatus.KO;
         }
 
         // WARNING : NOT IMPLEMENTED DUE TO THE LACK OF METADATA-RICH SAMPLE FILES

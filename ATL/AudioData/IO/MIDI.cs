@@ -409,7 +409,7 @@ namespace ATL.AudioData.IO
         public bool Read(Stream source, SizeInfo sizeNfo, ReadTagParams readTagParams)
         {
             sizeInfo = sizeNfo;
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
         public static bool IsValidHeader(ReadOnlySpan<byte> data)
@@ -423,7 +423,7 @@ namespace ATL.AudioData.IO
         }
 
         /// <inheritdoc/>
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             byte[] buffer = new byte[10];
 
@@ -433,14 +433,14 @@ namespace ATL.AudioData.IO
             FindValidHeader(source);
 
             // Ready to read header data...
-            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return false;
+            if (source.Read(buffer, 0, buffer.Length) < buffer.Length) return IMetaDataIO.ReadStatus.KO;
             if (buffer[0] != 0 ||
                 buffer[1] != 0 ||
                 buffer[2] != 0 ||
                 buffer[3] != 6)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_ERROR, "Wrong MIDI header");
-                return false;
+                return IMetaDataIO.ReadStatus.KO;
             }
             byte type = buffer[5];
 
@@ -467,7 +467,7 @@ namespace ATL.AudioData.IO
             // Ready to read track data...
             while (source.Position < sizeInfo.FileSize - 4)
             {
-                if (source.Read(buffer, 0, 4) < 4) return false;
+                if (source.Read(buffer, 0, 4) < 4) return IMetaDataIO.ReadStatus.KO;
                 var trigger = Utils.Latin1Encoding.GetString(buffer, 0, 4);
 
                 if (trigger != MIDI_TRACK_HEADER)
@@ -477,11 +477,11 @@ namespace ATL.AudioData.IO
                 }
 
                 // trackSize is stored in big endian -> needs inverting
-                if (source.Read(buffer, 0, 4) < 4) return false;
+                if (source.Read(buffer, 0, 4) < 4) return IMetaDataIO.ReadStatus.KO;
                 var trackSize = BinaryPrimitives.ReadInt32BigEndian(buffer);
 
                 byte[] trackData = new byte[trackSize];
-                if (source.Read(trackData, 0, trackSize) < trackSize) return false;
+                if (source.Read(trackData, 0, trackSize) < trackSize) return IMetaDataIO.ReadStatus.KO;
                 m_tracks.Add(parseTrack(trackData, nbTrack));
                 nbTrack++;
             }
@@ -494,7 +494,7 @@ namespace ATL.AudioData.IO
             Duration = getDuration();
             BitRate = sizeInfo.FileSize / Duration;
 
-            return true;
+            return IMetaDataIO.ReadStatus.OK;
         }
 
         #region Legacy Utilities

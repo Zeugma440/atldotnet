@@ -209,10 +209,10 @@ namespace ATL.AudioData.IO
         {
             sizeInfo = sizeNfo;
 
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
             BufferedBinaryReader bufferedSource = new BufferedBinaryReader(source); // Optimize parsing speed
 
@@ -220,12 +220,12 @@ namespace ATL.AudioData.IO
 
             source.Seek(0, SeekOrigin.Begin);
 
-            if (!readHeader(bufferedSource, readTagParams)) return false;
+            if (!readHeader(bufferedSource, readTagParams)) return IMetaDataIO.ReadStatus.KO;
 
             Duration = calculateDuration(bufferedSource, m_loopStart, LOOP_COUNT_DEFAULT) * 1000.0;
             BitRate = (sizeInfo.FileSize - GYM_HEADER_SIZE) * 8 / Duration; // TODO - use unpacked size if applicable, and not raw file size
 
-            return true;
+            return IMetaDataIO.ReadStatus.OK;
         }
 
         protected override int write(TagData tag, Stream s, string zone)

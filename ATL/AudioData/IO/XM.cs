@@ -358,12 +358,12 @@ namespace ATL.AudioData.IO
         {
             this.sizeInfo = sizeNfo;
 
-            return read(source, readTagParams);
+            return read(source, readTagParams) != IMetaDataIO.ReadStatus.KO;
         }
 
-        protected override bool read(Stream source, ReadTagParams readTagParams)
+        protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
-            bool result = true;
+            var result = IMetaDataIO.ReadStatus.OK;
             StringBuilder comment = new StringBuilder("");
 
             resetData();
