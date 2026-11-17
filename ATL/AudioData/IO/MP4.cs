@@ -3101,7 +3101,7 @@ namespace ATL.AudioData.IO
             var config = span.Slice(offset, audioSpecificConfigSize);
             
             // https://wiki.multimedia.cx/index.php?title=MPEG-4_Audio
-            var reader = new BitReader(config);
+            var reader = new BitReaderBE(config);
             reader.Read(5, out uint audioObjectType );
             if (audioObjectType == 31) 
             {
@@ -3170,7 +3170,7 @@ namespace ATL.AudioData.IO
 }
 
 //[DebuggerStepThrough]
-public ref struct BitReader
+public ref struct BitReaderBE
 {
     private readonly ReadOnlySpan<byte> _span;
     private int _index = 0;
