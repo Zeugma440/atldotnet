@@ -3099,46 +3099,41 @@ namespace ATL.AudioData.IO
                 return false;
 
             var config = span.Slice(offset, audioSpecificConfigSize);
+            
+            // https://wiki.multimedia.cx/index.php?title=MPEG-4_Audio
+            var reader = new BitReaderBE(config);
+            reader.Read(5, out uint audioObjectType );
+            if (audioObjectType == 31) 
+            {
+                reader.Read(6, out audioObjectType);
+                audioObjectType += 32;
+            }
 
-            var bits = BinaryPrimitives.ReadUInt16BigEndian(config.Slice(0, 2));
-
-            // Extract samplingFrequencyIndex (4 bits starting at bit 5)
-            var samplingFrequencyIndex = (bits >> 7) & 0x0F;
-
-            int channelOffset;
-            if (samplingFrequencyIndex == 15)
+            uint samplingFrequency;
+            reader.Read(4, out uint samplingFrequencyIndex);
+            if (samplingFrequencyIndex == 15) 
             {
                 // Explicit 24-bit sample rate follows
-                if (config.Length < 5)
+                if (reader.Remaining < 24)
                     return false;
-
+                
                 // Read 24-bit sample rate (bits 9-32)
-                SampleRate = ((config[1] & 0x7F) << 17) | (config[2] << 9) | (config[3] << 1) | (config[4] >> 7);
-                channelOffset = 4;
+                reader.Read(24, out samplingFrequency);
             }
             else
             {
                 // Use lookup table
-                SampleRate = samplingFrequencyIndex < AAC.AAC_SAMPLE_RATE.Length
+                samplingFrequency = (uint)(samplingFrequencyIndex < AAC.AAC_SAMPLE_RATE.Length
                     ? AAC.AAC_SAMPLE_RATE[samplingFrequencyIndex]
-                    : 0;
-                channelOffset = 1;
+                    : 0);
             }
+            SampleRate = (int)samplingFrequency;
+
 
             // Extract channelConfiguration (4 bits)
-            int channels;
-            if (samplingFrequencyIndex == 15)
-            {
-                // Channel config starts at bit 33
-                channels = (config[channelOffset] >> 3) & 0x0F;
-            }
-            else
-            {
-                // Channel config starts at bit 11
-                channels = (config[channelOffset] >> 3) & 0x0F;
-            }
+            reader.Read(4, out uint channels);
 
-            ChannelsArrangement = ChannelsArrangements.GuessFromChannelNumber(channels == 7 ? 8 : channels);
+            ChannelsArrangement = ChannelsArrangements.GuessFromChannelNumber((int)(channels == 7 ? 8 : channels));
 
             return true;
 
@@ -3172,4 +3167,57 @@ namespace ATL.AudioData.IO
         }
     }
 #pragma warning restore S125 // Sections of code should not be commented out
+}
+
+//[DebuggerStepThrough]
+public ref struct BitReaderBE
+{
+    private readonly ReadOnlySpan<byte> _span;
+    private int _index = 0;
+    private ulong _buffer = 0;
+    private int _bitsInBuffer = 0;
+    private int _position = 0;
+
+    public int Position => _position;
+    
+    public int Length => _span.Length * 8;
+    
+    public int Remaining => Length - Position;
+    
+    public BitReaderBE(ReadOnlySpan<byte> span)
+    {
+        _span = span;
+    }
+
+    public void Read(uint bits, out uint value)
+    {
+        // Debug.Assert((bits <= (sizeof(uint) * 8)));
+        // Debug.Assert(bits <= Remaining);
+        
+        while (_bitsInBuffer < bits) {
+            var data = _span[_index++];
+            _buffer = (_buffer << 8) | data;
+            _bitsInBuffer += 8;
+        }
+
+        value = (uint)((_buffer >> (int)(_bitsInBuffer - bits)) & (ulong)((1 << (int)bits) - 1));
+        _bitsInBuffer -= (int)bits;
+        _position += (int)bits;
+    }
+
+    public void Read(uint bits, out ulong value)
+    {
+        // Debug.Assert((bits <= (sizeof(ulong) * 8)));
+        // Debug.Assert(bits <= Remaining);
+
+        while (_bitsInBuffer < bits) {
+            var data = _span[_index++];
+            _buffer = (_buffer << 8) | data;
+            _bitsInBuffer += 8;
+        }
+
+        value = (_buffer >> (int)(_bitsInBuffer - bits)) & (ulong)((1 << (int)bits) - 1);
+        _bitsInBuffer -= (int)bits;
+        _position += (int)bits;
+    }
 }
