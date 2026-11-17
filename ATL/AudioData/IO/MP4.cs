@@ -3184,7 +3184,7 @@ public ref struct BitReaderBE
     
     public int Remaining => Length - Position;
     
-    public BitReader(ReadOnlySpan<byte> span)
+    public BitReaderBE(ReadOnlySpan<byte> span)
     {
         _span = span;
     }
