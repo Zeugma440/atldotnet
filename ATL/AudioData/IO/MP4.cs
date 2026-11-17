@@ -3099,41 +3099,45 @@ namespace ATL.AudioData.IO
                 return false;
 
             var config = span.Slice(offset, audioSpecificConfigSize);
-            
-            // https://wiki.multimedia.cx/index.php?title=MPEG-4_Audio
-            var reader = new BitReaderBE(config);
-            reader.Read(5, out uint audioObjectType );
-            if (audioObjectType == 31) 
+
+            int configPos = 0;
+            uint audioObjectType = StreamUtils.ReadBitsBE(config, configPos, 5);
+            configPos += 5;
+
+            if (audioObjectType == 31)
             {
-                reader.Read(6, out audioObjectType);
-                audioObjectType += 32;
+                //                audioObjectType = StreamUtils.ReadBits(config, configPos, 6, true);
+                configPos += 6;
+                //                audioObjectType += 32;
             }
 
+            uint samplingFrequencyIndex = StreamUtils.ReadBitsBE(config, configPos, 4);
+            configPos += 4;
+
             uint samplingFrequency;
-            reader.Read(4, out uint samplingFrequencyIndex);
-            if (samplingFrequencyIndex == 15) 
+            if (samplingFrequencyIndex == 15)
             {
                 // Explicit 24-bit sample rate follows
-                if (reader.Remaining < 24)
-                    return false;
-                
+                if (audioSpecificConfigSize - configPos < 24) return false;
+
                 // Read 24-bit sample rate (bits 9-32)
-                reader.Read(24, out samplingFrequency);
+                samplingFrequency = StreamUtils.ReadBitsBE(config, configPos, 24);
+                configPos += 24;
             }
             else
             {
                 // Use lookup table
-                samplingFrequency = (uint)(samplingFrequencyIndex < AAC.AAC_SAMPLE_RATE.Length
-                    ? AAC.AAC_SAMPLE_RATE[samplingFrequencyIndex]
-                    : 0);
+                samplingFrequency = samplingFrequencyIndex < AAC.AAC_SAMPLE_RATE.Length
+                    ? (uint)AAC.AAC_SAMPLE_RATE[samplingFrequencyIndex]
+                    : 0;
             }
             SampleRate = (int)samplingFrequency;
 
 
             // Extract channelConfiguration (4 bits)
-            reader.Read(4, out uint channels);
+            int channels = (int)StreamUtils.ReadBitsBE(config, configPos, 4);
 
-            ChannelsArrangement = ChannelsArrangements.GuessFromChannelNumber((int)(channels == 7 ? 8 : channels));
+            ChannelsArrangement = ChannelsArrangements.GuessFromChannelNumber(channels == 7 ? 8 : channels);
 
             return true;
 
@@ -3160,64 +3164,10 @@ namespace ATL.AudioData.IO
             Span<byte> span = stackalloc byte[(int)dataSize];
             if (source.Read(span) != dataSize) return false;
 
-            //var maxBitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(4, 4));
             bitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(8, 4)); // Average bitrate
 
             return true;
         }
     }
 #pragma warning restore S125 // Sections of code should not be commented out
-}
-
-//[DebuggerStepThrough]
-public ref struct BitReaderBE
-{
-    private readonly ReadOnlySpan<byte> _span;
-    private int _index = 0;
-    private ulong _buffer = 0;
-    private int _bitsInBuffer = 0;
-    private int _position = 0;
-
-    public int Position => _position;
-    
-    public int Length => _span.Length * 8;
-    
-    public int Remaining => Length - Position;
-    
-    public BitReaderBE(ReadOnlySpan<byte> span)
-    {
-        _span = span;
-    }
-
-    public void Read(uint bits, out uint value)
-    {
-        // Debug.Assert((bits <= (sizeof(uint) * 8)));
-        // Debug.Assert(bits <= Remaining);
-        
-        while (_bitsInBuffer < bits) {
-            var data = _span[_index++];
-            _buffer = (_buffer << 8) | data;
-            _bitsInBuffer += 8;
-        }
-
-        value = (uint)((_buffer >> (int)(_bitsInBuffer - bits)) & (ulong)((1 << (int)bits) - 1));
-        _bitsInBuffer -= (int)bits;
-        _position += (int)bits;
-    }
-
-    public void Read(uint bits, out ulong value)
-    {
-        // Debug.Assert((bits <= (sizeof(ulong) * 8)));
-        // Debug.Assert(bits <= Remaining);
-
-        while (_bitsInBuffer < bits) {
-            var data = _span[_index++];
-            _buffer = (_buffer << 8) | data;
-            _bitsInBuffer += 8;
-        }
-
-        value = (_buffer >> (int)(_bitsInBuffer - bits)) & (ulong)((1 << (int)bits) - 1);
-        _bitsInBuffer -= (int)bits;
-        _position += (int)bits;
-    }
 }
