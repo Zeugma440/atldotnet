@@ -115,14 +115,18 @@ namespace ATL.AudioData.IO
 
             AudioDataOffset = source.Position - 4;
             AudioDataSize = sizeNfo.FileSize - sizeNfo.APESize - sizeNfo.ID3v1Size - AudioDataOffset;
-            int coreFrameBitOffset = (int)(AudioDataOffset * 8);
 
-            uint cpf = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 38, 1); // CPF
+            source.Seek(AudioDataOffset + 4, SeekOrigin.Begin);
 
-            uint amode = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 60, 6); // AMODE
+            Span<byte> span = stackalloc byte[7];
+            if (source.Read(span) != 7) return false;
 
-            var value = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 66, 4);
-            sampleRate = value switch
+            uint cpf = StreamUtils.ReadBitsBE(span, 6, 1);
+
+            uint amode = StreamUtils.ReadBitsBE(span, 28, 6);
+
+            uint sfreq = StreamUtils.ReadBitsBE(span, 34, 4);
+            sampleRate = sfreq switch
             {
                 1 => 8000,
                 2 => 16000,
@@ -136,19 +140,21 @@ namespace ATL.AudioData.IO
                 _ => 0
             };
 
-            value = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 70, 5); // RATE
+            uint value = StreamUtils.ReadBitsBE(span, 38, 5); // RATE
             BitRate = (ushort)BITRATES[value];
 
-            value = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 80, 3); // EXT_AUDIO_ID
-            uint extAudio = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 83, 1); // EXT_AUDIO
+            value = StreamUtils.ReadBitsBE(span, 48, 3); // EXT_AUDIO_ID
+            uint extAudio = StreamUtils.ReadBitsBE(span, 51, 1); // EXT_AUDIO
             if (1 == extAudio && 2 == value) sampleRate = 96000; // X96 frequency extension
 
-            value = StreamUtils.ReadBEBits(source, coreFrameBitOffset + 85, 2); // LFF
+            value = StreamUtils.ReadBitsBE(span, 53, 2); // LFF
             bool isLfePresent = (1 == value || 2 == value);
             ChannelsArrangement = getChannelsArrangement(amode, isLfePresent);
 
-            int filtsOffset = coreFrameBitOffset + 88 + ((1 == cpf) ? 16 : 0);
-            value = StreamUtils.ReadBEBits(source, filtsOffset + 7, 3); // PCMR
+            long filtsOffset = AudioDataOffset + 11 + ((1 == cpf) ? 2 : 0);
+            source.Seek(filtsOffset, SeekOrigin.Begin);
+            if (source.Read(span) != 7) return false;
+            value = StreamUtils.ReadBitsBE(span, 7, 3); // PCMR
             switch (value)
             {
                 case 0:
