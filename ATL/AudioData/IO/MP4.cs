@@ -3100,11 +3100,15 @@ namespace ATL.AudioData.IO
 
             offset += 4; // streamType (1), bufferSizeDB (3)
 
-            // var maxBitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(offset, 4));
+            var maxBitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(offset, 4));
             offset += 4;
 
             this.bitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(offset, 4)); // Average bitrate
             offset += 4;
+
+            bitrateTypeID = (maxBitrate == 0) || ((maxBitrate >= bitrate) && (maxBitrate <= (bitrate * 1.005)))
+                ? MP4_BITRATE_TYPE_CBR
+                : MP4_BITRATE_TYPE_VBR;
 
             // Find DecoderSpecificInfo (Audio Specific Config)
             if (((span.Length - offset) == 0) || (span[offset++] != DecSpecificInfoTag))
@@ -3203,7 +3207,7 @@ namespace ATL.AudioData.IO
             var sampleRateCode = StreamUtils.ReadBitsBE(span, 14, 5);
 
             _descFormat = "AC-3";
-            bitrate = AC3.BITRATES[sampleRateCode];
+            bitrate = AC3.BITRATES[sampleRateCode] * 1000;
             var channels = lfeon + Ac3Channels[acmod];
             ChannelsArrangement = ChannelsArrangements.GuessFromChannelNumber((int)channels);
             SampleRate = fscod switch

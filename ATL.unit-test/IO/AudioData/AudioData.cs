@@ -151,7 +151,7 @@ namespace ATL.test.IO
             // Bitrate is 0 as the MDAT has been manually truncated => too little data for a long duration
             testGenericAudio("MP4/fragmented.mp4", CID_MP4, 0, 87211, 0, -1, 48000, false, CF_LOSSY, MONO, "MPEG-4 Part 14 / AAC-LC", 18820, 2252);
 
-            testGenericAudio("MP4/ac3.mp4", CID_MP4, 0, 10016, 192000, -1, 48000, false, CF_LOSSY, STEREO, "MPEG-4 Part 14 / AC-3", 40, 240392);
+            testGenericAudio("MP4/ac3.mp4", CID_MP4, 0, 10016, 192, -1, 48000, false, CF_LOSSY, STEREO, "MPEG-4 Part 14 / AC-3", 40, 240392);
         }
 
         [TestMethod]
