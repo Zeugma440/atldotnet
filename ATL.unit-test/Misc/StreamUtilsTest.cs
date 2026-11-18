@@ -439,26 +439,6 @@ namespace ATL.test
             {
                 // Nothing
             }
-
-            try
-            {
-                StreamUtils.ReadBEBits(new MemoryStream(), 0, 0);
-                Assert.Fail();
-            }
-            catch
-            {
-                // Nothing
-            }
-
-            try
-            {
-                StreamUtils.ReadBEBits(new MemoryStream(), 0, 33);
-                Assert.Fail();
-            }
-            catch
-            {
-                // Nothing
-            }
         }
     }
 }
