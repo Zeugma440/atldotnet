@@ -405,32 +405,12 @@ namespace ATL
         }
 
         /// <summary>
-        /// Read the given number of bits from the given position and converts it to an unsigned int32
-        /// according to big-endian byte _and_ bit convention
-        ///
-        /// NB : reader position _always_ progresses by 4, no matter how many bits are needed
-        /// </summary>
-        /// <param name="source">Stream to read the data from</param>
-        /// <param name="bitPosition">Position of the first _bit_ to read (scale is x8 compared to classic byte positioning)</param>
-        /// <param name="bitCount">Number of bits to read</param>
-        /// <returns>Unsigned int32 formed from read bits, according to big-endian convention</returns>
-        public static uint ReadBEBits(Stream source, int bitPosition, int bitCount)
-        {
-            if (bitCount is < 1 or > 32) throw new NotSupportedException("Bit count must be between 1 and 32");
-            Span<byte> buffer = stackalloc byte[4];
-
-            source.Seek(bitPosition / 8, SeekOrigin.Begin); // integer division =^ div
-            if (source.Read(buffer) < buffer.Length) return 0;
-            uint result = BinaryPrimitives.ReadUInt32BigEndian(buffer);
-            result = (result << (bitPosition % 8)) >> (32 - bitCount);
-
-            return result;
-        }
-
-        /// <summary>
         /// Extracts an integer from the given byte Span, using the given bits position and count, with little-endian convention
         /// Credits go to https://stackoverflow.com/questions/63788666/c-sharp-fastest-method-get-integer-from-part-of-bits
         /// </summary>
+        /// <param name="source">Span to read data from</param>
+        /// <param name="bitPosition">Position of the first _bit_ to read (scale is x8 compared to classic byte positioning)</param>
+        /// <param name="bitCount">Number of bits to read</param>
         public static int ReadBits(ReadOnlySpan<byte> source, int bitPosition, int bitCount)
         {
             if (bitPosition + bitCount > source.Length * 8) throw new NotSupportedException("Incompatible parameters");
@@ -446,6 +426,9 @@ namespace ATL
         /// <summary>
         /// Extracts an integer from the given byte Span, using the given bits position and count, with big-endian convention
         /// </summary>
+        /// <param name="source">Span to read data from</param>
+        /// <param name="bitPosition">Position of the first _bit_ to read (scale is x8 compared to classic byte positioning)</param>
+        /// <param name="bitCount">Number of bits to read</param>
         public static uint ReadBitsBE(ReadOnlySpan<byte> source, int bitPosition, int bitCount)
         {
             if (bitPosition + bitCount > source.Length * 8) throw new NotSupportedException("Incompatible parameters");

@@ -230,16 +230,6 @@ namespace ATL.test
         }
 
         [TestMethod]
-        public void StreamUtils_ReadBitsBEStreamed()
-        {
-            using MemoryStream stream4 = new MemoryStream(new byte[] { 0b110, 0b101, 0b001, 0b010 });
-            using MemoryStream stream5 = new MemoryStream(new byte[] { 0b111, 0b110, 0b101, 0b001, 0b010 });
-
-            Assert.AreEqual(1798u, StreamUtils.ReadBEBits(stream5, 0, 16)); // 0b111 0b110, read in big-endian convention
-            Assert.AreEqual(100991234u, StreamUtils.ReadBEBits(stream4, 0, 32));
-        }
-
-        [TestMethod]
         public void StreamUtils_BEUInt24Converters()
         {
             uint intValue = 0x00873529;
