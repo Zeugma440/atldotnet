@@ -72,6 +72,7 @@ namespace ATL.AudioData.IO
             { "©day", Field.RECORDING_DATE_OR_YEAR },
             { "©gen", Field.GENRE },
             { "gnre", Field.GENRE },
+            { "GENRE", Field.GENRE }, // aka ----:com.apple.iTunes:GENRE
             { "trkn", Field.TRACK_NUMBER_TOTAL },
             { "disk", Field.DISC_NUMBER_TOTAL },
             { "rtng", Field.RATING },
