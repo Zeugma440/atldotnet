@@ -863,7 +863,7 @@ namespace ATL.AudioData.IO
         {
             switch (contents)
             {
-                case Contents.FLAC: return false;
+                case Contents.FLAC: return true;
                 case Contents.SPEEX: return info.SpeexParameters.Vbr > 0;
                 default: return true;
             }
