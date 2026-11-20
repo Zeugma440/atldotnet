@@ -189,8 +189,8 @@ namespace ATL.test.IO
         [TestMethod]
         public void Audio_FLAC()
         {
-            testGenericAudio("FLAC/flac.flac", CID_FLAC, CID_FLAC, 5176, 694, 16, 44100, false, CF_LOSSLESS, STEREO, "Free Lossless Audio Codec", 18030, 448997);
-            testGenericAudio("OGG/embedded-flac.ogg", CID_OGG, CID_FLAC, 5176, 635, 16, 44100, false, CF_LOSSLESS, STEREO, "OGG / FLAC", 397, 410863);
+            testGenericAudio("FLAC/flac.flac", CID_FLAC, CID_FLAC, 5176, 694, 16, 44100, true, CF_LOSSLESS, STEREO, "Free Lossless Audio Codec", 18030, 448997);
+            testGenericAudio("OGG/embedded-flac.ogg", CID_OGG, CID_FLAC, 5176, 635, 16, 44100, true, CF_LOSSLESS, STEREO, "OGG / FLAC", 397, 410863);
         }
 
         [TestMethod]

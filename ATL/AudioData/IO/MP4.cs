@@ -1613,7 +1613,7 @@ namespace ATL.AudioData.IO
                         else if (fieldSize > 2)
                         {
                             if (source.Read(data, 0, 3) < 3) return;
-                            uIntData = StreamUtils.DecodeBEUInt24(data);
+                            uIntData = SpanUtils.DecodeBEUInt24(data);
                         }
                         else if (fieldSize > 1)
                         {
@@ -3129,7 +3129,7 @@ namespace ATL.AudioData.IO
             var config = span.Slice(offset, audioSpecificConfigSize);
 
             int configPos = 0;
-            uint audioObjectType = StreamUtils.ReadBitsBE(config, configPos, 5);
+            uint audioObjectType = SpanUtils.ReadBitsBE(config, configPos, 5);
             configPos += 5;
 
             if (audioObjectType == 31)
@@ -3139,7 +3139,7 @@ namespace ATL.AudioData.IO
                 //                audioObjectType += 32;
             }
 
-            uint samplingFrequencyIndex = StreamUtils.ReadBitsBE(config, configPos, 4);
+            uint samplingFrequencyIndex = SpanUtils.ReadBitsBE(config, configPos, 4);
             configPos += 4;
 
             uint samplingFrequency;
@@ -3149,7 +3149,7 @@ namespace ATL.AudioData.IO
                 if (audioSpecificConfigSize - configPos < 24) return false;
 
                 // Read 24-bit sample rate (bits 9-32)
-                samplingFrequency = StreamUtils.ReadBitsBE(config, configPos, 24);
+                samplingFrequency = SpanUtils.ReadBitsBE(config, configPos, 24);
                 configPos += 24;
             }
             else
@@ -3163,7 +3163,7 @@ namespace ATL.AudioData.IO
 
 
             // Extract channelConfiguration (4 bits)
-            int channels = (int)StreamUtils.ReadBitsBE(config, configPos, 4);
+            int channels = (int)SpanUtils.ReadBitsBE(config, configPos, 4);
 
             ChannelsArrangement = ChannelsArrangements.GuessFromChannelNumber(channels == 7 ? 8 : channels);
 

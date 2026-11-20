@@ -423,7 +423,7 @@ namespace ATL.AudioData
                 hasID3v2 = true;
 
                 var data2 = data[6..10]; // bytes 6-9 only
-                int id3v2Size = StreamUtils.DecodeSynchSafeInt32(data2) + 10;  // 10 being the size of the header
+                int id3v2Size = SpanUtils.DecodeSynchSafeInt32(data2) + 10;  // 10 being the size of the header
                 s.Seek(id3v2Size, SeekOrigin.Begin);
                 offset = s.Position;
                 if (s.Read(data) < 32) return GetFromFormat(IN_MEMORY, new AudioFormat(Format.UNKNOWN_FORMAT));

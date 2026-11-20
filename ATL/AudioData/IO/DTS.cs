@@ -121,11 +121,11 @@ namespace ATL.AudioData.IO
             Span<byte> span = stackalloc byte[7];
             if (source.Read(span) != 7) return false;
 
-            uint cpf = StreamUtils.ReadBitsBE(span, 6, 1);
+            uint cpf = SpanUtils.ReadBitsBE(span, 6, 1);
 
-            uint amode = StreamUtils.ReadBitsBE(span, 28, 6);
+            uint amode = SpanUtils.ReadBitsBE(span, 28, 6);
 
-            uint sfreq = StreamUtils.ReadBitsBE(span, 34, 4);
+            uint sfreq = SpanUtils.ReadBitsBE(span, 34, 4);
             sampleRate = sfreq switch
             {
                 1 => 8000,
@@ -140,21 +140,21 @@ namespace ATL.AudioData.IO
                 _ => 0
             };
 
-            uint value = StreamUtils.ReadBitsBE(span, 38, 5); // RATE
+            uint value = SpanUtils.ReadBitsBE(span, 38, 5); // RATE
             BitRate = (ushort)BITRATES[value];
 
-            value = StreamUtils.ReadBitsBE(span, 48, 3); // EXT_AUDIO_ID
-            uint extAudio = StreamUtils.ReadBitsBE(span, 51, 1); // EXT_AUDIO
+            value = SpanUtils.ReadBitsBE(span, 48, 3); // EXT_AUDIO_ID
+            uint extAudio = SpanUtils.ReadBitsBE(span, 51, 1); // EXT_AUDIO
             if (1 == extAudio && 2 == value) sampleRate = 96000; // X96 frequency extension
 
-            value = StreamUtils.ReadBitsBE(span, 53, 2); // LFF
+            value = SpanUtils.ReadBitsBE(span, 53, 2); // LFF
             bool isLfePresent = (1 == value || 2 == value);
             ChannelsArrangement = getChannelsArrangement(amode, isLfePresent);
 
             long filtsOffset = AudioDataOffset + 11 + ((1 == cpf) ? 2 : 0);
             source.Seek(filtsOffset, SeekOrigin.Begin);
             if (source.Read(span) != 7) return false;
-            value = StreamUtils.ReadBitsBE(span, 7, 3); // PCMR
+            value = SpanUtils.ReadBitsBE(span, 7, 3); // PCMR
             switch (value)
             {
                 case 0:

@@ -533,7 +533,7 @@ namespace ATL.AudioData.IO
                 Utils.Latin1Encoding.GetBytes(XTENDED_TAG.AsSpan(), buffer);
                 s.Write(buffer);
                 long sizePos = s.Position;
-                StreamUtils.WriteInt32(s, 0, buffer); // Size placeholder; to be rewritten with actual value at the end of the method
+                SpanUtils.WriteInt32(s, 0, buffer); // Size placeholder; to be rewritten with actual value at the end of the method
 
                 IDictionary<Field, string> map = tag.ToStringMap();
 
@@ -566,7 +566,7 @@ namespace ATL.AudioData.IO
 
                 int size = (int)(s.Position - sizePos);
                 s.Seek(sizePos, SeekOrigin.Begin);
-                StreamUtils.WriteInt32(s, size, buffer);
+                SpanUtils.WriteInt32(s, size, buffer);
             }
 
             return result;
@@ -600,7 +600,7 @@ namespace ATL.AudioData.IO
                     }
                     else
                     {
-                        StreamUtils.WriteUInt16(stream, ushort.Parse(text), buffer); // Value is directly written as an ushort into the length field
+                        SpanUtils.WriteUInt16(stream, ushort.Parse(text), buffer); // Value is directly written as an ushort into the length field
                     }
                     break;
                 case XID6_TSTR:
@@ -608,13 +608,13 @@ namespace ATL.AudioData.IO
                     else if (text.Length < 3) text = Utils.BuildStrictLengthString(text, 3, ' ');
 
                     byte[] textBinary = Utils.Latin1Encoding.GetBytes(text);
-                    StreamUtils.WriteUInt16(stream, (ushort)(textBinary.Length + 1), buffer);
+                    SpanUtils.WriteUInt16(stream, (ushort)(textBinary.Length + 1), buffer);
                     StreamUtils.WriteBytes(stream, textBinary);
                     stream.WriteByte(0);
                     break;
                 case XID6_TINT:
-                    StreamUtils.WriteUInt16(stream, 4, buffer);
-                    StreamUtils.WriteInt32(stream, Parse(text), buffer);
+                    SpanUtils.WriteUInt16(stream, 4, buffer);
+                    SpanUtils.WriteInt32(stream, Parse(text), buffer);
                     break;
             }
         }
