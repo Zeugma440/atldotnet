@@ -196,7 +196,7 @@ namespace ATL.AudioData.IO
                         isLast = (metaDataBlockHeader[0] & FLAG_LAST_METADATA_BLOCK) > 0; // last flag ( first bit == 1 )
 
                         blockIndex++;
-                        var blockLength = StreamUtils.DecodeBEUInt24(metaDataBlockHeader, 1);
+                        var blockLength = SpanUtils.DecodeBEUInt24(metaDataBlockHeader, 1);
 
                         var blockType = (byte)(metaDataBlockHeader[0] & 0x7F);
                         var position = source.Position;

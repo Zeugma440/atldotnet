@@ -450,14 +450,14 @@ namespace ATL.AudioData.IO
             List<TocEntry> finalToc = newToc.Values.Where(e => !isSectionDeletable(e.Section)).ToList();
             int deltaBytes = (newToc.Count - finalToc.Count) * 12;
             s.Seek(tocOffset, SeekOrigin.Begin);
-            StreamUtils.WriteBEInt32(s, finalToc.Count, span);
+            SpanUtils.WriteBEInt32(s, finalToc.Count, span);
             s.Seek(4, SeekOrigin.Current); // Skip unfathomable byte
                                            // Rewrite table of contents (<section>, <offset>, <length>)
             foreach (TocEntry entry in finalToc)
             {
-                StreamUtils.WriteBEInt32(s, entry.Section, span);
-                StreamUtils.WriteBEUInt32(s, entry.Offset, span);
-                StreamUtils.WriteBEUInt32(s, entry.Size, span);
+                SpanUtils.WriteBEInt32(s, entry.Section, span);
+                SpanUtils.WriteBEUInt32(s, entry.Offset, span);
+                SpanUtils.WriteBEUInt32(s, entry.Size, span);
             }
             int newTocSize = (int)(s.Position - tocOffset);
             // Process TOC resizing

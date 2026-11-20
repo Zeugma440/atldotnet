@@ -359,7 +359,7 @@ namespace ATL.AudioData.IO
             public int GetSize(bool includeFooter = true)
             {
                 // Get total tag size
-                int result = StreamUtils.DecodeSynchSafeInt32(Size) + 10; // 10 being the size of the header
+                int result = SpanUtils.DecodeSynchSafeInt32(Size) + 10; // 10 being the size of the header
 
                 if (includeFooter && HasFooter) result += 10; // Indicates the presence of a footer (ID3v2.4+)
 
@@ -743,7 +743,7 @@ namespace ATL.AudioData.IO
                 case TAG_VERSION_2_4:
                     long sizePosition = source.Position;
                     byte[] sizeDescriptor = source.ReadBytes(4);
-                    frame.Size = StreamUtils.DecodeSynchSafeInt32(sizeDescriptor);
+                    frame.Size = SpanUtils.DecodeSynchSafeInt32(sizeDescriptor);
                     // Important: Certain implementation of ID3v2.4 still use the ID3v2.3 size descriptor (e.g.FFMpeg 4.3.1 for the CTOC frame).
                     // => We have to test reading the frame to "guess" which convention its size descriptor uses
                     // when its size is described on more than 1 byte

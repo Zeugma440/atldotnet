@@ -66,7 +66,7 @@ namespace ATL.AudioData
             return nbBytes switch
             {
                 2 => BinaryPrimitives.ReadUInt16BigEndian(buffer),
-                3 => StreamUtils.DecodeBEUInt24(buffer),
+                3 => SpanUtils.DecodeBEUInt24(buffer),
                 4 => BinaryPrimitives.ReadUInt32BigEndian(buffer),
                 5 => (long)StreamUtils.DecodeBEUInt40(buffer),
                 // TODO 48 and 56 bits longs
@@ -182,7 +182,7 @@ namespace ATL.AudioData
             return nbBytes switch
             {
                 2 => BinaryPrimitives.ReadUInt16BigEndian(buffer),
-                3 => StreamUtils.DecodeBEUInt24(buffer),
+                3 => SpanUtils.DecodeBEUInt24(buffer),
                 4 => BinaryPrimitives.ReadUInt32BigEndian(buffer),
                 5 => StreamUtils.DecodeBEUInt40(buffer),
                 // TODO 48 and 56 bits longs

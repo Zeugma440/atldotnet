@@ -454,8 +454,8 @@ namespace Commons
                                     {
                                         s.Seek(5, SeekOrigin.Current);
                                         byte[] data = r.ReadBytes(4);
-                                        props.Width = 1 + StreamUtils.ReadBits(data, 0, 14); // Only read the first 14 bits
-                                        props.Height = 1 + StreamUtils.ReadBits(data, 14, 14); // Only read the last 14 bits
+                                        props.Width = 1 + SpanUtils.ReadBits(data, 0, 14); // Only read the first 14 bits
+                                        props.Height = 1 + SpanUtils.ReadBits(data, 14, 14); // Only read the last 14 bits
                                         break;
                                     }
                                 // Extended
@@ -463,10 +463,10 @@ namespace Commons
                                     {
                                         s.Seek(8, SeekOrigin.Current);
                                         byte[] data = r.ReadBytes(4);
-                                        props.Width = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
+                                        props.Width = 1 + SpanUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
                                         s.Seek(-1, SeekOrigin.Current);
                                         data = r.ReadBytes(4);
-                                        props.Height = 1 + StreamUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
+                                        props.Height = 1 + SpanUtils.ReadBits(data, 0, 24); // Only read the first 24 bits
                                         break;
                                     }
                                 // Lossy
@@ -474,9 +474,9 @@ namespace Commons
                                     {
                                         s.Seek(10, SeekOrigin.Current);
                                         byte[] data = r.ReadBytes(2);
-                                        props.Width = StreamUtils.ReadBits(data, 0, 14);
+                                        props.Width = SpanUtils.ReadBits(data, 0, 14);
                                         data = r.ReadBytes(2);
-                                        props.Height = StreamUtils.ReadBits(data, 0, 14);
+                                        props.Height = SpanUtils.ReadBits(data, 0, 14);
                                         break;
                                     }
                             }

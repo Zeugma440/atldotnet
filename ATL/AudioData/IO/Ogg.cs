@@ -184,10 +184,10 @@ namespace ATL.AudioData.IO
                 StreamUtils.WriteBytes(w, ID);
                 w.WriteByte(StreamVersion);
                 w.WriteByte(TypeFlag);
-                StreamUtils.WriteUInt64(w, AbsolutePosition, buffer);
-                StreamUtils.WriteInt32(w, StreamId, buffer);
-                StreamUtils.WriteInt32(w, PageNumber, buffer);
-                StreamUtils.WriteUInt32(w, Checksum, buffer);
+                SpanUtils.WriteUInt64(w, AbsolutePosition, buffer);
+                SpanUtils.WriteInt32(w, StreamId, buffer);
+                SpanUtils.WriteInt32(w, PageNumber, buffer);
+                SpanUtils.WriteUInt32(w, Checksum, buffer);
                 w.WriteByte(Segments);
                 StreamUtils.WriteBytes(w, LacingValues);
             }

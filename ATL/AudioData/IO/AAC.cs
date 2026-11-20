@@ -140,9 +140,9 @@ namespace ATL.AudioData.IO
             if (AAC_HEADER_TYPE_ADIF == headerTypeID) return true;
             else if (AAC_HEADER_TYPE_ADTS == headerTypeID)
             {
-                if (StreamUtils.ReadBits(data, 0, 8) != 0xFF) return false;
-                if (StreamUtils.ReadBits(data, 12, 4) != 0xF) return false;
-                if (StreamUtils.ReadBits(data, 9, 2) != 0) return false;  // Make sure Layer is 0
+                if (SpanUtils.ReadBits(data, 0, 8) != 0xFF) return false;
+                if (SpanUtils.ReadBits(data, 12, 4) != 0xF) return false;
+                if (SpanUtils.ReadBits(data, 9, 2) != 0) return false;  // Make sure Layer is 0
                 return true;
             }
             else return false;
@@ -187,7 +187,7 @@ namespace ATL.AudioData.IO
             if (source.Read(buffer) != 16) return false;
 
             var spanPos = 0;
-            if (0 == StreamUtils.ReadBitsBE(buffer, spanPos, 1)) spanPos += 3;
+            if (0 == SpanUtils.ReadBitsBE(buffer, spanPos, 1)) spanPos += 3;
             else
             {
                 // TODO make that section of the file readable / editable through IMetaDataIO
@@ -197,11 +197,11 @@ namespace ATL.AudioData.IO
             }
 
             // Bitstream type
-            if (0 == StreamUtils.ReadBitsBE(buffer, spanPos, 1)) bitrateTypeID = AAC_BITRATE_TYPE_CBR;
+            if (0 == SpanUtils.ReadBitsBE(buffer, spanPos, 1)) bitrateTypeID = AAC_BITRATE_TYPE_CBR;
             else bitrateTypeID = AAC_BITRATE_TYPE_VBR;
             spanPos++;
 
-            bitrate = StreamUtils.ReadBitsBE(buffer, spanPos, 23);
+            bitrate = SpanUtils.ReadBitsBE(buffer, spanPos, 23);
             spanPos += 23;
 
             // var nbConfigElts = StreamUtils.ReadBitsBE(span, spanPos, 4);  unused
@@ -213,15 +213,15 @@ namespace ATL.AudioData.IO
             spanPos += 6;
 
             uint channels = 1;
-            SampleRate = AAC_SAMPLE_RATE[StreamUtils.ReadBitsBE(buffer, spanPos, 4)];
+            SampleRate = AAC_SAMPLE_RATE[SpanUtils.ReadBitsBE(buffer, spanPos, 4)];
             spanPos += 4;
-            channels += StreamUtils.ReadBitsBE(buffer, spanPos, 4); // Front channels
+            channels += SpanUtils.ReadBitsBE(buffer, spanPos, 4); // Front channels
             spanPos += 4;
-            channels += StreamUtils.ReadBitsBE(buffer, spanPos, 4); // Side channels
+            channels += SpanUtils.ReadBitsBE(buffer, spanPos, 4); // Side channels
             spanPos += 4;
-            channels += StreamUtils.ReadBitsBE(buffer, spanPos, 4); // Back channels
+            channels += SpanUtils.ReadBitsBE(buffer, spanPos, 4); // Back channels
             spanPos += 4;
-            channels += StreamUtils.ReadBitsBE(buffer, spanPos, 2); // LFE channels
+            channels += SpanUtils.ReadBitsBE(buffer, spanPos, 2); // LFE channels
 
             ChannelsArrangement = GuessFromChannelNumber((int)channels);
 
@@ -244,24 +244,24 @@ namespace ATL.AudioData.IO
                 if (source.Read(buffer) != 8) return false;
 
                 var spanPos = 0;
-                if (StreamUtils.ReadBitsBE(buffer, spanPos, 12) != 0xFFF) break;
+                if (SpanUtils.ReadBitsBE(buffer, spanPos, 12) != 0xFFF) break;
                 spanPos += 12;
                 spanPos += 1;
 
-                if (StreamUtils.ReadBitsBE(buffer, spanPos, 2) != 0) break; // Make sure Layer is 0
+                if (SpanUtils.ReadBitsBE(buffer, spanPos, 2) != 0) break; // Make sure Layer is 0
                 spanPos += 5;
 
-                SampleRate = AAC_SAMPLE_RATE[StreamUtils.ReadBitsBE(buffer, spanPos, 4)];
+                SampleRate = AAC_SAMPLE_RATE[SpanUtils.ReadBitsBE(buffer, spanPos, 4)];
                 spanPos += 5;
 
-                uint channels = StreamUtils.ReadBitsBE(buffer, spanPos, 3);
+                uint channels = SpanUtils.ReadBitsBE(buffer, spanPos, 3);
                 ChannelsArrangement = GuessFromChannelNumber((int)channels);
                 spanPos += 7;
 
-                totalSize += StreamUtils.ReadBitsBE(buffer, spanPos, 13); // aac_frame_length
+                totalSize += SpanUtils.ReadBitsBE(buffer, spanPos, 13); // aac_frame_length
                 spanPos += 13;
 
-                if (0x7FF == StreamUtils.ReadBitsBE(buffer, spanPos, 11))
+                if (0x7FF == SpanUtils.ReadBitsBE(buffer, spanPos, 11))
                     bitrateTypeID = AAC_BITRATE_TYPE_VBR;
                 else
                     bitrateTypeID = AAC_BITRATE_TYPE_CBR;
