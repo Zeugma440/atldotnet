@@ -2987,11 +2987,13 @@ namespace ATL.AudioData.IO
                     if (!TryParseEsdsAtom(stream, dataSize)) return false;
                 }
                 {
+                    // btrt is an optional atom?
                     var (atomSize, headerSize) = navigateToAtomSize(stream, "btrt");
-                    if (atomSize == 0) return false;
-
-                    var dataSize = atomSize - headerSize;
-                    if (!TryParseBtrtAtom(stream, dataSize)) return false;
+                    if (atomSize != 0)
+                    {
+                        var dataSize = atomSize - headerSize;
+                        if (!TryParseBtrtAtom(stream, dataSize)) return false;
+                    }
                 }
 
                 return true;
@@ -3018,11 +3020,13 @@ namespace ATL.AudioData.IO
                     if (!TryParseDac3Atom(source1, dataSize)) return false;
                 }
                 {
+                    // btrt is an optional atom?
                     var (atomSize, headerSize) = navigateToAtomSize(source1, "btrt");
-                    if (atomSize == 0) return false;
-
-                    var dataSize = atomSize - headerSize;
-                    if (!TryParseBtrtAtom(source1, dataSize)) return false;
+                    if (atomSize != 0)
+                    {
+                        var dataSize = atomSize - headerSize;
+                        if (!TryParseBtrtAtom(source1, dataSize)) return false;
+                    }                
                 }
 
                 return true;
@@ -3185,10 +3189,19 @@ namespace ATL.AudioData.IO
 
         private bool TryParseBtrtAtom(Stream source, long dataSize)
         {
+            // BufferSizeDB, MaxBitrate, AvgBitrate
+            if (dataSize < 24) return false;
+            
             Span<byte> span = stackalloc byte[(int)dataSize];
             if (source.Read(span) != dataSize) return false;
 
             bitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(8, 4)); // Average bitrate
+
+            // TODO Does it make sense to do this here without knowing the codec? 
+            // var maxBitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(4, 4)); // Max bitrate 
+            // bitrateTypeID = (maxBitrate == 0) || ((maxBitrate >= bitrate) && (maxBitrate <= (bitrate * 1.005)))
+            //     ? MP4_BITRATE_TYPE_CBR
+            //     : MP4_BITRATE_TYPE_VBR;
 
             return true;
         }
