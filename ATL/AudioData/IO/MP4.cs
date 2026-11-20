@@ -3198,10 +3198,10 @@ namespace ATL.AudioData.IO
             bitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(8, 4)); // Average bitrate
 
             // TODO Does it make sense to do this here without knowing the codec? 
-            // var maxBitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(4, 4)); // Max bitrate 
-            // bitrateTypeID = (maxBitrate == 0) || ((maxBitrate >= bitrate) && (maxBitrate <= (bitrate * 1.005)))
-            //     ? MP4_BITRATE_TYPE_CBR
-            //     : MP4_BITRATE_TYPE_VBR;
+            var maxBitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(4, 4)); // Max bitrate 
+            bitrateTypeID = (maxBitrate == 0) || ((maxBitrate >= bitrate) && (maxBitrate <= (bitrate * 1.005)))
+                ? MP4_BITRATE_TYPE_CBR
+                : MP4_BITRATE_TYPE_VBR;
 
             return true;
         }
@@ -3213,12 +3213,12 @@ namespace ATL.AudioData.IO
             Span<byte> span = stackalloc byte[(int)dataSize];
             if (source.Read(span) != dataSize) return false;
 
-            var fscod = StreamUtils.ReadBitsBE(span, 0, 2); // Frame Size Code
-            var bsid = StreamUtils.ReadBitsBE(span, 2, 5); // Bit Stream Identification
-            //var bsmod = StreamUtils.ReadBitsBE(span, 7, 3); // Bit Stream Mode
-            var acmod = StreamUtils.ReadBitsBE(span, 10, 3); // Audio Config Mode
-            var lfeon = StreamUtils.ReadBitsBE(span, 13, 1); // Low Frequency Effects Channel On
-            var sampleRateCode = StreamUtils.ReadBitsBE(span, 14, 5);
+            var fscod = SpanUtils.ReadBitsBE(span, 0, 2); // Frame Size Code
+            //var bsid = SpanUtils.ReadBitsBE(span, 2, 5); // Bit Stream Identification. should be <= 8?
+            //var bsmod = SpanUtils.ReadBitsBE(span, 7, 3); // Bit Stream Mode
+            var acmod = SpanUtils.ReadBitsBE(span, 10, 3); // Audio Config Mode
+            var lfeon = SpanUtils.ReadBitsBE(span, 13, 1); // Low Frequency Effects Channel On
+            var sampleRateCode = SpanUtils.ReadBitsBE(span, 14, 5);
 
             _descFormat = "AC-3";
             bitrate = AC3.BITRATES[sampleRateCode] * 1000;
