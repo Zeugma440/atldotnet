@@ -69,7 +69,7 @@ namespace ATL.AudioData.IO
         // IAudioDataIO
         public int SampleRate { get; private set; }
 
-        public bool IsVBR => false;
+        public bool IsVBR => true;
 
         /// <inheritdoc/>
         public string FileName { get; }
