@@ -444,8 +444,11 @@ namespace ATL.AudioData.IO
         private sealed class BomProperties
         {
             public bool Found;              // BOM found
-            public int UnsynchronizedSize;  // Size of BOM after unsynchronization
+            public int Size;                // Size of BOM on storage
+            public int UnsynchronizedDelta; // Number of bytes ignored by unsynchronization
             public Encoding Encoding;       // Corresponding encoding
+
+            public int UnsynchronizedSize => Size - UnsynchronizedDelta;
         }
 
         private sealed class RichStructure
@@ -454,6 +457,7 @@ namespace ATL.AudioData.IO
             public string LanguageCode;
             public string ContentDescriptor;
             public int Size;
+            public int UnsynchronizedSize;
             // Synch'ed lyrics
             public byte TimestampFormat;
             public byte ContentType;
@@ -623,13 +627,18 @@ namespace ATL.AudioData.IO
 
             // Content description
             Encoding contentDescriptionEncoding = encoding;
+            int bomDelta = 0;
             if (tagVersion > TAG_VERSION_2_2 && encodingCode is 1 or 2)
             {
                 BomProperties bom = readUnicodeBOM(source);
-                if (bom.Found) contentDescriptionEncoding = bom.Encoding;
+                if (bom.Found)
+                {
+                    contentDescriptionEncoding = bom.Encoding;
+                    bomDelta = bom.UnsynchronizedDelta;
+                }
             }
             result.ContentDescriptor = StreamUtils.ReadNullTerminatedString(source, contentDescriptionEncoding);
-            result.Size = (int)(source.Position - initialPos);
+            result.Size = (int)(source.Position - initialPos) - bomDelta;
 
             // Ignore malformed comment
             if (result.Size < dataSize) return result;
@@ -767,11 +776,14 @@ namespace ATL.AudioData.IO
             frame.Flags = TAG_VERSION_2_2 == m_tagVersion ? (ushort)0 : BinaryPrimitives.ReadUInt16BigEndian(source.ReadBytes(2));
 
             var dataSize = frame.Size;
+            var targetSize = dataSize; // Size after unsynchronization decoding
+            int delta = 0;
 
             // Skips data size indicator if signaled by the flag
             if ((frame.Flags & 1) > 0)
             {
-                source.Seek(4, SeekOrigin.Current);
+                byte[] sizeDescriptor = source.ReadBytes(4);
+                targetSize = SpanUtils.DecodeSynchSafeInt32(sizeDescriptor);
                 dataSize -= 4;
             }
 
@@ -782,6 +794,7 @@ namespace ATL.AudioData.IO
             if (!noTextEncodingFields.Contains(frame.ID))
             {
                 dataSize--; // Minus encoding byte, which is part of frame data, not frame header
+                targetSize--;
                 encodingCode = source.ReadByte();
             }
             else
@@ -819,7 +832,7 @@ namespace ATL.AudioData.IO
                     inLyrics = true;
                 }
 
-                dataSize -= structure.Size;
+                delta -= structure.Size;
             }
             else if (frame.ID.StartsWith("SYL")) // Synch'ed lyrics
             {
@@ -832,7 +845,7 @@ namespace ATL.AudioData.IO
                 info.ContentType = (LyricsInfo.LyricsType)structure.ContentType;
                 inLyrics = true;
 
-                dataSize -= structure.Size;
+                delta -= structure.Size;
             }
 
             // A $01 "Unicode" encoding flag means the presence of a BOM (Byte Order Mark)
@@ -843,7 +856,7 @@ namespace ATL.AudioData.IO
                 if (bom.Found)
                 {
                     frameEncoding = bom.Encoding;
-                    dataSize -= bom.UnsynchronizedSize;
+                    delta -= bom.UnsynchronizedSize;
                 }
             }
 
@@ -852,7 +865,7 @@ namespace ATL.AudioData.IO
             {
                 frameEncoding = decodeID3v2CharEncoding(0);
                 source.Seek(-1, SeekOrigin.Current);
-                dataSize++;
+                delta++;
             }
 
             // General Encapsulated Object
@@ -863,7 +876,7 @@ namespace ATL.AudioData.IO
                 fileName = StreamUtils.ReadNullTerminatedString(source, frameEncoding); // File name
                 string cDesc = StreamUtils.ReadNullTerminatedString(source, frameEncoding); // Content description
                 frame.ID += "." + cDesc;
-                dataSize -= (int)(source.Position - geoStartOffset);
+                delta -= (int)(source.Position - geoStartOffset);
                 frameEncoding = Utils.Latin1Encoding; // Decode encapsulated object using Latin-1
             }
 
@@ -873,13 +886,15 @@ namespace ATL.AudioData.IO
                 long privStartOffset = source.Position;
                 string owner = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
                 frame.ID += "." + owner;
-                dataSize -= (int)(source.Position - privStartOffset);
+                delta -= (int)(source.Position - privStartOffset);
                 frameEncoding = Utils.Latin1Encoding; // Decode private data using Latin-1
             }
 
 
             // == READ ACTUAL FRAME DATA
             var dataOffset = source.Position;
+            dataSize += delta;
+            targetSize += delta;
 
             if (dataSize < 0 || dataSize >= source.Length)
             {
@@ -889,7 +904,7 @@ namespace ATL.AudioData.IO
 
             if ("PIC".Equals(frame.ID) || "APIC".Equals(frame.ID))
             {
-                readPictureFrame(source, encodingCode, frameEncoding, chapterDepth, dataSize, isUnsynchronized, readTagParams);
+                dataSize = readPictureFrame(source, encodingCode, frameEncoding, chapterDepth, targetSize, isUnsynchronized, readTagParams);
             }
             else
             {
@@ -1010,7 +1025,10 @@ namespace ATL.AudioData.IO
                     byte[] bData;
                     if (isUnsynchronized)
                     {
-                        bData = decodeUnsynchronizedStream(source, dataSize);
+                        int bytesRead = 0;
+                        bData = decodeUnsynchronizedStream(source, targetSize, out bytesRead);
+                        // Adjust dataSize to what has actually been read
+                        dataSize = bytesRead;
                     }
                     else
                     {
@@ -1106,7 +1124,7 @@ namespace ATL.AudioData.IO
             return true;
         }
 
-        private void readPictureFrame(
+        private int readPictureFrame(
             BufferedBinaryReader source,
             int encodingCode,
             Encoding frameEncoding,
@@ -1116,7 +1134,7 @@ namespace ATL.AudioData.IO
             ReadTagParams parms
             )
         {
-            long position = source.Position;
+            long initPos = source.Position;
             if (TAG_VERSION_2_2 == m_tagVersion)
             {
                 // Image format
@@ -1149,26 +1167,32 @@ namespace ATL.AudioData.IO
 
             // Image description
             // Description may be coded with another convention
-            if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readUnicodeBOM(source);
-            string description = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
-
-            if (parms.ReadPictures || chapterDepth > 0)
+            int deltaBom = 0;
+            if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
             {
-                int picSize = dataSize - (int)(source.Position - position);
+                var bom = readUnicodeBOM(source);
+                if (bom.Found) deltaBom = bom.UnsynchronizedDelta;
+            }
+            string description = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
+            int descriptionSize = (int)(source.Position - initPos);
+            int bytesRead = descriptionSize;
+
+            if (parms.ReadPictures || chapterDepth > 0 || isUnsynchronized)
+            {
+                int picSize = dataSize - descriptionSize + deltaBom;
 
                 byte[] data;
+
                 if (isUnsynchronized)
                 {
-                    data = decodeUnsynchronizedStream(source, picSize);
+                    int picBytesRead = 0;
+                    data = decodeUnsynchronizedStream(source, picSize, out picBytesRead);
+                    bytesRead += picBytesRead;
                 }
                 else
                 {
                     data = source.ReadBytes(picSize);
-                    /*
-                    using MemoryStream outStream = new MemoryStream(picSize);
-                    StreamUtils.CopyStream(source, outStream, picSize);
-                    data = outStream.ToArray();
-                    */
+                    bytesRead += picSize;
                 }
                 PictureInfo picInfo = PictureInfo.fromBinaryData(data, picType, getImplementedTagType(), picCode, picturePosition);
                 picInfo.Description = description;
@@ -1182,6 +1206,11 @@ namespace ATL.AudioData.IO
                     tagData.Chapters[^1].Picture = picInfo;
                 }
             }
+            else
+            {
+                bytesRead = dataSize;
+            }
+            return bytesRead;
         }
 
         // Get information from frames (universal)
@@ -2250,7 +2279,8 @@ namespace ATL.AudioData.IO
         {
             BomProperties result = new BomProperties();
             long initialPos = source.Position;
-            result.UnsynchronizedSize = 0;
+            result.Size = 0;
+            result.UnsynchronizedDelta = 0;
             result.Encoding = Encoding.Unicode;
 
             Span<byte> b = stackalloc byte[1];
@@ -2259,16 +2289,15 @@ namespace ATL.AudioData.IO
             bool foundFE = false;
             bool foundFF = false;
             bool previousFF = false;
-            int size = 0;
 
             if (source.Read(b) < 1) return result;
             while (0 == b[0] || 0xFF == b[0] || 0xFE == b[0])
             {
-                size++;
-                if (!(previousFF && 0 == b[0])) result.UnsynchronizedSize++;
+                result.Size++;
+                if (previousFF && 0 == b[0]) result.UnsynchronizedDelta++;
                 previousFF = 0xFF == b[0];
 
-                if (size > 3) break; // Useful (unsynchronized) BOM can't be longer than 3 chars => detection failed
+                if (result.Size > 3) break; // Useful (unsynchronized) BOM can't be longer than 3 chars => detection failed
 
                 // All UTF-16 BOMs either start or end with 0xFE or 0xFF
                 // => Having them both read means that the entirety of the UTF-16 BOM has been read
@@ -2366,8 +2395,12 @@ namespace ATL.AudioData.IO
         /// </summary>
         /// <param name="from">Reader to read from</param>
         /// <param name="targetSize">Target size of the unsynchronized data (bytes)</param>
+        /// <param name="bytesRead">Number of bytes actually read</param>
         /// <returns>Unsynchronized data</returns>
-        private static byte[] decodeUnsynchronizedStream(BufferedBinaryReader from, int targetSize)
+        private static byte[] decodeUnsynchronizedStream(
+            BufferedBinaryReader from,
+            int targetSize,
+            out int bytesRead)
         {
             const int BUFFER_SIZE = 8192;
 
@@ -2379,17 +2412,11 @@ namespace ATL.AudioData.IO
             byte[] writeBuffer = new byte[BUFFER_SIZE];
 
             int writtenTotal = 0;
-            int remainingBytes;
-            if (targetSize > 0)
-            {
-                remainingBytes = (int)Math.Min(targetSize, from.Length - from.Position);
-            }
-            else
-            {
-                remainingBytes = (int)(from.Length - from.Position);
-            }
+            bytesRead = 0;
+            int remainingBytes = (int)Math.Min((long)int.MaxValue, from.Length - from.Position);
+            long initialOffset = from.Position;
 
-            while (remainingBytes > 0)
+            while (writtenTotal < targetSize && remainingBytes > 0)
             {
                 var written = 0;
                 var bytesToRead = Math.Min(remainingBytes, BUFFER_SIZE);
@@ -2398,6 +2425,7 @@ namespace ATL.AudioData.IO
 
                 for (int i = 0; i < bytesToRead; i++)
                 {
+                    bytesRead++;
                     if (0xff == readBuffer[i]) foundFF = true;
                     else if (0x00 == readBuffer[i] && foundFF)
                     {
@@ -2407,14 +2435,23 @@ namespace ATL.AudioData.IO
                     else if (foundFF) foundFF = false;
 
                     writeBuffer[written++] = readBuffer[i];
+
+                    if (writtenTotal + written >= targetSize) // Pointless to continue
+                    {
+                        // If we're on a 0xff, consider one extra byte has been read
+                        if (0xff == readBuffer[i] && i < readBuffer.Length - 1 && 0x00 == readBuffer[i + 1]) bytesRead++;
+                        break;
+                    }
                 }
-                Array.Copy(writeBuffer, 0, result, writtenTotal, written);
-                writtenTotal += written;
+                int writtenCopied = Math.Min(targetSize - writtenTotal, written);
+                Array.Copy(writeBuffer, 0, result, writtenTotal, writtenCopied);
+                writtenTotal += writtenCopied;
 
                 remainingBytes -= bytesToRead;
             }
 
             Array.Resize(ref result, writtenTotal);
+            from.Seek(initialOffset + bytesRead, SeekOrigin.Begin);
 
             return result;
         }
