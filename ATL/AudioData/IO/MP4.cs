@@ -2973,6 +2973,7 @@ namespace ATL.AudioData.IO
             {
                 "mp4a" => TryParseMp4a(source),
                 "alac" => TryParseAlac(source),
+                "dac3" => TryParseAc3(source),
                 _ => true,
             };
 
@@ -2980,13 +2981,13 @@ namespace ATL.AudioData.IO
             {
                 {
                     var (atomSize, headerSize) = navigateToAtomSize(stream, "esds");
-                    if (atomSize != 0)
-                    {
-                        var dataSize = atomSize - headerSize;
-                        if (!TryParseEsdsAtom(stream, dataSize)) return false;
-                    }
+                    if (atomSize == 0) return false;
+
+                    var dataSize = atomSize - headerSize;
+                    if (!TryParseEsdsAtom(stream, dataSize)) return false;
                 }
                 {
+                    // btrt is an optional atom?
                     var (atomSize, headerSize) = navigateToAtomSize(stream, "btrt");
                     if (atomSize != 0)
                     {
@@ -2994,16 +2995,38 @@ namespace ATL.AudioData.IO
                         if (!TryParseBtrtAtom(stream, dataSize)) return false;
                     }
                 }
+
                 return true;
             }
 
             bool TryParseAlac(Stream source1)
             {
-                var (atomSine, headerSize) = navigateToAtomSize(source1, "alac");
-                if (atomSine != 0)
+                var (atomSize, headerSize) = navigateToAtomSize(source1, "alac");
+                if (atomSize == 0) return false;
+
+                var dataSize = atomSize - headerSize;
+                if (!this.TryParseAlacAtom(source1, dataSize)) return false;
+
+                return true;
+            }
+
+            bool TryParseAc3(Stream source1)
+            {
                 {
-                    var dataSize = atomSine - headerSize;
-                    if (!this.TryParseAlacAtom(source1, dataSize)) return false;
+                    var (atomSize, headerSize) = navigateToAtomSize(source1, "dac3");
+                    if (atomSize == 0) return false;
+
+                    var dataSize = atomSize - headerSize;
+                    if (!TryParseDac3Atom(source1, dataSize)) return false;
+                }
+                {
+                    // btrt is an optional atom?
+                    var (atomSize, headerSize) = navigateToAtomSize(source1, "btrt");
+                    if (atomSize != 0)
+                    {
+                        var dataSize = atomSize - headerSize;
+                        if (!TryParseBtrtAtom(source1, dataSize)) return false;
+                    }                
                 }
 
                 return true;
@@ -3082,11 +3105,15 @@ namespace ATL.AudioData.IO
 
             offset += 4; // streamType (1), bufferSizeDB (3)
 
-            // var maxBitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(offset, 4));
+            var maxBitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(offset, 4));
             offset += 4;
 
             this.bitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(offset, 4)); // Average bitrate
             offset += 4;
+
+            bitrateTypeID = (maxBitrate == 0) || ((maxBitrate >= bitrate) && (maxBitrate <= (bitrate * 1.005)))
+                ? MP4_BITRATE_TYPE_CBR
+                : MP4_BITRATE_TYPE_VBR;
 
             // Find DecoderSpecificInfo (Audio Specific Config)
             if (((span.Length - offset) == 0) || (span[offset++] != DecSpecificInfoTag))
@@ -3162,13 +3189,52 @@ namespace ATL.AudioData.IO
 
         private bool TryParseBtrtAtom(Stream source, long dataSize)
         {
+            // BufferSizeDB, MaxBitrate, AvgBitrate
+            if (dataSize < 24) return false;
+            
             Span<byte> span = stackalloc byte[(int)dataSize];
             if (source.Read(span) != dataSize) return false;
 
             bitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(8, 4)); // Average bitrate
 
+            // TODO Does it make sense to do this here without knowing the codec? 
+            var maxBitrate = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(4, 4)); // Max bitrate 
+            bitrateTypeID = (maxBitrate == 0) || ((maxBitrate >= bitrate) && (maxBitrate <= (bitrate * 1.005)))
+                ? MP4_BITRATE_TYPE_CBR
+                : MP4_BITRATE_TYPE_VBR;
+
             return true;
         }
+
+        private static readonly int[] Ac3Channels = {2, 1, 2, 3, 3, 4, 4, 5};
+        
+        private bool TryParseDac3Atom(Stream source, long dataSize)
+        {
+            Span<byte> span = stackalloc byte[(int)dataSize];
+            if (source.Read(span) != dataSize) return false;
+
+            var fscod = SpanUtils.ReadBitsBE(span, 0, 2); // Frame Size Code
+            //var bsid = SpanUtils.ReadBitsBE(span, 2, 5); // Bit Stream Identification. should be <= 8?
+            //var bsmod = SpanUtils.ReadBitsBE(span, 7, 3); // Bit Stream Mode
+            var acmod = SpanUtils.ReadBitsBE(span, 10, 3); // Audio Config Mode
+            var lfeon = SpanUtils.ReadBitsBE(span, 13, 1); // Low Frequency Effects Channel On
+            var sampleRateCode = SpanUtils.ReadBitsBE(span, 14, 5);
+
+            _descFormat = "AC-3";
+            bitrate = AC3.BITRATES[sampleRateCode] * 1000;
+            var channels = lfeon + Ac3Channels[acmod];
+            ChannelsArrangement = ChannelsArrangements.GuessFromChannelNumber((int)channels);
+            SampleRate = fscod switch
+            {
+                0 => 48000,
+                1 => 44100,
+                2 => 32000,
+                _ => 0
+            };           
+            
+            return true;
+        }
+
     }
 #pragma warning restore S125 // Sections of code should not be commented out
 }
