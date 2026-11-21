@@ -354,6 +354,10 @@ namespace ATL.AudioData.IO
 
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
             long endOffset = Math.Min(reader.Length, readEndOffset);
+            StringBuilder tagIdBuilder = new StringBuilder();
+            const int KEY_BUFFER = 20;
+            byte[] stringData = new byte[KEY_BUFFER];
+
             initialTagOffset = reader.Position;
             do
             {
@@ -372,9 +376,6 @@ namespace ATL.AudioData.IO
                 }
                 else
                 {
-                    const int KEY_BUFFER = 20;
-                    StringBuilder tagIdBuilder = new StringBuilder();
-                    byte[] stringData = new byte[KEY_BUFFER];
                     int equalsIndex = -1;
                     int nbBuffered = 0;
 
@@ -399,6 +400,7 @@ namespace ATL.AudioData.IO
 
                     reader.Seek(position + equalsIndex + 1, SeekOrigin.Begin);
                     string tagId = tagIdBuilder.ToString().ToUpper();
+                    tagIdBuilder.Clear();
 
                     if (tagId.Equals(PICTURE_METADATA_ID_NEW) || tagId.Equals(PICTURE_METADATA_ID_OLD))
                     {
