@@ -338,9 +338,6 @@ namespace ATL.AudioData.IO
 
         protected override IMetaDataIO.ReadStatus read(Stream source, ReadTagParams readTagParams)
         {
-            int nbFields = 0;
-            int index = 0;
-
             // ResetData(); <-- no; that calls resets image data when VorbisTag is managed by FLAC. ResetData has to be called manually by using Clear
             // Resets stuff anyway
             initialPaddingOffset = -1;
@@ -355,88 +352,107 @@ namespace ATL.AudioData.IO
             BufferedBinaryReader reader = new BufferedBinaryReader(source);
             long endOffset = Math.Min(reader.Length, readEndOffset);
             initialTagOffset = reader.Position;
-            do
+            
+            const int KEY_BUFFER = 20;
+            const int BUFFER_LEN = 64;
+            Span<byte> buffer = stackalloc byte[BUFFER_LEN];
+
+            /*
+             * https://xiph.org/vorbis/doc/v-comment.html
+               1) [vendor_length] = read an unsigned integer of 32 bits
+               2) [vendor_string] = read a UTF-8 vector as [vendor_length] octets
+               3) [user_comment_list_length] = read an unsigned integer of 32 bits
+               4) iterate [user_comment_list_length] times {
+                    5) [length] = read an unsigned integer of 32 bits
+                    6) this iteration's user comment = read a UTF-8 vector as [length] octets
+                  }
+               7) [framing_bit] = read a single bit as boolean
+               8) if ( [framing_bit] unset or end of packet ) then ERROR
+               9) done.
+               
+               NOTE: The framing_bit is Ogg only
+             */
+
+            var vendorLength = reader.ReadInt32();
+            if ((vendorLength < 0) || (vendorLength > (endOffset - reader.Position))) return IMetaDataIO.ReadStatus.KO;
+
+            var span = vendorLength <= BUFFER_LEN ? buffer[..vendorLength] : new byte[vendorLength];
+            if (reader.Read(span) != vendorLength) return IMetaDataIO.ReadStatus.KO;
+
+            var vendorString = Encoding.UTF8.GetString(span).Trim();
+            if (vendorString.Length > 0) SetMetaField(VENDOR_METADATA_ID, vendorString, readTagParams.ReadAllMetaFrames);
+            
+            var tagIdBuilder = new StringBuilder();
+            var userCommentListLength = reader.ReadInt32();
+            for (var i = 0; i < userCommentListLength; i++)
             {
                 if (reader.Position > endOffset - 4) return IMetaDataIO.ReadStatus.KO;
+                
                 var size = reader.ReadInt32();
                 var position = reader.Position;
                 if (size < 0 || size > endOffset - position) return IMetaDataIO.ReadStatus.KO;
 
-                string strData;
-                if (0 == index) // Mandatory : first metadata has to be the Vorbis vendor string
+                tagIdBuilder.Clear();
+                int equalsIndex = -1;
+                while ((-1 == equalsIndex) && (tagIdBuilder.Length < size))
                 {
-                    byte[] vendor = reader.ReadBytes(size);
-                    if (vendor.Length != size) return IMetaDataIO.ReadStatus.KO;
-                    strData = Encoding.UTF8.GetString(vendor).Trim();
-                    if (strData.Length > 0) SetMetaField(VENDOR_METADATA_ID, strData, readTagParams.ReadAllMetaFrames);
+                    // QUERY not sure why KEY_BUFFER 20 was chosen since we are reading off a buffer mostly
+                    var slice = buffer[..Math.Min(KEY_BUFFER, size - tagIdBuilder.Length)];
+                        
+                    int nbRead = reader.Read(slice);
+                    if (0 == nbRead) return IMetaDataIO.ReadStatus.KO;
+                        
+                    slice = buffer[..nbRead];
+                    var idx = slice.IndexOf((byte)0x3D);
+                
+                    var len = -1 == idx ? slice.Length : idx;
+                    tagIdBuilder.Append(Utils.Latin1Encoding.GetString(slice[..len]));
+                    
+                    if (idx != -1)
+                    {
+                        equalsIndex += tagIdBuilder.Length + 1;
+                    }                             
+                }
+                
+                if (equalsIndex < 0) return IMetaDataIO.ReadStatus.KO;
+                
+                reader.Seek(position + equalsIndex + 1, SeekOrigin.Begin);
+                string tagId = tagIdBuilder.ToString().ToUpper();
+                
+                if (tagId.Equals(PICTURE_METADATA_ID_NEW) || tagId.Equals(PICTURE_METADATA_ID_OLD))
+                {
+                    SetPictureItem(reader, tagId, size, readTagParams);
                 }
                 else
                 {
-                    const int KEY_BUFFER = 20;
-                    StringBuilder tagIdBuilder = new StringBuilder();
-                    byte[] stringData = new byte[KEY_BUFFER];
-                    int equalsIndex = -1;
-                    int nbBuffered = 0;
-
-                    while (-1 == equalsIndex && nbBuffered < size)
+                    // allocate a heap byte array only if the length of the value is larger than the preallocated buffer on stack
+                    var valueLength = size - equalsIndex - 1;
+                    var valueSpan = valueLength <= BUFFER_LEN 
+                        ? buffer[..valueLength] 
+                        : new byte[valueLength];
+                    
+                    if (reader.Read(valueSpan) != valueLength) return IMetaDataIO.ReadStatus.KO;
+                    var strData = Encoding.UTF8.GetString(valueSpan).Trim();                        
+                        
+                    if (tagId.StartsWith(CHAPTER_ID, StringComparison.OrdinalIgnoreCase)) // Chapter description
                     {
-                        int nbRead = reader.Read(stringData, 0, Math.Min(KEY_BUFFER, size - nbBuffered));
-                        if (0 == nbRead) return IMetaDataIO.ReadStatus.KO;
-
-                        for (int i = 0; i < nbRead; i++)
-                        {
-                            if (stringData[i] != 0x3D) continue; // '=' character
-                            equalsIndex = nbBuffered + i;
-                            break;
-                        }
-
-                        tagIdBuilder.Append(Utils.Latin1Encoding.GetString(stringData, 0,
-                            -1 == equalsIndex ? nbRead : equalsIndex - nbBuffered));
-                        nbBuffered += nbRead;
+                        setChapterData(tagId, strData);
                     }
-
-                    if (equalsIndex < 0) return IMetaDataIO.ReadStatus.KO;
-
-                    reader.Seek(position + equalsIndex + 1, SeekOrigin.Begin);
-                    string tagId = tagIdBuilder.ToString().ToUpper();
-
-                    if (tagId.Equals(PICTURE_METADATA_ID_NEW) || tagId.Equals(PICTURE_METADATA_ID_OLD))
+                    else // Standard textual field
                     {
-                        SetPictureItem(reader, tagId, size, readTagParams);
-                    }
-                    else
-                    {
-                        byte[] value = reader.ReadBytes(size - equalsIndex - 1);
-                        if (value.Length != size - equalsIndex - 1) return IMetaDataIO.ReadStatus.KO;
-                        strData = Encoding.UTF8.GetString(value).Trim();
-
-                        if (tagId.StartsWith(CHAPTER_ID, StringComparison.OrdinalIgnoreCase)) // Chapter description
-                        {
-                            setChapterData(tagId, strData);
-                        }
-                        else // Standard textual field
-                        {
-                            SetMetaField(tagId, strData, readTagParams.ReadAllMetaFrames);
-                        }
+                        SetMetaField(tagId, strData, readTagParams.ReadAllMetaFrames);
                     }
                 }
+
                 reader.Seek(position + size, SeekOrigin.Begin);
-
-                if (0 == index)
-                {
-                    if (reader.Position > endOffset - 4) return IMetaDataIO.ReadStatus.KO;
-                    nbFields = reader.ReadInt32();
-                    if (nbFields < 0 || nbFields > (endOffset - reader.Position) / 4) return IMetaDataIO.ReadStatus.KO;
-                }
-
-                index++;
-            } while (index <= nbFields);
-
+            }
+            
             structureHelper.AddZone(initialTagOffset, (int)(reader.Position - initialTagOffset), hasCoreSignature ? OGG_CORE_SIGNATURE : Array.Empty<byte>());
 
             if (!readTagParams.PrepareForWriting) return IMetaDataIO.ReadStatus.OK;
-
+            
             // Skip framing bit
+            // QUERY should the test be for writeMetadataFramingBit
             if (reader.PeekChar()) reader.Seek(1, SeekOrigin.Current);
 
             long streamPos = reader.Position;
