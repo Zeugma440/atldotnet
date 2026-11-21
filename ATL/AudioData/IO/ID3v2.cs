@@ -442,9 +442,9 @@ namespace ATL.AudioData.IO
         // Unicode BOM properties
         private sealed class BomProperties
         {
-            public bool Found;          // BOM found
-            public int Size;            // Size of BOM
-            public Encoding Encoding;   // Corresponding encoding
+            public bool Found;              // BOM found
+            public int UnsynchronizedSize;  // Size of BOM after unsynchronization
+            public Encoding Encoding;       // Corresponding encoding
         }
 
         private sealed class RichStructure
@@ -624,7 +624,7 @@ namespace ATL.AudioData.IO
             Encoding contentDescriptionEncoding = encoding;
             if (tagVersion > TAG_VERSION_2_2 && encodingCode is 1 or 2)
             {
-                BomProperties bom = readBOM(source);
+                BomProperties bom = readUnicodeBOM(source);
                 if (bom.Found) contentDescriptionEncoding = bom.Encoding;
             }
             result.ContentDescriptor = StreamUtils.ReadNullTerminatedString(source, contentDescriptionEncoding);
@@ -652,9 +652,9 @@ namespace ATL.AudioData.IO
 
             // Content description
             Encoding contentDescriptionEncoding = encoding;
-            if (tagVersion > TAG_VERSION_2_2 && (1 == encodingCode))
+            if (tagVersion > TAG_VERSION_2_2 && 1 == encodingCode)
             {
-                BomProperties bom = readBOM(source);
+                BomProperties bom = readUnicodeBOM(source);
                 if (bom.Found) contentDescriptionEncoding = bom.Encoding;
             }
             result.ContentDescriptor = StreamUtils.ReadNullTerminatedString(source, contentDescriptionEncoding);
@@ -838,11 +838,11 @@ namespace ATL.AudioData.IO
             // NB : Even if it's not part of the spec, BOMs may appear on ID3v2.2 tags
             if (1 == encodingCode)
             {
-                BomProperties bom = readBOM(source);
+                BomProperties bom = readUnicodeBOM(source);
                 if (bom.Found)
                 {
                     frameEncoding = bom.Encoding;
-                    dataSize -= bom.Size;
+                    dataSize -= bom.UnsynchronizedSize;
                 }
             }
 
@@ -921,7 +921,7 @@ namespace ATL.AudioData.IO
                             source.Seek(6, SeekOrigin.Current); // Skip size and flags
                             encodingCode = source.ReadByte();
                             Encoding encoding = decodeID3v2CharEncoding(encodingCode);
-                            if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode || 2 == encodingCode)) readBOM(source);
+                            if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode || 2 == encodingCode)) readUnicodeBOM(source);
                             strData = StreamUtils.ReadNullTerminatedStringFixed(source, encoding, (int)(dataOffset + frame.Size - source.Position));
                         }
                         else
@@ -1041,7 +1041,7 @@ namespace ATL.AudioData.IO
                     {
                         if (strData.Length > 0) setMetaField(Field.LYRICS_UNSYNCH, strData);
                     }
-                    else if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value
+                    else if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value after unsynchronization
                     {
                         if (0 == chapterDepth) SetMetaField(frame.ID, strData, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version, mimeType: mimeType, fileName: fileName);
                         else
@@ -1117,7 +1117,7 @@ namespace ATL.AudioData.IO
 
                     // Image description
                     // Description may be coded with another convention
-                    if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readBOM(source);
+                    if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readUnicodeBOM(source);
                     string description = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
 
                     if (readTagParams.ReadPictures || chapterDepth > 0)
@@ -1753,13 +1753,13 @@ namespace ATL.AudioData.IO
         {
             int result = 0;
 
-            string unsychData = null;
-            if (lyrics.UnsynchronizedLyrics != null && lyrics.UnsynchronizedLyrics.Length > 0) unsychData = lyrics.UnsynchronizedLyrics;
-            else if (lyrics.Format != LyricsInfo.LyricsFormat.SYNCHRONIZED) unsychData = lyrics.FormatSynch();
+            string unsynchData = null;
+            if (lyrics.UnsynchronizedLyrics != null && lyrics.UnsynchronizedLyrics.Length > 0) unsynchData = lyrics.UnsynchronizedLyrics;
+            else if (lyrics.Format != LyricsInfo.LyricsFormat.SYNCHRONIZED) unsynchData = lyrics.FormatSynch();
 
-            if (unsychData != null)
+            if (unsynchData != null)
             {
-                writeTextFrame(writer, "USLT", unsychData, tagEncoding, lyrics.LanguageCode, lyrics.Description);
+                writeTextFrame(writer, "USLT", unsynchData, tagEncoding, lyrics.LanguageCode, lyrics.Description);
                 result++;
             }
             else if (lyrics.SynchronizedLyrics != null && lyrics.SynchronizedLyrics.Count > 0)
@@ -2221,23 +2221,29 @@ namespace ATL.AudioData.IO
         /// If it has been found, stream is positioned on the next byte just after the BOM.
         /// If not, stream is positioned on its initial position before calling readBOM.
         /// </returns>
-        private static BomProperties readBOM(Stream source)
+        private static BomProperties readUnicodeBOM(Stream source)
         {
             BomProperties result = new BomProperties();
             long initialPos = source.Position;
-            result.Size = 1;
+            result.UnsynchronizedSize = 0;
             result.Encoding = Encoding.Unicode;
 
             Span<byte> b = stackalloc byte[1];
 
-            if (source.Read(b) < 1) return result;
             bool first = true;
             bool foundFE = false;
             bool foundFF = false;
+            bool previousFF = false;
+            int size = 0;
 
+            if (source.Read(b) < 1) return result;
             while (0 == b[0] || 0xFF == b[0] || 0xFE == b[0])
             {
-                if (result.Size > 3) break; // Useful (unsynchronized) BOM can't be longer than 3 chars => detection failed
+                size++;
+                if (!(previousFF && 0 == b[0])) result.UnsynchronizedSize++;
+                previousFF = 0xFF == b[0];
+
+                if (size > 3) break; // Useful (unsynchronized) BOM can't be longer than 3 chars => detection failed
 
                 // All UTF-16 BOMs either start or end with 0xFE or 0xFF
                 // => Having them both read means that the entirety of the UTF-16 BOM has been read
@@ -2257,11 +2263,9 @@ namespace ATL.AudioData.IO
                 }
 
                 if (source.Read(b) < 1) return result;
-                result.Size++;
             }
 
             if (!result.Found) source.Position = initialPos;
-            else result.Size = (int)(source.Position - initialPos);
 
             return result;
         }
