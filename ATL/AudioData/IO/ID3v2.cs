@@ -1019,14 +1019,19 @@ namespace ATL.AudioData.IO
                         else if (frame.ID.StartsWith('T'))
                         {
                             string[] parts = null;
-                            if (TAG_VERSION_2_4 == m_tagVersion) // All text information frames may contain multiple values on ID3v2.4
+                            // Separating multiple values using \0 should normally be ID3v2.4 only,
+                            // but that convention has spread to ID3v2.3 informally
+                            if (strData.Contains(VALUE_SEPARATOR_24))
                             {
-                                parts = strData.Trim().Split(new[] { VALUE_SEPARATOR_24 }, StringSplitOptions.RemoveEmptyEntries);
+                                // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character
+                                // (pattern : TXXX-BOM-VALUE-\0-BOM-VALUE)
+                                if (1 == encodingCode) strData = strData.Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
+                                parts = strData.Trim().Split(VALUE_SEPARATOR_24, StringSplitOptions.RemoveEmptyEntries);
                             }
                             // Only specific text information frames may contain multiple values on ID3v2.2-3
                             else if (multipleValuev23Fields.Contains(frame.ID) && Settings.ID3v2_separatev2v3Values)
                             {
-                                parts = strData.Trim().Split(new[] { VALUE_SEPARATOR_22 }, StringSplitOptions.RemoveEmptyEntries);
+                                parts = strData.Trim().Split(VALUE_SEPARATOR_22, StringSplitOptions.RemoveEmptyEntries);
                             }
                             if (parts != null) strData = string.Join(Settings.InternalValueSeparator + "", parts);
                         }
