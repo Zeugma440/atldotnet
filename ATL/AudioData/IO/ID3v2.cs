@@ -1,12 +1,13 @@
-using System;
-using System.IO;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
-using Commons;
 using ATL.Logging;
-using static ATL.TagData;
+using Commons;
+using System;
 using System.Buffers.Binary;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using static ATL.AudioData.IO.MetaDataIO;
+using static ATL.TagData;
 
 namespace ATL.AudioData.IO
 {
@@ -787,7 +788,7 @@ namespace ATL.AudioData.IO
             {
                 encodingCode = 0; // Latin-1; default according to spec
             }
-            var frameEncoding = decodeID3v2CharEncoding(encodingCode);
+            Encoding frameEncoding = decodeID3v2CharEncoding(encodingCode);
 
             // COMM and USLT/ULT fields contain :
             //   a 3-byte langage ID
@@ -880,283 +881,307 @@ namespace ATL.AudioData.IO
             // == READ ACTUAL FRAME DATA
             var dataOffset = source.Position;
 
-            if (dataSize >= 0 && dataSize < source.Length)
-            {
-                if (!("PIC".Equals(frame.ID) || "APIC".Equals(frame.ID))) // Not a picture frame
-                {
-                    string strData;
-
-                    // Specific to Popularitymeter : Rating data has to be extracted from the POPM block
-                    if (frame.ID.StartsWith("POP"))
-                    {
-                        // ID3v2.2 : According to spec (see paragraph3.2), encoding should actually be ISO-8859-1
-                        // ID3v2.3+ : Spec is unclear whether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
-                        strData = readRatingInPopularityMeter(source, Utils.Latin1Encoding).ToString();
-                    }
-                    else if (frame.ID.StartsWith("TXX"))
-                    {
-                        // Read frame data and set tag item if frame supported
-                        byte[] bData = source.ReadBytes(dataSize);
-                        strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
-
-                        string[] tabS = strData.Split('\0');
-                        frame.ID = tabS[0];
-                        // Handle multiple values (ID3v2.4 only, theoretically)
-                        if (tabS.Length > 1) strData = string.Join(Settings.InternalValueSeparator + "", tabS, 1, tabS.Length - 1);
-                        else strData = ""; //if the 2nd part of the array isn't there, value is non-existent (TXXX...KEY\0\0 or TXXX...KEY\0)
-
-                        // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character
-                        // (pattern : TXXX-stuff-BOM-ID-\0-BOM-VALUE-\0-BOM-VALUE-\0)
-                        if (1 == encodingCode) strData = strData.Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
-                    }
-                    else if (frame.ID.StartsWith("CTO")) // Chapters table of contents -> store chapter description
-                    {
-                        StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Skip element ID
-                        source.Seek(1, SeekOrigin.Current); // Skip flags
-                        int entryCount = source.ReadByte();
-                        for (int i = 0; i < entryCount; i++) StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Skip chapter element IDs
-                                                                                                                                 // There's an optional header here
-                        if (source.Position - dataOffset < frame.Size && "TIT2".Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4)), StringComparison.OrdinalIgnoreCase))
-                        {
-                            source.Seek(6, SeekOrigin.Current); // Skip size and flags
-                            encodingCode = source.ReadByte();
-                            Encoding encoding = decodeID3v2CharEncoding(encodingCode);
-                            if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode || 2 == encodingCode)) readUnicodeBOM(source);
-                            strData = StreamUtils.ReadNullTerminatedStringFixed(source, encoding, (int)(dataOffset + frame.Size - source.Position));
-                        }
-                        else
-                        {
-                            strData = "";
-                        }
-                    }
-                    else if (frame.ID.StartsWith("CHA")) // Chapters
-                    {
-                        tagData.Chapters ??= new List<ChapterInfo>();
-                        chapter = new ChapterInfo();
-                        tagData.Chapters.Add(chapter);
-
-                        long initPos = source.Position;
-                        chapter.UniqueID = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
-
-                        chapter.StartTime = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
-                        chapter.EndTime = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
-                        chapter.StartOffset = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
-                        chapter.EndOffset = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
-
-                        chapter.UseOffset = chapter.StartOffset != uint.MaxValue;
-
-                        long remainingData = dataSize - (source.Position - initPos);
-                        while (remainingData > 0 && chapterDepth < 4) // Limit chapter depth to 3 levels
-                        {
-                            if (!readFrame(source, tag, readTagParams, ref comments, chapterDepth + 1)) break;
-                            remainingData = dataSize - (source.Position - initPos);
-                        } // End chapter frames loop
-
-                        strData = "";
-                    }
-                    else if (frame.ID.StartsWith("SYL")) // Synch'ed lyrics
-                    {
-                        long initPos = source.Position;
-                        long remainingData = dataSize - (source.Position - initPos);
-
-                        LyricsInfo info = tagData.Lyrics[^1];
-                        info.Format = LyricsInfo.LyricsFormat.SYNCHRONIZED;
-                        while (remainingData > 0)
-                        {
-                            info.SynchronizedLyrics.Add(readLyricsPhrase(source, frameEncoding));
-                            remainingData = dataSize - (source.Position - initPos);
-                        }
-                        strData = "";
-                    }
-                    else if (frame.ID.StartsWith("WXX")) // Custom URL
-                    {
-                        var terminator = getNullTerminatorFromEncoding(frameEncoding);
-                        // Find the separator
-                        if (StreamUtils.FindSequence(source, terminator, dataSize))
-                        {
-                            var secondPartOffset = source.Position;
-                            var firstPartSize = (int)(secondPartOffset - terminator.Length - dataOffset);
-                            source.Seek(dataOffset, SeekOrigin.Begin);
-                            byte[] bData = source.ReadBytes(firstPartSize);
-                            // Description encoded with current encoding
-                            strData = frameEncoding.GetString(bData) + Settings.InternalValueSeparator;
-                            var secondPartSize = dataSize - firstPartSize - terminator.Length;
-                            if (secondPartSize > 0)
-                            {
-                                source.Seek(secondPartOffset, SeekOrigin.Begin);
-                                bData = source.ReadBytes(secondPartSize);
-                                // URL encoded in ISO-8859-1
-                                strData += Utils.Latin1Encoding.GetString(bData);
-                            }
-                        }
-                        else
-                        { // No separator (bad formatting) : take one single string with current encoding
-                            byte[] bData = source.ReadBytes(dataSize);
-                            strData = frameEncoding.GetString(bData) + Settings.InternalValueSeparator;
-                        }
-                    }
-                    else
-                    {
-                        // Read frame data and set tag item if frame supported
-                        byte[] bData = source.ReadBytes(dataSize);
-                        strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
-
-                        // Parse GENRE frame
-                        if (isGenreField(frame.ID, m_tagVersion)) strData = extractGenreFromID3v2Code(strData);
-                        // Parse Involved People frame for ID3v2.2-2.3 (IPL/IPLS) where value separator is a \0
-                        else if (frame.ID.StartsWith("IPL"))
-                        {
-                            string[] parts = strData.Trim().Split(new[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
-                            // Individual parts of that field may have a BOM
-                            if (1 == encodingCode)
-                            {
-                                string bomAsStr = frameEncoding.GetString(getBomFromEncoding(frameEncoding));
-                                for (int i = 0; i < parts.Length; i++) parts[i] = parts[i].Replace(bomAsStr, "");
-                            }
-                            strData = string.Join(Settings.InternalValueSeparator + "", parts);
-                        }
-                        // Handle multiple values on text information frames
-                        else if (frame.ID.StartsWith('T'))
-                        {
-                            string[] parts = null;
-                            // Separating multiple values using \0 should normally be ID3v2.4 only,
-                            // but that convention has spread to ID3v2.3 informally
-                            if (strData.Contains(VALUE_SEPARATOR_24))
-                            {
-                                // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character
-                                // (pattern : TXXX-BOM-VALUE-\0-BOM-VALUE)
-                                if (1 == encodingCode) strData = strData.Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
-                                parts = strData.Trim().Split(VALUE_SEPARATOR_24, StringSplitOptions.RemoveEmptyEntries);
-                            }
-                            // Only specific text information frames may contain multiple values on ID3v2.2-3
-                            else if (multipleValuev23Fields.Contains(frame.ID) && Settings.ID3v2_separatev2v3Values)
-                            {
-                                parts = strData.Trim().Split(VALUE_SEPARATOR_22, StringSplitOptions.RemoveEmptyEntries);
-                            }
-                            if (parts != null) strData = string.Join(Settings.InternalValueSeparator + "", parts);
-                        }
-                    }
-
-                    if (inLyrics)
-                    {
-                        if (strData.Length > 0) setMetaField(Field.LYRICS_UNSYNCH, strData);
-                    }
-                    else if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value after unsynchronization
-                    {
-                        if (0 == chapterDepth) SetMetaField(frame.ID, strData, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version, mimeType: mimeType, fileName: fileName);
-                        else
-                        {
-                            chapter = tagData.Chapters[^1];
-                            switch (frame.ID)
-                            {
-                                case "TIT2": chapter.Title = strData; break;
-                                case "TIT3": chapter.Subtitle = strData; break;
-                                case "WXXX":
-                                    string[] parts = strData.Split(Settings.InternalValueSeparator);
-                                    chapter.Url = new ChapterInfo.UrlInfo(parts[0], parts[1]);
-                                    break;
-                            }
-                        }
-                    }
-                    else if (comment != null) // We're in a Comment field => store value in temp Comment structure
-                    {
-                        bool found = false;
-
-                        // Comment of the same field if already exists
-                        foreach (MetaFieldInfo com in comments)
-                        {
-                            if (com.NativeFieldCode.Equals(comment.NativeFieldCode))
-                            {
-                                com.Value += Settings.InternalValueSeparator + strData;
-                                found = true;
-                            }
-                        }
-
-                        // Else brand new comment
-                        if (!found)
-                        {
-                            comment.Value = strData;
-                            comments.Add(comment);
-                        }
-                    }
-
-                    if (TAG_VERSION_2_2 == m_tagVersion) source.Seek(dataOffset + dataSize, SeekOrigin.Begin);
-                }
-                else // Picture frame
-                {
-                    long position = source.Position;
-                    if (TAG_VERSION_2_2 == m_tagVersion)
-                    {
-                        // Image format
-                        source.Seek(3, SeekOrigin.Current);
-                    }
-                    else
-                    {
-                        // mime-type always coded in ASCII
-                        if (1 == encodingCode) source.Seek(-1, SeekOrigin.Current);
-                        // Mime-type
-                        StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
-                    }
-
-                    byte picCode = source.ReadByte();
-                    // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ?
-                    PictureInfo.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
-
-                    int picturePosition = 0;
-                    if (0 == chapterDepth)
-                    {
-                        if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
-                        {
-                            picturePosition = takePicturePosition(MetaDataIOFactory.TagType.ID3V2, picCode);
-                        }
-                        else
-                        {
-                            picturePosition = takePicturePosition(picType);
-                        }
-                    }
-
-                    // Image description
-                    // Description may be coded with another convention
-                    if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readUnicodeBOM(source);
-                    string description = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
-
-                    if (readTagParams.ReadPictures || chapterDepth > 0)
-                    {
-                        int picSize = dataSize - (int)(source.Position - position);
-
-                        byte[] data;
-                        if (isUnsynchronized)
-                        {
-                            data = decodeUnsynchronizedStream(source, picSize);
-                        }
-                        else
-                        {
-                            using MemoryStream outStream = new MemoryStream(picSize);
-                            StreamUtils.CopyStream(source, outStream, picSize);
-                            data = outStream.ToArray();
-                        }
-                        PictureInfo picInfo = PictureInfo.fromBinaryData(data, picType, getImplementedTagType(), picCode, picturePosition);
-                        picInfo.Description = description;
-
-                        if (0 == chapterDepth)
-                        {
-                            tagData.Pictures.Add(picInfo);
-                        }
-                        else
-                        {
-                            tagData.Chapters[^1].Picture = picInfo;
-                        }
-                    }
-                } // Picture frame
-                source.Seek(dataOffset + dataSize, SeekOrigin.Begin);
-            }
-            else // Data size <= 0 or larger than file
+            if (dataSize < 0 || dataSize >= source.Length)
             {
                 LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Frame " + frame.ID + " has an invalid size : " + dataSize);
                 return false;
             }
 
+            if ("PIC".Equals(frame.ID) || "APIC".Equals(frame.ID))
+            {
+                readPictureFrame(source, encodingCode, frameEncoding, chapterDepth, dataSize, isUnsynchronized, readTagParams);
+            }
+            else
+            {
+                string strData;
+
+                // Specific to Popularitymeter : Rating data has to be extracted from the POPM block
+                if (frame.ID.StartsWith("POP"))
+                {
+                    // ID3v2.2 : According to spec (see paragraph3.2), encoding should actually be ISO-8859-1
+                    // ID3v2.3+ : Spec is unclear whether to read as ISO-8859-1 or not. Practice indicates using this convention is safer.
+                    strData = readRatingInPopularityMeter(source, Utils.Latin1Encoding).ToString();
+                }
+                else if (frame.ID.StartsWith("TXX"))
+                {
+                    // Read frame data and set tag item if frame supported
+                    byte[] bData = source.ReadBytes(dataSize);
+                    strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
+
+                    string[] tabS = strData.Split('\0');
+                    frame.ID = tabS[0];
+                    // Handle multiple values (ID3v2.4 only, theoretically)
+                    if (tabS.Length > 1) strData = string.Join(Settings.InternalValueSeparator + "", tabS, 1, tabS.Length - 1);
+                    else strData = ""; //if the 2nd part of the array isn't there, value is non-existent (TXXX...KEY\0\0 or TXXX...KEY\0)
+
+                    // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character
+                    // (pattern : TXXX-stuff-BOM-ID-\0-BOM-VALUE-\0-BOM-VALUE-\0)
+                    if (1 == encodingCode) strData = strData.Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
+                }
+                else if (frame.ID.StartsWith("CTO")) // Chapters table of contents -> store chapter description
+                {
+                    StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Skip element ID
+                    source.Seek(1, SeekOrigin.Current); // Skip flags
+                    int entryCount = source.ReadByte();
+                    for (int i = 0; i < entryCount; i++) StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding); // Skip chapter element IDs
+                                                                                                                             // There's an optional header here
+                    if (source.Position - dataOffset < frame.Size && "TIT2".Equals(Utils.Latin1Encoding.GetString(source.ReadBytes(4)), StringComparison.OrdinalIgnoreCase))
+                    {
+                        source.Seek(6, SeekOrigin.Current); // Skip size and flags
+                        encodingCode = source.ReadByte();
+                        Encoding encoding = decodeID3v2CharEncoding(encodingCode);
+                        if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode || 2 == encodingCode)) readUnicodeBOM(source);
+                        strData = StreamUtils.ReadNullTerminatedStringFixed(source, encoding, (int)(dataOffset + frame.Size - source.Position));
+                    }
+                    else
+                    {
+                        strData = "";
+                    }
+                }
+                else if (frame.ID.StartsWith("CHA")) // Chapters
+                {
+                    tagData.Chapters ??= new List<ChapterInfo>();
+                    chapter = new ChapterInfo();
+                    tagData.Chapters.Add(chapter);
+
+                    long initPos = source.Position;
+                    chapter.UniqueID = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
+
+                    chapter.StartTime = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+                    chapter.EndTime = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+                    chapter.StartOffset = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+                    chapter.EndOffset = BinaryPrimitives.ReadUInt32BigEndian(source.ReadBytes(4));
+
+                    chapter.UseOffset = chapter.StartOffset != uint.MaxValue;
+
+                    long remainingData = dataSize - (source.Position - initPos);
+                    while (remainingData > 0 && chapterDepth < 4) // Limit chapter depth to 3 levels
+                    {
+                        if (!readFrame(source, tag, readTagParams, ref comments, chapterDepth + 1)) break;
+                        remainingData = dataSize - (source.Position - initPos);
+                    } // End chapter frames loop
+
+                    strData = "";
+                }
+                else if (frame.ID.StartsWith("SYL")) // Synch'ed lyrics
+                {
+                    long initPos = source.Position;
+                    long remainingData = dataSize - (source.Position - initPos);
+
+                    LyricsInfo info = tagData.Lyrics[^1];
+                    info.Format = LyricsInfo.LyricsFormat.SYNCHRONIZED;
+                    while (remainingData > 0)
+                    {
+                        info.SynchronizedLyrics.Add(readLyricsPhrase(source, frameEncoding));
+                        remainingData = dataSize - (source.Position - initPos);
+                    }
+                    strData = "";
+                }
+                else if (frame.ID.StartsWith("WXX")) // Custom URL
+                {
+                    var terminator = getNullTerminatorFromEncoding(frameEncoding);
+                    // Find the separator
+                    if (StreamUtils.FindSequence(source, terminator, dataSize))
+                    {
+                        var secondPartOffset = source.Position;
+                        var firstPartSize = (int)(secondPartOffset - terminator.Length - dataOffset);
+                        source.Seek(dataOffset, SeekOrigin.Begin);
+                        byte[] bData = source.ReadBytes(firstPartSize);
+                        // Description encoded with current encoding
+                        strData = frameEncoding.GetString(bData) + Settings.InternalValueSeparator;
+                        var secondPartSize = dataSize - firstPartSize - terminator.Length;
+                        if (secondPartSize > 0)
+                        {
+                            source.Seek(secondPartOffset, SeekOrigin.Begin);
+                            bData = source.ReadBytes(secondPartSize);
+                            // URL encoded in ISO-8859-1
+                            strData += Utils.Latin1Encoding.GetString(bData);
+                        }
+                    }
+                    else
+                    { // No separator (bad formatting) : take one single string with current encoding
+                        byte[] bData = source.ReadBytes(dataSize);
+                        strData = frameEncoding.GetString(bData) + Settings.InternalValueSeparator;
+                    }
+                }
+                else // Other cases
+                {
+                    // Read frame data and set tag item if frame supported
+                    byte[] bData;
+                    if (isUnsynchronized)
+                    {
+                        bData = decodeUnsynchronizedStream(source, dataSize);
+                    }
+                    else
+                    {
+                        bData = source.ReadBytes(dataSize);
+                    }
+
+                    strData = Utils.StripEndingZeroChars(frameEncoding.GetString(bData));
+
+                    // Parse GENRE frame
+                    if (isGenreField(frame.ID, m_tagVersion)) strData = extractGenreFromID3v2Code(strData);
+                    // Parse Involved People frame for ID3v2.2-2.3 (IPL/IPLS) where value separator is a \0
+                    else if (frame.ID.StartsWith("IPL"))
+                    {
+                        string[] parts = strData.Trim().Split(new[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
+                        // Individual parts of that field may have a BOM
+                        if (1 == encodingCode)
+                        {
+                            string bomAsStr = frameEncoding.GetString(getBomFromEncoding(frameEncoding));
+                            for (int i = 0; i < parts.Length; i++) parts[i] = parts[i].Replace(bomAsStr, "");
+                        }
+                        strData = string.Join(Settings.InternalValueSeparator + "", parts);
+                    }
+                    // Handle multiple values on text information frames
+                    else if (frame.ID.StartsWith('T'))
+                    {
+                        string[] parts = null;
+                        // Separating multiple values using \0 should normally be ID3v2.4 only,
+                        // but that convention has spread to ID3v2.3 informally
+                        if (strData.Contains(VALUE_SEPARATOR_24))
+                        {
+                            // If unicode is used, there might be BOMs converted to 'ZERO WIDTH NO-BREAK SPACE' character
+                            // (pattern : TXXX-BOM-VALUE-\0-BOM-VALUE)
+                            if (1 == encodingCode) strData = strData.Replace(Utils.UNICODE_INVISIBLE_EMPTY, "");
+                            parts = strData.Trim().Split(VALUE_SEPARATOR_24, StringSplitOptions.RemoveEmptyEntries);
+                        }
+                        // Only specific text information frames may contain multiple values on ID3v2.2-3
+                        else if (multipleValuev23Fields.Contains(frame.ID) && Settings.ID3v2_separatev2v3Values)
+                        {
+                            parts = strData.Trim().Split(VALUE_SEPARATOR_22, StringSplitOptions.RemoveEmptyEntries);
+                        }
+                        if (parts != null) strData = string.Join(Settings.InternalValueSeparator + "", parts);
+                    }
+                }
+
+                if (inLyrics)
+                {
+                    if (strData.Length > 0) setMetaField(Field.LYRICS_UNSYNCH, strData);
+                }
+                else if (null == comment && null == chapter) // We're in a non-Comment, non-Chapter field => directly store value after unsynchronization
+                {
+                    if (0 == chapterDepth) SetMetaField(frame.ID, strData, readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version, mimeType: mimeType, fileName: fileName);
+                    else
+                    {
+                        chapter = tagData.Chapters[^1];
+                        switch (frame.ID)
+                        {
+                            case "TIT2": chapter.Title = strData; break;
+                            case "TIT3": chapter.Subtitle = strData; break;
+                            case "WXXX":
+                                string[] parts = strData.Split(Settings.InternalValueSeparator);
+                                chapter.Url = new ChapterInfo.UrlInfo(parts[0], parts[1]);
+                                break;
+                        }
+                    }
+                }
+                else if (comment != null) // We're in a Comment field => store value in temp Comment structure
+                {
+                    bool found = false;
+
+                    // Comment of the same field if already exists
+                    foreach (MetaFieldInfo com in comments)
+                    {
+                        if (com.NativeFieldCode.Equals(comment.NativeFieldCode))
+                        {
+                            com.Value += Settings.InternalValueSeparator + strData;
+                            found = true;
+                        }
+                    }
+
+                    // Else brand new comment
+                    if (!found)
+                    {
+                        comment.Value = strData;
+                        comments.Add(comment);
+                    }
+                }
+
+                if (TAG_VERSION_2_2 == m_tagVersion) source.Seek(dataOffset + dataSize, SeekOrigin.Begin);
+            }
+
+            source.Seek(dataOffset + dataSize, SeekOrigin.Begin);
+
             return true;
+        }
+
+        private void readPictureFrame(
+            BufferedBinaryReader source,
+            int encodingCode,
+            Encoding frameEncoding,
+            int chapterDepth,
+            int dataSize,
+            bool isUnsynchronized,
+            ReadTagParams parms
+            )
+        {
+            long position = source.Position;
+            if (TAG_VERSION_2_2 == m_tagVersion)
+            {
+                // Image format
+                source.Seek(3, SeekOrigin.Current);
+            }
+            else
+            {
+                // mime-type always coded in ASCII
+                if (1 == encodingCode) source.Seek(-1, SeekOrigin.Current);
+                // Mime-type
+                StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
+            }
+
+            byte picCode = source.ReadByte();
+            // TODO factorize : abstract PictureTypeDecoder + unsupported / supported decision in MetaDataIO ?
+            PictureInfo.PIC_TYPE picType = DecodeID3v2PictureType(picCode);
+
+            int picturePosition = 0;
+            if (0 == chapterDepth)
+            {
+                if (picType.Equals(PictureInfo.PIC_TYPE.Unsupported))
+                {
+                    picturePosition = takePicturePosition(MetaDataIOFactory.TagType.ID3V2, picCode);
+                }
+                else
+                {
+                    picturePosition = takePicturePosition(picType);
+                }
+            }
+
+            // Image description
+            // Description may be coded with another convention
+            if (m_tagVersion > TAG_VERSION_2_2 && (1 == encodingCode)) readUnicodeBOM(source);
+            string description = StreamUtils.ReadNullTerminatedString(source, frameEncoding);
+
+            if (parms.ReadPictures || chapterDepth > 0)
+            {
+                int picSize = dataSize - (int)(source.Position - position);
+
+                byte[] data;
+                if (isUnsynchronized)
+                {
+                    data = decodeUnsynchronizedStream(source, picSize);
+                }
+                else
+                {
+                    data = source.ReadBytes(picSize);
+                    /*
+                    using MemoryStream outStream = new MemoryStream(picSize);
+                    StreamUtils.CopyStream(source, outStream, picSize);
+                    data = outStream.ToArray();
+                    */
+                }
+                PictureInfo picInfo = PictureInfo.fromBinaryData(data, picType, getImplementedTagType(), picCode, picturePosition);
+                picInfo.Description = description;
+
+                if (0 == chapterDepth)
+                {
+                    tagData.Pictures.Add(picInfo);
+                }
+                else
+                {
+                    tagData.Chapters[^1].Picture = picInfo;
+                }
+            }
         }
 
         // Get information from frames (universal)
@@ -2335,13 +2360,18 @@ namespace ATL.AudioData.IO
             };
         }
 
-        // Copies the stream while cleaning abnormalities due to unsynchronization (Cf. paragraph5 of ID3v2.2 specs; paragraph6 of ID3v2.3+ specs)
-        // => every "0xff 0x00" becomes "0xff"
-        private static byte[] decodeUnsynchronizedStream(BufferedBinaryReader from, int length)
+        /// <summary>
+        /// Copy the stream while cleaning abnormalities due to unsynchronization (Cf. paragraph5 of ID3v2.2 specs; paragraph6 of ID3v2.3+ specs)
+        /// => every "0xff 0x00" becomes "0xff"
+        /// </summary>
+        /// <param name="from">Reader to read from</param>
+        /// <param name="targetSize">Target size of the unsynchronized data (bytes)</param>
+        /// <returns>Unsynchronized data</returns>
+        private static byte[] decodeUnsynchronizedStream(BufferedBinaryReader from, int targetSize)
         {
             const int BUFFER_SIZE = 8192;
 
-            byte[] result = new byte[length];
+            byte[] result = new byte[targetSize];
 
             bool foundFF = false;
 
@@ -2350,9 +2380,9 @@ namespace ATL.AudioData.IO
 
             int writtenTotal = 0;
             int remainingBytes;
-            if (length > 0)
+            if (targetSize > 0)
             {
-                remainingBytes = (int)Math.Min(length, from.Length - from.Position);
+                remainingBytes = (int)Math.Min(targetSize, from.Length - from.Position);
             }
             else
             {
