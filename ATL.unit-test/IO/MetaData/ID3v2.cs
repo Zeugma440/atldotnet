@@ -315,9 +315,34 @@ namespace ATL.test.IO.MetaData
 
 
         [TestMethod]
-        public void TagIO_R_ID3v2_TXXX_MultipleValues()
+        public void TagIO_R_ID3v23_TXXX_MultipleValues()
         {
-            // Source : ID3v2 with TXXX MOOD field with multiple values
+            // Source : ID3v2.3 with two fields using different ways of separating values :
+            //   Composer : '/'
+            //   Album Artist : `\0'
+            String location = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.3_multiple_values_null.mp3";
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            // Check if field and value are read properly
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            string[] values = theFile.ID3v2.Composer.Split(ATL.Settings.InternalValueSeparator);
+            Assert.AreEqual(2, values.Length);
+            Assert.AreEqual("PDQ Bach", values[0]);
+            Assert.AreEqual("Schickele, Peter", values[1]);
+
+            values = theFile.ID3v2.AlbumArtist.Split(ATL.Settings.InternalValueSeparator);
+            Assert.AreEqual(2, values.Length);
+            Assert.AreEqual("PDQ Bach", values[0]);
+            Assert.AreEqual("Schickele, Peter", values[1]);
+        }
+
+        [TestMethod]
+        public void TagIO_R_ID3v24_TXXX_MultipleValues()
+        {
+            // Source : ID3v2.4 with TXXX MOOD field with multiple values
             String location = TestUtils.GetResourceLocationRoot() + "MP3/id3v2.4_TXXX_multipleValues.mp3";
             AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
 
