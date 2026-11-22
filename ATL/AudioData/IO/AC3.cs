@@ -13,7 +13,7 @@ namespace ATL.AudioData.IO
 	class AC3 : IAudioDataIO
     {
         // Standard bitrates (KBit/s)
-        private static readonly int[] BITRATES = { 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 448, 512, 576, 640 };
+        internal static readonly int[] BITRATES = { 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 448, 512, 576, 640 };
 
         // Private declarations
         private uint sampleRate;
