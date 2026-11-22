@@ -116,7 +116,7 @@ namespace ATL.benchmark
             }
         }
 
-        static private void removeAt(string filePath)
+        static private void removeAt(string filePath, MetaDataIOFactory.TagType type = MetaDataIOFactory.TagType.ANY)
         {
             string testFileLocation = TestUtils.GenerateTempTestFile(filePath);
             try
@@ -130,7 +130,7 @@ namespace ATL.benchmark
                 Console.WriteLine(">>> REMOVE: BEGIN @ " + testFileLocation);
 
                 Writing w = new Writing();
-                w.performRemove(testFileLocation, 2);
+                w.performRemove(testFileLocation, type);
                 Console.WriteLine(">>> REMOVE : END");
 
                 Console.ReadLine();
@@ -168,11 +168,11 @@ namespace ATL.benchmark
                                   + " | " + Utils.EncodeTimecode_s(t.Duration) 
                                   + " | " + t.SampleRate + " (" + t.Bitrate + " kpbs" + (t.IsVBR ? " VBR)" : ")") 
                                   + " | Channels : " + t.ChannelsArrangement);
-                Console.WriteLine(Utils.BuildStrictLengthString("", t.Path.Length, '.') + ".......disc " + t.DiscNumber + " | track " + t.TrackNumber + " | title " + t.Title + " | artist " + t.Artist + " | album " + t.Album + " | year " + t.Year);
+                Console.WriteLine(Utils.BuildStrictLengthString("", t.Path.Length, '.') + ".......disc " + t.DiscNumber + " | track " + t.TrackNumber + " | title " + t.Title + " | artist " + t.Artist + " | album " + t.Album + " | year " + t.Year + " | genre " + t.Genre);
 
                 Console.WriteLine("images : " + t.EmbeddedPictures.Count);
 
-                Console.WriteLine("AdditionalFields");
+                Console.WriteLine("AdditionalFields : " + t.AdditionalFields.Count);
                 foreach (var field in t.AdditionalFields)
                 {
                     Console.WriteLine("  " + field.Key + " = " + field.Value);
@@ -190,8 +190,5 @@ namespace ATL.benchmark
             Console.ReadLine();
         }
     }
-
-
-
 }
 
