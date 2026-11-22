@@ -1723,6 +1723,30 @@ namespace ATL.test.IO.MetaData
         }
 
         [TestMethod]
+        public void TagIO_R_ID3v2_UnsynchPics()
+        {
+            // ID3v2.3 with two unsynch pics and a binary custom field (MCDI) with unsynched data
+            String location = TestUtils.GetResourceLocationRoot() + "FLAC/id3v2.3_unsynch_2pics.flac";
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(location));
+
+            Assert.IsTrue(theFile.ReadFromFile(true, true));
+
+            Assert.IsNotNull(theFile.ID3v2);
+            Assert.IsTrue(theFile.ID3v2.Exists);
+
+            Assert.AreEqual("Offenbach", theFile.ID3v2.Composer);
+            Assert.AreEqual("Natalie Dessay, Roberto Alagna, Etc.; Kent Nagano: Lyon National Opera Orchestra & Chorus", theFile.ID3v2.Comment);
+            Assert.IsTrue(theFile.ID3v2.AdditionalFields.ContainsKey("MCDI"));
+            Assert.AreEqual(179, theFile.ID3v2.AdditionalFields["MCDI"].Length);
+
+            Assert.AreEqual(2, theFile.ID3v2.EmbeddedPictures.Count);
+            Assert.AreEqual(PIC_TYPE.Front, theFile.ID3v2.EmbeddedPictures[0].PicType);
+            Assert.AreEqual(244121652, theFile.ID3v2.EmbeddedPictures[0].GetHashCode());
+            Assert.AreEqual(PIC_TYPE.Back, theFile.ID3v2.EmbeddedPictures[1].PicType);
+            Assert.AreEqual(227344033, theFile.ID3v2.EmbeddedPictures[1].GetHashCode());
+        }
+
+        [TestMethod]
         public void TagIO_RW_ID3v2_ID3v1()
         {
             test_RW_Cohabitation(MetaDataIOFactory.TagType.ID3V2, MetaDataIOFactory.TagType.ID3V1);
