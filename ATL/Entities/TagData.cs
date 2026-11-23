@@ -285,6 +285,10 @@ namespace ATL
 
 #pragma warning restore S1104 // Fields should not have public accessibility
 
+        // Keys cache for hasKey()
+        private ISet<Field> mapCache = new HashSet<Field>();
+
+
         /// <summary>
         /// Construct an empty TagData
         /// </summary>
@@ -382,6 +386,7 @@ namespace ATL
                         break;
                 }
             }
+            mapCache.Clear();
         }
 
         /// <summary>
@@ -601,7 +606,8 @@ namespace ATL
         /// <returns>True if the current TagData stores a value for the given ATL field code; false if not</returns>
         public bool hasKey(Field id)
         {
-            return ToMap().ContainsKey(id);
+            if (0 == mapCache.Count) mapCache = ToMap().Keys.ToHashSet<Field>();
+            return mapCache.Contains(id);
         }
 
         /// <summary>
@@ -732,6 +738,7 @@ namespace ATL
             AdditionalFields.Clear();
             Chapters?.Clear();
             Lyrics?.Clear();
+            mapCache.Clear();
 
             TrackDigitsForLeadingZeroes = 0;
             DiscDigitsForLeadingZeroes = 0;
@@ -829,6 +836,8 @@ namespace ATL
             if (Lyrics is not { Count: > 0 }) return;
 
             foreach (LyricsInfo lyrics in Lyrics) lyrics.GuessFormat();
+
+            mapCache.Clear();
         }
 
         /// <summary>
