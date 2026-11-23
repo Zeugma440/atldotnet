@@ -169,7 +169,7 @@ namespace ATL.AudioData.IO
                 if (this is IAudioDataIO iO)
 #pragma warning restore S3060 // "is" should not be used with "this"
                 {
-                    nativeFormat.MakeSubformat(" / " + iO.AudioFormat.ShortName, 0); // Don't need to identify specific native subformats
+                    nativeFormat.MakeSubformat(" / " + iO.AudioFormat.ContainerShortName, 0); // Don't need to identify specific native subformats
                 }
                 return new List<Format>(new[] { nativeFormat });
             }

@@ -454,27 +454,28 @@ namespace ATL.AudioData.IO
             get
             {
                 AudioFormat f = new AudioFormat(audioFormat);
-                string subformat;
+                string subformatName = null;
+                string subformatShortName = "";
                 switch (contents)
                 {
                     case Contents.VORBIS:
-                        subformat = "Vorbis";
+                        subformatName = "Vorbis";
                         break;
                     case Contents.OPUS:
-                        subformat = "Opus";
+                        subformatName = "Opus Interactive Audio Codec";
+                        subformatShortName = "Opus";
                         break;
                     case Contents.SPEEX:
-                        subformat = "Speex";
+                        subformatName = "Speex";
                         break;
                     case Contents.FLAC:
-                        subformat = "FLAC";
                         f.DataFormat = AudioDataIOFactory.GetInstance().getFormat(AudioDataIOFactory.CID_FLAC);
                         break;
                     default:
-                        subformat = "Unsupported";
+                        subformatName = "Unsupported";
                         break;
                 }
-                f.SpecifyCodec(subformat, (byte)contents);
+                if (subformatName != null) f.SpecifyCodec(subformatName, subformatShortName, (byte)contents);
                 return f;
             }
         }

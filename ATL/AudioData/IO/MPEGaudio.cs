@@ -311,7 +311,7 @@ namespace ATL.AudioData.IO
             get
             {
                 AudioFormat f = new AudioFormat(audioFormat);
-                f.SpecifyCodec(FirstFrame.Layer, FirstFrame.LayerID);
+                f.ContainerName += $" ({FirstFrame.Layer})";
                 return f;
             }
         }

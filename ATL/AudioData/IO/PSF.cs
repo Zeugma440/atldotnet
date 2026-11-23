@@ -81,7 +81,7 @@ namespace ATL.AudioData.IO
             get
             {
                 AudioFormat f = new AudioFormat(audioFormat);
-                f.SpecifyCodec(subformat(), version);
+                f.SpecifyCodec(subformat(), codecId : version);
                 return f;
             }
         }

@@ -120,7 +120,7 @@ namespace ATL
         /// <summary>
         /// Short name
         /// </summary>
-        public string ShortName { get; protected set; }
+        public virtual string ShortName { get; protected set; }
 
         /// <summary>
         /// Internal unique main ID

@@ -95,7 +95,7 @@ namespace ATL.AudioData
                     formatListByMime = new Dictionary<string, IList<AudioFormat>>()
                 };
 
-                AudioFormat tempFmt = new AudioFormat(CID_MPEG, "MPEG Audio", "MPEG");
+                AudioFormat tempFmt = new AudioFormat(CID_MPEG, "MPEG-1 Audio", "MPEG");
                 tempFmt.AddMimeType("audio/mp3");
                 tempFmt.AddMimeType("audio/mpeg");
                 tempFmt.AddMimeType("audio/x-mpeg");

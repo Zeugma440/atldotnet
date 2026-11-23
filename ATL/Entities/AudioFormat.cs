@@ -11,6 +11,9 @@ namespace ATL
     /// </summary>
     public class AudioFormat : Format
     {
+        // Audio data format / Codec, if different from the container
+        private Format? _dataFormat = null;
+
         /// <summary>
         /// Container ID
         /// Reference : AudioDataIOFactory.CID_ constants
@@ -22,10 +25,24 @@ namespace ATL
         /// </summary>
         public string ContainerName { get; set; } = string.Empty;
 
+
+        /// <summary>
+        /// Name of the container, if the format has one (e.g. "MKV")
+        /// </summary>
+        public string ContainerShortName { get; set; } = string.Empty;
+
         /// <summary>
         /// Audio data format / Codec
         /// </summary>
-        public Format DataFormat { get; set; }
+        public Format DataFormat
+        {
+            get
+            {
+                if (null == _dataFormat) return this;
+                else return _dataFormat;
+            }
+            set { _dataFormat = value; }
+        }
 
 
         /// <summary>
@@ -39,7 +56,7 @@ namespace ATL
         {
             ContainerId = id;
             ContainerName = name;
-            DataFormat = new Format(id, name, 0 == shortName.Length ? name : shortName, writable);
+            ContainerShortName = shortName;
             init(id, name, shortName, writable);
         }
 
@@ -70,16 +87,17 @@ namespace ATL
         {
             ContainerId = f.ContainerId;
             ContainerName = f.ContainerName;
-            DataFormat = new Format(f.DataFormat);
+            ContainerShortName = f.ContainerShortName;
+            if (f._dataFormat != null) _dataFormat = new Format(f._dataFormat);
             base.copyFrom(f);
         }
 
         /// <summary>
         /// Turns into a container format, using the given Audio data / codec name and ID
         /// </summary>
-        public void SpecifyCodec(String codecName, short codecId = 0)
+        public void SpecifyCodec(string codecName, string codecShortName = "", short codecId = 0)
         {
-            DataFormat = new Format(codecId, codecName);
+            DataFormat = new Format(codecId, codecName, codecShortName);
         }
 
         /// <summary>
@@ -92,14 +110,26 @@ namespace ATL
 
 
         /// <summary>
-        /// Name of the format (e.g. "FLAC"), including the Audio data format / Codec if the current format is a container (e.g. "Matroska / FLAC")
+        /// Name of the format (e.g. "Free Lossless Audio Codec"), including the Audio data format / Codec if the current format is a container (e.g. "Matroska / Free Lossless Audio Codec")
         /// </summary>
         override public string Name
         {
             get
             {
-                if (ContainerName.Length > 0 && ContainerName != DataFormat.Name) return $"{ContainerName} / {DataFormat.Name}";
-                else return DataFormat.Name;
+                if (_dataFormat != null) return $"{ContainerName} / {_dataFormat.Name}";
+                else return ContainerName;
+            }
+        }
+
+        /// <summary>
+        /// Short name of the format (e.g. "FLAC"), including the Audio data format / Codec if the current format is a container (e.g. "MKV / FLAC")
+        /// </summary>
+        override public string ShortName
+        {
+            get
+            {
+                if (ContainerShortName.Length > 0 && ContainerId != DataFormat.MainID) return $"{ContainerShortName} / {DataFormat.ShortName}";
+                else return ContainerShortName;
             }
         }
 
