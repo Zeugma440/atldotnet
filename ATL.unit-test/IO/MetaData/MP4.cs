@@ -1668,6 +1668,50 @@ namespace ATL.test.IO.MetaData
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
+        // Test with a file whose XMP contains data in a custom namespace
+        [TestMethod]
+        public void TagIO_RW_MP4_Xmp_Custom()
+        {
+            new ConsoleLogger();
+
+            string testFileLocation = TestUtils.CopyAsTempTestFile("MP4/xmp_custom.m4a");
+            AudioDataManager theFile = new AudioDataManager(AudioDataIOFactory.GetInstance().GetFromPath(testFileLocation));
+
+            // Read
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            var xmpCount = theFile.NativeTag.AdditionalFields.Count(f => f.Key.StartsWith("xmp."));
+            Assert.AreEqual(6, xmpCount); // Without namespaces
+            var originalFields = theFile.NativeTag.AdditionalFields
+                .Where(f => f.Key.StartsWith("xmp."))
+                .ToDictionary(field => field.Key, field => field.Value);
+
+            // Write
+            TagHolder theTag = new TagHolder();
+            theTag.Popularity = 3.0f / 5;
+
+            Assert.IsTrue(theFile.UpdateTagInFileAsync(theTag.tagData, MetaDataIOFactory.TagType.NATIVE).GetAwaiter().GetResult());
+            Assert.IsTrue(theFile.ReadFromFile(false, true));
+            Assert.IsNotNull(theFile.NativeTag);
+            Assert.IsTrue(theFile.NativeTag.Exists);
+
+            var newFields = theFile.NativeTag.AdditionalFields
+                .Where(f => f.Key.StartsWith("xmp."))
+                .ToDictionary(field => field.Key, field => field.Value);
+
+            Assert.AreEqual(originalFields.Count, newFields.Count);
+            foreach (var key in originalFields.Keys)
+            {
+                Assert.IsTrue(newFields.ContainsKey(key), "Key not found : " + key);
+                Assert.AreEqual(originalFields[key], newFields[key]);
+            }
+
+            // Get rid of the working copy
+            if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
+        }
+
         [TestMethod]
         public void TagIO_RW_MP4_Xmp_Empty()
         {
