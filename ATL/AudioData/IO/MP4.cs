@@ -2973,7 +2973,7 @@ namespace ATL.AudioData.IO
             {
                 "mp4a" => TryParseMp4a(source),
                 "alac" => TryParseAlac(source),
-                "dac3" => TryParseAc3(source),
+                "ac-3" => TryParseAc3(source),
                 _ => true,
             };
 
@@ -3190,7 +3190,7 @@ namespace ATL.AudioData.IO
         private bool TryParseBtrtAtom(Stream source, long dataSize)
         {
             // BufferSizeDB, MaxBitrate, AvgBitrate
-            if (dataSize < 24) return false;
+            if (dataSize < 12) return false;
             
             Span<byte> span = stackalloc byte[(int)dataSize];
             if (source.Read(span) != dataSize) return false;
