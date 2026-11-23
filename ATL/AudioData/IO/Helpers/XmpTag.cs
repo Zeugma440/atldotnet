@@ -55,6 +55,7 @@ namespace ATL.AudioData.IO
             {"tscSC", "http://www.techsmith.com/xmp/tsc/"},
             {"tscIQ", "http://www.techsmith.com/xmp/tscIQ/"},
             {"tscHS", "http://www.techsmith.com/xmp/tscHS/"},
+            {"mbxmp", "urn:nato:stanag:4778:bindinginformation:1:0:xmp#"},
         };
 
         // Namespace anchors
