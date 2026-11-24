@@ -312,6 +312,7 @@ namespace ATL.AudioData.IO
             {
                 AudioFormat f = new AudioFormat(audioFormat);
                 f.ContainerName += $" ({FirstFrame.Layer})";
+                f.ContainerShortName = "MP" + (4 - FirstFrame.LayerID);
                 return f;
             }
         }
