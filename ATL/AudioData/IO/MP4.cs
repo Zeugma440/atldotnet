@@ -173,6 +173,7 @@ namespace ATL.AudioData.IO
         private AudioDataManager.SizeInfo sizeInfo;
         private string _descFormat;
         private readonly AudioFormat containerFormat;
+        private readonly IDictionary<string, string> customNamespaces = new Dictionary<string, string>();
 
 
         // ---------- INFORMATIVE INTERFACE IMPLEMENTATIONS & MANDATORY OVERRIDES
@@ -270,6 +271,7 @@ namespace ATL.AudioData.IO
             chapterPictureTrackEdits = null;
 
             _descFormat = String.Empty;
+            customNamespaces.Clear();
 
             ResetData();
         }
@@ -470,7 +472,7 @@ namespace ATL.AudioData.IO
                     if (XmpTag.UUID_XMP == uuid.key)
                     {
                         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(uuid.value));
-                        XmpTag.FromStream(stream, this, readTagParams, new Dictionary<string, string>(), stream.Length);
+                        XmpTag.FromStream(stream, this, readTagParams, customNamespaces, stream.Length);
                     }
                     else
                     {
@@ -1996,7 +1998,7 @@ namespace ATL.AudioData.IO
             }
             else if (zone.StartsWith(UUID_PREFIX)) // Existing UUID atoms
             {
-                result = writeUuidFrame(tag, zone[5..], w);
+                result = writeUuidFrame(tag, zone[5..], w, customNamespaces);
             }
             else if (zone.StartsWith(ZONE_MP4_ADDITIONAL_UUIDS)) // Extra UUID atoms
             {
@@ -2811,7 +2813,7 @@ namespace ATL.AudioData.IO
 
             return 1;
         }
-        private static int writeUuidFrame(TagData tag, string key, BinaryWriter w)
+        private static int writeUuidFrame(TagData tag, string key, BinaryWriter w, IDictionary<string, string> customNamespaces)
         {
             var keyNominal = key.Replace(" ", "");
             if (keyNominal.Length < 32)
@@ -2829,7 +2831,7 @@ namespace ATL.AudioData.IO
             if (keyNominal.Equals(XmpTag.UUID_XMP, StringComparison.OrdinalIgnoreCase))
             {
                 using var mem = new MemoryStream();
-                XmpTag.ToStream(mem, new TagHolder(tag));
+                XmpTag.ToStream(mem, new TagHolder(tag), customNamespaces);
                 data = mem.ToArray();
             }
             else
@@ -2870,7 +2872,7 @@ namespace ATL.AudioData.IO
             var written = 0;
             foreach (var data in extraUuids)
             {
-                written += writeUuidFrame(tag, data.NativeFieldCode[5..], w);
+                written += writeUuidFrame(tag, data.NativeFieldCode[5..], w, customNamespaces);
             }
 
             // Scan AdditionalData for the need to write an XMP UUID if there's none already set
@@ -2881,7 +2883,7 @@ namespace ATL.AudioData.IO
                     // XMP data => create the corresponding UUID atom to host it
                     if (info.NativeFieldCode.StartsWith("xmp.", StringComparison.OrdinalIgnoreCase))
                     {
-                        written += writeUuidFrame(tag, XmpTag.UUID_XMP, w);
+                        written += writeUuidFrame(tag, XmpTag.UUID_XMP, w, customNamespaces);
                         break;
                     }
                 }
