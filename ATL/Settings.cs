@@ -1,4 +1,5 @@
 ﻿using ATL.AudioData;
+using System;
 using System.Text;
 
 namespace ATL
@@ -255,6 +256,13 @@ namespace ATL
         /// Default : true
         /// </summary>
         public static bool M3U_useExtendedFormat = true;
+
+        /// <summary>
+        /// Custom namespaces for XMP
+        ///   Item1 : prefix (e.g. "xml")
+        ///   Item2 : namespace (e.g. "http://www.w3.org/XML/1998/namespace")
+        /// </summary>
+        public static Tuple<string, string>[] XML_CustomNamespaces = { };
     }
 
 #pragma warning restore S1104 // Fields should not have public accessibility

@@ -78,7 +78,12 @@ namespace ATL.AudioData.IO
                 _ => false
             );
             result.setStructuralAttributes(ATTRIBUTES);
-            result.setDefaultNamespaces(DEFAULT_NAMESPACES);
+            if (Settings.XML_CustomNamespaces.Length > 0)
+            {
+                var customNs = new Dictionary<string, string>(DEFAULT_NAMESPACES);
+                foreach (var kvp in Settings.XML_CustomNamespaces) customNs[kvp.Item1] = kvp.Item2;
+                result.setDefaultNamespaces(customNs);
+            } else result.setDefaultNamespaces(DEFAULT_NAMESPACES);
             result.setNamespaceAnchors(NAMESPACE_ANCHORS);
             return result;
         }
