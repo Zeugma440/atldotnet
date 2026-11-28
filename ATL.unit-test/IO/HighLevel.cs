@@ -926,9 +926,8 @@ namespace ATL.test.IO
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
 
-        /*
         [TestMethod]
-        public void TagIO_RW_UpdateTrackTotalDiscTotralOnly()
+        public void TagIO_RW_UpdateTrackTotalDiscTotalOnly()
         {
             string testFileLocation = TestUtils.CopyAsTempTestFile("MP3/empty.mp3");
             Track theTrack = new Track(testFileLocation);
@@ -946,7 +945,6 @@ namespace ATL.test.IO
             // Get rid of the working copy
             if (Settings.DeleteAfterSuccess) File.Delete(testFileLocation);
         }
-        */
 
         [TestMethod]
         public void TagIO_RW_UpdateKeepDataIntegrity()

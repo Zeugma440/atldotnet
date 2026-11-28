@@ -756,6 +756,10 @@ namespace ATL
             {
                 string trackNumber = Fields[Field.TRACK_NUMBER].Value;
                 string trackTotal = null;
+                if (Fields.TryGetValue(Field.TRACK_TOTAL, out var field))
+                {
+                    trackTotal = field.Value;
+                }
                 string trackNumberTotal;
                 if (trackNumber.Contains('/'))
                 {
@@ -767,15 +771,16 @@ namespace ATL
                 else if (Utils.IsNumeric(trackNumber))
                 {
                     trackNumberTotal = trackNumber;
-                    if (Fields.TryGetValue(Field.TRACK_TOTAL, out var field))
-                    {
-                        trackTotal = field.Value;
-                        if (Utils.IsNumeric(trackTotal)) trackNumberTotal += "/" + trackTotal;
-                    }
+                    if (Utils.IsNumeric(trackTotal)) trackNumberTotal += "/" + trackTotal;
                 }
                 else
                 {
-                    trackNumberTotal = "";
+                    if (Utils.IsNumeric(trackTotal))
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Setting Track Total without setting Track Number; forcing Track Number to zero.");
+                        trackNumberTotal = "0/" + trackTotal;
+                    }
+                    else trackNumberTotal = "";
                 }
                 Fields[Field.TRACK_NUMBER] = new LiteFieldInfo(trackNumber);
                 IntegrateValue(Field.TRACK_TOTAL, trackTotal);
@@ -786,7 +791,12 @@ namespace ATL
             {
                 string discNumber = Fields[Field.DISC_NUMBER].Value;
                 string discTotal = null;
+                if (Fields.TryGetValue(Field.DISC_TOTAL, out var field))
+                {
+                    discTotal = field.Value;
+                }
                 string discNumberTotal;
+                // DiscTotal written inside DiscNumber overrides standalone DiscTotal
                 if (discNumber.Contains('/'))
                 {
                     discNumberTotal = discNumber;
@@ -797,15 +807,16 @@ namespace ATL
                 else if (Utils.IsNumeric(discNumber))
                 {
                     discNumberTotal = discNumber;
-                    if (Fields.TryGetValue(Field.DISC_TOTAL, out var field))
-                    {
-                        discTotal = field.Value;
-                        if (Utils.IsNumeric(discTotal)) discNumberTotal += "/" + discTotal;
-                    }
+                    if (Utils.IsNumeric(discTotal)) discNumberTotal += "/" + discTotal;
                 }
                 else
                 {
-                    discNumberTotal = "";
+                    if (Utils.IsNumeric(discTotal))
+                    {
+                        LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Setting Disc Total without setting Disc Number; forcing Disc Number to zero.");
+                        discNumberTotal = "0/" + discTotal;
+                    }
+                    else discNumberTotal = "";
                 }
                 Fields[Field.DISC_NUMBER] = new LiteFieldInfo(discNumber);
                 IntegrateValue(Field.DISC_TOTAL, discTotal);
