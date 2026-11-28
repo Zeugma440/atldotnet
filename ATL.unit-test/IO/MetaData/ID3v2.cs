@@ -74,15 +74,12 @@ namespace ATL.test.IO.MetaData
             byte found = 0;
             foreach (PictureInfo pic in theFile.ID3v2.EmbeddedPictures)
             {
-                Image picture;
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
                 {
-                    using (picture = Image.FromStream(new MemoryStream(pic.PictureData)))
-                    {
-                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
-                        Assert.AreEqual(656, picture.Height);
-                        Assert.AreEqual(552, picture.Width);
-                    }
+                    var imgProps = ImageUtils.GetImageProperties(pic.PictureData);
+                    Assert.AreEqual(ImageFormat.Jpeg, imgProps.Format);
+                    Assert.AreEqual(552, imgProps.Width);
+                    Assert.AreEqual(656, imgProps.Height);
                     found++;
                 }
             }
@@ -127,15 +124,12 @@ namespace ATL.test.IO.MetaData
             byte found = 0;
             foreach (PictureInfo pic in theFile.ID3v2.EmbeddedPictures)
             {
-                Image picture;
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
                 {
-                    using (picture = Image.FromStream(new MemoryStream(pic.PictureData)))
-                    {
-                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
-                        Assert.AreEqual(656, picture.Height);
-                        Assert.AreEqual(552, picture.Width);
-                    }
+                    var imgProps = ImageUtils.GetImageProperties(pic.PictureData);
+                    Assert.AreEqual(ImageFormat.Jpeg, imgProps.Format);
+                    Assert.AreEqual(552, imgProps.Width);
+                    Assert.AreEqual(656, imgProps.Height);
                     found++;
                 }
             }
@@ -163,15 +157,12 @@ namespace ATL.test.IO.MetaData
             byte found = 0;
             foreach (PictureInfo pic in theFile.ID3v2.EmbeddedPictures)
             {
-                Image picture;
                 if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Generic)) // Supported picture
                 {
-                    using (picture = Image.FromStream(new MemoryStream(pic.PictureData)))
-                    {
-                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Png, picture.RawFormat);
-                        Assert.AreEqual(256, picture.Height);
-                        Assert.AreEqual(256, picture.Width);
-                    }
+                    var imgProps = ImageUtils.GetImageProperties(pic.PictureData);
+                    Assert.AreEqual(ImageFormat.Png, imgProps.Format);
+                    Assert.AreEqual(256, imgProps.Width);
+                    Assert.AreEqual(256, imgProps.Height);
                     found++;
                 }
             }

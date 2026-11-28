@@ -2,6 +2,8 @@
 using ATL.Logging;
 using System;
 using System.Buffers.Binary;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Commons
@@ -84,6 +86,14 @@ namespace Commons
     /// </summary>
     internal static class ImageUtils
     {
+        // JPEG Start of Frame (SOF) signatures
+        private static readonly IList<byte[]> jpegSofSignatures = new List<byte[]>  {
+            new byte[] { 0xFF, 0xC0 }, new byte[] { 0xFF, 0xC1 }, new byte[] { 0xFF, 0xC2 }, new byte[] { 0xFF, 0xC3 },
+            new byte[] { 0xFF, 0xC5 }, new byte[] { 0xFF, 0xC6 }, new byte[] { 0xFF, 0xC7 }, new byte[] { 0xFF, 0xC9 },
+            new byte[] { 0xFF, 0xCA }, new byte[] { 0xFF, 0xCB }, new byte[] { 0xFF, 0xCD }, new byte[] { 0xFF, 0xCE },
+            new byte[] { 0xFF, 0xCF }
+        };
+
         /// <summary>
         /// Return the mime-type of the given .NET image format
         /// NB : This function is restricted to most common embedded picture formats : JPEG, GIF, PNG, BMP, TIFF, WEBP
@@ -403,29 +413,32 @@ namespace Commons
 
                         break;
                     case ImageFormat.Jpeg:
-                        Span<byte> shortData = stackalloc byte[2];
-                        byte[] SOF0FrameSignature = { 0xFF, 0xC0 };
-
                         /*
-                         * We just need to reach the SOF0 frame descripting the actual picture
+                         * We just need to reach the SOFx frame descripting the actual picture
+                         * (SOF1 to SOF15)
                          *
-                         * In order to handle JPEG files that contain multiple SOF0 frames (see test suite),
+                         * In order to handle JPEG files that contain multiple SOFx frames (see test suite),
                          * the simplest way of proceeding is to look for all SOF0 frames in the first 25% of the file,
                          * and then read the very last one
                         */
                         long lastPos = 0;
 
-                        while (StreamUtils.FindSequence(s, SOF0FrameSignature, limit))
+                        foreach (var sig in jpegSofSignatures)
                         {
-                            lastPos = s.Position;
+                            while (StreamUtils.FindSequence(s, sig, limit))
+                            {
+                                lastPos = s.Position;
+                            }
+                            if (lastPos > 0) break; // No need to continue looking if we found one
                         }
 
                         if (0 == lastPos)
                         {
-                            LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Invalid JPEG file; no SOF0 frame found");
+                            LogDelegator.GetLogDelegate()(Log.LV_WARNING, "Invalid JPEG file; no SOF frame found");
                         }
                         else
                         {
+                            Span<byte> shortData = stackalloc byte[2];
                             // Skip frame length
                             s.Seek(2, SeekOrigin.Current);
                             bitsPerSample = r.ReadByte();

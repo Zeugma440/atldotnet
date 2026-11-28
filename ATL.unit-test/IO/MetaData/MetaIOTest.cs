@@ -277,14 +277,10 @@ namespace ATL.test.IO.MetaData
                         {
                             Assert.AreEqual(0x06, pic.NativePicCode);
                         }
-#pragma warning disable CA1416
-                        using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
-                        {
-                            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                            Assert.AreEqual(600, picture.Height);
-                            Assert.AreEqual(900, picture.Width);
-                        }
-#pragma warning restore CA1416
+                        var imgProps = ImageUtils.GetImageProperties(pic.PictureData);
+                        Assert.AreEqual(ImageFormat.Jpeg, imgProps.Format);
+                        Assert.AreEqual(900, imgProps.Width);
+                        Assert.AreEqual(600, imgProps.Height);
                         nbFound++;
                         break;
                     }
@@ -768,13 +764,10 @@ namespace ATL.test.IO.MetaData
                          (pic.NativePicCodeStr != null && pic.NativePicCodeStr.Equals(pictureCode1)))
                        )
                     {
-                        using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
-                        {
-                            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                            Assert.AreEqual(600, picture.Height);
-                            Assert.AreEqual(900, picture.Width);
-                        }
-
+                        var imgProps = ImageUtils.GetImageProperties(pic.PictureData);
+                        Assert.AreEqual(ImageFormat.Jpeg, imgProps.Format);
+                        Assert.AreEqual(600, imgProps.Width);
+                        Assert.AreEqual(900, imgProps.Height);
                         found++;
                     }
                     else if (pic.PicType.Equals(PictureInfo.PIC_TYPE.Unsupported)
@@ -782,13 +775,10 @@ namespace ATL.test.IO.MetaData
                                                                             pic.NativePicCodeStr.Equals(pictureCode2)))
                             )
                     {
-                        using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
-                        {
-                            Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                            Assert.AreEqual(290, picture.Height);
-                            Assert.AreEqual(900, picture.Width);
-                        }
-
+                        var imgProps = ImageUtils.GetImageProperties(pic.PictureData);
+                        Assert.AreEqual(ImageFormat.Jpeg, imgProps.Format);
+                        Assert.AreEqual(290, imgProps.Width);
+                        Assert.AreEqual(900, imgProps.Height);
                         found++;
                     }
                 }
@@ -850,13 +840,10 @@ namespace ATL.test.IO.MetaData
                                                                              pic.NativePicCodeStr.Equals(pictureCode2)))
                            )
                         {
-                            using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
-                            {
-                                Assert.AreEqual(picture.RawFormat, System.Drawing.Imaging.ImageFormat.Jpeg);
-                                Assert.AreEqual(290, picture.Height);
-                                Assert.AreEqual(900, picture.Width);
-                            }
-
+                            var imgProps = ImageUtils.GetImageProperties(pic.PictureData);
+                            Assert.AreEqual(ImageFormat.Jpeg, imgProps.Format);
+                            Assert.AreEqual(290, imgProps.Width);
+                            Assert.AreEqual(900, imgProps.Height);
                             found++;
                         }
                     }

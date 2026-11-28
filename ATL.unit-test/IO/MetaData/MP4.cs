@@ -250,10 +250,10 @@ namespace ATL.test.IO.MetaData
             {
                 if (pic.PicType.Equals(PIC_TYPE.Generic) && (1 == nbFound))
                 {
-                    using Image picture = Image.FromStream(new MemoryStream(pic.PictureData));
-                    Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Png, picture.RawFormat);
-                    Assert.AreEqual(175, picture.Width);
-                    Assert.AreEqual(168, picture.Height);
+                    var imgProps = ImageUtils.GetImageProperties(pic.PictureData);
+                    Assert.AreEqual(ImageFormat.Png, imgProps.Format);
+                    Assert.AreEqual(175, imgProps.Width);
+                    Assert.AreEqual(168, imgProps.Height);
                 }
                 nbFound++;
             }
@@ -359,22 +359,18 @@ namespace ATL.test.IO.MetaData
             {
                 if (pic.PicType.Equals(PIC_TYPE.Generic) && (0 == found)) // No custom nor categorized picture type in MP4
                 {
-                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
-                    {
-                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
-                        Assert.AreEqual(600, picture.Height);
-                        Assert.AreEqual(900, picture.Width);
-                    }
+                    var imgProps = ImageUtils.GetImageProperties(pic.PictureData);
+                    Assert.AreEqual(ImageFormat.Jpeg, imgProps.Format);
+                    Assert.AreEqual(900, imgProps.Width);
+                    Assert.AreEqual(600, imgProps.Height);
                     found++;
                 }
                 else if (pic.PicType.Equals(PIC_TYPE.Generic) && (1 == found))  // No custom nor categorized picture type in MP4
                 {
-                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
-                    {
-                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
-                        Assert.AreEqual(290, picture.Height);
-                        Assert.AreEqual(900, picture.Width);
-                    }
+                    var imgProps = ImageUtils.GetImageProperties(pic.PictureData);
+                    Assert.AreEqual(ImageFormat.Jpeg, imgProps.Format);
+                    Assert.AreEqual(900, imgProps.Width);
+                    Assert.AreEqual(290, imgProps.Height);
                     found++;
                 }
             }
@@ -414,12 +410,10 @@ namespace ATL.test.IO.MetaData
             {
                 if (pic.PicType.Equals(PIC_TYPE.Generic) && (0 == found))
                 {
-                    using (Image picture = Image.FromStream(new MemoryStream(pic.PictureData)))
-                    {
-                        Assert.AreEqual(System.Drawing.Imaging.ImageFormat.Jpeg, picture.RawFormat);
-                        Assert.AreEqual(290, picture.Height);
-                        Assert.AreEqual(900, picture.Width);
-                    }
+                    var imgProps = ImageUtils.GetImageProperties(pic.PictureData);
+                    Assert.AreEqual(ImageFormat.Jpeg, imgProps.Format);
+                    Assert.AreEqual(900, imgProps.Width);
+                    Assert.AreEqual(290, imgProps.Height);
                     found++;
                 }
             }

@@ -35,7 +35,7 @@ namespace ATL.test
         [TestMethod]
         public void ImgUtils_LoadJpeg()
         {
-            // THis one has multiple image data segments; never figured out why
+            // This one has multiple image data segments; never figured out why
             byte[] data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/pic1.jpg");
             ImageProperties props = ImageUtils.GetImageProperties(data);
 
@@ -50,6 +50,15 @@ namespace ATL.test
 
             Assert.AreEqual(900, props.Width);
             Assert.AreEqual(290, props.Height);
+            Assert.AreEqual(0, props.NumColorsInPalette);
+            Assert.AreEqual(24, props.ColorDepth);
+
+            // This one uses alternate SOF headers (0xFF 0xC2) instead of the usual 0xFF 0xC0
+            data = File.ReadAllBytes(TestUtils.GetResourceLocationRoot() + "_Images/dims_alt.jpg");
+            props = ImageUtils.GetImageProperties(data);
+
+            Assert.AreEqual(552, props.Width);
+            Assert.AreEqual(656, props.Height);
             Assert.AreEqual(0, props.NumColorsInPalette);
             Assert.AreEqual(24, props.ColorDepth);
         }

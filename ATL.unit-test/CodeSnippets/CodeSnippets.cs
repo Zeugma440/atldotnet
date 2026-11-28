@@ -98,9 +98,11 @@ namespace ATL.test.CodeSnippets
             // Transform them into .NET Image, if needed
             foreach (PictureInfo pic in embeddedPictures)
             {
+                /*
                 System.Drawing.Image image = System.Drawing.Image.FromStream(new System.IO.MemoryStream(pic.PictureData));
                 // do stuff
                 image.Dispose();
+                */
             }
         }
 
